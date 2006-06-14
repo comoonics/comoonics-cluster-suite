@@ -6,10 +6,13 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.2 2006-06-14 10:48:05 mark Exp $
+# $Id: ComLog.py,v 1.3 2006-06-14 10:51:34 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLog.py,v $
-# $log:$
+# $Log: ComLog.py,v $
+# Revision 1.3  2006-06-14 10:51:34  mark
+# another try  for Log Tag ;-)
+#
