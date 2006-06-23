@@ -33,12 +33,16 @@ cs = doc.createElementNS(EMPTY_NAMESPACE, 'copyset')
 dest = doc.createElementNS(EMPTY_NAMESPACE, 'destination')
 dest.setAttributeNS(EMPTY_NAMESPACE, 'type', 'filecopy')
 cs.appendChild(dest)
+lvm = doc.createElementNS(EMPTY_NAMESPACE, 'volume_management')
+dest.appendChild(lvm)
+
+
 device = doc.createElementNS(EMPTY_NAMESPACE, 'device')
 device.setAttributeNS(EMPTY_NAMESPACE, 'type', 'lvm')
 device.setAttributeNS(EMPTY_NAMESPACE, 'path', '/dev/VG_wasauchimmer/LV_wasauchimmer')
+
+
 dest.appendChild(device)
-lvm = doc.createElementNS(EMPTY_NAMESPACE, 'lvm_config')
-device.appendChild(lvm)
 fs = doc.createElementNS(EMPTY_NAMESPACE, 'filesystem')
 fs.setAttributeNS(EMPTY_NAMESPACE, 'type', 'gfs')
 node = doc.createElementNS(EMPTY_NAMESPACE, 'fs_config')
@@ -48,7 +52,7 @@ node.setAttributeNS(EMPTY_NAMESPACE, 'clustername', 'mycluster')
 node.setAttributeNS(EMPTY_NAMESPACE, 'locktable', 'mylocktable')
 node.setAttributeNS(EMPTY_NAMESPACE, 'lockproto', 'lock_dlm')
 fs.appendChild(node)
-dest.appendChild(fs)
+device.appendChild(fs)
 
 doc.appendChild(cs)
 
