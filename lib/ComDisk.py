@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.2 2006-06-23 11:58:32 mark Exp $
+# $Id: ComDisk.py,v 1.3 2006-06-23 16:17:16 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDisk.py,v $
 
 import os
@@ -29,10 +29,14 @@ class Disk:
         device: path to devicefile e.g. "/dev/sda"
         """
         if not os.path.isfile( device ):
-            raise ComException(device + " not found")
+            #raise ComException(device + " not found")
             pass
         self.__device=device
         self.log=ComLog.getLogger("Disk")
+
+    def getLog(self):
+        return self.log
+
 
     def getDeviceName(self):
         """ returns the Disks device name (e.g. /dev/sda) """ 
@@ -76,7 +80,10 @@ class Disk:
 
     
 # $Log: ComDisk.py,v $
-# Revision 1.2  2006-06-23 11:58:32  mark
+# Revision 1.3  2006-06-23 16:17:16  mark
+# removed devicefile check because there is a bug
+#
+# Revision 1.2  2006/06/23 11:58:32  mark
 # moved Log to bottom
 #
 # Revision 1.1  2006/06/23 07:56:24  mark
