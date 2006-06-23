@@ -6,17 +6,18 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComUtils.py,v 1.2 2006-06-23 11:55:58 mark Exp $
+# $Id: ComUtils.py,v 1.3 2006-06-23 16:17:38 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComUtils.py,v $
 
 
 
-from exceptions import ValueError
+from exceptions import *
 
+import re
 import ComLog
 import ComSystem
 
@@ -43,10 +44,22 @@ def copyPartitionTable(source_device, destination_device):
     if __rc != 0:
         raise ComException(__cmd)
         
-
+def grepInLines(lines, exp):
+    rv=[]
+    for line in lines:
+        m = re.match(exp, line)
+        try:
+            res=m.group(1)
+            rv.append(res)
+        except Exception:
+            pass
+    return rv
     
 # $Log: ComUtils.py,v $
-# Revision 1.2  2006-06-23 11:55:58  mark
+# Revision 1.3  2006-06-23 16:17:38  mark
+# added grepInLines
+#
+# Revision 1.2  2006/06/23 11:55:58  mark
 # moved Log to bottom
 #
 # Revision 1.1  2006/06/23 07:56:24  mark
