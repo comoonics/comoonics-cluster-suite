@@ -1,0 +1,51 @@
+"""Comoonics utility module
+
+here should be some more information about the module, that finds its way inot the onlinedoc
+
+"""
+
+
+# here is some internal information
+# $Id: ComUtils.py,v 1.1 2006-06-23 07:56:24 mark Exp $
+#
+
+
+__version__ = "$Revision: 1.1 $"
+# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComUtils.py,v $
+# $Log: ComUtils.py,v $
+# Revision 1.1  2006-06-23 07:56:24  mark
+# initial checkin (stable)
+#
+
+
+
+from exceptions import ValueError
+
+import ComLog
+import ComSystem
+
+log=ComLog.getLogger("ComUtils")
+
+CMD_SFDISK = "/sbin/sfdisk"
+
+def isInt( str ):
+    """ Is the given string an integer?     """
+    ok = 1
+    try:
+        num = int(str)
+        #log.debug(str + " is of int")
+    except ValueError:
+        #log.debug(str + " is not of int")
+        ok = 0
+    return ok
+
+def copyPartitionTable(source_device, destination_device):
+    __cmd = CMD_SFDISK + " -d " + source_device.getDeviceName() + " | " + CMD_SFDISK \
+            + " " + destination_device.getDeviceName()
+    __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+    log.debug("copyPartitionTable " + __ret)
+    if __rc != 0:
+        raise ComException(__cmd)
+        
+
+    
