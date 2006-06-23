@@ -6,16 +6,12 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.1 2006-06-23 07:56:24 mark Exp $
+# $Id: ComSystem.py,v 1.2 2006-06-23 11:55:14 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComSystem.py,v $
-# $Log: ComSystem.py,v $
-# Revision 1.1  2006-06-23 07:56:24  mark
-# initial checkin (stable)
-#
 
 import sys
 import commands
@@ -48,3 +44,11 @@ def execLocal(__cmd):
             return os.system(__cmd)
         return 0
     return os.system(__cmd)
+
+# $Log: ComSystem.py,v $
+# Revision 1.2  2006-06-23 11:55:14  mark
+# moved Log to bottom
+#
+# Revision 1.1  2006/06/23 07:56:24  mark
+# initial checkin (stable)
+#

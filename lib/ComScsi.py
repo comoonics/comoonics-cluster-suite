@@ -6,16 +6,12 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComScsi.py,v 1.1 2006-06-23 07:56:24 mark Exp $
+# $Id: ComScsi.py,v 1.2 2006-06-23 11:56:52 mark Exp $
 #
 
 
 __version__ = "$$"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComScsi.py,v $
-# $Log: ComScsi.py,v $
-# Revision 1.1  2006-06-23 07:56:24  mark
-# initial checkin (stable)
-#
 
 import os
 import sys
@@ -74,3 +70,10 @@ class SCSI:
         for __host in __hosts:
             ComSystem.execLocal( "echo \""+__bus+"\" \""+ __target+"\" \""+ __lun+ "\" > "+__syspath+"/"+__host+"/scan")
 
+# $Log: ComScsi.py,v $
+# Revision 1.2  2006-06-23 11:56:52  mark
+# moved Log to bottom
+#
+# Revision 1.1  2006/06/23 07:56:24  mark
+# initial checkin (stable)
+#

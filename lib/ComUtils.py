@@ -6,16 +6,12 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComUtils.py,v 1.1 2006-06-23 07:56:24 mark Exp $
+# $Id: ComUtils.py,v 1.2 2006-06-23 11:55:58 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComUtils.py,v $
-# $Log: ComUtils.py,v $
-# Revision 1.1  2006-06-23 07:56:24  mark
-# initial checkin (stable)
-#
 
 
 
@@ -49,3 +45,10 @@ def copyPartitionTable(source_device, destination_device):
         
 
     
+# $Log: ComUtils.py,v $
+# Revision 1.2  2006-06-23 11:55:58  mark
+# moved Log to bottom
+#
+# Revision 1.1  2006/06/23 07:56:24  mark
+# initial checkin (stable)
+#
