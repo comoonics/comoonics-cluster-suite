@@ -7,12 +7,14 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.2 2006-06-26 14:38:52 marc Exp $
+# $Id: ComDataObject.py,v 1.3 2006-06-26 15:11:19 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
+
+import exceptions
 
 
 class DataObject:
@@ -29,6 +31,8 @@ class DataObject:
         return self.__getattr__(name)
         
     def __getattr__(self,name):
+        if not self.__dict__['element'].hasAttribute(name):
+            raise exceptions.NameError("No attribute name " + name)
         return self.__dict__['element'].getAttribute(name)
 
     def __setattribute__(self, name, value):
@@ -38,7 +42,10 @@ class DataObject:
         self.__dict__['element'].setAttribute(name, value)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.2  2006-06-26 14:38:52  marc
+# Revision 1.3  2006-06-26 15:11:19  mark
+# added attribute check
+#
+# Revision 1.2  2006/06/26 14:38:52  marc
 # Added generic selectors (getattr, setattr) for any attribute in element
 #
 # Revision 1.1  2006/06/23 14:08:56  mark
