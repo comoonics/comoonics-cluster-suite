@@ -53,7 +53,6 @@ vg.appendChild(lv2)
 vg.appendChild(pv1)
 vg.appendChild(pv2)
 lvm.appendChild(vg)
-
 dest.appendChild(lvm)
 
 
