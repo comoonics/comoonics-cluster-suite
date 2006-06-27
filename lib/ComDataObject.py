@@ -7,17 +7,19 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.8 2006-06-27 12:00:13 mark Exp $
+# $Id: ComDataObject.py,v 1.9 2006-06-27 14:08:56 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
 import copy
 
 class DataObject:
+    TAGNAME="DataObject"
+    
     def __init__(self, element, doc=None):
         self.__dict__['element']=element
         self.__dict__['document']=doc
@@ -32,18 +34,12 @@ class DataObject:
         return self.__dict__['document']
 
     def setDocument(self, doc):
-        self.__dict__['doc']=doc
+        self.__dict__['document']=doc
 
-    def __getattribute__(self,name):
-        return self.__getattr__(name)
-        
     def __getattr__(self,name):
         if not self.__dict__.has_key('element') or not self.__dict__['element'].hasAttribute(name):
             raise exceptions.NameError("No attribute name " + name)
         return self.__dict__['element'].getAttribute(name)
-
-    def __setattribute__(self, name, value):
-        self.__setattr__(name, value)
 
     def __setattr__(self, name, value):
         self.__dict__['element'].setAttribute(name, value)
@@ -70,13 +66,16 @@ class DataObject:
         '''
         Return all attributes of element to string
         '''
-        str=""
+        str="Classtype: "+self.__class__+", ElementName: "+self.getElement().tagName
         for i in range(len(self.getElement().attributes)):
             str+="%s = %s, " % (self.getElement().attributes.item(i).name, self.getElement().attributes.item(i).value)
         return str
 
 # $Log: ComDataObject.py,v $
-# Revision 1.8  2006-06-27 12:00:13  mark
+# Revision 1.9  2006-06-27 14:08:56  marc
+# bugfixes
+#
+# Revision 1.8  2006/06/27 12:00:13  mark
 # added doc attribute
 #
 # Revision 1.7  2006/06/27 09:42:32  marc
