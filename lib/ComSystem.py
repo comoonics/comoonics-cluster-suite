@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.3 2006-06-26 16:55:29 mark Exp $
+# $Id: ComSystem.py,v 1.4 2006-06-27 11:47:07 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComSystem.py,v $
 
 import sys
@@ -38,19 +38,22 @@ def execLocalStatusOutput(__cmd):
         return [0,""]
     return commands.getstatusoutput(__cmd)
 
-def execLocalGetResult(__cmd):
+
+def execLocalGetResult(__cmd, err=False):
     """ exec %__cmd and returns an array ouf output lines"""
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
         __ans=raw_input(__cmd+" (y,n)")
         if __ans != "y":
             return [0, ""]
-    child=popen2.Popen3(__cmd)
+    child=popen2.Popen3(__cmd, err)
     __rc=child.wait()
     __rv=child.fromchild.readlines()
+    if err:
+        __err=child.childerr.readlines()
+        return [__rc, __rv, __err]
     return [__rc, __rv]
 
-     
 
 def execLocal(__cmd):
     """ exec %cmd and return status """
@@ -63,7 +66,10 @@ def execLocal(__cmd):
     return os.system(__cmd)
 
 # $Log: ComSystem.py,v $
-# Revision 1.3  2006-06-26 16:55:29  mark
+# Revision 1.4  2006-06-27 11:47:07  mark
+# added stderr to execLocalGetResult
+#
+# Revision 1.3  2006/06/26 16:55:29  mark
 # added execLocalGetResult
 #
 # Revision 1.2  2006/06/23 11:55:14  mark
