@@ -7,15 +7,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.9 2006-06-27 14:08:56 marc Exp $
+# $Id: ComDataObject.py,v 1.10 2006-06-27 14:18:03 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
 import copy
+from xml.dom import Element
 
 class DataObject:
     TAGNAME="DataObject"
@@ -42,6 +43,8 @@ class DataObject:
         return self.__dict__['element'].getAttribute(name)
 
     def __setattr__(self, name, value):
+        if not self.__dict__['element'] and not isinstance(Element, self.__dict__['element']):
+            raise exceptions.IndexError("Element not defined or wrong instance.")
         self.__dict__['element'].setAttribute(name, value)
 
     def __copy__(self):
@@ -72,7 +75,10 @@ class DataObject:
         return str
 
 # $Log: ComDataObject.py,v $
-# Revision 1.9  2006-06-27 14:08:56  marc
+# Revision 1.10  2006-06-27 14:18:03  marc
+# added error exception for setattr if element does not exist.
+#
+# Revision 1.9  2006/06/27 14:08:56  marc
 # bugfixes
 #
 # Revision 1.8  2006/06/27 12:00:13  mark
