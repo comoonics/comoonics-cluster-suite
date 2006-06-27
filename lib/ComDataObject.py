@@ -7,53 +7,52 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.10 2006-06-27 14:18:03 marc Exp $
+# $Id: ComDataObject.py,v 1.11 2006-06-27 16:06:28 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
 import copy
+import string
 from xml.dom import Element
 
 class DataObject:
     TAGNAME="DataObject"
     
     def __init__(self, element, doc=None):
-        self.__dict__['element']=element
-        self.__dict__['document']=doc
+        self.element=element
+        self.document=doc
 
     def getElement(self):
-        return self.__dict__['element']
+        return self.element
 
     def setElement(self, element):
-        self.__dict__['element']=element
+        self.element=element
 
     def getDocument(self):
-        return self.__dict__['document']
+        return self.document
 
     def setDocument(self, doc):
         self.__dict__['document']=doc
 
-    def __getattr__(self,name):
-        if not self.__dict__.has_key('element') or not self.__dict__['element'].hasAttribute(name):
+    def getAttribute(self,name):
+        if not self.__dict__.has_key('element') or not self.element.hasAttribute(name):
             raise exceptions.NameError("No attribute name " + name)
-        return self.__dict__['element'].getAttribute(name)
+        return self.element.getAttribute(name)
 
-    def __setattr__(self, name, value):
-        if not self.__dict__['element'] and not isinstance(Element, self.__dict__['element']):
+    def setAttribute(self, name, value):
+        if not self.element and not isinstance(Element, self.element):
             raise exceptions.IndexError("Element not defined or wrong instance.")
-        self.__dict__['element'].setAttribute(name, value)
+        self.element.setAttribute(name, value)
 
     def __copy__(self):
         class EmptyClass: pass
         obj = EmptyClass()
         obj.__class__ = self.__class__
         obj.__dict__.update(self.__dict__)
-        obj.__dict__['element']=self.__dict__['element'].cloneNode(False)
-        obj.__dict__['document']=self.__dict__['document']
         return obj
 
     def __deepcopy__(self, memo):
@@ -61,21 +60,29 @@ class DataObject:
         obj = EmptyClass()
         obj.__class__ = self.__class__
         obj.__dict__.update(self.__dict__)
-        obj.__dict__['element']=self.__dict__['element'].cloneNode(True)
-        obj.__dict__['document']=self.__dict__['document']
+        obj.element=self.element.cloneNode(True)
+        obj.document=self.document
         return obj
  
     def __str__(self):
         '''
         Return all attributes of element to string
         '''
-        str="Classtype: "+self.__class__+", ElementName: "+self.getElement().tagName
+        str="Classtype: "+self.__class__.__name__+"\nTransient attributes: "
+        for attr in self.__dict__.keys():
+            str+="%s = %s, " % (attr, self.__dict__[attr])
+        str+="\n"
+        str+="Elementname: "+self.getElement().tagName
+        str+=", persistent Attributes: "
         for i in range(len(self.getElement().attributes)):
             str+="%s = %s, " % (self.getElement().attributes.item(i).name, self.getElement().attributes.item(i).value)
         return str
 
 # $Log: ComDataObject.py,v $
-# Revision 1.10  2006-06-27 14:18:03  marc
+# Revision 1.11  2006-06-27 16:06:28  marc
+# changed functionality. Added get/setAttribute for persistent attributes.
+#
+# Revision 1.10  2006/06/27 14:18:03  marc
 # added error exception for setattr if element does not exist.
 #
 # Revision 1.9  2006/06/27 14:08:56  marc
