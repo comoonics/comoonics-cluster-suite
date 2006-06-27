@@ -7,25 +7,32 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.7 2006-06-27 09:42:32 marc Exp $
+# $Id: ComDataObject.py,v 1.8 2006-06-27 12:00:13 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
 import copy
 
 class DataObject:
-    def __init__(self, element):
+    def __init__(self, element, doc=None):
         self.__dict__['element']=element
+        self.__dict__['document']=doc
 
     def getElement(self):
         return self.__dict__['element']
 
     def setElement(self, element):
         self.__dict__['element']=element
+
+    def getDocument(self):
+        return self.__dict__['document']
+
+    def setDocument(self, doc):
+        self.__dict__['doc']=doc
 
     def __getattribute__(self,name):
         return self.__getattr__(name)
@@ -47,6 +54,7 @@ class DataObject:
         obj.__class__ = self.__class__
         obj.__dict__.update(self.__dict__)
         obj.__dict__['element']=self.__dict__['element'].cloneNode(False)
+        obj.__dict__['document']=self.__dict__['document']
         return obj
 
     def __deepcopy__(self, memo):
@@ -55,6 +63,7 @@ class DataObject:
         obj.__class__ = self.__class__
         obj.__dict__.update(self.__dict__)
         obj.__dict__['element']=self.__dict__['element'].cloneNode(True)
+        obj.__dict__['document']=self.__dict__['document']
         return obj
  
     def __str__(self):
@@ -67,7 +76,10 @@ class DataObject:
         return str
 
 # $Log: ComDataObject.py,v $
-# Revision 1.7  2006-06-27 09:42:32  marc
+# Revision 1.8  2006-06-27 12:00:13  mark
+# added doc attribute
+#
+# Revision 1.7  2006/06/27 09:42:32  marc
 # added __str__ method
 #
 # Revision 1.6  2006/06/27 09:09:16  mark
