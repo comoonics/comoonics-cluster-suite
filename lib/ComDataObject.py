@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.5 2006-06-27 06:50:05 marc Exp $
+# $Id: ComDataObject.py,v 1.6 2006-06-27 09:09:16 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
@@ -49,7 +49,7 @@ class DataObject:
         obj.__dict__['element']=self.__dict__['element'].cloneNode(False)
         return obj
 
-    def __deepcopy__(self):
+    def __deepcopy__(self, memo):
         class EmptyClass: pass
         obj = EmptyClass()
         obj.__class__ = self.__class__
@@ -58,7 +58,10 @@ class DataObject:
         return obj
  
 # $Log: ComDataObject.py,v $
-# Revision 1.5  2006-06-27 06:50:05  marc
+# Revision 1.6  2006-06-27 09:09:16  mark
+# changed __deepcopy__ to fullfill interface requirements
+#
+# Revision 1.5  2006/06/27 06:50:05  marc
 # added deepcopy and changed copy to only "copy" the elements in depth 1
 #
 # Revision 1.4  2006/06/26 19:12:18  marc
