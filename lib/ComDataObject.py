@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.6 2006-06-27 09:09:16 mark Exp $
+# $Id: ComDataObject.py,v 1.7 2006-06-27 09:42:32 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
@@ -57,8 +57,20 @@ class DataObject:
         obj.__dict__['element']=self.__dict__['element'].cloneNode(True)
         return obj
  
+    def __str__(self):
+        '''
+        Return all attributes of element to string
+        '''
+        str=""
+        for i in range(len(self.getElement().attributes)):
+            str+="%s = %s, " % (self.getElement().attributes.item(i).name, self.getElement().attributes.item(i).value)
+        return str
+
 # $Log: ComDataObject.py,v $
-# Revision 1.6  2006-06-27 09:09:16  mark
+# Revision 1.7  2006-06-27 09:42:32  marc
+# added __str__ method
+#
+# Revision 1.6  2006/06/27 09:09:16  mark
 # changed __deepcopy__ to fullfill interface requirements
 #
 # Revision 1.5  2006/06/27 06:50:05  marc
