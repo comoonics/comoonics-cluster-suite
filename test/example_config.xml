@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<businesscopy>
+	<copyset type="partition">
+		<source>
+			<disk name="/dev/sda"/>
+		</source>
+		<destination>
+			<disk name="/dev/sdc"/>
+		</destination>
+	</copyset>	
+	<copyset type="lvm">
+		<source>
+			<volumegroup name="vg1"/>
+		</source>
+		<destination>
+  			<volumegroup name="vg2">
+  				<physicalvolume name="/dev/sdd"/>
+  				<physicalvolume name="/dev/sde"/>
+  			</volumegroup>
+  		</destination>
+	</copyset>
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/vg1/lv1">
+    			<filesystem type="gfs"/>
+    			<mountpoint path="/"/>
+    		</device>
+  		</source>
+  		<destination type="filesystem">
+    		<device name="/dev/vg2/lv1" id="rootfs">
+      			<filesystem type="gfs" clustername="neuercluster"/>     	
+      			<mountpoint name="/mnt/tmp">
+      				<option lockproto="lock_nolock"/>
+      			</mountpoint>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="filecopy">
+  		<source>
+  			<device name="/dev/sda1" id="bootfs">
+    			<filesystem type="ext3"/>
+    			<mountpoint name="/boot"/>
+    		</device>
+  		</source>
+  		<destination>
+    		<device name="/dev/sdb1">
+      			<filesystem type="ext3"/>     	
+      			<mountpoint path="/mnt/tmp"/>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="bootloader">
+		<source/>
+		<destination>	
+			<device name="/dev/sdb"/>
+			<bootloader type="grub"/>
+		</destination>
+	</copyset>
+	<modificationset>
+		<device refid="rootfs">
+			<file name="cluster/cdsl/node1/etc/sysconfig/network">
+				<modification type="regexp" search="HOSTNAME=.*" replace="HOSTNAME=myhostname"/>
+			</file>
+			<file name="etc/cluster/cluster.conf">
+				<modification type="copy" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+			</file>
+		</device>
+		<device refid="bootfs">
+			<archive type="cpio" name="/initrd_sr-2.6.9-34.0.1.ELsmp.img">				
+				<file name="etc/cluster.conf">
+					<modification type="copy" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+				</file>
+			</archive>
+		</device>
+	</modificationset>
+</businesscopy>
