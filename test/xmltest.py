@@ -1,92 +1,39 @@
-#from Ft.Xml import MarkupWriter
+"""XML Test
 
-#writer = MarkupWriter()
-#writer.startDocument() 
+here should be some more information about the module, that finds its way inot the onlinedoc
 
-#writer.startElement(u'filesystem')
-#writer.attribute(u'type', u'gfs')
-#writer.attribute(u'journals', u"10")
-#writer.endElement(u'filesystem')
+"""
 
 
+# here is some internal information
+# $Id: xmltest.py,v 1.6 2006-06-28 12:28:55 mark Exp $
+#
 
 
-from Ft.Xml import *
-from Ft.Xml.Domlette import implementation, PrettyPrint
+__version__ = "$Revision: 1.6 $"
+# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/test/xmltest.py,v $
 
+
+import os
+import xml.dom
+from xml.dom import EMPTY_NAMESPACE
+from xml.dom.ext import PrettyPrint
+from xml.dom.ext.reader import Sax2
+from xml import xpath
 
 def printDom(doc):
     PrettyPrint(doc)
 
-def printDeviceName(doc):
-    node = doc.xpath("*/destination/device/@path")
-    print node[0].value
+# create Reader object
+reader = Sax2.Reader()
 
+#parse the document
+file=os.fdopen(os.open("./example_config.xml",os.O_RDONLY))
+doc = reader.fromStream(file)
 
-
-
-
-
-
-doc = implementation.createRootNode('file:///article.xml')
-cs = doc.createElementNS(EMPTY_NAMESPACE, 'copyset')
-dest = doc.createElementNS(EMPTY_NAMESPACE, 'destination')
-dest.setAttributeNS(EMPTY_NAMESPACE, 'type', 'filecopy')
-cs.appendChild(dest)
-lvm = doc.createElementNS(EMPTY_NAMESPACE, 'volume_management')
-vg = doc.createElementNS(EMPTY_NAMESPACE, 'volume_group')
-vg.setAttributeNS(EMPTY_NAMESPACE, 'name', 'vg1')
-lv1 = doc.createElementNS(EMPTY_NAMESPACE, 'logical_volume')
-lv1.setAttributeNS(EMPTY_NAMESPACE, 'name', 'lv1')
-lv1.setAttributeNS(EMPTY_NAMESPACE, 'size', '100M')
-lv2 = doc.createElementNS(EMPTY_NAMESPACE, 'logical_volume')
-lv2.setAttributeNS(EMPTY_NAMESPACE, 'name', 'lv2')
-lv2.setAttributeNS(EMPTY_NAMESPACE, 'size', '200M')
-pv1 = doc.createElementNS(EMPTY_NAMESPACE, 'physical_volume')
-pv1.setAttributeNS(EMPTY_NAMESPACE, 'name', 'pv1')
-pv1.setAttributeNS(EMPTY_NAMESPACE, 'path', '/dev/sdc')
-pv2 = doc.createElementNS(EMPTY_NAMESPACE, 'physical_volume')
-pv2.setAttributeNS(EMPTY_NAMESPACE, 'name', 'pv2')
-pv2.setAttributeNS(EMPTY_NAMESPACE, 'path', '/dev/sda1')
-vg.appendChild(lv1)
-vg.appendChild(lv2)
-vg.appendChild(pv1)
-vg.appendChild(pv2)
-lvm.appendChild(vg)
-dest.appendChild(lvm)
-
-
-device = doc.createElementNS(EMPTY_NAMESPACE, 'device')
-# device.setAttributeNS(EMPTY_NAMESPACE, 'type', 'lvm')
-device.setAttributeNS(EMPTY_NAMESPACE, 'path', '/dev/vg1/lv1')
-
-
-dest.appendChild(device)
-fs = doc.createElementNS(EMPTY_NAMESPACE, 'filesystem')
-fs.setAttributeNS(EMPTY_NAMESPACE, 'type', 'gfs')
-fs.setAttributeNS(EMPTY_NAMESPACE, 'bsize', '4096')
-fs.setAttributeNS(EMPTY_NAMESPACE, 'journals', '8')
-fs.setAttributeNS(EMPTY_NAMESPACE, 'clustername', 'mycluster')
-fs.setAttributeNS(EMPTY_NAMESPACE, 'locktable', 'mylocktable')
-fs.setAttributeNS(EMPTY_NAMESPACE, 'lockproto', 'lock_dlm')
-device.appendChild(fs)
-mopts=doc.createElementNS(EMPTY_NAMESPACE, 'mount_options')
-mopt=doc.createElementNS(EMPTY_NAMESPACE, 'option')
-mopt.setAttributeNS(EMPTY_NAMESPACE, 'name', 'noatime')
-mopts.appendChild(mopt)
-mopt=doc.createElementNS(EMPTY_NAMESPACE, 'option')
-mopt.setAttributeNS(EMPTY_NAMESPACE, 'value', 'lock_nolock')
-mopt.setAttributeNS(EMPTY_NAMESPACE, 'name', 'lockproto')
-mopts.appendChild(mopt)
-fs.appendChild(mopts)
-
-doc.appendChild(cs)
-
-
-# ...using a single tab, rather than 2 spaces, to indent at each level
 printDom(doc)
-printDeviceName(doc)
 
-print "Name of gfsnode is: " + node.nodeName
-
-
+# $Log: xmltest.py,v $
+# Revision 1.6  2006-06-28 12:28:55  mark
+# using SAX Parser
+#
