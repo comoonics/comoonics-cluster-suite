@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.4 2006-06-27 11:47:07 mark Exp $
+# $Id: ComSystem.py,v 1.5 2006-06-28 17:24:00 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComSystem.py,v $
 
 import sys
@@ -35,7 +35,7 @@ def execLocalStatusOutput(__cmd):
         __ans=raw_input(__cmd+" (y,n)")
         if __ans == "y":
             return commands.getstatusoutput(__cmd)
-        return [0,""]
+        return [0,"skipped"]
     return commands.getstatusoutput(__cmd)
 
 
@@ -45,7 +45,7 @@ def execLocalGetResult(__cmd, err=False):
     if __EXEC_REALLY_DO == "ask":
         __ans=raw_input(__cmd+" (y,n)")
         if __ans != "y":
-            return [0, ""]
+            return [0, "skipped"]
     child=popen2.Popen3(__cmd, err)
     __rc=child.wait()
     __rv=child.fromchild.readlines()
@@ -66,7 +66,10 @@ def execLocal(__cmd):
     return os.system(__cmd)
 
 # $Log: ComSystem.py,v $
-# Revision 1.4  2006-06-27 11:47:07  mark
+# Revision 1.5  2006-06-28 17:24:00  mark
+# bug fixes
+#
+# Revision 1.4  2006/06/27 11:47:07  mark
 # added stderr to execLocalGetResult
 #
 # Revision 1.3  2006/06/26 16:55:29  mark

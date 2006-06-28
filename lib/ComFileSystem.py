@@ -7,19 +7,12 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.2 2006-06-27 12:10:37 mark Exp $
+# $Id: ComFileSystem.py,v 1.3 2006-06-28 17:24:42 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFileSystem.py,v $
-# $Log: ComFileSystem.py,v $
-# Revision 1.2  2006-06-27 12:10:37  mark
-# backup checkin
-#
-# Revision 1.1  2006/06/23 07:57:08  mark
-# initial checkin (unstable)
-#
 
 import os
 import exceptions
@@ -33,6 +26,14 @@ from ComDataObject import *
 
 log=ComLog.getLogger("ComFileSystem")
 
+
+CMD_MKFS="/sbin/mkfs"
+CMD_GFS_MKFS="/sbin/gfs_mkfs"
+CMD_GFS_TOOL="/sbin/gfs_tool"
+CMD_MOUNT="/bin/mount"
+CMD_UMOUNT="/bin/umount"
+CMD_E2LABEL="/sbin/e2label"
+
 def getFileSystemofType(type):
     raise exceptions.NotImplementedError()
 
@@ -45,33 +46,35 @@ def getFileSystemofType(type):
     raise exceptions.NotImplementedError()
 
 
-def getFileSystem(element):
+def getFileSystem(element, doc):
     """returns a FileSystem object that fits to the description in doc"""
     __type=element.getAttribute("type")
     if __type == "ext2":
-        return ext2FileSystem(element)
+        return ext2FileSystem(element, doc)
     if __type == "ext3":
-        return ext3FileSystem(element)
+        return ext3FileSystem(element, doc)
     if __type == "gfs":
-        return gfsFileSystem(element)
+        return gfsFileSystem(element, doc)
     raise exceptions.NotImplementedError()
        
 
 
 class FileSystem(DataObject):
+    TAGNAME="filesystem"
     def __init__(self, element, doc):
         """ element: DOMElement
         """
         # super
-        DataObject.__init__(self,element, doc)
-        # Check for mount options
-        __mopt = element.getElementsByTagName("mount_options")
-        if len(__mopt):
-            self.mountOptions=MountOptions(__mopt[0], doc)
-        else:
-            __node=doc.createElement("mount_options")
-            element.appendChild(__node)
-            self.mountOptions=MountOptions(__node, doc)
+        DataObject.__init__(self, element, doc)
+
+        #Check for mount options
+        #__mopt = element.getElementsByTagName(MountOptions.TAGNAME)
+        #if len(__mopt):
+        #    self.mountOptions=MountOptions(__mopt[0], doc)
+        #else:
+        #    __node=doc.createElement(MountOptions.TAGNAME)
+        #    element.appendChild(__node)
+        #    self.mountOptions=MountOptions(__node, doc)
         # FIXME Do we need all of them ?
         self.formattable=0
         self.checked = 0
@@ -80,20 +83,35 @@ class FileSystem(DataObject):
         self.maxSizeMB = 8 * 1024 * 1024
         self.maxLabelChars = 16
         self.partedFileSystemType = None
-        self.log=ComLog.getLogger("FileSystem");
-        self.xmlpath="*/filesystem/fs_config"
+ 
 
-
-    def mount(self, device, mountpoint, readOnly=0, bindMount=0):
-        __cmd = "/bin/mount -t " + self.mountOptions.getOptionsString()
-        self.log.debug(__cmd)
+    def mount(self, device, mountpoint):
+        __cmd = CMD_MOUNT + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
+                " " + device.getDevicePath() + " " + mountpoint.getAttribute("name")
+        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+        log.debug("mount:" + __cmd + ": " + __ret) 
+        if __rc != 0:
+            raise ComException(__cmd + __ret)
         
 
-    def umount(self, device, path):
-        pass
+    def umountDev(self, device):
+        __cmd = CMD_UMOUNT + " " + device.getDevicePath() 
+        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+        log.debug("umount:" + __cmd + ": " + __ret) 
+        if __rc != 0:
+            raise ComException(__cmd + __ret)
 
-    def getName(self, quoted = 0):
-        pass
+
+    def umountDir(self, mountpoint):
+        __cmd = CMD_UMOUNT + " " + mountpoint.getAttribute("name")
+        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+        log.debug("umount: " + __cmd + ": " + __ret) 
+        if __rc != 0:
+            raise ComException(__cmd + __ret)
+
+
+    def getName(self):
+        return self.type
 
     def formatDevice(self, device):
         pass
@@ -131,7 +149,9 @@ class FileSystem(DataObject):
         device: ComDevice.Device
         """
         pass
-
+    
+    def scanOptions(self, device, mountpoint=None):
+        pass
         
 
 
@@ -143,31 +163,47 @@ class extFileSystem(FileSystem):
         self.checked = 1
         self.linuxnativefs = 1
         self.maxSizeMB = 8 * 1024 * 1024
-        #self.packages = [ "e2fsprogs" ]
-        self.CMD_E2LABEL="/usr/sbin/e2label"
-
+  
     def labelDevice(self, label, device):
         __devicePath = device.getDevicePath()
-        __cmd = self.CMD_E2LABEL + " " + __devicePath + " " + label
+        __cmd = CMD_E2LABEL + " " + __devicePath + " " + label
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        self.getLog().debug("labelDevice: \n" , __cmd, __ret) 
-        if __rc != 0:
+        log.debug("labelDevice: " +  __cmd + ": " + __ret) 
+        if __rc:
             raise ComException(__cmd + __ret)
+
+    def getLabel(self, device):
+        __cmd = CMD_E2LABEL + " " + __devicePath
+        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+        log.debug("getLabel: " + __cmd + ": " + __ret) 
+        if __rc: 
+            raise ComException(__cmd + __ret)
+        return __ret
         
     def formatDevice(self, device):
         __devicePath = device.getDevicePath()
         __cmd = self.getMkfsCmd() + " " + __devicePath 
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        self.getLog().debug("formatDevice: \n" , __cmd, __ret) 
+        log.debug("formatDevice: "  + __cmd + ": " + __ret) 
         if __rc != 0:
             raise ComException(__cmd + __ret)
 
+    def findLabel(self, label):
+        """ try to find Device with label
+        returns Device
+        """
+        __cmd="/sbin/findfs LABEL=" + label
+        __rc, __path = execLocalGetResult(__cmd)
+        if not rc:
+            raise ComException("device with label " + label + "not found")
+        return ComDevice.Device(__path[0])
+        
 
 class ext2FileSystem(extFileSystem):
     def __init__(self,element, doc):
         extFileSystem.__init__(self,element, doc)
         self.name = "ext2"
-        self.setMkfsCmd("/sbin/mkfs.ext2")
+        self.setMkfsCmd(CMD_MKFS + " -t ext2 ")
         #self.partedFileSystemType = parted.file_system_type_get("ext2")
         #self.migratetofs = ['ext3']
 
@@ -176,7 +212,7 @@ class ext3FileSystem(extFileSystem):
     def __init__(self,element, doc):
         extFileSystem.__init__(self,element, doc)
         self.name = "ext3"
-        self.setMkfsCmd("/sbin/mkfs.ext3")
+        self.setMkfsCmd(CMD_MKFS + " -t ext3 ")
 
 
 class gfsFileSystem(FileSystem):
@@ -189,70 +225,76 @@ class gfsFileSystem(FileSystem):
         self.maxSizeMB = 8 * 1024 * 1024
         #self.packages = [ "e2fsprogs" ]
         self.name="gfs"
-        self.setMkfsCmd("/sbin/gfs_mkfs")
-        self.GFS_TOOL_CMD="/sbin/gfs_tool"
+        self.setMkfsCmd(CMD_GFS_MKFS + " -O ")
+
 
 
     def formatDevice(self, device):
         __cmd = self.getMkfsCmd() + self.getOptionsString() + device.getDevicePath() 
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        self.getLog().debug("formatDevice: \n" , __cmd, __ret) 
+        #self.getLog().debug("formatDevice: \n" , __cmd + __ret) 
         if __rc != 0:
             raise ComException(__cmd + __ret)
 
     def getOptionsString(self):
         __optstr=" -j "
-        __optstr+= self.journals
+        __optstr+= self.getAttribute("journals")
         __optstr+=" -p "
-        __optstr+= self.lockproto
+        __optstr+= self.getAttribute("lockproto")
         __optstr+=" -t "
-        __optstr+= self.clustername
+        __optstr+= self.getAttribute("clustername")
         __optstr+=":"
-        __optstr+= self.locktable
+        __optstr+= self.getAttribute("locktable")
         __optstr+=" -b "
-        __optstr+= self.bsize
+        __optstr+= self.getAttribute("bsize")
         __optstr+=" "
         return __optstr
 
                 
-    def scanOptions(self, device=None):
-        if not device:
-            device=Device(self.getElement().parentNode.getAttribute("path"))
-        __mountpoint, fstype = device.getMountPoint()
-        if __mountpoint == "":
+    def scanOptions(self, device, mountpoint=None):
+        """ Scans a mountded gfs and puts the meta information into the DOM
+        raises ComException
+        """
+        
+        if mountpoint:
+            __mountpoint=mountpoint.getAttribute("name")
+        else:
+            __mountpoint, fstype = device.scanMountPoint()
+        if not __mountpoint:
             raise ComException("device " + device.getDevicePath() + " is not mounted.")
-        __cmd = self.GFS_TOOL_CMD + " getsb " + __mountpoint  
+        __cmd = CMD_GFS_TOOL + " getsb " + __mountpoint  
         __rc, __ret = ComSystem.execLocalGetResult(__cmd)
         if __rc != 0:
             raise ComException(__cmd + __ret)
 
         __bsize=ComUtils.grepInLines(__ret, "  sb_bsize = ([0-9]*)")[0]
-        self.getLog().debug("scan Options bsize: " + __bsize)
-        self.bsize=__bsize
+        log.debug("scan Options bsize: " + __bsize)
+        self.setAttribute("bsize", __bsize)
 
         __lockproto=ComUtils.grepInLines(__ret, "  sb_lockproto = (.*)")[0]
-        self.getLog().debug("scan Options lockproto: " + __lockproto)
-        self.lockproto=__lockproto
+        log.debug("scan Options lockproto: " + __lockproto)
+        self.setAttribute("lockproto",__lockproto)
 
         __locktable=ComUtils.grepInLines(__ret, "  sb_locktable = .*?:(.*)")[0]
-        self.getLog().debug("scan Options locktable: " + __locktable)
-        self.locktable=__locktable
+        log.debug("scan Options locktable: " + __locktable)
+        self.setAttribute("locktable", __locktable)
 
         __clustername=ComUtils.grepInLines(__ret, "  sb_locktable = (.*?):.*")[0]
-        self.getLog().debug("scan Options clustername: " +__clustername)
-        self.clustername=__clustername
+        log.debug("scan Options clustername: " +__clustername)
+        self.setAttribute("clustername", __clustername)
 
-        __cmd = self.GFS_TOOL_CMD + " df " + __mountpoint
+        __cmd = CMD_GFS_TOOL + " df " + __mountpoint
         __rc, __ret = ComSystem.execLocalGetResult(__cmd)
         if __rc != 0:
             raise ComException(__cmd + __ret)
         __journals=ComUtils.grepInLines(__ret, "  Journals = ([0-9]+)")[0]
-        self.getLog().debug("scan Options Journals: " +__journals)
-        self.journals=__journals
+        log.debug("scan Options Journals: " +__journals)
+        self.setAttribute("journals", __journals)
                                            
 
         
-class MountOptions(DataObject):
+class MountPoint(DataObject):
+    TAGNAME="mountpoint"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
 
@@ -271,3 +313,13 @@ class MountOptions(DataObject):
         return __opts
         
             
+# $Log: ComFileSystem.py,v $
+# Revision 1.3  2006-06-28 17:24:42  mark
+# bug fixes
+#
+# Revision 1.2  2006/06/27 12:10:37  mark
+# backup checkin
+#
+# Revision 1.1  2006/06/23 07:57:08  mark
+# initial checkin (unstable)
+#
