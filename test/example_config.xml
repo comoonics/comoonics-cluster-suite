@@ -2,10 +2,10 @@
 <businesscopy>
 	<copyset type="partition">
 		<source>
-			<disk name="/dev/sda"/>
+			<disk name="/dev/sdd"/>
 		</source>
 		<destination>
-			<disk name="/dev/sdc"/>
+			<disk name="/dev/sda"/>
 		</destination>
 	</copyset>	
 	<copyset type="lvm">
@@ -21,38 +21,38 @@
 	</copyset>
 	<copyset type="filesystem">
   		<source type="filesystem">
-  			<device name="/dev/vg1/lv1">
+  			<device name="/dev/vg_test/lv_source">
     			<filesystem type="gfs"/>
-    			<mountpoint path="/"/>
+    			<mountpoint name="/mnt/source"/>
     		</device>
   		</source>
   		<destination type="filesystem">
-    		<device name="/dev/vg2/lv1" id="rootfs">
+    		<device name="/dev/vg_test/lv_dest" id="rootfs">
       			<filesystem type="gfs" clustername="neuercluster"/>     	
       			<mountpoint name="/mnt/tmp">
-      				<option lockproto="lock_nolock"/>
+      				<option name="lockproto" value="lock_nolock"/>
       			</mountpoint>
    			</device>
    		</destination>
 	</copyset>
-	<copyset type="filecopy">
-  		<source>
-  			<device name="/dev/sda1" id="bootfs">
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/sdd1" id="bootfs">
     			<filesystem type="ext3"/>
     			<mountpoint name="/boot"/>
     		</device>
   		</source>
-  		<destination>
-    		<device name="/dev/sdb1">
+  		<destination type="filesystem">
+    		<device name="/dev/sda1">
       			<filesystem type="ext3"/>     	
-      			<mountpoint path="/mnt/tmp"/>
+      			<mountpoint name="/mnt/tmp"/>
    			</device>
    		</destination>
 	</copyset>
 	<copyset type="bootloader">
 		<source/>
 		<destination>	
-			<device name="/dev/sdb"/>
+			<disk name="/dev/sda"/>
 			<bootloader type="grub"/>
 		</destination>
 	</copyset>
