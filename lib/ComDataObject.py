@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.12 2006-06-28 13:40:33 marc Exp $
+# $Id: ComDataObject.py,v 1.13 2006-06-28 17:24:23 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
@@ -47,6 +47,10 @@ class DataObject:
         if not self.element and not isinstance(Element, self.element):
             raise exceptions.IndexError("Element not defined or wrong instance.")
         self.element.setAttribute(name, str(value))
+        
+    def setAttributes(self, nodemap):
+        for i in range(len(nodemap)):
+            self.setAttribute(nodemap.item(i).nodeName, nodemap.item(i).nodeValue)
 
     def __copy__(self):
         class EmptyClass: pass
@@ -79,7 +83,10 @@ class DataObject:
         return str
 
 # $Log: ComDataObject.py,v $
-# Revision 1.12  2006-06-28 13:40:33  marc
+# Revision 1.13  2006-06-28 17:24:23  mark
+# added setAttribues method
+#
+# Revision 1.12  2006/06/28 13:40:33  marc
 # added str() to any attribute value
 #
 # Revision 1.11  2006/06/27 16:06:28  marc
