@@ -14,4 +14,5 @@ print execLocalGetResult(cmd1)
 print execLocalGetResult(cmd2, True)
 
 print execLocalStatusOutput("/bin/false")
+print execLocal("/bin/false")
 

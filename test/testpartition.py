@@ -3,17 +3,32 @@ import traceback
 
 sys.path.append("../lib")
 
+
+
+import os
+import xml.dom
+from xml.dom import EMPTY_NAMESPACE
+from xml.dom.ext import PrettyPrint
+from xml.dom.ext.reader import Sax2
+from xml import xpath
+
+
 import ComDisk
 import ComUtils
+import ComCopyset
 
-#sourcedisk=ComDisk.Disk("/dev/sdd")
-destdisk=ComDisk.Disk("/dev/sda")
-#ComUtils.copyPartitionTable(sourcedisk, destdisk)
 
-disk=ComDisk.Disk("/dev/hda")
-disk.savePartitionTable("/tmp/hda.table")
+def printDom(doc):
+    PrettyPrint(doc)
 
-disk=ComDisk.Disk("/dev/sdd")
-disk.savePartitionTable("/tmp/sdd.table")
+# create Reader object
+reader = Sax2.Reader()
 
-destdisk.restorePartitionTable("/tmp/sdd.table")
+#parse the document
+file=os.fdopen(os.open("./example_config.xml",os.O_RDONLY))
+doc = reader.fromStream(file)
+
+#element = xpath.Evaluate('businesscopy/copyset[@type=partition]', doc)[0]
+element = xpath.Evaluate('businesscopy/copyset[@type="partition"]', doc)[0]
+copyset=ComCopyset.getCopyset(element, doc)
+copyset.doCopy()
