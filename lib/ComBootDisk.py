@@ -8,11 +8,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComBootDisk.py,v 1.2 2006-06-23 12:00:28 mark Exp $
+# $Id: ComBootDisk.py,v 1.3 2006-06-28 17:23:19 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComBootDisk.py,v $
 
 import os
@@ -23,8 +23,8 @@ from ComDisk import Disk
 from ComExceptions import *
 
 class BootDisk(Disk):
-    def __init__(self, device, tmppath="/tmp"):
-        Disk.__init__(self, device)
+    def __init__(self, element, doc, tmppath="/tmp"):
+        Disk.__init__(self, element, doc)
         if not os.path.isdir( tmppath ):
             raise ComException(device + " not found") 
         self.__tmp=tmppath    
@@ -78,7 +78,10 @@ class BootDisk(Disk):
             raise ComException("cannot install grub on "+__dev)
     
 # $Log: ComBootDisk.py,v $
-# Revision 1.2  2006-06-23 12:00:28  mark
+# Revision 1.3  2006-06-28 17:23:19  mark
+# modified to use DataObject
+#
+# Revision 1.2  2006/06/23 12:00:28  mark
 # moved Log to bottom
 #
 # Revision 1.1  2006/06/23 07:56:24  mark
