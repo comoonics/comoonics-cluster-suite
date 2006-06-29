@@ -9,13 +9,12 @@
 		</destination>
 	</copyset>	
 	<copyset type="lvm">
-		<source>
-			<volumegroup name="vg1"/>
+		<source type="lvm">
+			<volumegroup name="vg_test"/>
 		</source>
-		<destination>
-  			<volumegroup name="vg2">
-  				<physicalvolume name="/dev/sdd"/>
-  				<physicalvolume name="/dev/sde"/>
+		<destination type="lvm">
+  			<volumegroup name="vg_test_new">
+  				<physicalvolume name="/dev/sda1"/>
   			</volumegroup>
   		</destination>
 	</copyset>
@@ -56,20 +55,20 @@
 			<bootloader type="grub"/>
 		</destination>
 	</copyset>
-	<modificationset>
+	<modificationset type="filesystem">
 		<device refid="rootfs">
-			<file name="cluster/cdsl/node1/etc/sysconfig/network">
-				<modification type="regexp" search="HOSTNAME=.*" replace="HOSTNAME=myhostname"/>
-			</file>
-			<file name="etc/cluster/cluster.conf">
-				<modification type="copy" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
-			</file>
+			<modification type="regexp" search="HOSTNAME=.*" replace="HOSTNAME=myhostname">
+				<file name="cluster/cdsl/node1/etc/sysconfig/network"/>
+			</modification>
+			<modification type="copy">
+				<file name="etc/cluster/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+			</modification
 		</device>
 		<device refid="bootfs">
-			<archive type="cpio" name="/initrd_sr-2.6.9-34.0.1.ELsmp.img">				
-				<file name="etc/cluster.conf">
-					<modification type="copy" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
-				</file>
+			<modification type="copy" format="cpio">
+				<requirement type="archive" format="cpio" name="/initrd_sr-2.6.9-34.0.1.ELsmp.img" dest="/tmp/test"/>
+				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+			</modification>
 			</archive>
 		</device>
 	</modificationset>
