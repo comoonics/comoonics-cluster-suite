@@ -62,14 +62,13 @@
 			</modification>
 			<modification type="copy">
 				<file name="etc/cluster/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
-			</modification
+			</modification>
 		</device>
 		<device refid="bootfs">
 			<modification type="copy" format="cpio">
 				<requirement type="archive" format="cpio" name="/initrd_sr-2.6.9-34.0.1.ELsmp.img" dest="/tmp/test"/>
 				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
 			</modification>
-			</archive>
 		</device>
 	</modificationset>
 </businesscopy>
