@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.15 2006-06-29 09:13:23 mark Exp $
+# $Id: ComDataObject.py,v 1.16 2006-06-29 09:27:23 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 
@@ -38,19 +38,7 @@ class DataObject:
     '''
     def __init__(self, element, doc=None):
         if element.hasAttribute("refid"):
-            try:
-                __xquery='//'
-                __xquery+=element.tagName
-                __xquery+='[@id="'
-                __xquery+=element.getAttribute("refid")
-                __xquery+='"]'
-                # cloneNode to be safe 
-                self.element = xpath.Evaluate(__xquery, doc)[0].cloneNode(True)
-                ComLog.getLogger("DataObject").debug("found refid " + \
-                                                        element.getAttribute("refid")) 
-            except exceptions.Exception:
-                raise ComException("Element with id " + element.getAttribute("refid") \
-                                   + " not found. Query: " + __xquery)
+            self.element=self.searchReference(element, doc, True)
         else:
             self.element=element
         self.document=doc
@@ -124,9 +112,35 @@ class DataObject:
         for i in range(len(self.getElement().attributes)):
             str+="%s = %s, " % (self.getElement().attributes.item(i).name, self.getElement().attributes.item(i).value)
         return str
-        
+    
+    """
+    Privat Methods
+    """
+    
+    def searchReference(self, element, doc, clone=True):    
+        try:
+            __xquery='//'
+            __xquery+=element.tagName
+            __xquery+='[@id="'
+            __xquery+=element.getAttribute("refid")
+            __xquery+='"]'
+            # cloneNode to be safe 
+            __element=xpath.Evaluate(__xquery, doc)[0]
+            ComLog.getLogger("DataObject").debug("found refid " + \
+                                                 element.getAttribute("refid")) 
+            if clone:
+                return __element.cloneNode(True)
+            else:
+                return __element 
+        except exceptions.Exception:
+            raise ComException("Element with id " + element.getAttribute("refid") \
+                               + " not found. Query: " + __xquery)
+                
 # $Log: ComDataObject.py,v $
-# Revision 1.15  2006-06-29 09:13:23  mark
+# Revision 1.16  2006-06-29 09:27:23  mark
+# made constructor more fancy
+#
+# Revision 1.15  2006/06/29 09:13:23  mark
 # added support for reference refid attribute
 #
 # Revision 1.14  2006/06/29 08:44:20  marc
