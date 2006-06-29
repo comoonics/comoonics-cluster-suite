@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComCopyset.py,v 1.1 2006-06-28 17:25:16 mark Exp $
+# $Id: ComCopyset.py,v 1.2 2006-06-29 13:49:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComCopyset.py,v $
 
 import exceptions
@@ -25,7 +25,8 @@ def getCopyset(element, doc):
         from ComPartitionCopyset import PartitionCopyset
         return PartitionCopyset(element, doc)
     if __type == "lvm":
-        return LvmCopyset(element, doc)
+        from ComLVMCopyset import LVMCopyset
+        return LVMCopyset(element, doc)
     if __type == "filesystem":
         from ComFilesystemCopyset import FilesystemCopyset
         return FilesystemCopyset(element, doc)
@@ -52,6 +53,9 @@ class Copyset(DataObject):
         pass
     
 # $Log: ComCopyset.py,v $
-# Revision 1.1  2006-06-28 17:25:16  mark
+# Revision 1.2  2006-06-29 13:49:47  marc
+# added LVM stuff.
+#
+# Revision 1.1  2006/06/28 17:25:16  mark
 # initial checkin (stable)
 #
