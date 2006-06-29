@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.4 2006-06-28 17:23:46 mark Exp $
+# $Id: ComDisk.py,v 1.5 2006-06-29 08:17:16 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDisk.py,v $
 
 import os
@@ -62,6 +62,9 @@ class Disk(DataObject):
             raise ComException(__cmd)
 
     def getDumpStdout(self):
+        """ returns the command string for dumping partition information
+        see sfdisk -d
+        """
         return CMD_SFDISK + " -d " + self.getDeviceName()
 
 
@@ -78,10 +81,17 @@ class Disk(DataObject):
             raise ComException(__cmd)
 
     def getRestoreStdin(self):
+        """ returns command string to restore a partition table
+        config from sfdisk stdin
+        see sfdisk < config
+        """ 
         return CMD_SFDISK + " " + self.getDeviceName()
     
 # $Log: ComDisk.py,v $
-# Revision 1.4  2006-06-28 17:23:46  mark
+# Revision 1.5  2006-06-29 08:17:16  mark
+# added some comments
+#
+# Revision 1.4  2006/06/28 17:23:46  mark
 # modified to use DataObject
 #
 # Revision 1.3  2006/06/23 16:17:16  mark
