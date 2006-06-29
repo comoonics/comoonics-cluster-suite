@@ -4,22 +4,21 @@
 here should be some more information about the module, that finds its way inot the onlinedoc
 
 """
-from _xmlplus.xpath.pyxpath import SELF_AXIS
-from _xmlplus.xpath.pyxpath import SELF_AXIS
 
 # here is some internal information
 # $Id $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVM.py,v $
 
 import os
-from exceptions import RuntimeError, IndexError
+import string
+from exceptions import RuntimeError, IndexError, TypeError
 import math
 import xml.dom
-from xml.dom import Element
+from xml.dom import Element, Node
 
 import ComSystem
 from ComDataObject import DataObject
@@ -33,7 +32,7 @@ class LinuxVolumeManager(DataObject):
     '''
     
     __logStrLevel__ = "LVM"
-    TAGNAME="LinuxVolumeManager"
+    TAGNAME="linuxvolumemanager"
     LVM_ROOT = "/etc/lvm"
     
     ''' Static methods '''
@@ -92,6 +91,8 @@ class LinuxVolumeManager(DataObject):
                 (vgname, pvname) = line.strip().split(':')
             except:
                 continue
+            if not vgname or vgname=="":
+                continue
             ComLog.getLogger(LinuxVolumeManager.__logStrLevel__).debug("vg %s, pv %s" %(vgname, pvname))
             if vgs.has_key(vgname):
                 vg=vgs[vgname]
@@ -139,14 +140,17 @@ class LinuxVolumeManager(DataObject):
 
     lvlist=staticmethod(lvlist)
 
-    def pvlist(doc=None):
+    def pvlist(vg=None, doc=None):
         '''
         Returns a list of phyicalvolumes found on this system
         '''
         LinuxVolumeManager.has_lvm()
 
+        pipe=""
+        if vg:
+            pipe=" | grep %s" % vg.getAttribute("name")
         pvs= []
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : --options pv_name,vg_name')
+        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : --options pv_name,vg_name'+pipe)
         if rc >> 8 != 0:
             raise RuntimeError("running vgdisplay failed: "+ str(rc)+", ",rv)
 
@@ -280,7 +284,7 @@ class LogicalVolume(LinuxVolumeManager):
     Representation of the Linux Volume Manager Logical Volume
     '''
 
-    TAGNAME="LogicalVolume"
+    TAGNAME="logicalvolume"
     parentvg=None
     
     def __init__(self, *params):
@@ -293,11 +297,13 @@ class LogicalVolume(LinuxVolumeManager):
         if len(params) == 2:
             DataObject.__init__(self, params[0])
         elif len(params) == 3:
-            if isinstance(params[0], Element.__class__):
-                LinuxVolumeManager.__init__(params[0], params[2])
-            else:
+            if isinstance(params[0], Node):
+                LinuxVolumeManager.__init__(self, params[0], params[2])
+            elif isinstance(params[0], type("")):
                 LinuxVolumeManager.__init__(self, params[2].createElement(LogicalVolume.TAGNAME), params[2])
                 self.setAttribute("name", params[0])
+            else:
+                raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         else:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
         self.parentvg=params[1]
@@ -379,7 +385,7 @@ class PhysicalVolume(LinuxVolumeManager):
     Representation of the Linux Volume Manager Physical Volume
     '''
 
-    TAGNAME="PhysicalVolume"
+    TAGNAME="physicalvolume"
     parentvg=""
     
     def __init__(self, *params):
@@ -392,11 +398,13 @@ class PhysicalVolume(LinuxVolumeManager):
         if len(params) == 2:
             DataObject.__init__(self, params[0])
         elif len(params) == 3:
-            if isinstance(params[0], Element.__class__):
-                LinuxVolumeManager.__init__(self, params[0], params[1], params[2])
-            else:
+            if isinstance(params[0], Node):
+                LinuxVolumeManager.__init__(self, params[0], params[2])
+            elif isinstance(params[0], type("")):
                 LinuxVolumeManager.__init__(self, params[2].createElement(self.TAGNAME), params[0])
                 self.setAttribute("name", params[0])
+            else:
+                raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         else:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
         self.parentvg=params[1]
@@ -467,7 +475,7 @@ class VolumeGroup(LinuxVolumeManager):
     Representation of the Linux Volumen Manager Volume Group 
     '''
     
-    TAGNAME="VolumeGroup"
+    TAGNAME="volumegroup"
     pvs=dict()
     lvs=dict()
 
@@ -503,11 +511,23 @@ class VolumeGroup(LinuxVolumeManager):
         self.pvs=dict()
         self.lvs=dict()
         if (len(params) == 2):
-            if isinstance(params[0], Element.__class__):
+            if isinstance(params[0], Node):
+                ComLog.getLogger().debug("createing volumegroup %s/%s from element" % (params[0].tagName, params[0].getAttribute("name")))
                 LinuxVolumeManager.__init__(self, params[0], params[1])
-            else:
+                # init all lvs
+                __lvs=self.getElement().getElementsByTagName(LogicalVolume.TAGNAME)
+                for i in range(len(__lvs)):
+                    self.addLogicalVolume(LogicalVolume(__lvs[i], self, params[1]))
+                # init all pvs
+                __pvs=self.getElement().getElementsByTagName(PhysicalVolume.TAGNAME)
+                for i in range(len(__pvs)):
+                    self.addPhysicalVolume(PhysicalVolume(__pvs[i], self, params[1]))
+            elif isinstance(params[0], type("")):
+                ComLog.getLogger().debug("createing volumegroup %s from new element" % params[0])
                 LinuxVolumeManager.__init__(self, params[1].createElement(self.TAGNAME), params[1])
                 self.setAttribute("name", params[0])
+            else:
+                raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         else:
             raise IndexError("Index out of range for Volume Group constructor (%u)" % len(params))
  
@@ -537,12 +557,16 @@ class VolumeGroup(LinuxVolumeManager):
     def getLogicalVolume(self, name):
         return self.lvs[name]
     
+    def hasLogicalVolume(self, name):
+        return self.lvs.has_key(name)
+    
     def addLogicalVolume(self, lv):
         """
         Adds a logical volume to this volume group
         """
         self.lvs[lv.getAttribute("name")] = lv
         self.getElement().appendChild(lv.getElement())
+        lv.parentvg=self
 
     def delLogicalVolume(self, lv):
         """
@@ -559,6 +583,10 @@ class VolumeGroup(LinuxVolumeManager):
    
     def getPhysicalVolume(self, name):
         return self.pvs[name]
+
+    def hasPhysicalVolume(self, name):
+        return self.pvs.has_key(name)
+    
     
     def addPhysicalVolume(self, pv):
         """
@@ -566,6 +594,7 @@ class VolumeGroup(LinuxVolumeManager):
         """
         self.pvs[pv.getAttribute("name")] = pv
         self.getElement().appendChild(pv.getElement())
+        pv.parentvg=self
 
     def delPhysicalVolume(self, pv):
         """
@@ -682,7 +711,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.2  2006-06-28 17:26:12  marc
+# Revision 1.3  2006-06-29 13:47:28  marc
+# stable version
+#
+# Revision 1.2  2006/06/28 17:26:12  marc
 # first version
 #
 # Revision 1.1  2006/06/26 19:12:48  marc
