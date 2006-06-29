@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.18 2006-06-29 10:38:11 mark Exp $
+# $Id: ComDataObject.py,v 1.19 2006-06-29 13:49:10 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 
@@ -77,7 +77,7 @@ class DataObject:
         for i in range(len(frommap)):
             node=frommap.item(i)
             if not self.hasAttribute(node.nodeName) and node.nodeType == Node.ATTRIBUTE_NODE:
-                self.setAttribute(node.cloneNode(True))
+                self.getElement().setAttributeNode(node.cloneNode(True))
 
     def setAttributes(self, nodemap):
         for i in range(len(nodemap)):
@@ -142,7 +142,10 @@ class DataObject:
                 
                 
 # $Log: ComDataObject.py,v $
-# Revision 1.18  2006-06-29 10:38:11  mark
+# Revision 1.19  2006-06-29 13:49:10  marc
+# bugfix in updateAttributes
+#
+# Revision 1.18  2006/06/29 10:38:11  mark
 # bug fixes
 #
 # Revision 1.17  2006/06/29 10:22:48  mark
