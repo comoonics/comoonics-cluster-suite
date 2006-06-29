@@ -7,17 +7,23 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.14 2006-06-29 08:44:20 marc Exp $
+# $Id: ComDataObject.py,v 1.15 2006-06-29 09:13:23 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
+
 
 import exceptions
 import copy
 import string
 from xml.dom import Element, Node
+from xml import xpath
+
+import ComLog
+from ComExceptions import *
+
 
 class DataObject:
     TAGNAME="DataObject"
@@ -31,7 +37,22 @@ class DataObject:
     Public methods
     '''
     def __init__(self, element, doc=None):
-        self.element=element
+        if element.hasAttribute("refid"):
+            try:
+                __xquery='//'
+                __xquery+=element.tagName
+                __xquery+='[@id="'
+                __xquery+=element.getAttribute("refid")
+                __xquery+='"]'
+                # cloneNode to be safe 
+                self.element = xpath.Evaluate(__xquery, doc)[0].cloneNode(True)
+                ComLog.getLogger("DataObject").debug("found refid " + \
+                                                        element.getAttribute("refid")) 
+            except exceptions.Exception:
+                raise ComException("Element with id " + element.getAttribute("refid") \
+                                   + " not found. Query: " + __xquery)
+        else:
+            self.element=element
         self.document=doc
 
     def getElement(self):
@@ -105,7 +126,10 @@ class DataObject:
         return str
         
 # $Log: ComDataObject.py,v $
-# Revision 1.14  2006-06-29 08:44:20  marc
+# Revision 1.15  2006-06-29 09:13:23  mark
+# added support for reference refid attribute
+#
+# Revision 1.14  2006/06/29 08:44:20  marc
 # added updateAttirbutes and minor changes.
 #
 # Revision 1.13  2006/06/28 17:24:23  mark
