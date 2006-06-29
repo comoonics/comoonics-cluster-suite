@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.17 2006-06-29 10:22:48 mark Exp $
+# $Id: ComDataObject.py,v 1.18 2006-06-29 10:38:11 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 
@@ -128,7 +128,7 @@ class DataObject:
             __element=xpath.Evaluate(__xquery, doc)[0]
             ComLog.getLogger("DataObject").debug("found refid " + \
                                                  element.getAttribute("refid")) 
-            __childs=element.getElementsByTagName('*')
+            __childs=xpath.Evaluate('./*', element)
             __new=__element.cloneNode(True)
             self.appendChildren(__new, __childs)
             return __new 
@@ -138,12 +138,14 @@ class DataObject:
                 
     def appendChildren(self, element, nodelist):
         for i in range(len(nodelist)):
-            if nodelist.item(i).nodeType == Node.ELEMENT_NODE:
-                element.appendChild(nodelist.item(i))
+            element.appendChild(nodelist[i])
                 
                 
 # $Log: ComDataObject.py,v $
-# Revision 1.17  2006-06-29 10:22:48  mark
+# Revision 1.18  2006-06-29 10:38:11  mark
+# bug fixes
+#
+# Revision 1.17  2006/06/29 10:22:48  mark
 # bug fixes
 #
 # Revision 1.16  2006/06/29 09:27:23  mark
