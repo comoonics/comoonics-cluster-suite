@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE businesscopy SYSTEM "file:///home/marc/workspace/comoonics-clustersuite/xml/comoonics-business-copy.dtd">
+<businesscopy>
+	<copyset type="partition">
+		<source>
+			<disk name="/dev/sdd"/>
+		</source>
+		<destination>
+			<disk name="/dev/sda"/>
+		</destination>
+	</copyset>	
+	<copyset type="lvm">
+		<source type="lvm">
+			<volumegroup name="vg_test"/>
+		</source>
+		<destination type="lvm">
+  			<volumegroup name="vg_test_new">
+  				<physicalvolume name="/dev/sda2"/>
+  			</volumegroup>
+  		</destination>
+	</copyset>
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/vg_test/lv_source">
+    			<filesystem type="gfs"/>
+    			<mountpoint name="/mnt/source"/>
+    		</device>
+  		</source>
+  		<destination type="filesystem">
+    		<device name="/dev/vg_test/lv_dest" id="rootfs">
+      			<filesystem type="gfs" clustername="neuercluster"/>     	
+      			<mountpoint name="/mnt/tmp">
+      				<option name="lockproto" value="lock_nolock"/>
+      			</mountpoint>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/sdd1" id="bootfs">
+    			<filesystem type="ext3"/>
+    			<mountpoint name="/boot"/>
+    		</device>
+  		</source>
+  		<destination type="filesystem">
+    		<device name="/dev/sda1">
+      			<filesystem type="ext3"/>     	
+      			<mountpoint name="/mnt/tmp"/>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="bootloader">
+		<source/>
+		<destination>	
+			<disk name="/dev/sda"/>
+			<bootloader type="grub"/>
+		</destination>
+	</copyset>
+	<modificationset type="filesystem">
+		<device refid="rootfs">
+			<modification type="regexp" search="HOSTNAME=.*" replace="HOSTNAME=myhostname">
+				<file name="cluster/cdsl/node1/etc/sysconfig/network"/>
+			</modification>
+			<modification type="copy">
+				<file name="etc/cluster/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+			</modification>
+		</device>
+		<device refid="bootfs">
+			<modification type="copy" format="cpio">
+				<requirement type="archive" format="cpio" name="/initrd_sr-2.6.9-34.0.1.ELsmp.img" dest="/tmp/test"/>
+				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+			</modification>
+		</device>
+	</modificationset>
+</businesscopy>
