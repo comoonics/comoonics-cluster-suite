@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.16 2006-06-29 09:27:23 mark Exp $
+# $Id: ComDataObject.py,v 1.17 2006-06-29 10:22:48 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 
@@ -38,7 +38,7 @@ class DataObject:
     '''
     def __init__(self, element, doc=None):
         if element.hasAttribute("refid"):
-            self.element=self.searchReference(element, doc, True)
+            self.element=self.searchReference(element, doc)
         else:
             self.element=element
         self.document=doc
@@ -117,7 +117,7 @@ class DataObject:
     Privat Methods
     """
     
-    def searchReference(self, element, doc, clone=True):    
+    def searchReference(self, element, doc):    
         try:
             __xquery='//'
             __xquery+=element.tagName
@@ -128,16 +128,25 @@ class DataObject:
             __element=xpath.Evaluate(__xquery, doc)[0]
             ComLog.getLogger("DataObject").debug("found refid " + \
                                                  element.getAttribute("refid")) 
-            if clone:
-                return __element.cloneNode(True)
-            else:
-                return __element 
+            __childs=element.getElementsByTagName('*')
+            __new=__element.cloneNode(True)
+            self.appendChildren(__new, __childs)
+            return __new 
         except exceptions.Exception:
             raise ComException("Element with id " + element.getAttribute("refid") \
                                + " not found. Query: " + __xquery)
                 
+    def appendChildren(self, element, nodelist):
+        for i in range(len(nodelist)):
+            if nodelist.item(i).nodeType == Node.ELEMENT_NODE:
+                element.appendChild(nodelist.item(i))
+                
+                
 # $Log: ComDataObject.py,v $
-# Revision 1.16  2006-06-29 09:27:23  mark
+# Revision 1.17  2006-06-29 10:22:48  mark
+# bug fixes
+#
+# Revision 1.16  2006/06/29 09:27:23  mark
 # made constructor more fancy
 #
 # Revision 1.15  2006/06/29 09:13:23  mark
