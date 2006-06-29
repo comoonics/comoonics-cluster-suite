@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE businesscopy SYSTEM "file:../../xml/comoonics-business-copy.dtd">
 <businesscopy>
 	<copyset type="partition">
-		<source>
+		<source type="disk">
 			<disk name="/dev/sdd"/>
 		</source>
-		<destination>
+		<destination type="disk">
 			<disk name="/dev/sda"/>
 		</destination>
 	</copyset>	
@@ -49,8 +50,8 @@
    		</destination>
 	</copyset>
 	<copyset type="bootloader">
-		<source/>
-		<destination>	
+		<source	type="none"/>
+		<destination type="disk">	
 			<disk name="/dev/sda"/>
 			<bootloader type="grub"/>
 		</destination>
@@ -68,7 +69,7 @@
 	<modificationset type="filesystem">
 		<device refid="bootfs">
 			<modification type="copy">
-				<requirement type="archive" format="cpio" name="/boot/initrd-2.6.16-1.2069_FC4.img" dest="/tmp/test"/>
+				<requirement type="archive" format="cpio" name="/home/marc/tmp/initrd-2.6.16-1.2069_FC4.img" dest="/tmp/test"/>
 				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
 			</modification>
 		</device>
