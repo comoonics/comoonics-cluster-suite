@@ -1,4 +1,4 @@
-""" Comoonics copy object module
+""" Comoonics Requirement class
 
 
 here should be some more information about the module, that finds its way inot the onlinedoc
@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComRequirement.py,v 1.2 2006-06-29 12:34:22 marc Exp $
+# $Id: ComRequirement.py,v 1.3 2006-06-29 13:37:15 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComRequirement.py,v $
 
 from ComDataObject import DataObject
@@ -35,7 +35,8 @@ class Requirement(DataObject):
     """
     Static methods and objects/attributes
     """
-    __logStrLevel__ = "LVMCopyObject"
+    __logStrLevel__ = "Requirement"
+    TAGNAME = "requirement"
 
     """
     Public methods
@@ -67,7 +68,10 @@ class Requirement(DataObject):
 
 ###################################
 # $Log: ComRequirement.py,v $
-# Revision 1.2  2006-06-29 12:34:22  marc
+# Revision 1.3  2006-06-29 13:37:15  marc
+# *** empty log message ***
+#
+# Revision 1.2  2006/06/29 12:34:22  marc
 # added Factory and changed classname.
 #
 # Revision 1.1  2006/06/29 12:20:28  marc
