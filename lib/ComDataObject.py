@@ -7,21 +7,29 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.13 2006-06-28 17:24:23 mark Exp $
+# $Id: ComDataObject.py,v 1.14 2006-06-29 08:44:20 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 import exceptions
 import copy
 import string
-from xml.dom import Element
+from xml.dom import Element, Node
 
 class DataObject:
     TAGNAME="DataObject"
+    __logStrLevel__ = "DataObject"
+
+    '''
+    static methods
+    '''
     
+    '''
+    Public methods
+    '''
     def __init__(self, element, doc=None):
         self.element=element
         self.document=doc
@@ -43,11 +51,25 @@ class DataObject:
             raise exceptions.NameError("No attribute name " + name)
         return self.element.getAttribute(name)
 
+    def hasAttribute(self, name):
+        return self.element.hasAttribute(name)
+
     def setAttribute(self, name, value):
         if not self.element and not isinstance(Element, self.element):
             raise exceptions.IndexError("Element not defined or wrong instance.")
         self.element.setAttribute(name, str(value))
+
+    def updateAttributes(self, frommap):
+        '''
+        Updates all attribute from frommap that are not already set
         
+        frommap - the NamedNodeMap of attributes that are taken as source
+        '''
+        for i in range(len(frommap)):
+            node=frommap.item(i)
+            if not self.hasAttribute(node.nodeName) and node.nodeType == Node.ATTRIBUTE_NODE:
+                self.setAttribute(node.cloneNode(True))
+
     def setAttributes(self, nodemap):
         for i in range(len(nodemap)):
             self.setAttribute(nodemap.item(i).nodeName, nodemap.item(i).nodeValue)
@@ -81,9 +103,12 @@ class DataObject:
         for i in range(len(self.getElement().attributes)):
             str+="%s = %s, " % (self.getElement().attributes.item(i).name, self.getElement().attributes.item(i).value)
         return str
-
+        
 # $Log: ComDataObject.py,v $
-# Revision 1.13  2006-06-28 17:24:23  mark
+# Revision 1.14  2006-06-29 08:44:20  marc
+# added updateAttirbutes and minor changes.
+#
+# Revision 1.13  2006/06/28 17:24:23  mark
 # added setAttribues method
 #
 # Revision 1.12  2006/06/28 13:40:33  marc
