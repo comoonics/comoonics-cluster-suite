@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.3 2006-06-28 17:24:42 mark Exp $
+# $Id: ComFileSystem.py,v 1.4 2006-06-29 08:23:08 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFileSystem.py,v $
 
 import os
@@ -23,6 +23,7 @@ import ComUtils
 from ComExceptions import *
 from ComDevice import Device
 from ComDataObject import *
+from ComMountpoint import MountPoint
 
 log=ComLog.getLogger("ComFileSystem")
 
@@ -34,20 +35,11 @@ CMD_MOUNT="/bin/mount"
 CMD_UMOUNT="/bin/umount"
 CMD_E2LABEL="/sbin/e2label"
 
-def getFileSystemofType(type):
-    raise exceptions.NotImplementedError()
-
-    if type == "ext2":
-        return ext2FileSystem()
-    if type == "ext3":
-        return ext3FileSystem()
-    if type == "gfs":
-        return gfsFileSystem()
-    raise exceptions.NotImplementedError()
-
 
 def getFileSystem(element, doc):
-    """returns a FileSystem object that fits to the description in doc"""
+    """factory method to ceate a FileSystem object
+    returns a FileSystem object that fits to the description in element"
+    """
     __type=element.getAttribute("type")
     if __type == "ext2":
         return ext2FileSystem(element, doc)
@@ -58,8 +50,8 @@ def getFileSystem(element, doc):
     raise exceptions.NotImplementedError()
        
 
-
 class FileSystem(DataObject):
+    """ Base class for a filesystem """
     TAGNAME="filesystem"
     def __init__(self, element, doc):
         """ element: DOMElement
@@ -86,6 +78,10 @@ class FileSystem(DataObject):
  
 
     def mount(self, device, mountpoint):
+        """ mount a filesystem
+        device: ComDevice.Device
+        mountpoint: ComMountPoint.MountPoint
+        """ 
         __cmd = CMD_MOUNT + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
                 " " + device.getDevicePath() + " " + mountpoint.getAttribute("name")
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
@@ -95,6 +91,9 @@ class FileSystem(DataObject):
         
 
     def umountDev(self, device):
+        """ umount a filesystem with the use of the device name
+        device: ComDevice.Device
+        """
         __cmd = CMD_UMOUNT + " " + device.getDevicePath() 
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("umount:" + __cmd + ": " + __ret) 
@@ -103,6 +102,9 @@ class FileSystem(DataObject):
 
 
     def umountDir(self, mountpoint):
+        """ umount a filesystem with the use of the mountpoint 
+        mountpoint: ComMountPoint.MountPoint
+        """
         __cmd = CMD_UMOUNT + " " + mountpoint.getAttribute("name")
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("umount: " + __cmd + ": " + __ret) 
@@ -111,28 +113,49 @@ class FileSystem(DataObject):
 
 
     def getName(self):
+        """ returns the filesystem name/type """
         return self.type
 
     def formatDevice(self, device):
+        """ format device with filesystem (virtual method)
+        device: ComDevice.Device
+        """
         pass
 
-    def labelDevice(self, device):
+    def labelDevice(self, device, label):
+        """ label device with label (virtual method)
+        device: ComDevice.Device
+        label: string
+        """
         pass
 
     def checkFs(self, device):
+        """ check filesystem on device (virtual method)
+        device: ComDevice.Device
+        """
         pass
 
     def getLabel(self, device):
+        """ return the label on device (virtual method)
+        device: ComDevice.Device
+        """
         pass
 
     def getBlockSize(self):
+        """ return the blocksize defined in filesystem element 
+        see scanOptions
+        """
         __attr=self.getElement().xpath(self.xmlpath+"/@bsize")
         return __attr[0].value
 
     def isFormattable(self):
+        """ return if this filesystem type can be formatted 
+        e.g ext3 is formattable, proc is not
+        """
         return self.formattable
 
     def getMaxSizeMB(self):
+        """ returns maximum size of the filesystem in MB """
         return self.maxSizeMB
 
     def setMkfsCmd(self, cmd):
@@ -145,17 +168,23 @@ class FileSystem(DataObject):
         return self.log
 
     def scanDevice(self, device):
-        """ scans the filesystem on device 
+        # Do we really need this method ?
+        """ scans the device (virtual method) 
         device: ComDevice.Device
         """
         pass
     
     def scanOptions(self, device, mountpoint=None):
+        """ scans the filesystem for parameters e.g. blocksize (virtual method) 
+        device: ComDevice.Device
+        mountpoint: ComMountPoint.MountPoint
+        """
         pass
         
 
 
 class extFileSystem(FileSystem):
+    """ Base class for extended filesystem """
     def __init__(self, element, doc):
         FileSystem.__init__(self, element, doc)
         self.partedFileSystemType = None
@@ -200,6 +229,7 @@ class extFileSystem(FileSystem):
         
 
 class ext2FileSystem(extFileSystem):
+    """ The extended2 filesystem """
     def __init__(self,element, doc):
         extFileSystem.__init__(self,element, doc)
         self.name = "ext2"
@@ -209,6 +239,7 @@ class ext2FileSystem(extFileSystem):
 
 
 class ext3FileSystem(extFileSystem):
+    """ The extended3 filesystem """
     def __init__(self,element, doc):
         extFileSystem.__init__(self,element, doc)
         self.name = "ext3"
@@ -216,6 +247,7 @@ class ext3FileSystem(extFileSystem):
 
 
 class gfsFileSystem(FileSystem):
+    """ The Global Filesystem - gfs """
     def __init__(self, element, doc):
         FileSystem.__init__(self, element, doc )
         self.partedFileSystemType = None
@@ -293,28 +325,14 @@ class gfsFileSystem(FileSystem):
                                            
 
         
-class MountPoint(DataObject):
-    TAGNAME="mountpoint"
-    def __init__(self, element, doc):
-        DataObject.__init__(self, element, doc)
 
-    def getOptionsString(self):
-        __opts="-o "
-        __attr=self.getElement().getElementsByTagName("option")
-        if not (__attr.length):
-            return __opts + "defaults"
-        for i in range(__attr.length): 
-            __opts+=__attr.item(i).getAttribute("name")
-            if __attr.item(i).hasAttribute("value"):
-                __opts+="="
-                __opts+=__attr.item(i).getAttribute("value")
-            if i+1 < __attr.length:
-                __opts+=","
-        return __opts
-        
             
 # $Log: ComFileSystem.py,v $
-# Revision 1.3  2006-06-28 17:24:42  mark
+# Revision 1.4  2006-06-29 08:23:08  mark
+# added comments
+# moved MountPoint to ComMountPoint.py
+#
+# Revision 1.3  2006/06/28 17:24:42  mark
 # bug fixes
 #
 # Revision 1.2  2006/06/27 12:10:37  mark
