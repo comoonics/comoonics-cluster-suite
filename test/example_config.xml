@@ -14,7 +14,7 @@
 		</source>
 		<destination type="lvm">
   			<volumegroup name="vg_test_new">
-  				<physicalvolume name="/dev/sda1"/>
+  				<physicalvolume name="/dev/sda2"/>
   			</volumegroup>
   		</destination>
 	</copyset>
@@ -64,8 +64,10 @@
 				<file name="etc/cluster/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
 			</modification>
 		</device>
+	</modificationset>
+	<modificationset type="filesystem">
 		<device refid="bootfs">
-			<modification type="copy" format="cpio">
+			<modification type="copy">
 				<requirement type="archive" format="cpio" name="/initrd_sr-2.6.9-34.0.1.ELsmp.img" dest="/tmp/test"/>
 				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
 			</modification>
