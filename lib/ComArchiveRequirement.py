@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.1 2006-06-29 13:38:06 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.2 2006-06-29 13:43:50 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComArchiveRequirement.py,v $
 
 from ComExceptions import ComException
@@ -52,7 +52,7 @@ class ArchiveRequirement(Requirement):
         Requirement.__init__(self, element, doc)
         if not self.hasAttribute("format"):
             raise ArchiveRequirementException("Format has to be defined for %s" % self.__class__.__name__)
-        if not self.getAttribute("format") == "archive":
+        if not self.getAttribute("format") == "cpio":
             raise ArchiveRequirementException("Format %s is not implemented for %s" % (self.getAttribute("format"), self.__class__.__name__  ))
         if not self.hasAttribute("name") or not self.hasAttribute("dest"):
             raise ArchiveRequirementException("Either name or destination not defined in element")
@@ -101,6 +101,9 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.1  2006-06-29 13:38:06  marc
+# Revision 1.2  2006-06-29 13:43:50  marc
+# first version
+#
+# Revision 1.1  2006/06/29 13:38:06  marc
 # initial revision
 #
