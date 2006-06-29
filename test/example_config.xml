@@ -68,7 +68,7 @@
 	<modificationset type="filesystem">
 		<device refid="bootfs">
 			<modification type="copy">
-				<requirement type="archive" format="cpio" name="/initrd_sr-2.6.9-34.0.1.ELsmp.img" dest="/tmp/test"/>
+				<requirement type="archive" format="cpio" name="/boot/initrd-2.6.16-1.2069_FC4.img" dest="/tmp/test"/>
 				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
 			</modification>
 		</device>
