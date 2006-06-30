@@ -7,18 +7,19 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.1 2006-06-29 07:24:02 mark Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.2 2006-06-30 08:03:17 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
 
 from ComDevice import Device
 import ComFileSystem
-from ComFileSystem import FileSystem, MountPoint
+from ComFileSystem import FileSystem
+from ComMountpoint import MountPoint
 from ComCopyObject import CopyObject
 from ComExceptions import *         
 
@@ -41,7 +42,7 @@ class FilesystemCopyObject(CopyObject):
             __mp=xpath.Evaluate('device/mountpoint', element)[0]
             self.mountpoint=MountPoint(__mp, doc)
         except Exception:
-            raise ComException("device for copyset not defined")
+            raise ComException("mountpoint for copyset not defined")
         self.umountfs=False
 
     def getFileSystem(self):
@@ -83,6 +84,9 @@ class FilesystemCopyObject(CopyObject):
         
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.1  2006-06-29 07:24:02  mark
+# Revision 1.2  2006-06-30 08:03:17  mark
+# added ComMountPoint include
+#
+# Revision 1.1  2006/06/29 07:24:02  mark
 # initial checkin
 #
