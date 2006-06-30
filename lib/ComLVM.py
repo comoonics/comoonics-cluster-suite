@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVM.py,v $
 
 import os
@@ -668,7 +668,6 @@ class VolumeGroup(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgcreate %s %s %s' % (pesize, self.getAttribute("name"), ' '.join(self.getPhysicalVolumeMap().keys())))
         if rc >> 8 != 0:
             raise RuntimeError("running vgcreate on %s failed: %u,%s" % (self.getAttribute("name"),rc >> 8, rv))
-        self.activate()
         self.init_from_disk()
         
     def remove(self):
@@ -711,7 +710,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.3  2006-06-29 13:47:28  marc
+# Revision 1.4  2006-06-30 08:27:41  marc
+# removed autoactivation in create
+#
+# Revision 1.3  2006/06/29 13:47:28  marc
 # stable version
 #
 # Revision 1.2  2006/06/28 17:26:12  marc
