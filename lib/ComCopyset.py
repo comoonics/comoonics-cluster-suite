@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyset.py,v 1.3 2006-06-30 08:29:51 marc Exp $
+# $Id: ComCopyset.py,v 1.4 2006-06-30 12:39:46 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComCopyset.py,v $
 
 import exceptions
@@ -40,6 +40,7 @@ def getCopyset(element, doc):
 
 class Copyset(DataObject):
     __logStrLevel__ = "Copyset"
+    TAGNAME = "copyset"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
         
@@ -80,7 +81,10 @@ class CopysetJournaled(Copyset, JournaledObject):
         self.replayJournal()
         
 # $Log: ComCopyset.py,v $
-# Revision 1.3  2006-06-30 08:29:51  marc
+# Revision 1.4  2006-06-30 12:39:46  marc
+# added TAGNAME
+#
+# Revision 1.3  2006/06/30 08:29:51  marc
 # added undoCopy method to Copyset
 # added CopysetJournaled
 #
