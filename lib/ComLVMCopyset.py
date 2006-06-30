@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.2 2006-06-30 08:28:45 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.3 2006-06-30 13:58:13 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -106,8 +106,6 @@ class LVMCopyset(CopysetJournaled):
         for lv in self.dest.vg.getLogicalVolumes():
             lv.create()
             self.journal(lv, "create")
-        from ComExceptions import ComException
-        raise ComException("DummyException to test undo")
         self.postSource()
         self.postDest()
     
@@ -128,7 +126,10 @@ class LVMCopyset(CopysetJournaled):
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.2  2006-06-30 08:28:45  marc
+# Revision 1.3  2006-06-30 13:58:13  marc
+# removed dummyexception
+#
+# Revision 1.2  2006/06/30 08:28:45  marc
 # added journal functionality
 #
 # Revision 1.1  2006/06/29 13:47:51  marc
