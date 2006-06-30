@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.1 2006-06-30 08:04:41 mark Exp $
+# $Id: ComModificationset.py,v 1.2 2006-06-30 12:38:35 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModificationset.py,v $
 
 import exceptions
@@ -33,6 +33,7 @@ def getModificationset(element, doc):
 
 
 class Modificationset(DataObject):
+    TAGNAME = "modificationset"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
         log.debug("Modificationset CWD: " + os.getcwd())
@@ -42,6 +43,10 @@ class Modificationset(DataObject):
         self.doPre()
         self.doRealModifications()
         self.doPost()
+
+    def undoModifications(self):
+        """undos all modifications """
+        pass
     
     def doPre(self):
         pass
@@ -55,9 +60,14 @@ class Modificationset(DataObject):
                 ComModification.getModification(self.getModifications()[i], self.getDocument()).doModification()
             except NotImplementedError, e:
                 log.warning(e)
+
     def getModifications(self):
         return None
+   
 # $Log: ComModificationset.py,v $
-# Revision 1.1  2006-06-30 08:04:41  mark
+# Revision 1.2  2006-06-30 12:38:35  marc
+# added undo
+#
+# Revision 1.1  2006/06/30 08:04:41  mark
 # initial checkin
 #
