@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVM.py,v $
 
 import os
@@ -339,6 +339,10 @@ class LogicalVolume(LinuxVolumeManager):
         size=""
         try:
             size=self.getAttribute("size")
+            if int(self.getAttribute("size")) > int(self.parentvg.getAttribute("free")):
+                ComLog.getLogger(self.__logStrLevel__).warn("Requested LV size %s is too big taking free %s" % (self.getAttribute("size"), self.parentvg.getAttribute("free")))
+                self.setAttribute("size", self.parentvg.getAttribute("free"))
+                size=self.getAttribute("size")
         except NameError:
             size=self.parentvg.getAttribute("free")
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' lvcreate -L %sM -n %s %s' %(size, self.getAttribute("name"), self.parentvg.getAttribute("name")))
@@ -710,7 +714,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.4  2006-06-30 08:27:41  marc
+# Revision 1.5  2006-06-30 13:57:47  marc
+# changed lvcreate to take free size if size is too big
+#
+# Revision 1.4  2006/06/30 08:27:41  marc
 # removed autoactivation in create
 #
 # Revision 1.3  2006/06/29 13:47:28  marc
