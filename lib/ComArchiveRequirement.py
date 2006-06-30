@@ -6,17 +6,18 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.2 2006-06-29 13:43:50 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.3 2006-06-30 08:30:20 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComArchiveRequirement.py,v $
 
 from ComExceptions import ComException
 from ComRequirement import Requirement
 import os
 import ComSystem
+import ComLog
 
 class ArchiveRequirementException(ComException): pass
 
@@ -90,18 +91,24 @@ class ArchiveRequirement(Requirement):
             raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
         os.chdir(destfile)
         __cmd="cp %s %s" %(srcfile, srcfile+".bak")
-        (rc, rv) = ComSystem.execLocalGetResult(__cmd)
-        if rc >> 8 != 0:
-            raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
+        try:
+            (rc, rv) = ComSystem.execLocalGetResult(__cmd)
+            if rc >> 8 != 0:
+                raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
+        except RuntimeError, re:
+            ComLog.getLogger(ArchiveRequirement.__logStrLevel__).warn("Cannot backup sourcefile %s=%s, %s." %(srcfile, srcfile+".bak", re))
 
-        __cmd="find . | cpio -o -c |gzip -9 > %s" % (srcfile, destfile)
+        __cmd="find . | cpio -o -c |gzip -9 > %s" % (srcfile)
         (rc, rv) = ComSystem.execLocalGetResult(__cmd)
         if rc >> 8 != 0:
             raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.2  2006-06-29 13:43:50  marc
+# Revision 1.3  2006-06-30 08:30:20  marc
+# added logging
+#
+# Revision 1.2  2006/06/29 13:43:50  marc
 # first version
 #
 # Revision 1.1  2006/06/29 13:38:06  marc
