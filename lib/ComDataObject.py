@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.19 2006-06-29 13:49:10 marc Exp $
+# $Id: ComDataObject.py,v 1.20 2006-06-30 08:00:52 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.19 $"
+__version__ = "$Revision: 1.20 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 
@@ -38,7 +38,9 @@ class DataObject:
     '''
     def __init__(self, element, doc=None):
         if element.hasAttribute("refid"):
-            self.element=self.searchReference(element, doc)
+            __newelement=self.searchReference(element, doc)
+            element.parentNode.replaceChild(__newelement, element)
+            self.element=__newelement
         else:
             self.element=element
         self.document=doc
@@ -142,7 +144,10 @@ class DataObject:
                 
                 
 # $Log: ComDataObject.py,v $
-# Revision 1.19  2006-06-29 13:49:10  marc
+# Revision 1.20  2006-06-30 08:00:52  mark
+# bugfixes in ref
+#
+# Revision 1.19  2006/06/29 13:49:10  marc
 # bugfix in updateAttributes
 #
 # Revision 1.18  2006/06/29 10:38:11  mark
