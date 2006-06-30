@@ -6,17 +6,17 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComMountpoint.py,v 1.1 2006-06-29 08:16:33 mark Exp $
+# $Id: ComMountpoint.py,v 1.2 2006-06-30 08:05:00 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComMountpoint.py,v $
 
 
 import xml.dom
 from ComDevice import Device
-
+from ComDataObject import  DataObject
 
 
 class MountPoint(DataObject):
@@ -39,6 +39,9 @@ class MountPoint(DataObject):
         return __opts
         
 # $Log: ComMountpoint.py,v $
-# Revision 1.1  2006-06-29 08:16:33  mark
+# Revision 1.2  2006-06-30 08:05:00  mark
+# bug fixes
+#
+# Revision 1.1  2006/06/29 08:16:33  mark
 # initial checkin
 #
