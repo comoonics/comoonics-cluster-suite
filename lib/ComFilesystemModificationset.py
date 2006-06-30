@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.1 2006-06-30 08:03:54 mark Exp $
+# $Id: ComFilesystemModificationset.py,v 1.2 2006-06-30 12:42:22 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -35,13 +35,11 @@ class FilesystemModificationset(Modificationset):
     def __init__(self, element, doc):
         Modificationset.__init__(self, element, doc)
         try:
-            PrettyPrint(element)
             __device=xpath.Evaluate('device', element)[0]
             self.device=Device(__device, doc)
         except Exception:
             raise ComException("device for copyset not defined")
         try:    
-            PrettyPrint(element)
             __fs=xpath.Evaluate('device/filesystem', element)[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
         except Exception:
@@ -76,6 +74,9 @@ class FilesystemModificationset(Modificationset):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.1  2006-06-30 08:03:54  mark
+# Revision 1.2  2006-06-30 12:42:22  mark
+# bug fixes
+#
+# Revision 1.1  2006/06/30 08:03:54  mark
 # initial checkin
 #

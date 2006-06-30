@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModification.py,v 1.1 2006-06-30 08:04:17 mark Exp $
+# $Id: ComModification.py,v 1.2 2006-06-30 12:42:05 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModification.py,v $
 import exceptions
 import xml.dom
@@ -20,19 +20,17 @@ from xml import xpath
 from ComDataObject import DataObject
 import ComRequirement
 
+
 def getModification(element, doc):
     """ Factory function to create Modification Objects"""
     __type=element.getAttribute("type")
-    #if __type == "regexp":
-    #    from ComRegexpModification import RegexpModification
-    #    return RegexpModification(element, doc)
     if __type == "copy":
         from ComCopyModification import CopyModification
         return CopyModification(element, doc)
     if __type == "regexp":
         from ComRegexpModification import RegexpModification
         return RegexpModification(element, doc)
-     raise exceptions.NotImplementedError("Modifcation for type: "+ __type + " is not implemented")
+    raise exceptions.NotImplementedError("Modifcation for type: "+ __type + " is not implemented")
         
 
 class Modification(DataObject):
@@ -78,6 +76,9 @@ class Modification(DataObject):
             __reqs.append(ComRequirement.getRequirement(__elements[i], doc))
         return __reqs
 # $Log: ComModification.py,v $
-# Revision 1.1  2006-06-30 08:04:17  mark
+# Revision 1.2  2006-06-30 12:42:05  mark
+# bug fixes
+#
+# Revision 1.1  2006/06/30 08:04:17  mark
 # initial checkin
 #
