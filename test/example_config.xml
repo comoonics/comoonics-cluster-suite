@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE businesscopy SYSTEM "file:../../xml/comoonics-business-copy.dtd">
 <businesscopy>
-	<copyset type="partition">
+<!--	<copyset type="partition">
 		<source type="disk">
-			<disk name="/dev/sdd"/>
+			<disk name="/dev/sdc"/>
 		</source>
 		<destination type="disk">
 			<disk name="/dev/sda"/>
 		</destination>
-	</copyset>	
+	</copyset>	-->
 	<copyset type="lvm">
 		<source type="lvm">
-			<volumegroup name="vg_test"/>
+			<volumegroup name="VG_SHAREDROOT"/>
 		</source>
 		<destination type="lvm">
-  			<volumegroup name="vg_test_new">
-  				<physicalvolume name="/dev/sda2"/>
+  			<volumegroup name="VG_SHAREDROOT_new">
+  				<physicalvolume name="/dev/sda"/>
   			</volumegroup>
   		</destination>
 	</copyset>
 	<copyset type="filesystem">
   		<source type="filesystem">
-  			<device name="/dev/vg_test/lv_source">
+  			<device name="/dev/VG_SHAREDROOT/LV_SHAREDROOT">
     			<filesystem type="gfs"/>
-    			<mountpoint name="/mnt/source"/>
+    			<mountpoint name="/"/>
     		</device>
   		</source>
   		<destination type="filesystem">
-    		<device name="/dev/vg_test/lv_dest" id="rootfs">
-      			<filesystem type="gfs" clustername="neuercluster"/>     	
+    		<device name="/dev/VG_SHAREDROOT_new/LV_SHAREDROOT" id="rootfs">
+      			<filesystem type="gfs" clustername="vmwareclusternew"/>     	
       			<mountpoint name="/mnt/tmp">
       				<option name="lockproto" value="lock_nolock"/>
       			</mountpoint>
    			</device>
    		</destination>
 	</copyset>
-	<copyset type="filesystem">
+<!--	<copyset type="filesystem">
   		<source type="filesystem">
   			<device name="/dev/sdd1" id="bootfs">
     			<filesystem type="ext3"/>
@@ -50,13 +50,13 @@
    		</destination>
 	</copyset>
 	<copyset type="bootloader">
-		<source	type="none"/>
+		<source type="none"/>
 		<destination type="disk">	
 			<disk name="/dev/sda"/>
 			<bootloader type="grub"/>
 		</destination>
-	</copyset>
-	<modificationset type="filesystem">
+	</copyset>-->
+<!--	<modificationset type="filesystem">
 		<device refid="rootfs">
 			<modification type="regexp" search="HOSTNAME=.*" replace="HOSTNAME=myhostname">
 				<file name="cluster/cdsl/node1/etc/sysconfig/network"/>
@@ -73,5 +73,5 @@
 				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
 			</modification>
 		</device>
-	</modificationset>
+	</modificationset>-->
 </businesscopy>
