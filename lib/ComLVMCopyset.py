@@ -18,25 +18,21 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.1 2006-06-29 13:47:51 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.2 2006-06-30 08:28:45 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVMCopyset.py,v $
 
-from xml.dom import Element
 from exceptions import IndexError
 import ComCopyObject
 import ComLog
-from ComCopyset import Copyset
-from ComDataObject import DataObject
-from xml.dom.NodeFilter import NodeFilter
-from ComExceptions import ComException
+from ComCopyset import CopysetJournaled
 from ComLVMCopyObject import LVMCopyObject
 from ComLVM import VolumeGroup, LinuxVolumeManager, LogicalVolume
 
-class LVMCopyset(Copyset):
+class LVMCopyset(CopysetJournaled):
     
     def updateFromElement(edit_copyobject, source_copyobject):
         """
@@ -71,7 +67,7 @@ class LVMCopyset(Copyset):
     
     __logStrLevel__ = "LVMCopyset"
     def __init__(self, element, doc):
-        Copyset.__init__(self, element, doc)
+        CopysetJournaled.__init__(self, element, doc)
         try:
             __source=self.getElement().getElementsByTagName('source')[0]
         except IndexError, ie:
@@ -82,15 +78,18 @@ class LVMCopyset(Copyset):
             raise IndexError("Destination for copyset %s not defined: %s" % (element.tagName, ie))
         self.source=ComCopyObject.getCopyObject(__source, doc)
         self.source.getVolumeGroup().init_from_disk()
+        self.addToUndoMap(self.source.getVolumeGroup().__class__.__name__, "create", "remove")
+        self.addToUndoMap(self.source.getVolumeGroup().__class__.__name__, "activate", "deactivate")
         for pv in LinuxVolumeManager.pvlist(self.source.getVolumeGroup(), doc):
             pv.init_from_disk()
             self.source.getVolumeGroup().addPhysicalVolume(pv)
+            self.addToUndoMap(pv.__class__.__name__,"create", "remove")
         for lv in LinuxVolumeManager.lvlist(self.source.getVolumeGroup(), doc):
             lv.init_from_disk()
             self.source.getVolumeGroup().addLogicalVolume(lv)
+            self.addToUndoMap(lv.__class__.__name__,"create", "remove")
         self.dest=ComCopyObject.getCopyObject(__dest, doc)
         LVMCopyset.updateFromElement(self.dest, self.source)
-
         
     def doCopy(self):
         # do everything
@@ -99,10 +98,16 @@ class LVMCopyset(Copyset):
         ComLog.getLogger(self.__logStrLevel__).debug("Copying volumegroup %s => %s" % (self.source.vg.getAttribute("name"), self.dest.vg.getAttribute("name")))
         for pv in self.dest.vg.getPhysicalVolumes():
             pv.create()
+            self.journal(pv, "create")
         self.dest.vg.create()
+        self.journal(self.dest.vg, "create")
         self.dest.vg.activate()
+        self.journal(self.dest.vg, "activate")
         for lv in self.dest.vg.getLogicalVolumes():
             lv.create()
+            self.journal(lv, "create")
+        from ComExceptions import ComException
+        raise ComException("DummyException to test undo")
         self.postSource()
         self.postDest()
     
@@ -123,6 +128,9 @@ class LVMCopyset(Copyset):
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.1  2006-06-29 13:47:51  marc
+# Revision 1.2  2006-06-30 08:28:45  marc
+# added journal functionality
+#
+# Revision 1.1  2006/06/29 13:47:51  marc
 # initial revision
 #
