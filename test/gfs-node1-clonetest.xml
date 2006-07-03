@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE businesscopy SYSTEM "file:../../xml/comoonics-business-copy.dtd">
+<businesscopy>
+	<copyset type="partition">
+		<source type="disk">
+			<disk name="/dev/sdb"/>
+		</source>
+		<destination type="disk">
+			<disk name="/dev/sdd"/>
+		</destination>
+	</copyset>
+	<copyset type="partition">
+		<source type="disk">
+			<disk name="/dev/sdc"/>
+		</source>
+		<destination type="disk">
+			<disk name="/dev/sde"/>
+		</destination>
+	</copyset>
+	<copyset type="lvm">
+		<source type="lvm">
+			<volumegroup name="VG_SHAREDROOT"/>
+		</source>
+		<destination type="lvm">
+  			<volumegroup name="VG_SHAREDROOT_new">
+  				<physicalvolume name="/dev/sde"/>
+  			</volumegroup>
+  		</destination>
+	</copyset>
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/VG_SHAREDROOT/LV_SHAREDROOT">
+    			<filesystem type="gfs"/>
+    			<mountpoint name="/mnt/source"/>
+    		</device>
+  		</source>
+  		<destination type="filesystem">
+    		<device name="/dev/VG_SHAREDROOT_new/LV_SHAREDROOT" id="rootfs">
+      			<filesystem type="gfs" clustername="vmwareclusternew"/>     	
+      			<mountpoint name="/mnt/dest">
+      				<option name="lockproto" value="lock_nolock"/>
+      			</mountpoint>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/sdb1" id="bootfs">
+    			<filesystem type="ext3"/>
+    			<mountpoint name="/mnt/source"/>
+    		</device>
+  		</source>
+  		<destination type="filesystem">
+    		<device name="/dev/sdd1">
+      			<filesystem type="ext3"/>     	
+      			<mountpoint name="/mnt/dest"/>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="bootloader">
+		<source type="none"/>
+		<destination type="disk">	
+			<disk name="/dev/sdd"/>
+			<bootloader type="grub"/>
+		</destination>
+	</copyset>
+	<modificationset type="filesystem">
+		<device refid="rootfs">
+			<modification type="regexp" search="HOSTNAME=.*" replace="HOSTNAME=testhost">
+				<file name="cluster/cdsl/1/etc/sysconfig/network"/>
+			</modification>
+			<modification type="copy">
+				<file name="etc/cluster/mycluster.conf" sourcefile="/etc/comoonics/copysets/gfs-node1/cluster.conf"/>
+			</modification>
+		</device>
+	</modificationset>
+	<modificationset type="filesystem">
+		<device refid="bootfs">
+			<modification type="copy">
+				<requirement type="archive" format="cpio" name="/mnt/source/initrd_sr-2.6.9-34.0.1.ELsmp.gz" dest="/tmp/test"/>
+				<file name="etc/cluster/mycluster.conf" sourcefile="/etc/comoonics/copysets/gfs-node1/cluster.conf"/>
+			</modification>
+		</device>
+	</modificationset>
+</businesscopy>
