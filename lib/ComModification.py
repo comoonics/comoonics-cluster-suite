@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModification.py,v 1.2 2006-06-30 12:42:05 mark Exp $
+# $Id: ComModification.py,v 1.3 2006-07-03 07:47:22 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModification.py,v $
 import exceptions
 import xml.dom
@@ -34,6 +34,8 @@ def getModification(element, doc):
         
 
 class Modification(DataObject):
+    TAGNAME="Modification"
+
     """ Base Class for all source and destination objects"""
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
@@ -45,6 +47,11 @@ class Modification(DataObject):
         self.doPre()
         self.doRealModifications()
         self.doPost()
+        pass
+
+    def undoModification(self):
+        """ undos this modification if necessary """
+        
         pass
         
     def doPre(self):
@@ -64,7 +71,7 @@ class Modification(DataObject):
         
     def doRealModifications(self):
         pass
-    
+
 
     """
     privat methods
@@ -76,7 +83,10 @@ class Modification(DataObject):
             __reqs.append(ComRequirement.getRequirement(__elements[i], doc))
         return __reqs
 # $Log: ComModification.py,v $
-# Revision 1.2  2006-06-30 12:42:05  mark
+# Revision 1.3  2006-07-03 07:47:22  marc
+# changed the modifications
+#
+# Revision 1.2  2006/06/30 12:42:05  mark
 # bug fixes
 #
 # Revision 1.1  2006/06/30 08:04:17  mark
