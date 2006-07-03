@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.1 2006-06-28 17:25:16 mark Exp $
+# $Id: ComFilesystemCopyset.py,v 1.2 2006-07-03 10:41:01 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -85,11 +85,15 @@ class FilesystemCopyset(Copyset):
         __cmd=CMD_RSYNC
         __cmd+=" -aux --delete "
         __cmd+=self.source.getMountpoint().getAttribute("name")
-        __cmd+=" "
+        __cmd+="/ "
         __cmd+=self.destination.getMountpoint().getAttribute("name")
+        __cmd+="/"
         return __cmd
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.1  2006-06-28 17:25:16  mark
+# Revision 1.2  2006-07-03 10:41:01  mark
+# bug fix for rsync command
+#
+# Revision 1.1  2006/06/28 17:25:16  mark
 # initial checkin (stable)
 #
