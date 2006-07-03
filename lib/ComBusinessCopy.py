@@ -6,16 +6,17 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComBusinessCopy.py,v 1.1 2006-06-30 13:57:24 marc Exp $
+# $Id: ComBusinessCopy.py,v 1.2 2006-07-03 12:47:07 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComBusinessCopy.py,v $
 
 import ComDataObject
 import ComCopyset
 import ComModificationset
+import ComLog
 
 def getBusinessCopy(element, doc):
     """ Factory function to create the BusinessCopy Objects"""
@@ -33,7 +34,7 @@ class BusinessCopy(ComDataObject.DataObject):
       
         self.copysets=list()
         self.modificationsets=list()
-        print "%s, %s" % (ComCopyset.Copyset.TAGNAME, self.getElement().tagName)
+        ComLog.getLogger(self.__logStrLevel__).debug("%s, %s" % (ComCopyset.Copyset.TAGNAME, self.getElement().tagName))
         ecopysets=self.getElement().getElementsByTagName(ComCopyset.Copyset.TAGNAME)
         for i in range(len(ecopysets)):
             cs=ComCopyset.getCopyset(ecopysets[i], doc)
@@ -48,7 +49,9 @@ class BusinessCopy(ComDataObject.DataObject):
             copyset.doCopy()
 
     def undoCopysets(self):
-        for copyset in self.copysets.reverse():
+        ComLog.getLogger(self.__logStrLevel__).debug("Copysets: %s " % self.copysets)
+        self.copysets.reverse()
+        for copyset in self.copysets:
             copyset.undoCopy()
 
     def doModificationsets(self):
@@ -56,11 +59,16 @@ class BusinessCopy(ComDataObject.DataObject):
             modset.doModifications()
           
     def undoModificationsets(self):
-        for modset in self.modificationsets.reverse():
+        self.modificationsets.reverse()
+        for modset in self.modificationsets:
             modset.undoModifications()
 
 #################################
 # $Log: ComBusinessCopy.py,v $
-# Revision 1.1  2006-06-30 13:57:24  marc
+# Revision 1.2  2006-07-03 12:47:07  marc
+# added logging.
+# change run through modifications
+#
+# Revision 1.1  2006/06/30 13:57:24  marc
 # initial revision
 #
