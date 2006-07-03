@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.2 2006-06-30 12:38:35 marc Exp $
+# $Id: ComModificationset.py,v 1.3 2006-07-03 07:47:37 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModificationset.py,v $
 
 import exceptions
@@ -36,6 +36,7 @@ class Modificationset(DataObject):
     TAGNAME = "modificationset"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
+        self.modifications=list()
         log.debug("Modificationset CWD: " + os.getcwd())
         
     def doModifications(self):
@@ -46,7 +47,12 @@ class Modificationset(DataObject):
 
     def undoModifications(self):
         """undos all modifications """
-        pass
+        for mod in self.modifications.revert():
+            try:
+                mod.undoModification()
+            except NotImplementedError, e:
+                log.warning(e)
+
     
     def doPre(self):
         pass
@@ -55,17 +61,27 @@ class Modificationset(DataObject):
         pass
     
     def doRealModifications(self):
-        for i in range(len(self.getModifications())):
+        for mod in self.modifications:
             try:
-                ComModification.getModification(self.getModifications()[i], self.getDocument()).doModification()
+                mod.doModification()
             except NotImplementedError, e:
                 log.warning(e)
 
     def getModifications(self):
-        return None
+        return self.modifications
+
+    """
+    privat methods
+    """
+    def createModificationsList(self, emods, doc):
+        for i in range(len(emods)):
+            self.modifications.append(ComModification.getModification(emods[i], doc))
    
 # $Log: ComModificationset.py,v $
-# Revision 1.2  2006-06-30 12:38:35  marc
+# Revision 1.3  2006-07-03 07:47:37  marc
+# changed the list of modifications
+#
+# Revision 1.2  2006/06/30 12:38:35  marc
 # added undo
 #
 # Revision 1.1  2006/06/30 08:04:41  mark
