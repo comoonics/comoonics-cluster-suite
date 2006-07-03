@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.4 2006-07-03 12:53:42 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.5 2006-07-03 16:10:44 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -49,7 +49,6 @@ class LVMCopyset(CopysetJournaled):
         if isinstance(edit_copyobject, LVMCopyObject):
             LVMCopyset.updateFromElement(edit_copyobject.getVolumeGroup(), source_copyobject.getVolumeGroup())
         elif isinstance(edit_copyobject, VolumeGroup):
-            pass
             for lv in source_copyobject.getLogicalVolumes():
                 if edit_copyobject.hasLogicalVolume(lv.getAttribute("name")):
                     LVMCopyset.updateFromElement(edit_copyobject.getLogicalVolume(lv.getAttribute("name")), lv)
@@ -115,7 +114,7 @@ class LVMCopyset(CopysetJournaled):
                 lv.create()
                 self.journal(lv, "create")
             except LinuxVolumeManager.LVMAlreadyExistsException, e:
-                ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s as it already exists" % (lv.__class__.__name__, lv.getAttribute("name")))
+                ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (lv.__class__.__name__, lv.getAttribute("name")))
 
         self.postSource()
         self.postDest()
@@ -137,7 +136,10 @@ class LVMCopyset(CopysetJournaled):
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.4  2006-07-03 12:53:42  marc
+# Revision 1.5  2006-07-03 16:10:44  marc
+# removed a weired pass
+#
+# Revision 1.4  2006/07/03 12:53:42  marc
 # changed error detection
 #
 # Revision 1.3  2006/06/30 13:58:13  marc
