@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.3 2006-07-03 08:28:46 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.4 2006-07-03 12:47:44 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -50,8 +50,9 @@ class FilesystemModificationset(Modificationset):
         except Exception:
             raise ComException("mountpoint for copyset not defined")
         self.umountfs=False
-        self.modifications=self.createModificationsList(xpath.Evaluate('device/modification', element), doc)
+        self.createModificationsList(xpath.Evaluate('device/modification', element), doc)
         self.cwd = os.getcwd()
+        log.debug("Modifications: %u" % len(self.modifications))
         log.debug("Filesystemodificationset CWD: " + self.cwd)
     
     def doPre(self):
@@ -74,7 +75,10 @@ class FilesystemModificationset(Modificationset):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.3  2006-07-03 08:28:46  marc
+# Revision 1.4  2006-07-03 12:47:44  marc
+# more debugging.
+#
+# Revision 1.3  2006/07/03 08:28:46  marc
 # updated to latest changes in baseclass
 #
 # Revision 1.2  2006/06/30 12:42:22  mark
