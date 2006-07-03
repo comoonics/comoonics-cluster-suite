@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.3 2006-06-30 08:30:20 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.4 2006-07-03 16:08:58 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComArchiveRequirement.py,v $
 
 from ComExceptions import ComException
@@ -102,10 +102,17 @@ class ArchiveRequirement(Requirement):
         (rc, rv) = ComSystem.execLocalGetResult(__cmd)
         if rc >> 8 != 0:
             raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
+        __cmd="rm -rf "+srcfile
+        (rc, rv) = ComSystem.execLocalGetResult(__cmd)
+        if rc >> 8 != 0:
+            raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.3  2006-06-30 08:30:20  marc
+# Revision 1.4  2006-07-03 16:08:58  marc
+# removing the unpacked archive afterwards
+#
+# Revision 1.3  2006/06/30 08:30:20  marc
 # added logging
 #
 # Revision 1.2  2006/06/29 13:43:50  marc
