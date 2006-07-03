@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.6 2006-06-28 17:27:26 marc Exp $
+# $Id: ComLog.py,v 1.7 2006-07-03 16:09:45 marc Exp $
 #
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLog.py,v $
 
 import logging
@@ -30,8 +30,14 @@ def getLogger(name=""):
     return __default_log
 
 
+def setLevel(debuglevel):
+    __default_log.setLevel(debuglevel)
+
 # $Log: ComLog.py,v $
-# Revision 1.6  2006-06-28 17:27:26  marc
+# Revision 1.7  2006-07-03 16:09:45  marc
+# added setLoglevel
+#
+# Revision 1.6  2006/06/28 17:27:26  marc
 # comment out import exceptions
 #
 # Revision 1.5  2006/06/23 11:50:10  mark
