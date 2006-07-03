@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModification.py,v 1.3 2006-07-03 07:47:22 marc Exp $
+# $Id: ComModification.py,v 1.4 2006-07-03 12:54:26 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModification.py,v $
 import exceptions
 import xml.dom
@@ -58,15 +58,15 @@ class Modification(DataObject):
         """ do preprocessing
         """
         for i in range(len(self.requirements)):
-            #self.requirements[i].doPre()
-            #self.requirements[i].do()
+            self.requirements[i].doPre()
+            self.requirements[i].do()
             pass
             
     def doPost(self):
         """ do postprocessing
         """
         for i in range(len(self.requirements)):
-            #self.requirements[i].doPost()
+            self.requirements[i].doPost()
             pass
         
     def doRealModifications(self):
@@ -83,7 +83,10 @@ class Modification(DataObject):
             __reqs.append(ComRequirement.getRequirement(__elements[i], doc))
         return __reqs
 # $Log: ComModification.py,v $
-# Revision 1.3  2006-07-03 07:47:22  marc
+# Revision 1.4  2006-07-03 12:54:26  marc
+# commented out the requirements
+#
+# Revision 1.3  2006/07/03 07:47:22  marc
 # changed the modifications
 #
 # Revision 1.2  2006/06/30 12:42:05  mark
