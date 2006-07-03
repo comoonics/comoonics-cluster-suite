@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVM.py,v $
 
 import os
@@ -316,6 +316,9 @@ class LogicalVolume(LinuxVolumeManager):
         else:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
         self.parentvg=params[1]
+        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+self.parentvg.getAttribute("name")+"/"+self.getAttribute("name"))
+        if rc >> 8 == 0:
+            self.ondisk=True
 
     '''
     The LVM methods
@@ -329,6 +332,7 @@ class LogicalVolume(LinuxVolumeManager):
 
         (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+self.parentvg.getAttribute("name")+"/"+self.getAttribute("name"))
         if rc >> 8 != 0:
+            self.ondisk=False
             raise RuntimeError("running lvdisplay of %s failed: %u, %s" % (self.parentvg+"/"+self.getAttribute("name"), rc,rv))
 
         for line in rv:
@@ -431,6 +435,9 @@ class PhysicalVolume(LinuxVolumeManager):
         else:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
         self.parentvg=params[1]
+        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"))
+        if rc >> 8 == 0:
+            self.ondisk=True
 
     '''
     The LVM methods
@@ -444,7 +451,8 @@ class PhysicalVolume(LinuxVolumeManager):
 
         (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"))
         if rc >> 8 != 0:
-            raise RuntimeError("running vgdisplay failed: %u, %s" % (rc,rv))
+            self.ondisk=False
+            raise RuntimeError("running pvdisplay failed: %u, %s" % (rc,rv))
 
         for line in rv:
             try:
@@ -462,9 +470,9 @@ class PhysicalVolume(LinuxVolumeManager):
         Newly creates the physical volume
         """
         LinuxVolumeManager.has_lvm()
-        if not self.ondisk:
+        if self.ondisk:
             raise LinuxVolumeManager.LVMAlreadyExistsException(self.__class__.__name__+"("+self.getAttribute("name")+")")
-        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' pvcreate -ff -v -y '+self.getAttribute("name"))
+        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' pvcreate -f -v -y '+self.getAttribute("name"))
         if rc >> 8 != 0:
             raise RuntimeError("running pvcreate on %s failed: %u,%s" % (self.getAttribute("name"),rc >> 8, rv))
         self.init_from_disk()
@@ -560,6 +568,9 @@ class VolumeGroup(LinuxVolumeManager):
                 raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         else:
             raise IndexError("Index out of range for Volume Group constructor (%u)" % len(params))
+        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvscan | grep "[[:blank:]]%s[[:blank:]]"' % self.getAttribute("name"))
+        if rc >> 8 == 0:
+            self.ondisk=True
  
     def __str__(self):
         '''
@@ -641,6 +652,7 @@ class VolumeGroup(LinuxVolumeManager):
 
         (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' vgdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"))
         if rc >> 8 != 0:
+            self.ondisk=False
             raise RuntimeError("running vgdisplay failed: %u, %s" % (rc,rv))
 
         for line in rv:
@@ -749,7 +761,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.6  2006-07-03 12:48:13  marc
+# Revision 1.7  2006-07-03 16:10:20  marc
+# self on disk and checks for creating of already existings pvs, vgs and lvs
+#
+# Revision 1.6  2006/07/03 12:48:13  marc
 # added error detection
 #
 # Revision 1.5  2006/06/30 13:57:47  marc
