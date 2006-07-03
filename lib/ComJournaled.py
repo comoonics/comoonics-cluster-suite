@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComJournaled.py,v 1.2 2006-07-03 13:51:09 marc Exp $
+# $Id: ComJournaled.py,v 1.3 2006-07-03 16:09:31 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComJournaled.py,v $
 
 import ComLog
@@ -62,8 +62,6 @@ class JournaledObject:
         """
         if (len(params) >2):
             self.__journal__.append(JournaledObject.JournalEntry(params[0], params[1], params[2:]))
-        elif len(params) == 3:
-            self.__journal__.append(JournaledObject.JournalEntry(params[0], params[1], params[2]))
         else:
             self.__journal__.append(JournaledObject.JournalEntry(params[0], params[1]))
         
@@ -80,6 +78,8 @@ class JournaledObject:
                 ComLog.getLogger(JournaledObject.__logStrLevel__).debug("Undomethod: %s(%s)" % (undomethod, je.params))
                 if not je.params or len(je.params) == 0:
                     je.ref.__class__.__dict__[undomethod](je.ref)
+                elif len(je.params) == 1:
+                    je.ref.__class__.__dict__[undomethod](je.ref, je.params[0])
                 else:
                     je.ref.__class__.__dict__[undomethod](je.ref, je.params)
             except Exception, e:
@@ -89,7 +89,10 @@ class JournaledObject:
 
 ####################
 # $Log: ComJournaled.py,v $
-# Revision 1.2  2006-07-03 13:51:09  marc
+# Revision 1.3  2006-07-03 16:09:31  marc
+# still params to journal functions
+#
+# Revision 1.2  2006/07/03 13:51:09  marc
 # will now know about one argument to journal method.
 #
 # Revision 1.1  2006/06/30 08:27:59  marc
