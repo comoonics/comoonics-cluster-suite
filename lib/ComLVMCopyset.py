@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.3 2006-06-30 13:58:13 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.4 2006-07-03 12:53:42 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -97,15 +97,26 @@ class LVMCopyset(CopysetJournaled):
         self.prepareDest()
         ComLog.getLogger(self.__logStrLevel__).debug("Copying volumegroup %s => %s" % (self.source.vg.getAttribute("name"), self.dest.vg.getAttribute("name")))
         for pv in self.dest.vg.getPhysicalVolumes():
-            pv.create()
-            self.journal(pv, "create")
-        self.dest.vg.create()
-        self.journal(self.dest.vg, "create")
+            try:
+                pv.create()
+                self.journal(pv, "create")
+            except LinuxVolumeManager.LVMAlreadyExistsException, e:
+                ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (pv.__class__.__name__, pv.getAttribute("name")))
+
+        try:
+            self.dest.vg.create()
+            self.journal(self.dest.vg, "create")
+        except LinuxVolumeManager.LVMAlreadyExistsException, e:
+            ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (self.dest.vg.__class__.__name__, self.dest.vg.getAttribute("name")))
         self.dest.vg.activate()
         self.journal(self.dest.vg, "activate")
         for lv in self.dest.vg.getLogicalVolumes():
-            lv.create()
-            self.journal(lv, "create")
+            try:
+                lv.create()
+                self.journal(lv, "create")
+            except LinuxVolumeManager.LVMAlreadyExistsException, e:
+                ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s as it already exists" % (lv.__class__.__name__, lv.getAttribute("name")))
+
         self.postSource()
         self.postDest()
     
@@ -126,7 +137,10 @@ class LVMCopyset(CopysetJournaled):
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.3  2006-06-30 13:58:13  marc
+# Revision 1.4  2006-07-03 12:53:42  marc
+# changed error detection
+#
+# Revision 1.3  2006/06/30 13:58:13  marc
 # removed dummyexception
 #
 # Revision 1.2  2006/06/30 08:28:45  marc
