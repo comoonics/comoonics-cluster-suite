@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.5 2006-06-29 08:17:16 mark Exp $
+# $Id: ComDisk.py,v 1.6 2006-07-03 09:27:12 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDisk.py,v $
 
 import os
@@ -22,6 +22,7 @@ from ComDataObject import DataObject
 from ComExceptions import *
 
 CMD_SFDISK = "/sbin/sfdisk"
+CMD_DD="/bin/dd"
 
 class Disk(DataObject):
     """ Disk represents a raw disk """
@@ -29,8 +30,8 @@ class Disk(DataObject):
         """ creates a Disk object
         """
         DataObject.__init__(self, element, doc)
-        #if not os.path.isfile( device ):
-            #raise ComException(device + " not found")
+        if not os.path.exists(self.getAttribute("name")):
+            raise ComException(self.getAttribute("name") + " not found")
         #    pass
         #self.__device=device
         self.log=ComLog.getLogger("Disk")
@@ -67,6 +68,26 @@ class Disk(DataObject):
         """
         return CMD_SFDISK + " -d " + self.getDeviceName()
 
+    def hasPartitionTable(self):
+        """ checks wether the disk has a partition table or not """
+        __cmd = CMD_SFDISK + " -Vq " + self.getDeviceName() + " >/dev/null 2>&1"
+        if ComSystem.execLocal(__cmd):
+            return False
+        return True
+    
+    def deletePartitionTable(self):
+        """ deletes the partition table """
+        __cmd = CMD_DD + " if=/dev/zero of=" + self.getDeviceName() + " bs=512 count=2 >/dev/null 2>&1"
+        if ComSystem.execLocal(__cmd):
+            return False
+        return self.rereadPartitionTable()
+        
+    def rereadPartitionTable(self):
+        """ rereads the partition table of a disk """
+        __cmd = CMD_SFDISK + " -R " + self.getDeviceName() + " >/dev/null 2>&1"
+        if ComSystem.execLocal(__cmd):
+            return False
+        return True
 
     def restorePartitionTable(self, filename):
         """ writes partition table stored in <filename> to Disk.
@@ -88,7 +109,11 @@ class Disk(DataObject):
         return CMD_SFDISK + " " + self.getDeviceName()
     
 # $Log: ComDisk.py,v $
-# Revision 1.5  2006-06-29 08:17:16  mark
+# Revision 1.6  2006-07-03 09:27:12  mark
+# added some methods for partition management
+# added device check in constructor
+#
+# Revision 1.5  2006/06/29 08:17:16  mark
 # added some comments
 #
 # Revision 1.4  2006/06/28 17:23:46  mark
