@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.3 2006-07-03 07:47:37 marc Exp $
+# $Id: ComModificationset.py,v 1.4 2006-07-03 12:54:55 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModificationset.py,v $
 
 import exceptions
@@ -47,12 +47,13 @@ class Modificationset(DataObject):
 
     def undoModifications(self):
         """undos all modifications """
-        for mod in self.modifications.revert():
+        ComLog.getLogger(self.__logStrLevel__).debug("Modifications: %s" % self.modifications)
+        self.modifications.reverse()
+        for mod in self.modifications:
             try:
                 mod.undoModification()
             except NotImplementedError, e:
                 log.warning(e)
-
     
     def doPre(self):
         pass
@@ -76,9 +77,13 @@ class Modificationset(DataObject):
     def createModificationsList(self, emods, doc):
         for i in range(len(emods)):
             self.modifications.append(ComModification.getModification(emods[i], doc))
+        return self.modifications
    
 # $Log: ComModificationset.py,v $
-# Revision 1.3  2006-07-03 07:47:37  marc
+# Revision 1.4  2006-07-03 12:54:55  marc
+# bugfixed undoing.
+#
+# Revision 1.3  2006/07/03 07:47:37  marc
 # changed the list of modifications
 #
 # Revision 1.2  2006/06/30 12:38:35  marc
