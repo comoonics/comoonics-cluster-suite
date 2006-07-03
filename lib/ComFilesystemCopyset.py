@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.2 2006-07-03 10:41:01 mark Exp $
+# $Id: ComFilesystemCopyset.py,v 1.3 2006-07-03 14:30:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -27,7 +27,7 @@ import ComLog
 
 CMD_RSYNC="/usr/bin/rsync"
 
-
+__logStrLevel__ = "FilesystemCopyset"
 class FilesystemCopyset(Copyset):
     def __init__(self, element, doc):
         Copyset.__init__(self, element, doc)
@@ -55,6 +55,17 @@ class FilesystemCopyset(Copyset):
         if __rc:
             raise ComException(__cmd + __ret)
     
+    def undoCopy(self):
+        # simple undo we need to think about that again
+        try:
+            self.postSource()
+        except Exception, e:
+            ComLog.getLogger(__logStrLevel__).warning(e)
+        try:
+            self.postDest()
+        except Exception, e:
+            ComLog.getLogger(__logStrLevel__).warning(e)
+        
     def prepareSource(self):
         #do things like fsck, mount
         # scan for fsconfig
@@ -91,7 +102,10 @@ class FilesystemCopyset(Copyset):
         return __cmd
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.2  2006-07-03 10:41:01  mark
+# Revision 1.3  2006-07-03 14:30:24  mark
+# added undo
+#
+# Revision 1.2  2006/07/03 10:41:01  mark
 # bug fix for rsync command
 #
 # Revision 1.1  2006/06/28 17:25:16  mark

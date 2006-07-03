@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.2 2006-06-30 08:03:17 mark Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.3 2006-07-03 14:30:06 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -72,6 +72,7 @@ class FilesystemCopyObject(CopyObject):
     def cleanupSource(self):
         if self.umountfs:
             self.filesystem.umountDir(self.mountpoint)
+            self.umountfs=False
     
     def cleanupDest(self):
         self.filesystem.umountDir(self.mountpoint)
@@ -84,7 +85,10 @@ class FilesystemCopyObject(CopyObject):
         
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.2  2006-06-30 08:03:17  mark
+# Revision 1.3  2006-07-03 14:30:06  mark
+# added undo
+#
+# Revision 1.2  2006/06/30 08:03:17  mark
 # added ComMountPoint include
 #
 # Revision 1.1  2006/06/29 07:24:02  mark
