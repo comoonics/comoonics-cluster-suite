@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.6 2006-07-03 09:27:12 mark Exp $
+# $Id: ComDisk.py,v 1.7 2006-07-03 13:02:51 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDisk.py,v $
 
 import os
@@ -30,15 +30,13 @@ class Disk(DataObject):
         """ creates a Disk object
         """
         DataObject.__init__(self, element, doc)
-        if not os.path.exists(self.getAttribute("name")):
-            raise ComException(self.getAttribute("name") + " not found")
-        #    pass
-        #self.__device=device
         self.log=ComLog.getLogger("Disk")
 
     def getLog(self):
         return self.log
 
+    def exists(self):
+        return os.path.exists(self.getAttribute("name"))
 
     def getDeviceName(self):
         """ returns the Disks device name (e.g. /dev/sda) """ 
@@ -109,7 +107,10 @@ class Disk(DataObject):
         return CMD_SFDISK + " " + self.getDeviceName()
     
 # $Log: ComDisk.py,v $
-# Revision 1.6  2006-07-03 09:27:12  mark
+# Revision 1.7  2006-07-03 13:02:51  mark
+# moved devicefile check in exists() methos
+#
+# Revision 1.6  2006/07/03 09:27:12  mark
 # added some methods for partition management
 # added device check in constructor
 #
