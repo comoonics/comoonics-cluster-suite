@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.4 2006-06-29 08:23:08 mark Exp $
+# $Id: ComFileSystem.py,v 1.5 2006-07-03 10:40:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFileSystem.py,v $
 
 import os
@@ -273,10 +273,11 @@ class gfsFileSystem(FileSystem):
         __optstr+= self.getAttribute("journals")
         __optstr+=" -p "
         __optstr+= self.getAttribute("lockproto")
-        __optstr+=" -t "
-        __optstr+= self.getAttribute("clustername")
-        __optstr+=":"
-        __optstr+= self.getAttribute("locktable")
+        if self.hasAttribute("clustername") and self.hasAttribute("locktable"):
+            __optstr+=" -t "
+            __optstr+= self.getAttribute("clustername")
+            __optstr+=":"
+            __optstr+= self.getAttribute("locktable")
         __optstr+=" -b "
         __optstr+= self.getAttribute("bsize")
         __optstr+=" "
@@ -307,13 +308,15 @@ class gfsFileSystem(FileSystem):
         log.debug("scan Options lockproto: " + __lockproto)
         self.setAttribute("lockproto",__lockproto)
 
-        __locktable=ComUtils.grepInLines(__ret, "  sb_locktable = .*?:(.*)")[0]
-        log.debug("scan Options locktable: " + __locktable)
-        self.setAttribute("locktable", __locktable)
+        __locktable=ComUtils.grepInLines(__ret, "  sb_locktable = .*?:(.*)")
+        if len(__locktable) == 1:
+            log.debug("scan Options locktable: " + __locktable[0])
+            self.setAttribute("locktable", __locktable[0])
 
-        __clustername=ComUtils.grepInLines(__ret, "  sb_locktable = (.*?):.*")[0]
-        log.debug("scan Options clustername: " +__clustername)
-        self.setAttribute("clustername", __clustername)
+        __clustername=ComUtils.grepInLines(__ret, "  sb_locktable = (.*?):.*")
+        if len(__clustername) == 1:
+            log.debug("scan Options clustername: " +__clustername[0])
+            self.setAttribute("clustername", __clustername[0])
 
         __cmd = CMD_GFS_TOOL + " df " + __mountpoint
         __rc, __ret = ComSystem.execLocalGetResult(__cmd)
@@ -328,7 +331,10 @@ class gfsFileSystem(FileSystem):
 
             
 # $Log: ComFileSystem.py,v $
-# Revision 1.4  2006-06-29 08:23:08  mark
+# Revision 1.5  2006-07-03 10:40:24  mark
+# some bugfixes
+#
+# Revision 1.4  2006/06/29 08:23:08  mark
 # added comments
 # moved MountPoint to ComMountPoint.py
 #

@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDevice.py,v 1.5 2006-06-29 08:16:56 mark Exp $
+# $Id: ComDevice.py,v 1.6 2006-07-03 10:40:06 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDevice.py,v $
 
 import os
@@ -27,9 +27,9 @@ class Device(Disk):
         Disk.__init__(self,element, doc)
 
     def isMounted(self):
-        if self.scanMountPoint()[0] != "":
-            return 1
-        return 0
+        if self.scanMountPoint()[0]:
+            return True
+        return False
 
     def scanMountPoint(self):
         """ returns first mountpoint of device and fstype if mounted
@@ -46,16 +46,19 @@ class Device(Disk):
         if len(mp) == 0:
             return [None, None]
         exp="^" + self.getDevicePath() + " " + mp[0] + " (.*?) .*"
-        self.getLog().debug(exp)
         fs=ComUtils.grepInLines(lines, exp)
         if len(fs) == 0:
             return [None, None]
+        self.getLog().debug("mountpoint %s filesystem %s", mp[0], fs[0])
         return [mp[0], fs[0]]
 
         
 
 # $Log: ComDevice.py,v $
-# Revision 1.5  2006-06-29 08:16:56  mark
+# Revision 1.6  2006-07-03 10:40:06  mark
+# some bugfixes
+#
+# Revision 1.5  2006/06/29 08:16:56  mark
 # bug fixes
 #
 # Revision 1.4  2006/06/28 17:23:19  mark
