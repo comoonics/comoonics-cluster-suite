@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComLVM.py,v $
 
 import os
@@ -90,9 +90,9 @@ class LinuxVolumeManager(DataObject):
             doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
 
         vgs = {}
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' vgdisplay -C --noheadings --units b --nosuffix --separator : --options vg_name,pv_name')
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' vgdisplay -C --noheadings --units b --nosuffix --separator : --options vg_name,pv_name', True)
         if rc >> 8 != 0:
-            raise RuntimeError("running vgdisplay failed: %u, %s" % (rc,rv))
+            raise RuntimeError("running vgdisplay failed: %u, %s, %s" % (rc,rv, stderr))
 
         for line in rv:
             try:
@@ -125,9 +125,9 @@ class LinuxVolumeManager(DataObject):
 
         lvs = []
         # field names for "options" are in LVM2.2.01.01/lib/report/columns.h
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : --options vg_name,lv_name '+vg.getAttribute("name"))
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : --options vg_name,lv_name '+vg.getAttribute("name"), True)
         if rc >> 8 != 0:
-            raise RuntimeError("running lvdisplay failed: %u, %s" % (rc,rv))
+            raise RuntimeError("running lvdisplay failed: %u, %s, %s" % (rc,rv, stderr))
 
         for line in rv:
             try:
@@ -158,9 +158,9 @@ class LinuxVolumeManager(DataObject):
         if vg:
             pipe=" | grep %s" % vg.getAttribute("name")
         pvs= []
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : --options pv_name,vg_name'+pipe)
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : --options pv_name,vg_name'+pipe, True)
         if rc >> 8 != 0:
-            raise RuntimeError("running vgdisplay failed: "+ str(rc)+", ",rv)
+            raise RuntimeError("running vgdisplay failed: %u, %s, %s" % (rc,rv, stderr))
 
         for line in rv:
             try:
@@ -316,7 +316,7 @@ class LogicalVolume(LinuxVolumeManager):
         else:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
         self.parentvg=params[1]
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+self.parentvg.getAttribute("name")+"/"+self.getAttribute("name"))
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+self.parentvg.getAttribute("name")+"/"+self.getAttribute("name"), True)
         if rc >> 8 == 0:
             self.ondisk=True
 
@@ -330,10 +330,10 @@ class LogicalVolume(LinuxVolumeManager):
         """
         LinuxVolumeManager.has_lvm()
 
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+self.parentvg.getAttribute("name")+"/"+self.getAttribute("name"))
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+self.parentvg.getAttribute("name")+"/"+self.getAttribute("name"), True)
         if rc >> 8 != 0:
             self.ondisk=False
-            raise RuntimeError("running lvdisplay of %s failed: %u, %s" % (self.parentvg+"/"+self.getAttribute("name"), rc,rv))
+            raise RuntimeError("running lvdisplay of %s failed: %u, %s, %s" % (self.parentvg+"/"+self.getAttribute("name"), rc,rv, stderr))
 
         for line in rv:
             try:
@@ -435,7 +435,7 @@ class PhysicalVolume(LinuxVolumeManager):
         else:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
         self.parentvg=params[1]
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"))
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"), True)
         if rc >> 8 == 0:
             self.ondisk=True
 
@@ -449,10 +449,10 @@ class PhysicalVolume(LinuxVolumeManager):
         """
         LinuxVolumeManager.has_lvm()
 
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"))
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"), True)
         if rc >> 8 != 0:
             self.ondisk=False
-            raise RuntimeError("running pvdisplay failed: %u, %s" % (rc,rv))
+            raise RuntimeError("running pvdisplay failed: %u, %s, %s" % (rc,rv,stderr))
 
         for line in rv:
             try:
@@ -568,7 +568,7 @@ class VolumeGroup(LinuxVolumeManager):
                 raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         else:
             raise IndexError("Index out of range for Volume Group constructor (%u)" % len(params))
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' pvscan | grep "[[:blank:]]%s[[:blank:]]"' % self.getAttribute("name"))
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvscan | grep "[[:blank:]]%s[[:blank:]]"' % self.getAttribute("name"), True)
         if rc >> 8 == 0:
             self.ondisk=True
  
@@ -650,10 +650,10 @@ class VolumeGroup(LinuxVolumeManager):
         """
         LinuxVolumeManager.has_lvm()
 
-        (rc, rv) = ComSystem.execLocalGetResult(CMD_LVM+' vgdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"))
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' vgdisplay -C --noheadings --units b --nosuffix --separator : '+self.getAttribute("name"), True)
         if rc >> 8 != 0:
             self.ondisk=False
-            raise RuntimeError("running vgdisplay failed: %u, %s" % (rc,rv))
+            raise RuntimeError("running vgdisplay failed: %u, %s, %s" % (rc,rv, stderr))
 
         for line in rv:
             try:
@@ -761,7 +761,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.7  2006-07-03 16:10:20  marc
+# Revision 1.8  2006-07-04 11:01:22  marc
+# changed handling errror output
+#
+# Revision 1.7  2006/07/03 16:10:20  marc
 # self on disk and checks for creating of already existings pvs, vgs and lvs
 #
 # Revision 1.6  2006/07/03 12:48:13  marc
