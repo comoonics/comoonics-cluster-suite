@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-bc.py,v 1.3 2006-07-04 11:01:48 marc Exp $
+# $Id: com-bc.py,v 1.4 2006-07-04 11:16:11 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/Attic/com-bc.py,v $
 
 from exceptions import Exception
@@ -32,6 +32,7 @@ import ComCopyset
 import ComModificationset
 import getopt
 import logging
+import warnings
 
 ComSystem.__EXEC_REALLY_DO=""
 
@@ -49,6 +50,9 @@ def usage(argv):
     -n|--novalidate don't validate the xml. Handle with care!!!
     '''
 
+def setWarnings():
+    warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning, module='Com*')
+    
 try:
     (opts, args_proper)=getopt.getopt(sys.argv[1:], 'adn', [ 'ask', 'debug', 'novalidate' ])
 except getopt.GetoptError, goe:
@@ -69,6 +73,9 @@ for (opt, value) in opts:
         ComLog.setLevel(logging.DEBUG)
     elif opt == "-n" or opt == "--novalidate":
         VALIDATE=FALSE
+
+# filter warnings
+setWarnings()
 
 # create Reader object
 if VALIDATE:
@@ -113,7 +120,10 @@ except Exception, e:
 
 ##################
 # $Log: com-bc.py,v $
-# Revision 1.3  2006-07-04 11:01:48  marc
+# Revision 1.4  2006-07-04 11:16:11  mark
+# added setWarinings()
+#
+# Revision 1.3  2006/07/04 11:01:48  marc
 # be a little more verbose
 #
 # Revision 1.2  2006/07/03 16:11:10  marc
