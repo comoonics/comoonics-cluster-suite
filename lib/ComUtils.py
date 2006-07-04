@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComUtils.py,v 1.4 2006-06-28 17:24:00 mark Exp $
+# $Id: ComUtils.py,v 1.5 2006-07-04 08:33:23 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComUtils.py,v $
 
 
@@ -50,14 +50,16 @@ def grepInLines(lines, exp):
         m = re.match(exp, line)
         try:
             res=m.group(1)
-            print res
             rv.append(res)
         except Exception:
             pass
     return rv
     
 # $Log: ComUtils.py,v $
-# Revision 1.4  2006-06-28 17:24:00  mark
+# Revision 1.5  2006-07-04 08:33:23  mark
+# minor bug fixes
+#
+# Revision 1.4  2006/06/28 17:24:00  mark
 # bug fixes
 #
 # Revision 1.3  2006/06/23 16:17:38  mark
