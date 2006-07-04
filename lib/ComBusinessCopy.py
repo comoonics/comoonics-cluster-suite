@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComBusinessCopy.py,v 1.2 2006-07-03 12:47:07 marc Exp $
+# $Id: ComBusinessCopy.py,v 1.3 2006-07-04 11:00:41 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComBusinessCopy.py,v $
 
 import ComDataObject
@@ -46,26 +46,33 @@ class BusinessCopy(ComDataObject.DataObject):
           
     def doCopysets(self):
         for copyset in self.copysets:
+            ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s)" % (copyset.__class__.__name__, copyset.getAttribute("type")))
             copyset.doCopy()
 
     def undoCopysets(self):
         ComLog.getLogger(self.__logStrLevel__).debug("Copysets: %s " % self.copysets)
         self.copysets.reverse()
         for copyset in self.copysets:
+            ComLog.getLogger(self.__logStrLevel__).info("Undoing copyset %s(%s)" % (copyset.__class__.__name__, copyset.getAttribute("type")))
             copyset.undoCopy()
 
     def doModificationsets(self):
         for modset in self.modificationsets:
+            ComLog.getLogger(self.__logStrLevel__).info("Executing modificationset %s(%s)" % (modset.__class__.__name__, modset.getAttribute("type")))
             modset.doModifications()
           
     def undoModificationsets(self):
         self.modificationsets.reverse()
         for modset in self.modificationsets:
+            ComLog.getLogger(self.__logStrLevel__).info("Undoing modificationset %s(%s)" % (modset.__class__.__name__, modset.getAttribute("type")))
             modset.undoModifications()
 
 #################################
 # $Log: ComBusinessCopy.py,v $
-# Revision 1.2  2006-07-03 12:47:07  marc
+# Revision 1.3  2006-07-04 11:00:41  marc
+# be a little more verbose
+#
+# Revision 1.2  2006/07/03 12:47:07  marc
 # added logging.
 # change run through modifications
 #

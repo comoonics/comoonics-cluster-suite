@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-bc.py,v 1.2 2006-07-03 16:11:10 marc Exp $
+# $Id: com-bc.py,v 1.3 2006-07-04 11:01:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/Attic/com-bc.py,v $
 
 from exceptions import Exception
@@ -94,20 +94,29 @@ try:
     line("executing copysets %u" % len(businesscopy.copysets))
     businesscopy.doCopysets()
 
-    line("executing all modificationsets %u" % len(businesscopy.copysets))
+    line("executing all modificationsets %u" % len(businesscopy.modificationsets))
     businesscopy.doModificationsets()
+
+    line("Successfully executed businesscopy.")
 except Exception, e:
     ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).warn("Exception %s caught during copy." % e)
     import traceback
     traceback.print_exc()
+    line("undoing executing all copysets %u" % len(businesscopy.copysets))
     ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).warn("Undoing %s." % ComCopyset.Copyset.TAGNAME)
     businesscopy.undoCopysets()
+    line("undoing executing all modificationsets %u" % len(businesscopy.modificationsets))
     ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).warn("Undoing %s." % ComModificationset.Modificationset.TAGNAME)
     businesscopy.undoModificationsets()
 
+    line("Errors during execution of businesscopy.")
+
 ##################
 # $Log: com-bc.py,v $
-# Revision 1.2  2006-07-03 16:11:10  marc
+# Revision 1.3  2006-07-04 11:01:48  marc
+# be a little more verbose
+#
+# Revision 1.2  2006/07/03 16:11:10  marc
 # added commandline params
 #
 # Revision 1.1  2006/06/30 13:57:13  marc
