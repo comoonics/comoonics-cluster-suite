@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.4 2006-07-03 16:08:58 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.5 2006-07-04 11:00:17 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComArchiveRequirement.py,v $
 
 from ComExceptions import ComException
@@ -69,9 +69,9 @@ class ArchiveRequirement(Requirement):
             raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
         os.chdir(destfile)
         __cmd="gzip -cd %s | cpio -i" % srcfile
-        (rc, rv) = ComSystem.execLocalGetResult(__cmd)
+        (rc, rv, stderr) = ComSystem.execLocalGetResult(__cmd, True)
         if rc >> 8 != 0:
-            raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
+            raise RuntimeError("running \"%s\" failed: %u, %s, %s" % (__cmd, rc,rv, stderr))
 
     
     def do(self):
@@ -92,7 +92,7 @@ class ArchiveRequirement(Requirement):
         os.chdir(destfile)
         __cmd="cp %s %s" %(srcfile, srcfile+".bak")
         try:
-            (rc, rv) = ComSystem.execLocalGetResult(__cmd)
+            (rc, rv, stderr) = ComSystem.execLocalGetResult(__cmd, True)
             if rc >> 8 != 0:
                 raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
         except RuntimeError, re:
@@ -102,14 +102,17 @@ class ArchiveRequirement(Requirement):
         (rc, rv) = ComSystem.execLocalGetResult(__cmd)
         if rc >> 8 != 0:
             raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
-        __cmd="rm -rf "+srcfile
+        __cmd="rm -rf %s/*" % destfile
         (rc, rv) = ComSystem.execLocalGetResult(__cmd)
         if rc >> 8 != 0:
             raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.4  2006-07-03 16:08:58  marc
+# Revision 1.5  2006-07-04 11:00:17  marc
+# changed bug in cleanup
+#
+# Revision 1.4  2006/07/03 16:08:58  marc
 # removing the unpacked archive afterwards
 #
 # Revision 1.3  2006/06/30 08:30:20  marc
