@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComJournaled.py,v 1.3 2006-07-03 16:09:31 marc Exp $
+# $Id: ComJournaled.py,v 1.4 2006-07-04 09:31:18 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComJournaled.py,v $
 
 import ComLog
@@ -30,7 +30,9 @@ class JournaledObject:
         def __init__(self, *params):
             self.ref=params[0]
             self.method=params[1]
-            if len(params) > 2:
+            if len(params) == 3:
+                self.params=params[2]
+            elif len(params) > 3:
                 self.params=params[2:]
             else:
                 self.params=None
@@ -60,7 +62,9 @@ class JournaledObject:
         params - must be a list of at least 2 params (ref and methodname). Optionally the rest are parameters to the
                  method
         """
-        if (len(params) >2):
+        if len(params) == 3:
+            self.__journal__.append(JournaledObject.JournalEntry(params[0], params[1], params[2]))
+        elif len(params) >3:
             self.__journal__.append(JournaledObject.JournalEntry(params[0], params[1], params[2:]))
         else:
             self.__journal__.append(JournaledObject.JournalEntry(params[0], params[1]))
@@ -89,7 +93,10 @@ class JournaledObject:
 
 ####################
 # $Log: ComJournaled.py,v $
-# Revision 1.3  2006-07-03 16:09:31  marc
+# Revision 1.4  2006-07-04 09:31:18  marc
+# changed the execution of journal methods
+#
+# Revision 1.3  2006/07/03 16:09:31  marc
 # still params to journal functions
 #
 # Revision 1.2  2006/07/03 13:51:09  marc
