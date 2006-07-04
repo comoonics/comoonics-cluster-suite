@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-bc.py,v 1.4 2006-07-04 11:16:11 mark Exp $
+# $Id: com-bc.py,v 1.5 2006-07-04 11:38:21 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/Attic/com-bc.py,v $
 
 from exceptions import Exception
@@ -90,13 +90,17 @@ else:
     usage(sys.argv)
     sys.exit(1)
 
-file=os.fdopen(os.open(filename,os.O_RDONLY))
-line("Parsing document %s " % filename)
-doc = reader.fromStream(file)
-businesscopy=ComBusinessCopy.getBusinessCopy(doc.documentElement, doc)
-if ASK_MODE:
-    ComSystem.__EXEC_REALLY_DO="ask"
-
+try:
+    file=os.fdopen(os.open(filename,os.O_RDONLY))
+    line("Parsing document %s " % filename)
+    doc = reader.fromStream(file)
+    businesscopy=ComBusinessCopy.getBusinessCopy(doc.documentElement, doc)
+    if ASK_MODE:
+        ComSystem.__EXEC_REALLY_DO="ask"
+except KeyboardInterrupt:
+    ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).info("Leaving because of user signal")
+    sys.exit(1)
+    
 try:
     line("executing copysets %u" % len(businesscopy.copysets))
     businesscopy.doCopysets()
@@ -105,6 +109,9 @@ try:
     businesscopy.doModificationsets()
 
     line("Successfully executed businesscopy.")
+except KeyboardInterrupt:
+    ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).info("Leaving because of user signal")
+    sys.exit(1)
 except Exception, e:
     ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).warn("Exception %s caught during copy." % e)
     import traceback
@@ -120,7 +127,10 @@ except Exception, e:
 
 ##################
 # $Log: com-bc.py,v $
-# Revision 1.4  2006-07-04 11:16:11  mark
+# Revision 1.5  2006-07-04 11:38:21  mark
+# added support for Ctrl-C interrupt
+#
+# Revision 1.4  2006/07/04 11:16:11  mark
 # added setWarinings()
 #
 # Revision 1.3  2006/07/04 11:01:48  marc
