@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-bc.py,v 1.5 2006-07-04 11:38:21 mark Exp $
+# $Id: com-bc.py,v 1.6 2006-07-05 13:06:50 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/Attic/com-bc.py,v $
 
 from exceptions import Exception
@@ -102,10 +102,15 @@ except KeyboardInterrupt:
     sys.exit(1)
     
 try:
-    line("executing copysets %u" % len(businesscopy.copysets))
+    if businesscopy.hasAttribute("name"):
+        line("Execution of businesscopy %s" % (businesscopy.getAttribute("name")))
+    else:
+        line("Execution of businesscopy %s" % ("unknown"))
+
+    line("Executing copysets %u" % len(businesscopy.copysets))
     businesscopy.doCopysets()
 
-    line("executing all modificationsets %u" % len(businesscopy.modificationsets))
+    line("Executing all modificationsets %u" % len(businesscopy.modificationsets))
     businesscopy.doModificationsets()
 
     line("Successfully executed businesscopy.")
@@ -116,10 +121,10 @@ except Exception, e:
     ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).warn("Exception %s caught during copy." % e)
     import traceback
     traceback.print_exc()
-    line("undoing executing all copysets %u" % len(businesscopy.copysets))
+    line("Undoing executing all copysets %u" % len(businesscopy.copysets))
     ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).warn("Undoing %s." % ComCopyset.Copyset.TAGNAME)
     businesscopy.undoCopysets()
-    line("undoing executing all modificationsets %u" % len(businesscopy.modificationsets))
+    line("Undoing executing all modificationsets %u" % len(businesscopy.modificationsets))
     ComLog.getLogger(ComBusinessCopy.BusinessCopy.__logStrLevel__).warn("Undoing %s." % ComModificationset.Modificationset.TAGNAME)
     businesscopy.undoModificationsets()
 
@@ -127,7 +132,10 @@ except Exception, e:
 
 ##################
 # $Log: com-bc.py,v $
-# Revision 1.5  2006-07-04 11:38:21  mark
+# Revision 1.6  2006-07-05 13:06:50  marc
+# support names on every tag.
+#
+# Revision 1.5  2006/07/04 11:38:21  mark
 # added support for Ctrl-C interrupt
 #
 # Revision 1.4  2006/07/04 11:16:11  mark
