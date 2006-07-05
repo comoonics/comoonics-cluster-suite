@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.20 2006-06-30 08:00:52 mark Exp $
+# $Id: ComDataObject.py,v 1.21 2006-07-05 13:06:20 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.20 $"
+__version__ = "$Revision: 1.21 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDataObject.py,v $
 
 
@@ -57,8 +57,10 @@ class DataObject:
     def setDocument(self, doc):
         self.__dict__['document']=doc
 
-    def getAttribute(self,name):
-        if not self.__dict__.has_key('element') or not self.element.hasAttribute(name):
+    def getAttribute(self,name,default=None):
+        if not self.__dict__.has_key('element') or not self.element.hasAttribute(name) and default:
+            return default
+        elif not self.__dict__.has_key('element') or not self.element.hasAttribute(name):
             raise exceptions.NameError("No attribute name " + name)
         return self.element.getAttribute(name)
 
@@ -144,7 +146,10 @@ class DataObject:
                 
                 
 # $Log: ComDataObject.py,v $
-# Revision 1.20  2006-06-30 08:00:52  mark
+# Revision 1.21  2006-07-05 13:06:20  marc
+# added getAttribute with default
+#
+# Revision 1.20  2006/06/30 08:00:52  mark
 # bugfixes in ref
 #
 # Revision 1.19  2006/06/29 13:49:10  marc
