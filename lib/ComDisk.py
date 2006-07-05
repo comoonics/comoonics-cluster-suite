@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.7 2006-07-03 13:02:51 mark Exp $
+# $Id: ComDisk.py,v 1.8 2006-07-05 12:29:34 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComDisk.py,v $
 
 import os
@@ -93,21 +93,28 @@ class Disk(DataObject):
         see sfdisk -d
         Throws ComException on error
         """
-        __cmd = self.getRestoreStdin() + " < " + filename
+        __cmd = self.getRestoreStdin(True) + " < " + filename
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         self.log.debug("restorePartitionTable( " + filename + "):\n " + __ret)
         if __rc != 0:
             raise ComException(__cmd)
 
-    def getRestoreStdin(self):
+    def getRestoreStdin(self, force=False):
         """ returns command string to restore a partition table
         config from sfdisk stdin
         see sfdisk < config
         """ 
-        return CMD_SFDISK + " " + self.getDeviceName()
+        __cmd = [CMD_SFDISK]
+        if force:
+            __cmd.append("--force")
+        __cmd.append(self.getDeviceName())
+        return " ".join(__cmd)
     
 # $Log: ComDisk.py,v $
-# Revision 1.7  2006-07-03 13:02:51  mark
+# Revision 1.8  2006-07-05 12:29:34  mark
+# added sfdisk --force option
+#
+# Revision 1.7  2006/07/03 13:02:51  mark
 # moved devicefile check in exists() methos
 #
 # Revision 1.6  2006/07/03 09:27:12  mark
