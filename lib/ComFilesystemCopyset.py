@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.3 2006-07-03 14:30:24 mark Exp $
+# $Id: ComFilesystemCopyset.py,v 1.4 2006-07-06 08:59:07 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -53,7 +53,10 @@ class FilesystemCopyset(Copyset):
         self.postSource()
         self.postDest()
         if __rc:
-            raise ComException(__cmd + __ret)
+            # TODO
+            # check for specific error codes
+            #raise ComException(__cmd + __ret)
+            ComLog.getLogger("Copyset").warning("doCopy: " + __ret)
     
     def undoCopy(self):
         # simple undo we need to think about that again
@@ -102,7 +105,10 @@ class FilesystemCopyset(Copyset):
         return __cmd
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.3  2006-07-03 14:30:24  mark
+# Revision 1.4  2006-07-06 08:59:07  mark
+# Changed bahavior on rsync error codes see Bug #6
+#
+# Revision 1.3  2006/07/03 14:30:24  mark
 # added undo
 #
 # Revision 1.2  2006/07/03 10:41:01  mark
