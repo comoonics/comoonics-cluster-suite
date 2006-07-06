@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.4 2006-07-03 12:47:44 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.5 2006-07-06 12:39:41 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -21,7 +21,7 @@ from xml.dom.ext import PrettyPrint
 import os
 
 from ComExceptions import *
-from ComModificationset import Modificationset
+from ComModificationset import ModificationsetJournaled
 from ComDevice import Device
 import ComFileSystem
 from ComFileSystem import FileSystem
@@ -30,10 +30,10 @@ import ComLog
 
 log=ComLog.getLogger("Modificationset")
 
-class FilesystemModificationset(Modificationset):
+class FilesystemModificationset(ModificationsetJournaled):
     """ Base Class for all source and destination objects"""
     def __init__(self, element, doc):
-        Modificationset.__init__(self, element, doc)
+        ModificationsetJournaled.__init__(self, element, doc)
         try:
             __device=xpath.Evaluate('device', element)[0]
             self.device=Device(__device, doc)
@@ -54,28 +54,37 @@ class FilesystemModificationset(Modificationset):
         self.cwd = os.getcwd()
         log.debug("Modifications: %u" % len(self.modifications))
         log.debug("Filesystemodificationset CWD: " + self.cwd)
-    
+        self.addToUndoMap(self.filesystem.__class__.__name__, "mount", "umountDir")
+        self.addToUndoMap(os.__class__.__name__, "chdir", "chdir")
+        
     def doPre(self):
         # mount Filesystem
         if not self.device.isMounted():
             self.filesystem.mount(self.device, self.mountpoint)
-            self.umountfs=True
+            self.journal(self.filesystem, "mount", [self.mountpoint])
+        __cwd=os.getcwd()
         os.chdir(self.mountpoint.getAttribute("name"))
+        self.journal(os, "chdir", __cwd)
         log.debug("CWD: " + os.getcwd())
         
     
     def doPost(self):
-        os.chdir(self.cwd)
+        self.replayJournal()
+        self.commitJournal()
+        #os.chdir(self.cwd)
         #umount Filesystem
-        if self.umountfs:
-            self.filesystem.umountDir(self.mountpoint)
+        #if self.umountfs:
+        #    self.filesystem.umountDir(self.mountpoint)
         log.debug("CWD: " + os.getcwd())
         
     def getModifications(self):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.4  2006-07-03 12:47:44  marc
+# Revision 1.5  2006-07-06 12:39:41  mark
+# added journal support
+#
+# Revision 1.4  2006/07/03 12:47:44  marc
 # more debugging.
 #
 # Revision 1.3  2006/07/03 08:28:46  marc
