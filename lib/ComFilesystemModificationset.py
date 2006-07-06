@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.5 2006-07-06 12:39:41 mark Exp $
+# $Id: ComFilesystemModificationset.py,v 1.6 2006-07-06 15:09:33 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -59,7 +59,7 @@ class FilesystemModificationset(ModificationsetJournaled):
         
     def doPre(self):
         # mount Filesystem
-        if not self.device.isMounted():
+        if not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
         __cwd=os.getcwd()
@@ -81,7 +81,10 @@ class FilesystemModificationset(ModificationsetJournaled):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.5  2006-07-06 12:39:41  mark
+# Revision 1.6  2006-07-06 15:09:33  mark
+# Device.isMounted(mountpoint)
+#
+# Revision 1.5  2006/07/06 12:39:41  mark
 # added journal support
 #
 # Revision 1.4  2006/07/03 12:47:44  marc

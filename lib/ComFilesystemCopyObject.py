@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.4 2006-07-06 11:53:11 mark Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.5 2006-07-06 15:09:10 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -64,7 +64,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
         
     def prepareAsSource(self):   
         # Check for mounted
-        if not self.device.isMounted():
+        if not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
             #self.umountfs=True
@@ -92,7 +92,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.4  2006-07-06 11:53:11  mark
+# Revision 1.5  2006-07-06 15:09:10  mark
+# Device.isMounted(mountpoint)
+#
+# Revision 1.4  2006/07/06 11:53:11  mark
 # added journal support
 #
 # Revision 1.3  2006/07/03 14:30:06  mark
