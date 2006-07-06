@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComJournaled.py,v 1.4 2006-07-04 09:31:18 marc Exp $
+# $Id: ComJournaled.py,v 1.5 2006-07-06 11:52:19 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComJournaled.py,v $
 
 import ComLog
@@ -81,19 +81,33 @@ class JournaledObject:
                 undomethod=self.__undomap__[je.ref.__class__.__name__+"."+je.method]
                 ComLog.getLogger(JournaledObject.__logStrLevel__).debug("Undomethod: %s(%s)" % (undomethod, je.params))
                 if not je.params or len(je.params) == 0:
-                    je.ref.__class__.__dict__[undomethod](je.ref)
+                    # changed call of replay 
+                    # __class__.__dict__[undomethod] does not work with inherited methods
+                    #je.ref.__class__.__dict__[undomethod](je.ref)
+                    getattr(je.ref,undomethod)()
                 elif len(je.params) == 1:
-                    je.ref.__class__.__dict__[undomethod](je.ref, je.params[0])
+                    #je.ref.__class__.__dict__[undomethod](je.ref, je.params[0])
+                    getattr(je.ref,undomethod)(je.params[0])
                 else:
-                    je.ref.__class__.__dict__[undomethod](je.ref, je.params)
+                    #je.ref.__class__.__dict__[undomethod](je.ref, je.params)
+                    getattr(je.ref,undomethod)(je.params)
             except Exception, e:
                 ComLog.getLogger(JournaledObject.__logStrLevel__).warn("Caught exception e during journal replay of method %s => %s on %s: %s" % (je.method, undomethod, je.ref.__class__.__name__, e))
                 import traceback
                 traceback.print_exc()
+    def commitJournal(self):
+        """
+        commits the journal, i.e. deletes all journal entries
+        """
+        self.__journal__=[]
 
 ####################
 # $Log: ComJournaled.py,v $
-# Revision 1.4  2006-07-04 09:31:18  marc
+# Revision 1.5  2006-07-06 11:52:19  mark
+# added commitJournal
+# changed call for undomethod to support inherited methods
+#
+# Revision 1.4  2006/07/04 09:31:18  marc
 # changed the execution of journal methods
 #
 # Revision 1.3  2006/07/03 16:09:31  marc
