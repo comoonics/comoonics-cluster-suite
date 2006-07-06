@@ -7,17 +7,18 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.4 2006-07-03 12:54:55 marc Exp $
+# $Id: ComModificationset.py,v 1.5 2006-07-06 12:40:01 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModificationset.py,v $
 
 import exceptions
 import os
 
 from ComDataObject import DataObject
+from ComJournaled import JournaledObject
 import ComModification
 import ComLog
 
@@ -79,8 +80,33 @@ class Modificationset(DataObject):
             self.modifications.append(ComModification.getModification(emods[i], doc))
         return self.modifications
    
+ 
+class ModificationsetJournaled(Modificationset, JournaledObject):
+    """
+    Derives anything from Modification plus journals all actions.
+    Internally ModificationsetJournaled has a map of undomethods and references to objects that methods should be executed upon.
+    If undo is called the journal stack is executed from top to buttom (LIFO) order.
+    """
+    __logStrLevel__ = "CopysetJournaled"
+
+    def __init__(self, element, doc):
+        Modificationset.__init__(self, element, doc)
+        JournaledObject.__init__(self)
+        self.__journal__=list()
+        self.__undomap__=dict()
+
+    def undoModifications(self):
+        """
+        just calls replayJournal and undoModifications from Modificationset
+        """
+        Modificationset.undoModifications(self)
+        self.replayJournal()  
+   
 # $Log: ComModificationset.py,v $
-# Revision 1.4  2006-07-03 12:54:55  marc
+# Revision 1.5  2006-07-06 12:40:01  mark
+# added ModificationsetJournaled
+#
+# Revision 1.4  2006/07/03 12:54:55  marc
 # bugfixed undoing.
 #
 # Revision 1.3  2006/07/03 07:47:37  marc
