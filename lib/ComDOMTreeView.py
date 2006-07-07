@@ -62,9 +62,9 @@ class DOMTreeModel(gtk.TreeStore, DOMModel):
 class DOMListModel(gtk.ListStore, DOMModel):
     def __init__(self, node):
         gtk.ListStore.__init__(self, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, gobject.TYPE_OBJECT)
-        self.createStoreModelFromNode(node)
+        #self.createStoreModelFromNode(node)
 
-    def createStoreModelFromNode(self, node):
+    def createStoreModelFromNode(self, node, doc, dtd):
         iter=self.append()
         print "Node: %s, %s" % (node.nodeName, node.nodeValue)
         gobj=gobject.GObject()
@@ -73,9 +73,14 @@ class DOMListModel(gtk.ListStore, DOMModel):
         self.set_value(iter, DOMModel.COLUMN_VALUE, node.nodeValue)
         self.set_value(iter, DOMModel.COLUMN_EDITABLE, True)
         self.set_value(iter, DOMModel.COLUMN_NODE, gobj)
-        if node.attributes:
-            for child in node.attributes:
-                self.createStoreModelFromNode(child)
+        if node.nodeType == xml.dom.Node.ELEMENT_NODE:
+            __attr=dtd.get_elem(node.nodeName).get_attr_list()
+            for i in range(len(__attr)):
+                if node.hasAttribute(__attr[i]):
+                    __child=node.getAttributeNode(__attr[i])
+                else:
+                    __child=doc.createAttribute(__attr[i])
+                self.createStoreModelFromNode(__child, doc, dtd)
          
 class DOMNodeView(gtk.TreeView):
     def __init__(self):
@@ -98,7 +103,7 @@ class DOMNodeView(gtk.TreeView):
         self.append_column(column)
 
 class DOMTreeViewTest(gtk.Window):
-    def __init__(self, node, parent=None):
+    def __init__(self, node, doc, dtd, parent=None):
         gtk.Window.__init__(self)
         try:
             self.set_screen(parent.get_screen())
@@ -107,6 +112,8 @@ class DOMTreeViewTest(gtk.Window):
         self.set_title(self.__class__.__name__)
         self.set_default_size(650, 400)
         self.set_border_width(8)
+        self.dtd=dtd
+        self.doc=doc
 
         label = gtk.Label("DOMTreeViewer")
 
@@ -157,7 +164,8 @@ class DOMTreeViewTest(gtk.Window):
         (model, iter) = selection.get_selected()
         print "Selection changed %s, %s, %s %s" % (model, iter, dest, filter)
         dest.clear()
-        dest.createStoreModelFromNode(model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY))
+        dest.createStoreModelFromNode(model.get_value(iter, DOMModel.COLUMN_NODE). \
+                                      get_data(DOMModel.NODE_KEY), self.doc, self.dtd)
         if filter:
             filter.refilter()
     
@@ -168,8 +176,9 @@ def main():
         filename=sys.argv[1]
     file=os.fdopen(os.open(filename,os.O_RDONLY))
     doc = reader.fromStream(file)
+    dtd=reader.parser._parser.get_dtd()
     
-    dtv=DOMTreeViewTest(doc.documentElement)
+    dtv=DOMTreeViewTest(doc.documentElement, doc, dtd)
     gtk.main()
 
 if __name__ == '__main__':
