@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModification.py,v 1.4 2006-07-03 12:54:26 marc Exp $
+# $Id: ComModification.py,v 1.5 2006-07-07 11:33:44 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComModification.py,v $
 import exceptions
 import xml.dom
@@ -27,6 +27,9 @@ def getModification(element, doc):
     if __type == "copy":
         from ComCopyModification import CopyModification
         return CopyModification(element, doc)
+    if __type == "move":
+        from ComMoveModification import MoveModification
+        return MoveModification(element, doc)
     if __type == "regexp":
         from ComRegexpModification import RegexpModification
         return RegexpModification(element, doc)
@@ -83,7 +86,10 @@ class Modification(DataObject):
             __reqs.append(ComRequirement.getRequirement(__elements[i], doc))
         return __reqs
 # $Log: ComModification.py,v $
-# Revision 1.4  2006-07-03 12:54:26  marc
+# Revision 1.5  2006-07-07 11:33:44  mark
+# added factory for move
+#
+# Revision 1.4  2006/07/03 12:54:26  marc
 # commented out the requirements
 #
 # Revision 1.3  2006/07/03 07:47:22  marc
