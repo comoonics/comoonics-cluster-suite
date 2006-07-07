@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComRegexpModification.py,v 1.1 2006-06-30 12:42:45 mark Exp $
+# $Id: ComRegexpModification.py,v 1.2 2006-07-07 11:35:00 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComRegexpModification.py,v $
 
 import exceptions
@@ -20,25 +20,20 @@ from xml import xpath
 import re
 import os
 
-from ComModification import Modification
+from ComFileModification import FileModification
 from ComFile import File
 import ComSystem
 import ComLog
 
 CMD_CP="/bin/cp"
 
-class RegexpModification(Modification):
+class RegexpModification(FileModification):
     SAVESTRING=".regexp"
     """ Regular Expression Modification"""
     def __init__(self, element, doc):
-        Modification.__init__(self, element, doc)
-        self.files=self.createFileList(element, doc)
+        FileModification.__init__(self, element, doc)
         
-    def doRealModifications(self):
-        for i in range(len(self.files)):
-            self.doRegexp(self.files[i])
-    
-    def doRegexp(self, file, save=True):
+    def doModifications(self, file, save=True):
         __search = self.getAttribute("search")
         __replace = self.getAttribute("replace")
         if save:
@@ -63,18 +58,10 @@ class RegexpModification(Modification):
         
         __dest.close()
             
-    """
-    privat methods
-    """
-
-    def createFileList(self, element, doc):
-        __files=list()
-        __elements=xpath.Evaluate('file', element)
-        for i in range(len(__elements)):
-            __files.append(File(__elements[i], doc))
-        return __files
-
 # $Log: ComRegexpModification.py,v $
-# Revision 1.1  2006-06-30 12:42:45  mark
+# Revision 1.2  2006-07-07 11:35:00  mark
+# changed to inherit FileModification
+#
+# Revision 1.1  2006/06/30 12:42:45  mark
 # initial checkin
 #

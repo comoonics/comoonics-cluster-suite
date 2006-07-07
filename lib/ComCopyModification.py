@@ -7,33 +7,28 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComCopyModification.py,v 1.1 2006-06-30 07:56:12 mark Exp $
+# $Id: ComCopyModification.py,v 1.2 2006-07-07 11:35:36 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComCopyModification.py,v $
 
 import exceptions
 import xml.dom
 from xml import xpath
 
-from ComModification import Modification
+from ComFileModification import FileModification
 from ComFile import File
 import ComSystem
 import ComLog
 
-class CopyModification(Modification):
+class CopyModification(FileModification):
     """ Base Class for all source and destination objects"""
     def __init__(self, element, doc):
-        Modification.__init__(self, element, doc)
-        self.files=self.createFileList(element, doc)
-        
-    def doRealModifications(self):
-        for i in range(len(self.files)):
-            self.doCopy(self.files[i])
+        FileModification.__init__(self, element, doc)
     
-    def doCopy(self, file):
+    def doModifications(self, file):
         # TODO create bckup of file ?
         # TODO raise Warning Exception
         __cmd = "cp -a "
@@ -46,18 +41,11 @@ class CopyModification(Modification):
         else:
             ComLog.getLogger("CopyModification").debug("doCopy: "  + __cmd +" "+ __ret) 
 
-    """
-    privat methods
-    """
-
-    def createFileList(self, element, doc):
-        __files=list()
-        __elements=xpath.Evaluate('file', element)
-        for i in range(len(__elements)):
-            __files.append(File(__elements[i], doc))
-        return __files
 
 # $Log: ComCopyModification.py,v $
-# Revision 1.1  2006-06-30 07:56:12  mark
+# Revision 1.2  2006-07-07 11:35:36  mark
+# changed to inherit FileModification
+#
+# Revision 1.1  2006/06/30 07:56:12  mark
 # initial revision
 #
