@@ -1,4 +1,4 @@
-""" Comoonics BusinessCopy class
+""" Comoonics EnterpriseCopy class
 
 
 here should be some more information about the module, that finds its way inot the onlinedoc
@@ -6,28 +6,28 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComBusinessCopy.py,v 1.4 2006-07-05 13:06:34 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.1 2006-07-07 08:41:27 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
-# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComBusinessCopy.py,v $
+__version__ = "$Revision: 1.1 $"
+# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComEnterpriseCopy.py,v $
 
 import ComDataObject
 import ComCopyset
 import ComModificationset
 import ComLog
 
-def getBusinessCopy(element, doc):
-    """ Factory function to create the BusinessCopy Objects"""
-    return BusinessCopy(element, doc)
+def getEnterpriseCopy(element, doc):
+    """ Factory function to create the EnterpriseCopy Objects"""
+    return EnterpriseCopy(element, doc)
 
-class BusinessCopy(ComDataObject.DataObject):
+class EnterpriseCopy(ComDataObject.DataObject):
     """
-    Class that does the businesscopy. Runs through every copyset and modificationset and executes them.
+    Class that does the enterprisecopy. Runs through every copyset and modificationset and executes them.
     """
-    TAGNAME = "businesscopy"
-    __logStrLevel__ = "BusinessCopy"
+    TAGNAME = "enterprisecopy"
+    __logStrLevel__ = "EnterpriseCopy"
 
     def __init__(self, element, doc):
         ComDataObject.DataObject.__init__(self, element, doc)
@@ -68,8 +68,11 @@ class BusinessCopy(ComDataObject.DataObject):
             modset.undoModifications()
 
 #################################
-# $Log: ComBusinessCopy.py,v $
-# Revision 1.4  2006-07-05 13:06:34  marc
+# $Log: ComEnterpriseCopy.py,v $
+# Revision 1.1  2006-07-07 08:41:27  marc
+# Business is now Enterprise sonst ändert sich nix.
+#
+# Revision 1.4  2006/07/05 13:06:34  marc
 # support names on every tag.
 #
 # Revision 1.3  2006/07/04 11:00:41  marc
