@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-'''Tree View/Generic Tree Model
+'''
+Tree View/Generic Tree Model
 
 This test is designed to demonstrate creating a new type of tree model
-in python for use with the new tree widget in gtk 2.0.'''
+in python for use with the new tree widget in gtk 2.0.
+'''
 
 import gtk
 import gobject
@@ -14,77 +16,81 @@ import os
 from xml.dom.NodeFilter import NodeFilter
 
 def acceptElements(model, iter):
-    if not model.get_value(iter, 1):
+    if not model.get_value(iter, DOMModel.COLUMN_NODE):
         return False
-    node=model.get_value(iter, 1).get_data(DOMTreeModel.NODE_KEY)
+    node=model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMTreeModel.NODE_KEY)
     if node.nodeType == node.ELEMENT_NODE:
         return True
     else:
         return False
         
 def acceptAttributes(model, iter):
-    return True
-    if not model.get_value(iter, 1):
+    if not model.get_value(iter, DOMModel.COLUMN_NODE):
         return False
-    node=model.get_value(iter, 1).get_data(DOMTreeModel.NODE_KEY)
+    node=model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMTreeModel.NODE_KEY)
     if node.nodeType == node.ATTRIBUTE_NODE:
-        print "Node: %s, %s" % (node.nodeName, node.nodeValue)
         return True
     else:
         return False
 
-class DOMTreeModel(gtk.TreeStore):
+class DOMModel:
     NODE_KEY="node"
+    (
+      COLUMN_NAME,
+      COLUMN_VALUE,
+      COLUMN_EDITABLE,
+      COLUMN_NODE
+     ) = range(4)
 
-    def __init__(self, node, filter=None):
-        gtk.TreeStore.__init__(self, gobject.TYPE_STRING, gobject.TYPE_OBJECT)
-        if not filter:
-            self.filter = acceptElements
-        else:
-            self.filter = filter
-            
-        modelfilter=self.filter_new()
-        modelfilter.set_visible_func(self.filter)
-        self.createTreeStoreModelFromNode(node)
-        modelfilter.refilter()
 
-    def createTreeStoreModelFromNode(self, node, parent=None):
+class DOMTreeModel(gtk.TreeStore, DOMModel):
+    def __init__(self, node):
+        gtk.TreeStore.__init__(self, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, gobject.TYPE_OBJECT)
+        self.createStoreModelFromNode(node)
+
+    def createStoreModelFromNode(self, node, parent=None):
         iter=self.append(parent)
-        self.set_value(iter, 0, node.nodeName)
         gobj=gobject.GObject()
         gobj.set_data(DOMTreeModel.NODE_KEY, node)
-        self.set_value(iter, 1, gobj)
+        self.set_value(iter, DOMModel.COLUMN_NAME, node.nodeName)
+        self.set_value(iter, DOMModel.COLUMN_VALUE, node.nodeValue)
+        self.set_value(iter, DOMModel.COLUMN_EDITABLE, False)
+        self.set_value(iter, DOMModel.COLUMN_NODE, gobj)
         for child in node.childNodes:
-            self.createTreeStoreModelFromNode(child, iter)
-         
-class DOMListModel(gtk.ListStore):
-    NODE_KEY="node"
+            self.createStoreModelFromNode(child, iter)
 
-    def __init__(self, node, filter=None):
-        gtk.ListStore.__init__(self, gobject.TYPE_STRING, gobject.TYPE_OBJECT)
-        if not filter:
-            self.filter = acceptAttributes
-        else:
-            self.filter = filter
-            
-        modelfilter=self.filter_new()
-        modelfilter.set_visible_func(self.filter)
-        self.createTreeStoreModelFromNode(node)
-        modelfilter.refilter()
+class DOMListModel(gtk.ListStore, DOMModel):
+    def __init__(self, node):
+        gtk.ListStore.__init__(self, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, gobject.TYPE_OBJECT)
+        self.createStoreModelFromNode(node)
 
-    def createTreeStoreModelFromNode(self, node, parent=None):
-        iter=self.append(parent)
-        self.set_value(iter, 0, node.nodeName)
+    def createStoreModelFromNode(self, node):
+        iter=self.append()
+        print "Node: %s, %s" % (node.nodeName, node.nodeValue)
         gobj=gobject.GObject()
         gobj.set_data(DOMTreeModel.NODE_KEY, node)
-        self.set_value(iter, 1, gobj)
+        self.set_value(iter, DOMModel.COLUMN_NAME, node.nodeName)
+        self.set_value(iter, DOMModel.COLUMN_VALUE, node.nodeValue)
+        self.set_value(iter, DOMModel.COLUMN_EDITABLE, True)
+        self.set_value(iter, DOMModel.COLUMN_NODE, gobj)
+        if node.attributes:
+            for child in node.attributes:
+                self.createStoreModelFromNode(child)
          
 class DOMNodeView(gtk.TreeView):
     def __init__(self):
         gtk.TreeView.__init__(self)
         renderer = gtk.CellRendererText()
         renderer.set_property("xalign", 0.0)
-        column = gtk.TreeViewColumn("Name", renderer, text=0)
+        column = gtk.TreeViewColumn("Name", renderer, text=DOMModel.COLUMN_NAME)
+        #column = gtk_tree_view_get_column(GTK_TREE_VIEW(treeview), col_offset - 1);
+        column.set_clickable(True)
+        # self.get_selection().set_mode(gtk.SELECTION_SINGLE)
+
+        self.append_column(column)
+
+       #column = gtk_tree_view_get_column(GTK_TREE_VIEW(treeview), col_offset - 1);
+        column = gtk.TreeViewColumn("Value", renderer, text=DOMModel.COLUMN_VALUE, editable=DOMModel.COLUMN_EDITABLE)
         #column = gtk_tree_view_get_column(GTK_TREE_VIEW(treeview), col_offset - 1);
         column.set_clickable(True)
         # self.get_selection().set_mode(gtk.SELECTION_SINGLE)
@@ -106,16 +112,22 @@ class DOMTreeViewTest(gtk.Window):
 
         # create model
         # create treeview
+        basemodell=DOMTreeModel(node)
+        basemodelr=DOMListModel(node)
+        modelfilterl=basemodell.filter_new()
+        modelfilterl.set_visible_func(acceptElements)
+        modelfilterr=basemodelr.filter_new()
+        modelfilterr.set_visible_func(acceptAttributes)
         treeview = DOMNodeView()
-        treeview.set_model(DOMTreeModel(node))
+        treeview.set_model(modelfilterl)
         treeview.set_rules_hint(True)
         listview = DOMNodeView()
-        listview.set_model(DOMListModel(node, acceptAttributes))
+        listview.set_model(modelfilterr)
         listview.set_rules_hint(True)
 
         # expand all rows after the treeview widget has been realized
         treeview.connect('realize', lambda tv: tv.expand_all())
-        treeview.get_selection().connect("changed", self.selection_changed)
+        treeview.get_selection().connect("changed", self.selection_changed, basemodelr, modelfilterr)
         
         sw = gtk.ScrolledWindow()
         sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
@@ -141,8 +153,13 @@ class DOMTreeViewTest(gtk.Window):
         self.add(vbox)
         self.show_all()
         
-    def selection_changed(self, parm):
-        print "Selection changed %s" % parm
+    def selection_changed(self, selection, dest, filter):
+        (model, iter) = selection.get_selected()
+        print "Selection changed %s, %s, %s %s" % (model, iter, dest, filter)
+        dest.clear()
+        dest.createStoreModelFromNode(model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY))
+        if filter:
+            filter.refilter()
     
 def main():
     reader = Sax2.Reader(validate=1)
