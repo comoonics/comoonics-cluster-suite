@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE businesscopy SYSTEM "file:../../xml/comoonics-business-copy.dtd">
-<businesscopy>
+<!DOCTYPE enterprisecopy SYSTEM "file:../../xml/enterprise-business-copy.dtd">
+<enterprisecopy>
 <!--	<copyset type="partition">
 		<source type="disk">
 			<disk name="/dev/sdc"/>
@@ -74,4 +74,4 @@
 			</modification>
 		</device>
 	</modificationset>-->
-</businesscopy>
+</enterprisecopy>
