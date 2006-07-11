@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec.py,v 1.1 2006-07-07 08:40:02 marc Exp $
+# $Id: com-ec.py,v 1.2 2006-07-11 09:24:41 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/Attic/com-ec.py,v $
 
 from exceptions import Exception
@@ -41,29 +41,34 @@ def line(str=None):
     print "--------------------"+str+"---------------------------------"
 
 def usage(argv):
-    print "%s [-a|--ask] [-d|-debug] [-n|--novalidate] xmlfilename" % argv[0]
+    print "%s [-a|--ask] [-d|-debug] [-n|--novalidate] [-h|--help] xmlfilename" % argv[0]
     print '''
     executes all commands described in the <xmlfile>
     
     -a|--ask ask before any command is executed
     -d|--debug be more helpfull
     -n|--novalidate don't validate the xml. Handle with care!!!
+    -c|--copset <name>|all only do all or the given modification set
+    -m|--modificationset <name>|all only do all or the given modification set
+    -h|--help: this helpscreen
     '''
 
 def setWarnings():
     warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning, module='Com*')
     
 try:
-    (opts, args_proper)=getopt.getopt(sys.argv[1:], 'adn', [ 'ask', 'debug', 'novalidate' ])
+    (opts, args_proper)=getopt.getopt(sys.argv[1:], 'hadnc:m:', [ 'help', 'ask', 'debug', 'novalidate', 'copyset', 'modificationset' ])
 except getopt.GetoptError, goe:
     print "Error parsing params: %s", goe
-    usage()
+    usage(sys.argv)
     sys.exit(1)
 
 VALIDATE=True
 DEBUG=False
 ASK_MODE=False
 ComLog.setLevel(logging.INFO)
+copysetname=None
+modsetname=None
 for (opt, value) in opts:
 #    print "Option %s" % opt
     if opt == "-a" or opt == "--ask":
@@ -73,6 +78,13 @@ for (opt, value) in opts:
         ComLog.setLevel(logging.DEBUG)
     elif opt == "-n" or opt == "--novalidate":
         VALIDATE=FALSE
+    elif opt == "-c" or opt == "--copyset":
+        copysetname=value
+    elif opt == "-m" or opt == "--modificationset":
+        modsetname=value
+    elif opt == "-h" or opt == "--help":
+        usage(sys.argv)
+        sys.exit(0)
 
 # filter warnings
 setWarnings()
@@ -107,11 +119,13 @@ try:
     else:
         line("Execution of businesscopy %s" % ("unknown"))
 
-    line("Executing copysets %u" % len(businesscopy.copysets))
-    businesscopy.doCopysets()
+    if (not copysetname and not modsetname) or copysetname:
+        line("Executing %s copysets %u" % (copysetname, len(businesscopy.copysets)))
+        businesscopy.doCopysets(copysetname)
 
-    line("Executing all modificationsets %u" % len(businesscopy.modificationsets))
-    businesscopy.doModificationsets()
+    if (not copysetname and not modsetname) or modsetname:
+        line("Executing %s modificationsets %u" % (modsetname, len(businesscopy.modificationsets)))
+        businesscopy.doModificationsets(modsetname)
 
     line("Successfully executed businesscopy.")
 except KeyboardInterrupt:
@@ -121,18 +135,23 @@ except Exception, e:
     ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Exception %s caught during copy." % e)
     import traceback
     traceback.print_exc()
-    line("Undoing executing all copysets %u" % len(businesscopy.copysets))
-    ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComCopyset.Copyset.TAGNAME)
-    businesscopy.undoCopysets()
-    line("Undoing executing all modificationsets %u" % len(businesscopy.modificationsets))
-    ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComModificationset.Modificationset.TAGNAME)
-    businesscopy.undoModificationsets()
+    if not copysetname and not modsetname or modsetname:
+        line("Undoing executing %s modificationsets %u" % (modsetname, len(businesscopy.modificationsets)))
+        ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComModificationset.Modificationset.TAGNAME)
+        businesscopy.undoModificationsets(copysetname)
+    if not copysetname and not modsetname or copysetname:
+        line("Undoing executing all copysets %u" % (copysetname, len(businesscopy.copysets)))
+        ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComCopyset.Copyset.TAGNAME)
+        businesscopy.undoCopysets(modsetname)
 
     line("Errors during execution of businesscopy.")
 
 ##################
 # $Log: com-ec.py,v $
-# Revision 1.1  2006-07-07 08:40:02  marc
+# Revision 1.2  2006-07-11 09:24:41  marc
+# added commandswitches -m and -c
+#
+# Revision 1.1  2006/07/07 08:40:02  marc
 # initial revision business is enterprise now.
 #
 # Revision 1.6  2006/07/05 13:06:50  marc
