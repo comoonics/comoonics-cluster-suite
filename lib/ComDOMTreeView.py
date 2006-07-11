@@ -116,6 +116,9 @@ class DOMTreeViewTest(gtk.Window):
         self.set_border_width(8)
         self.dtd=dtd
 
+        menubar = self.create_main_menu()
+        menubar.show()
+
         label = gtk.Label("DOMTreeViewer")
 
         # create model
@@ -159,7 +162,8 @@ class DOMTreeViewTest(gtk.Window):
         hpaned.add1(framel)
         hpaned.add2(framer)
         vbox = gtk.VBox(False, 8)
-        vbox.pack_start(label, False, False)
+        vbox.pack_start(menubar, False, False)
+        vbox.add(label)
         vbox.add(hpaned)
         self.add(vbox)
         self.show_all()
@@ -233,6 +237,63 @@ class DOMTreeViewTest(gtk.Window):
     """ 
     private methods
     """
+    def create_main_menu(self):
+        # This is the ItemFactoryEntry structure used to generate new menus.
+        # Item 1: The menu path. The letter after the underscore indicates an
+        #         accelerator key once the menu is open.
+        # Item 2: The accelerator key for the entry
+        # Item 3: The callback.
+        # Item 4: The callback action.  This changes the parameters with
+        #         which the callback is called.  The default is 0.
+        # Item 5: The item type, used to define what kind of an item it is.
+        #       Here are the possible values:
+        #       NULL               -> "<Item>"
+        #       ""                 -> "<Item>"
+        #       "<Title>"          -> create a title item
+        #       "<Item>"           -> create a simple item
+        #       "<CheckItem>"      -> create a check item
+        #       "<ToggleItem>"     -> create a toggle item
+        #       "<RadioItem>"      -> create a radio item
+        #       <path>             -> path of a radio item to link against
+        #       "<Separator>"      -> create a separator
+        #       "<Branch>"         -> create an item to hold sub items (optional)
+        #       "<LastBranch>"     -> create a right justified branch 
+        __menu_items=(
+            ( "/_File",         None,         None, 0, "<Branch>" ),
+            ( "/File/_New",     "<control>N", self.print_hello, 0, None ),
+            ( "/File/_Open",    "<control>O", self.print_hello, 0, None ),
+            ( "/File/_Save",    "<control>S", self.print_hello, 0, None ),
+            ( "/File/Save _As", None,         None, 0, None ),
+            ( "/File/sep1",     None,         None, 0, "<Separator>" ),
+            ( "/File/Quit",     "<control>Q", gtk.main_quit, 0, None ),
+            ( "/_Options",      None,         None, 0, "<Branch>" ),
+            ( "/Options/Test",  None,         None, 0, None ),
+            ( "/_Help",         None,         None, 0, "<LastBranch>" ),
+            ( "/_Help/About",   None,         None, 0, None ),
+            )
+        
+        __accel_group = gtk.AccelGroup()
+
+        # This function initializes the item factory.
+        # Param 1: The type of menu - can be MenuBar, Menu,
+        #          or OptionMenu.
+        # Param 2: The path of the menu.
+        # Param 3: A reference to an AccelGroup. The item factory sets up
+        #          the accelerator table while generating menus.
+        self.item_factory = gtk.ItemFactory(gtk.MenuBar, "<main>", __accel_group)
+
+        # This method generates the menu items. Pass to the item factory
+        #  the list of menu items
+        self.item_factory.create_items(__menu_items)
+
+        # Attach the new accelerator group to the window.
+        self.add_accel_group(__accel_group)
+
+        # Finally, return the actual menu bar created by the item factory.
+        return self.item_factory.get_widget("<main>")
+
+    def print_hello(self, w, data):
+        print "hello"
 
 class AddElementMenuItem(gtk.MenuItem):
     def __init__(self, selection, dtd, label="add Child Element..."):
@@ -251,7 +312,7 @@ class AddElementMenuItem(gtk.MenuItem):
         __menu = gtk.Menu()
         __model, __i = selection.get_selected()
         __node = __model.get(__i, DOMModel.COLUMN_NODE)[0]
-        __attr = ContentModelHelper(dtd).getValidElementNames(__node.get_data(DOMTreeModel.NODE_KEY))
+        __attr = ContentModelHelper(dtd).getValidElementNamesAppend(__node.get_data(DOMTreeModel.NODE_KEY))
         for i in range(len(__attr)):
             __item = gtk.MenuItem(__attr[i])
             __menu.append(__item)
@@ -264,8 +325,10 @@ class InsertElementMenuItem(gtk.MenuItem):
     def __init__(self, selection, dtd, label="insert Element..."):
         gtk.MenuItem.__init__(self, label)       
         self.items=list()
-        self.set_submenu(self.createMenu(selection, dtd))
-        self.show()  
+        __item = self.createMenu(selection, dtd)
+        if __item:
+            self.set_submenu(__item)
+            self.show()  
         
     
     def registerListener(self, listener):
@@ -277,7 +340,11 @@ class InsertElementMenuItem(gtk.MenuItem):
         __menu = gtk.Menu()
         __model, __i = selection.get_selected()
         __node = __model.get(__i, DOMModel.COLUMN_NODE)[0]
-        __attr = ContentModelHelper(dtd).getValidElementNames(__node.get_data(DOMTreeModel.NODE_KEY).parentNode)
+        if not __node.get_data(DOMTreeModel.NODE_KEY).parentNode.nodeType == __node.get_data(DOMTreeModel.NODE_KEY).parentNode.ELEMENT_NODE:
+            return None
+        print __node.get_data(DOMTreeModel.NODE_KEY).parentNode
+        __attr = ContentModelHelper(dtd). \
+            getValidElementNamesInsert(__node.get_data(DOMTreeModel.NODE_KEY))
         for i in range(len(__attr)):
             __item = gtk.MenuItem(__attr[i])
             __menu.append(__item)
@@ -355,7 +422,52 @@ class ContentModelHelper:
     def __init__(self, dtd):
         self.dtd=dtd
     
-    def getValidElementNames(self, element):
+    def getValidElementNamesAppend(self, element):
+        __elem=self.dtd.get_elem(element.tagName)
+        __state=__elem.get_start_state()
+        __nodes=element.childNodes
+        for i in range(len(__nodes)):
+            print "found element %s" %__nodes[i].tagName
+            __state=__elem.next_state(__state, __nodes[i].tagName)
+        return __elem.get_valid_elements(__state)
+        
+    def getValidElementNamesInsert(self, element):
+        ret=list()
+        oelement=element
+        parent=element.parentNode
+        __elem=self.dtd.get_elem(parent.tagName)
+        __state=__elem.get_start_state()
+        __nodes=[element]
+        while element.previousSibling:
+            if element.nodeType == element.ELEMENT_NODE:
+                __nodes.append(element)
+                element = element.previousSibling 
+        __nodes.reverse()
+        for i in range(len(__nodes)):
+            print "found element %s" %__nodes[i].tagName
+            #if __elem.final_state(__state):
+             #   return ret
+        __state=__elem.next_state(__state, __nodes[i].tagName)
+       
+        __elements=__elem.get_valid_elements(__state)
+        for i in range(len(__elements)):
+            print "testing element " + __elements[i]
+            ooelement=oelement
+            try: 
+                __tstate=__elem.next_state(__state, __elements[i])
+                while oelement.nextSibling:
+                    oelement=oelement.nextSibling
+                    if element.nodeType == element.ELEMENT_NODE:
+                        __tstate=__elem.next_state(__tstate, oelement.tagName)
+            except KeyError, e:
+                print "element : " + __elements[i]
+                print e
+                continue
+            ret.append(__elements[i])
+        print ret
+        return ret
+        
+    def getValidElementNames2(self, element):
         __elem=self.dtd.get_elem(element.tagName)
         __sstate=__elem.get_start_state()
         __elementlist=list()
