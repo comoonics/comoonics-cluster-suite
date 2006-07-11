@@ -19,6 +19,7 @@ def acceptElements(model, iter):
     if not model.get_value(iter, DOMModel.COLUMN_NODE):
         return False
     node=model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMTreeModel.NODE_KEY)
+    #print "Filter Node %s" % node.nodeName
     if node.nodeType == node.ELEMENT_NODE:
         return True
     else:
@@ -41,12 +42,17 @@ class DOMModel:
       COLUMN_EDITABLE,
       COLUMN_NODE
      ) = range(4)
+     
+    def __init__(self, doc):
+         self.document=doc
 
 
 class DOMTreeModel(gtk.TreeStore, DOMModel):
-    def __init__(self, node):
+    def __init__(self, node, doc):
         gtk.TreeStore.__init__(self, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, gobject.TYPE_OBJECT)
+        DOMModel.__init__(self, doc)
         self.createStoreModelFromNode(node)
+        self.document=doc
 
     def createStoreModelFromNode(self, node, parent=None):
         iter=self.append(parent)
@@ -60,8 +66,9 @@ class DOMTreeModel(gtk.TreeStore, DOMModel):
             self.createStoreModelFromNode(child, iter)
 
 class DOMListModel(gtk.ListStore, DOMModel):
-    def __init__(self, node):
+    def __init__(self, node, doc):
         gtk.ListStore.__init__(self, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, gobject.TYPE_OBJECT)
+        DOMModel.__init__(self, doc)
         self.createStoreModelFromNode(node)
 
     def createStoreModelFromNode(self, node):
@@ -98,7 +105,7 @@ class DOMNodeView(gtk.TreeView):
         self.append_column(column)
 
 class DOMTreeViewTest(gtk.Window):
-    def __init__(self, node, dtd, parent=None):
+    def __init__(self, node, dtd, doc, parent=None):
         gtk.Window.__init__(self)
         try:
             self.set_screen(parent.get_screen())
@@ -113,28 +120,30 @@ class DOMTreeViewTest(gtk.Window):
 
         # create model
         # create treeview
-        basemodell=DOMTreeModel(node)
-        basemodelr=DOMListModel(node)
-        modelfilterl=basemodell.filter_new()
+        self.__basemodell=DOMTreeModel(node, doc)
+        self.__basemodelr=DOMListModel(node, doc)
+        modelfilterl=self.__basemodell.filter_new()
         modelfilterl.set_visible_func(acceptElements)
-        modelfilterr=basemodelr.filter_new()
+        modelfilterr=self.__basemodelr.filter_new()
         modelfilterr.set_visible_func(acceptAttributes)
-        treeview = DOMNodeView()
-        treeview.set_model(modelfilterl)
-        treeview.set_rules_hint(True)
-        listview = DOMNodeView()
-        listview.set_model(modelfilterr)
-        listview.set_rules_hint(True)
+        self.__treeview = DOMNodeView()
+        self.__treeview.set_model(modelfilterl)
+        self.__treeview.set_rules_hint(True)
+        self.__treeview.get_selection().set_mode(gtk.SELECTION_SINGLE)
+        self.__listview = DOMNodeView()
+        self.__listview.set_model(modelfilterr)
+        self.__listview.set_rules_hint(True)
+        self.__listview.get_selection().set_mode(gtk.SELECTION_SINGLE)
 
         # expand all rows after the treeview widget has been realized
-        treeview.connect('realize', lambda tv: tv.expand_all())
-        treeview.get_selection().connect("changed", self.selection_changed, basemodelr, modelfilterr)
-        treeview.connect_object("button-press-event", self.button_press, treeview)
+        self.__treeview.connect('realize', lambda tv: tv.expand_all())
+        self.__treeview.get_selection().connect("changed", self.selection_changed, self.__basemodelr, modelfilterr)
+        self.__treeview.connect_object("button-press-event", self.button_press, self.__treeview)
         
         sw = gtk.ScrolledWindow()
         sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        sw.add(treeview)
+        sw.add(self.__treeview)
 
         framel = gtk.Frame()
         framel.set_shadow_type(gtk.SHADOW_IN)
@@ -144,7 +153,7 @@ class DOMTreeViewTest(gtk.Window):
         framer = gtk.Frame()
         framer.set_shadow_type(gtk.SHADOW_IN)
         framer.set_size_request(200, 200)
-        framer.add(listview)
+        framer.add(self.__listview)
         
         hpaned = gtk.HPaned()
         hpaned.add1(framel)
@@ -162,6 +171,28 @@ class DOMTreeViewTest(gtk.Window):
         dest.createStoreModelFromNode(model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY))
         if filter:
             filter.refilter()
+            
+    def add_element(self, item, model, iter, name):
+        print "Menu Add Element... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
+        (_model, _iter)=self.__treeview.get_selection().get_selected()
+        _piter=self.__basemodell.iter_parent(_iter)
+        value=_model.get_value(_iter, DOMModel.COLUMN_NODE)
+        print "Value: %s" % value
+        domnode=value.get_data(DOMModel.NODE_KEY)
+        print "domnode: %s" % domnode
+        node=self.__basemodell.document.createElement(name)
+        domnode.appendChild(node)
+        self.__basemodell.createStoreModelFromNode(node, iter)
+        self.__treeview.set_model(self.__basemodell)
+        
+    def delete_element(self, item, model, iter):
+        print "Menu Delete Element... " + name + " pressed menuitem %s, model %s" % (item, model)
+
+    def add_attribute(self, item, model, iter, name):
+        print "Menu Add Attribute... " + name + " pressed menuitem %s, model %s" % (item, model)
+
+    def delete_attribute(self, item, model, iter, name):
+        print "Menu Delete Element... " + name + " pressed menuitem %s, model %s" % (item, model)
     
     def button_press(self, widget, event):
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
@@ -191,18 +222,6 @@ class DOMTreeViewTest(gtk.Window):
             __menu.append(__item)
             __item.registerListener(self)
             __menu.popup(None, None, None, event.button, event.time)
-            
-    def add_element(self, item, model, iter, name):
-        print "Menu Add Element... " + name + " pressed"
-
-    def delete_element(self, item, model, iter):
-        print "Menu Delete Element... " + " pressed"
- 
-    def add_attribute(self, item, model, iter, name):
-        print "Menu Add Attribute... " + name + " pressed"
-    
-    def delete_attribute(self, item, model, iter, name):
-        print "Menu Delete Attribute... " + str(name) + " pressed"
     
     """ 
     private methods
@@ -333,7 +352,7 @@ def main():
     file=os.fdopen(os.open(filename,os.O_RDONLY))
     doc = reader.fromStream(file)
     dtd=reader.parser._parser.get_dtd()
-    dtv=DOMTreeViewTest(doc.documentElement, dtd)
+    dtv=DOMTreeViewTest(doc.documentElement, dtd, doc)
     gtk.main()
 
 if __name__ == '__main__':
