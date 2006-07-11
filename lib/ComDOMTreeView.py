@@ -174,27 +174,35 @@ class DOMTreeViewTest(gtk.Window):
                 return False
             __menu = gtk.Menu()
             __model, __i = widget.get_selection().get_selected()
+            #Add Attribute
             __item=AddAttributeMenuItem(widget.get_selection(), self.dtd)
             __item.registerListener(self)
             __menu.append(__item)
-            __menu.append(DeleteAttributeMenuItem(widget.get_selection()))
+            #Delete Attribute
+            __item=DeleteAttributeMenuItem(widget.get_selection())
+            __item.registerListener(self)
+            __menu.append(__item)
+            #Add Element
             __item=AddElementMenuItem(widget.get_selection(), self.dtd)
             __menu.append(__item)
             __item.registerListener(self)
-            __menu.append(DeleteElementMenuItem(widget.get_selection()))
+            #Delete Element
+            __item=DeleteElementMenuItem(widget.get_selection())
+            __menu.append(__item)
+            __item.registerListener(self)
             __menu.popup(None, None, None, event.button, event.time)
             
-    def add_element(self, item, model, name):
+    def add_element(self, item, model, iter, name):
         print "Menu Add Element... " + name + " pressed"
 
-    def delete_element(self, item, model, name):
-        print "Menu Add Element... " + name + " pressed"
+    def delete_element(self, item, model, iter):
+        print "Menu Delete Element... " + " pressed"
  
-    def add_attribute(self, item, model, name):
+    def add_attribute(self, item, model, iter, name):
         print "Menu Add Attribute... " + name + " pressed"
     
-    def delete_attribute(self, item, model, name):
-        print "Menu Add Element... " + name + " pressed"
+    def delete_attribute(self, item, model, iter, name):
+        print "Menu Delete Attribute... " + str(name) + " pressed"
     
     """ 
     private methods
@@ -211,7 +219,7 @@ class AddElementMenuItem(gtk.MenuItem):
     def registerListener(self, listener):
         for i in range(len(self.items)):
             self.items[i][0].connect("activate", listener.add_element, \
-                                     self.items[i][1], self.items[i][2])
+                                     self.items[i][1], self.items[i][2], self.items[i][3])
 
     def createMenu(self, selection, dtd):
         __menu = gtk.Menu()
@@ -221,7 +229,7 @@ class AddElementMenuItem(gtk.MenuItem):
         for i in range(len(__attr)):
             __item = gtk.MenuItem(__attr[i])
             __menu.append(__item)
-            self.items.append([__item, __model, __attr[i]])
+            self.items.append([__item, __model, __i, __attr[i]])
             __item.show()
         __menu.show()
         return __menu
@@ -230,8 +238,12 @@ class AddElementMenuItem(gtk.MenuItem):
 class DeleteElementMenuItem(gtk.MenuItem):
     def __init__(self, selection, label="delete"):
         gtk.MenuItem.__init__(self, label)
+        self.selection=selection
         self.show()
         
+    def registerListener(self, listener):
+        __model, __i = self.selection.get_selected()
+        self.connect("activate", listener.delete_element,  __model, __i)    
         
 class AddAttributeMenuItem(gtk.MenuItem):
     def __init__(self, selection, dtd, label="add Attribute..."):
@@ -243,7 +255,7 @@ class AddAttributeMenuItem(gtk.MenuItem):
     def registerListener(self, listener):
         for i in range(len(self.items)):
             self.items[i][0].connect("activate", listener.add_attribute, \
-                                     self.items[i][1], self.items[i][2])    
+                                     self.items[i][1], self.items[i][2], self.items[i][3])    
         
     def createMenu(self, selection, dtd):
         __menu = gtk.Menu()
@@ -254,7 +266,7 @@ class AddAttributeMenuItem(gtk.MenuItem):
             if not __node.hasAttribute(__attr[i]):
                 __item = gtk.MenuItem(__attr[i])
                 __menu.append(__item)
-                self.items.append([__item, __model, __attr[i]])
+                self.items.append([__item, __model, __i, __attr[i]])
                 __item.show()
         __menu.show()
         return __menu
@@ -263,8 +275,14 @@ class AddAttributeMenuItem(gtk.MenuItem):
 class DeleteAttributeMenuItem(gtk.MenuItem):
     def __init__(self, selection, label="delete Attribute..."):
         gtk.MenuItem.__init__(self, label)
+        self.items=list()
         self.set_submenu(self.createMenu(selection))
         self.show()           
+            
+    def registerListener(self, listener):
+        for i in range(len(self.items)):
+            self.items[i][0].connect("activate", listener.delete_attribute, \
+                                     self.items[i][1], self.items[i][2], self.items[i][3])    
             
     def createMenu(self, selection):
         __menu = gtk.Menu()
@@ -274,6 +292,7 @@ class DeleteAttributeMenuItem(gtk.MenuItem):
         __attr = __elem.attributes
         for i in range(len(__attr)):
             __item = gtk.MenuItem(__attr[i].name)
+            self.items.append([__item, __model, __i, __attr[i].name])
             __menu.append(__item)
             __item.show()
         __menu.show()
