@@ -29,6 +29,7 @@ def acceptAttributes(model, iter):
     if not model.get_value(iter, DOMModel.COLUMN_NODE):
         return False
     node=model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMTreeModel.NODE_KEY)
+    print "Filter Node %s" % node
     if node.nodeType == node.ATTRIBUTE_NODE:
         return True
     else:
@@ -85,10 +86,14 @@ class DOMListModel(gtk.ListStore, DOMModel):
                 self.createStoreModelFromNode(child)
          
 class DOMNodeView(gtk.TreeView):
-    def __init__(self):
+    def __init__(self, edit=False, editfunc=None):
         gtk.TreeView.__init__(self)
         renderer = gtk.CellRendererText()
+        renderer.set_data("column", DOMModel.COLUMN_NAME)
         renderer.set_property("xalign", 0.0)
+        if edit:
+            renderer.connect("edited", editfunc, self)
+
         column = gtk.TreeViewColumn("Name", renderer, text=DOMModel.COLUMN_NAME)
         #column = gtk_tree_view_get_column(GTK_TREE_VIEW(treeview), col_offset - 1);
         column.set_clickable(True)
@@ -119,8 +124,6 @@ class DOMTreeViewTest(gtk.Window):
         menubar = self.create_main_menu()
         menubar.show()
 
-        label = gtk.Label("DOMTreeViewer")
-
         # create model
         # create treeview
         self.__basemodell=DOMTreeModel(node, doc)
@@ -133,7 +136,7 @@ class DOMTreeViewTest(gtk.Window):
         self.__treeview.set_model(modelfilterl)
         self.__treeview.set_rules_hint(True)
         self.__treeview.get_selection().set_mode(gtk.SELECTION_SINGLE)
-        self.__listview = DOMNodeView()
+        self.__listview = DOMNodeView(True, self.edit_attribute)
         self.__listview.set_model(modelfilterr)
         self.__listview.set_rules_hint(True)
         self.__listview.get_selection().set_mode(gtk.SELECTION_SINGLE)
@@ -163,7 +166,6 @@ class DOMTreeViewTest(gtk.Window):
         hpaned.add2(framer)
         vbox = gtk.VBox(False, 8)
         vbox.pack_start(menubar, False, False)
-        vbox.add(label)
         vbox.add(hpaned)
         self.add(vbox)
         self.show_all()
@@ -172,35 +174,87 @@ class DOMTreeViewTest(gtk.Window):
         (model, iter) = selection.get_selected()
         print "Selection changed %s, %s, %s %s" % (model, iter, dest, filter)
         dest.clear()
-        dest.createStoreModelFromNode(model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY))
+        if iter:
+            dest.createStoreModelFromNode(model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY))
         if filter:
             filter.refilter()
             
-    def add_element(self, item, model, iter, name):
-        print "Menu Add Element... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
-        (_model, _iter)=self.__treeview.get_selection().get_selected()
-        _piter=self.__basemodell.iter_parent(_iter)
-        value=_model.get_value(_iter, DOMModel.COLUMN_NODE)
-        print "Value: %s" % value
-        domnode=value.get_data(DOMModel.NODE_KEY)
-        print "domnode: %s" % domnode
+    def add_element(self, item, model, piter, name, iter=None):
+        print "Menu Add Element... " + name + " pressed menuitem %s, model %s, piter %s, iter %s" % (item, model, piter, iter)
+        if iter:
+            value = model.get_value(iter, DOMModel.COLUMN_NODE)
+            ref_node=value.get_data(DOMModel.NODE_KEY)
+            ref_node=ref_node.nextSibling
+            citer=model.convert_iter_to_child_iter(iter)
+        else:
+            citer=None
+            ref_node=None
+        value=model.get_value(piter, DOMModel.COLUMN_NODE)
+        parent_node=value.get_data(DOMModel.NODE_KEY)
+        print "parentnode: %s" % parent_node
         node=self.__basemodell.document.createElement(name)
-        domnode.appendChild(node)
-        self.__basemodell.createStoreModelFromNode(node, iter)
-        self.__treeview.set_model(self.__basemodell)
+        parent_node.insertBefore(node, ref_node)
+        cpiter=model.convert_iter_to_child_iter(piter)
+        iter_newnode=model.get_model().insert_after(cpiter, citer)
+        gobj=gobject.GObject()
+        gobj.set_data(DOMTreeModel.NODE_KEY, node)
+        model.get_model().set_value(iter_newnode, DOMModel.COLUMN_NAME, node.nodeName)
+        model.get_model().set_value(iter_newnode, DOMModel.COLUMN_VALUE, node.nodeValue)
+        model.get_model().set_value(iter_newnode, DOMModel.COLUMN_EDITABLE, False)
+        model.get_model().set_value(iter_newnode, DOMModel.COLUMN_NODE, gobj)
         
-    def delete_element(self, item, model, iter):
-        print "Menu Delete Element... " + name + " pressed menuitem %s, model %s" % (item, model)
-    
     def insert_element(self, item, model, iter, name):
-        print "Menu Insert Element... " + name + " pressed menuitem %s, model %s" % (item, model)
+        print "Menu Insert Element... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
+        piter=model.iter_parent(iter)
+        self.add_element(item, model, piter, name, iter)
 
+    def delete_element(self, item, model, iter):
+        print "Menu Delete Element... pressed menuitem %s, model %s" % (item, model)
+        value = model.get_value(iter, DOMModel.COLUMN_NODE)
+        ref_node=value.get_data(DOMModel.NODE_KEY)
+        piter=model.iter_parent(iter)
+        value=model.get_value(piter, DOMModel.COLUMN_NODE)
+        parent_node=value.get_data(DOMModel.NODE_KEY)
+        print "parentnode: %s" % parent_node
+        parent_node.removeChild(ref_node)
+        citer=model.convert_iter_to_child_iter(iter)
+        model.get_model().remove(citer)
+    
     def add_attribute(self, item, model, iter, name):
-        print "Menu Add Attribute... " + name + " pressed menuitem %s, model %s" % (item, model)
+        print "Menu Add Attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
+        value = model.get_value(iter, DOMModel.COLUMN_NODE)
+        ref_node=value.get_data(DOMModel.NODE_KEY)
+        ref_node.setAttribute(name, "unset")
+        print "ref_node: %s" % ref_node
+        self.__basemodelr.clear()
+        self.__basemodelr.createStoreModelFromNode(ref_node)
 
     def delete_attribute(self, item, model, iter, name):
-        print "Menu Delete Element... " + name + " pressed menuitem %s, model %s" % (item, model)
+        print "Menu Delete attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
+        value = model.get_value(iter, DOMModel.COLUMN_NODE)
+        ref_node=value.get_data(DOMModel.NODE_KEY)
+        ref_node.removeAttribute(name)
+        print "ref_node: %s" % ref_node
+        self.__basemodelr.clear()
+        self.__basemodelr.createStoreModelFromNode(ref_node)
     
+    def edit_attribute(self, cell, path_string, new_text, view):
+        model=view.get_model()
+        print "Menu Edit attribute... " + path_string + " pressed cell %s, model %s, new_text %s" % (cell, model, new_text)
+        iter = model.get_iter_from_string(path_string)
+        piter= model.iter_parent(iter)
+        parent_node=model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY)
+        value = model.get_value(iter, DOMModel.COLUMN_NODE)
+        ref_node=value.get_data(DOMModel.NODE_KEY)
+        print "Path: %s" % (path_string)
+        
+        print "ref_node: %s" % ref_node
+        ref_node.nodeValue=new_text
+        citer=model.convert_iter_to_child_iter(iter)
+        model.get_model().set(citer, DOMModel.COLUMN_VALUE, new_text)
+#        self.__basemodelr.clear()
+#        self.__basemodelr.createStoreModelFromNode(parent_node)
+            
     def button_press(self, widget, event):
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             try:
