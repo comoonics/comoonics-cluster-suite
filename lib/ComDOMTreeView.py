@@ -13,7 +13,10 @@ from xml.dom.ext.reader import Sax2
 import xml.dom
 import sys
 import os
+import urllib2
+import urllib
 from xml.dom.NodeFilter import NodeFilter
+from xml.dom.ext import PrettyPrint
 
 def acceptElements(model, iter):
     if not model.get_value(iter, DOMModel.COLUMN_NODE):
@@ -110,7 +113,7 @@ class DOMNodeView(gtk.TreeView):
         self.append_column(column)
 
 class DOMTreeViewTest(gtk.Window):
-    def __init__(self, node, dtd, doc, parent=None):
+    def __init__(self, filename, parent=None):
         gtk.Window.__init__(self)
         try:
             self.set_screen(parent.get_screen())
@@ -119,11 +122,13 @@ class DOMTreeViewTest(gtk.Window):
         self.set_title(self.__class__.__name__)
         self.set_default_size(650, 400)
         self.set_border_width(8)
-        self.dtd=dtd
 
         menubar = self.create_main_menu()
         menubar.show()
 
+        (doc, dtd) = self.openFile(filename)
+        self.dtd=dtd
+        node=doc.documentElement
         # create model
         # create treeview
         self.__basemodell=DOMTreeModel(node, doc)
@@ -169,6 +174,27 @@ class DOMTreeViewTest(gtk.Window):
         vbox.add(hpaned)
         self.add(vbox)
         self.show_all()
+
+    def openFile(self, filename):
+        reader = Sax2.Reader(validate=1)
+        stream = open(filename)
+        doc = reader.fromStream(stream)
+        dtd = reader.parser._parser.get_dtd()
+        self.filename=filename
+        return (doc, dtd)
+
+    def openURI(self, uri):
+        print "openURI(%s)" % uri        
+        return self.openFile(filename)
+        
+    
+    def saveFile(self, _uri=None):
+        if not _uri:
+            _uri=self.filename
+        print "file: %s" % _uri
+        stream=open(_uri,"w+")
+        PrettyPrint(self.__basemodell.document, stream)
+        self.filename=_uri
         
     def selection_changed(self, selection, dest, filter):
         (model, iter) = selection.get_selected()
@@ -252,8 +278,6 @@ class DOMTreeViewTest(gtk.Window):
         ref_node.nodeValue=new_text
         citer=model.convert_iter_to_child_iter(iter)
         model.get_model().set(citer, DOMModel.COLUMN_VALUE, new_text)
-#        self.__basemodelr.clear()
-#        self.__basemodelr.createStoreModelFromNode(parent_node)
             
     def button_press(self, widget, event):
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
@@ -288,6 +312,51 @@ class DOMTreeViewTest(gtk.Window):
             __item.registerListener(self)
             __menu.popup(None, None, None, event.button, event.time)
     
+    def file_new(self, number, menuitem):
+        print "file_new pressed %s, %s." %(number, menuitem)
+        
+    def file_open(self, number, menuitem):
+        print "file open pressed %s, %s." %(number, menuitem)
+        dialog=gtk.FileChooserDialog("Choose file to open", self, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_OK, gtk.RESPONSE_OK,
+                gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+        xml_filter=gtk.FileFilter()
+        xml_filter.add_pattern("*.xml")
+        xml_filter.set_name("XML-Filter")
+        conf_filter=gtk.FileFilter()
+        conf_filter.add_pattern("*.conf")
+        conf_filter.set_name("Conf-Filter")
+        dialog.add_filter(xml_filter)
+        dialog.add_filter(conf_filter)
+        response=dialog.run()
+        file=dialog.get_filename()
+        dialog.destroy()
+        if response == gtk.RESPONSE_OK:
+            print "File: %s" % file
+            self.openFile(file)
+        
+    def file_save(self, number, menuitem):
+        print "file save pressed %s, %s." %(number, menuitem)
+        self.saveFile()
+        
+    def file_save_as(self, number, menuitem):
+        print "file save as pressed %s, %s." %(number, menuitem)
+        dialog=gtk.FileChooserDialog("Choose file to open", self, gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_OK, gtk.RESPONSE_OK,
+                gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+        xml_filter=gtk.FileFilter()
+        xml_filter.add_pattern("*.xml")
+        xml_filter.set_name("XML-Filter")
+        conf_filter=gtk.FileFilter()
+        conf_filter.add_pattern("*.conf")
+        conf_filter.set_name("Conf-Filter")
+        dialog.add_filter(xml_filter)
+        dialog.add_filter(conf_filter)
+        response=dialog.run()
+        file=dialog.get_filename()
+        dialog.destroy()
+        if response == gtk.RESPONSE_OK:
+            print "File: %s" % file
+            self.saveFile(file)
+    
     """ 
     private methods
     """
@@ -314,10 +383,10 @@ class DOMTreeViewTest(gtk.Window):
         #       "<LastBranch>"     -> create a right justified branch 
         __menu_items=(
             ( "/_File",         None,         None, 0, "<Branch>" ),
-            ( "/File/_New",     "<control>N", self.print_hello, 0, None ),
-            ( "/File/_Open",    "<control>O", self.print_hello, 0, None ),
-            ( "/File/_Save",    "<control>S", self.print_hello, 0, None ),
-            ( "/File/Save _As", None,         None, 0, None ),
+            ( "/File/_New",     "<control>N", self.file_new, 0, None ),
+            ( "/File/_Open",    "<control>O", self.file_open, 0, None ),
+            ( "/File/_Save",    "<control>S", self.file_save, 0, None ),
+            ( "/File/Save _As", None,         self.file_save_as, 0, None ),
             ( "/File/sep1",     None,         None, 0, "<Separator>" ),
             ( "/File/Quit",     "<control>Q", gtk.main_quit, 0, None ),
             ( "/_Options",      None,         None, 0, "<Branch>" ),
@@ -544,14 +613,10 @@ class ContentModelHelper:
         
 
 def main():
-    reader = Sax2.Reader(validate=1)
     filename="../test/gfs-node1-clonetest.xml"
     if len(sys.argv) > 1:
         filename=sys.argv[1]
-    file=os.fdopen(os.open(filename,os.O_RDONLY))
-    doc = reader.fromStream(file)
-    dtd=reader.parser._parser.get_dtd()
-    dtv=DOMTreeViewTest(doc.documentElement, dtd, doc)
+    dtv=DOMTreeViewTest(filename)
     gtk.main()
 
 if __name__ == '__main__':
