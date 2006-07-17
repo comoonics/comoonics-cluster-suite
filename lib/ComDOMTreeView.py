@@ -131,24 +131,17 @@ class DOMTreeViewTest(gtk.Window):
         node=doc.documentElement
         # create model
         # create treeview
-        self.__basemodell=DOMTreeModel(node, doc)
-        self.__basemodelr=DOMListModel(node, doc)
-        modelfilterl=self.__basemodell.filter_new()
-        modelfilterl.set_visible_func(acceptElements)
-        modelfilterr=self.__basemodelr.filter_new()
-        modelfilterr.set_visible_func(acceptAttributes)
         self.__treeview = DOMNodeView()
-        self.__treeview.set_model(modelfilterl)
         self.__treeview.set_rules_hint(True)
         self.__treeview.get_selection().set_mode(gtk.SELECTION_SINGLE)
         self.__listview = DOMNodeView(True, self.edit_attribute)
-        self.__listview.set_model(modelfilterr)
         self.__listview.set_rules_hint(True)
         self.__listview.get_selection().set_mode(gtk.SELECTION_SINGLE)
 
+        self.initFromDOMNode(node, doc)
+
         # expand all rows after the treeview widget has been realized
         self.__treeview.connect('realize', lambda tv: tv.expand_all())
-        self.__treeview.get_selection().connect("changed", self.selection_changed, self.__basemodelr, modelfilterr)
         self.__treeview.connect_object("button-press-event", self.button_press, self.__treeview)
         
         sw = gtk.ScrolledWindow()
@@ -175,6 +168,21 @@ class DOMTreeViewTest(gtk.Window):
         self.add(vbox)
         self.show_all()
 
+    def initFromDOMNode(self, node, doc):
+        self.__basemodell=DOMTreeModel(node, doc)
+        self.__basemodelr=DOMListModel(node, doc)
+        modelfilterl=self.__basemodell.filter_new()
+        modelfilterl.set_visible_func(acceptElements)
+        modelfilterr=self.__basemodelr.filter_new()
+        modelfilterr.set_visible_func(acceptAttributes)
+        self.__treeview.set_model(modelfilterl)
+        self.__treeview.get_selection().connect("changed", self.selection_changed, self.__basemodelr, modelfilterr)
+        self.__listview.set_model(modelfilterr)
+
+    def newFromDTDFile(self, dtd_filename):
+        # Here we need to create the dtd-object and create an empty document with the basename of the dtd
+        return (doc, dtd)
+
     def openFile(self, filename):
         reader = Sax2.Reader(validate=1)
         stream = open(filename)
@@ -186,7 +194,6 @@ class DOMTreeViewTest(gtk.Window):
     def openURI(self, uri):
         print "openURI(%s)" % uri        
         return self.openFile(filename)
-        
     
     def saveFile(self, _uri=None):
         if not _uri:
@@ -314,6 +321,20 @@ class DOMTreeViewTest(gtk.Window):
     
     def file_new(self, number, menuitem):
         print "file_new pressed %s, %s." %(number, menuitem)
+        dialog=gtk.FileChooserDialog("Choose DTD file to open", self, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_OK, gtk.RESPONSE_OK,
+                gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+        dtd_filter=gtk.FileFilter()
+        dtd_filter.add_pattern("*.dtd")
+        dtd_filter.set_name("DTD-Filter")
+        dialog.add_filter(dtd_filter)
+        response=dialog.run()
+        dtd_file=dialog.get_filename()
+        dialog.destroy()
+        if response == gtk.RESPONSE_OK:
+            print "File: %s" % dtd_file
+            (doc, dtd) = self.newFromDTDFile(dtd_file)
+            self.dtd=dtd
+            self.initFromDOMNode(doc.documentNode, doc)
         
     def file_open(self, number, menuitem):
         print "file open pressed %s, %s." %(number, menuitem)
@@ -332,7 +353,9 @@ class DOMTreeViewTest(gtk.Window):
         dialog.destroy()
         if response == gtk.RESPONSE_OK:
             print "File: %s" % file
-            self.openFile(file)
+            (doc, dtd) = self.openFile(file)
+            self.dtd=dtd
+            self.initFromDOMNode(doc.documentElement, doc)
         
     def file_save(self, number, menuitem):
         print "file save pressed %s, %s." %(number, menuitem)
