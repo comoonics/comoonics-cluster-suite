@@ -8,7 +8,9 @@ in python for use with the new tree widget in gtk 2.0.
 
 import gtk
 import gobject
-from xml.dom.minidom import parseString
+from xml.dom.minidom import parseString 
+import xml.dom.minidom
+import xml.parsers.xmlproc.utils
 from xml.dom.ext.reader import Sax2
 import xml.dom
 import sys
@@ -117,6 +119,7 @@ class DOMNodeView(gtk.TreeView):
         self.append_column(column)
 
 class DOMTreeViewTest(gtk.Window):
+    DOM_QNAME="enterprisecopy"
     def __init__(self, filename, parent=None):
         gtk.Window.__init__(self)
         try:
@@ -185,6 +188,11 @@ class DOMTreeViewTest(gtk.Window):
 
     def newFromDTDFile(self, dtd_filename):
         # Here we need to create the dtd-object and create an empty document with the basename of the dtd
+        dom = xml.dom.minidom.getDOMImplementation()
+        type = dom.createDocumentType(self.DOM_QNAME, None, dtd_filename)
+        doc = dom.createDocument(None, self.DOM_QNAME, type)
+        dtd = xml.parsers.xmlproc.utils.load_dtd(dtd_filename)
+
         return (doc, dtd)
 
     def openFile(self, filename):
@@ -338,7 +346,7 @@ class DOMTreeViewTest(gtk.Window):
             ComLog.getLogger(__logStrLevel__).debug("File: %s" % dtd_file)
             (doc, dtd) = self.newFromDTDFile(dtd_file)
             self.dtd=dtd
-            self.initFromDOMNode(doc.documentNode, doc)
+            self.initFromDOMNode(doc.documentElement, doc)
         
     def file_open(self, number, menuitem):
         ComLog.getLogger(__logStrLevel__).debug("file open pressed %s, %s." %(number, menuitem))
@@ -648,7 +656,10 @@ if __name__ == '__main__':
 
 ################################
 # $Log: ComDOMTreeView.py,v $
-# Revision 1.13  2006-07-17 10:11:01  marc
+# Revision 1.14  2006-07-17 11:11:32  mark
+# implemented newFromDTDFile
+#
+# Revision 1.13  2006/07/17 10:11:01  marc
 # added Log Tag
 # print => ComLog.getLogger()..
 #
