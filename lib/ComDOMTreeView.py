@@ -18,6 +18,8 @@ import urllib
 from xml.dom.NodeFilter import NodeFilter
 from xml.dom.ext import PrettyPrint
 
+import ComLog
+
 def acceptElements(model, iter):
     if not model.get_value(iter, DOMModel.COLUMN_NODE):
         return False
@@ -37,6 +39,8 @@ def acceptAttributes(model, iter):
         return True
     else:
         return False
+
+__logStrLevel__="DOMTreeView"
 
 class DOMModel:
     NODE_KEY="node"
@@ -77,7 +81,7 @@ class DOMListModel(gtk.ListStore, DOMModel):
 
     def createStoreModelFromNode(self, node):
         iter=self.append()
-        print "Node: %s, %s" % (node.nodeName, node.nodeValue)
+        ComLog.getLogger(__logStrLevel__).debug("Node: %s, %s" % (node.nodeName, node.nodeValue))
         gobj=gobject.GObject()
         gobj.set_data(DOMTreeModel.NODE_KEY, node)
         self.set_value(iter, DOMModel.COLUMN_NAME, node.nodeName)
@@ -192,20 +196,20 @@ class DOMTreeViewTest(gtk.Window):
         return (doc, dtd)
 
     def openURI(self, uri):
-        print "openURI(%s)" % uri        
+        ComLog.getLogger(__logStrLevel__).debug("openURI(%s)" % uri)
         return self.openFile(filename)
     
     def saveFile(self, _uri=None):
         if not _uri:
             _uri=self.filename
-        print "file: %s" % _uri
+        ComLog.getLogger(__logStrLevel__).debug("file: %s" % _uri)
         stream=open(_uri,"w+")
         PrettyPrint(self.__basemodell.document, stream)
         self.filename=_uri
         
     def selection_changed(self, selection, dest, filter):
         (model, iter) = selection.get_selected()
-        print "Selection changed %s, %s, %s %s" % (model, iter, dest, filter)
+        ComLog.getLogger(__logStrLevel__).debug("Selection changed %s, %s, %s %s" % (model, iter, dest, filter))
         dest.clear()
         if iter:
             dest.createStoreModelFromNode(model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY))
@@ -213,7 +217,7 @@ class DOMTreeViewTest(gtk.Window):
             filter.refilter()
             
     def add_element(self, item, model, piter, name, iter=None):
-        print "Menu Add Element... " + name + " pressed menuitem %s, model %s, piter %s, iter %s" % (item, model, piter, iter)
+        ComLog.getLogger(__logStrLevel__).debug("Menu Add Element... " + name + " pressed menuitem %s, model %s, piter %s, iter %s" % (item, model, piter, iter))
         if iter:
             value = model.get_value(iter, DOMModel.COLUMN_NODE)
             ref_node=value.get_data(DOMModel.NODE_KEY)
@@ -224,7 +228,7 @@ class DOMTreeViewTest(gtk.Window):
             ref_node=None
         value=model.get_value(piter, DOMModel.COLUMN_NODE)
         parent_node=value.get_data(DOMModel.NODE_KEY)
-        print "parentnode: %s" % parent_node
+        ComLog.getLogger(__logStrLevel__).debug("parentnode: %s" % parent_node)
         node=self.__basemodell.document.createElement(name)
         parent_node.insertBefore(node, ref_node)
         cpiter=model.convert_iter_to_child_iter(piter)
@@ -237,51 +241,51 @@ class DOMTreeViewTest(gtk.Window):
         model.get_model().set_value(iter_newnode, DOMModel.COLUMN_NODE, gobj)
         
     def insert_element(self, item, model, iter, name):
-        print "Menu Insert Element... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
+        ComLog.getLogger(__logStrLevel__).debug("Menu Insert Element... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
         piter=model.iter_parent(iter)
         self.add_element(item, model, piter, name, iter)
 
     def delete_element(self, item, model, iter):
-        print "Menu Delete Element... pressed menuitem %s, model %s" % (item, model)
+        ComLog.getLogger(__logStrLevel__).debug("Menu Delete Element... pressed menuitem %s, model %s" % (item, model))
         value = model.get_value(iter, DOMModel.COLUMN_NODE)
         ref_node=value.get_data(DOMModel.NODE_KEY)
         piter=model.iter_parent(iter)
         value=model.get_value(piter, DOMModel.COLUMN_NODE)
         parent_node=value.get_data(DOMModel.NODE_KEY)
-        print "parentnode: %s" % parent_node
+        ComLog.getLogger(__logStrLevel__).debug("parentnode: %s" % parent_node)
         parent_node.removeChild(ref_node)
         citer=model.convert_iter_to_child_iter(iter)
         model.get_model().remove(citer)
     
     def add_attribute(self, item, model, iter, name):
-        print "Menu Add Attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
+        ComLog.getLogger(__logStrLevel__).debug("Menu Add Attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
         value = model.get_value(iter, DOMModel.COLUMN_NODE)
         ref_node=value.get_data(DOMModel.NODE_KEY)
         ref_node.setAttribute(name, "unset")
-        print "ref_node: %s" % ref_node
+        ComLog.getLogger(__logStrLevel__).debug("ref_node: %s" % ref_node)
         self.__basemodelr.clear()
         self.__basemodelr.createStoreModelFromNode(ref_node)
 
     def delete_attribute(self, item, model, iter, name):
-        print "Menu Delete attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter)
+        ComLog.getLogger(__logStrLevel__).debug("Menu Delete attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
         value = model.get_value(iter, DOMModel.COLUMN_NODE)
         ref_node=value.get_data(DOMModel.NODE_KEY)
         ref_node.removeAttribute(name)
-        print "ref_node: %s" % ref_node
+        ComLog.getLogger(__logStrLevel__).debug("ref_node: %s" % ref_node)
         self.__basemodelr.clear()
         self.__basemodelr.createStoreModelFromNode(ref_node)
     
     def edit_attribute(self, cell, path_string, new_text, view):
         model=view.get_model()
-        print "Menu Edit attribute... " + path_string + " pressed cell %s, model %s, new_text %s" % (cell, model, new_text)
+        ComLog.getLogger(__logStrLevel__).debug("Menu Edit attribute... " + path_string + " pressed cell %s, model %s, new_text %s" % (cell, model, new_text))
         iter = model.get_iter_from_string(path_string)
         piter= model.iter_parent(iter)
         parent_node=model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY)
         value = model.get_value(iter, DOMModel.COLUMN_NODE)
         ref_node=value.get_data(DOMModel.NODE_KEY)
-        print "Path: %s" % (path_string)
+        ComLog.getLogger(__logStrLevel__).debug("Path: %s" % (path_string))
         
-        print "ref_node: %s" % ref_node
+        ComLog.getLogger(__logStrLevel__).debug("ref_node: %s" % ref_node)
         ref_node.nodeValue=new_text
         citer=model.convert_iter_to_child_iter(iter)
         model.get_model().set(citer, DOMModel.COLUMN_VALUE, new_text)
@@ -320,7 +324,7 @@ class DOMTreeViewTest(gtk.Window):
             __menu.popup(None, None, None, event.button, event.time)
     
     def file_new(self, number, menuitem):
-        print "file_new pressed %s, %s." %(number, menuitem)
+        ComLog.getLogger(__logStrLevel__).debug("file_new pressed %s, %s." %(number, menuitem))
         dialog=gtk.FileChooserDialog("Choose DTD file to open", self, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_OK, gtk.RESPONSE_OK,
                 gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
         dtd_filter=gtk.FileFilter()
@@ -331,13 +335,13 @@ class DOMTreeViewTest(gtk.Window):
         dtd_file=dialog.get_filename()
         dialog.destroy()
         if response == gtk.RESPONSE_OK:
-            print "File: %s" % dtd_file
+            ComLog.getLogger(__logStrLevel__).debug("File: %s" % dtd_file)
             (doc, dtd) = self.newFromDTDFile(dtd_file)
             self.dtd=dtd
             self.initFromDOMNode(doc.documentNode, doc)
         
     def file_open(self, number, menuitem):
-        print "file open pressed %s, %s." %(number, menuitem)
+        ComLog.getLogger(__logStrLevel__).debug("file open pressed %s, %s." %(number, menuitem))
         dialog=gtk.FileChooserDialog("Choose file to open", self, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_OK, gtk.RESPONSE_OK,
                 gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
         xml_filter=gtk.FileFilter()
@@ -352,17 +356,17 @@ class DOMTreeViewTest(gtk.Window):
         file=dialog.get_filename()
         dialog.destroy()
         if response == gtk.RESPONSE_OK:
-            print "File: %s" % file
+            ComLog.getLogger(__logStrLevel__).debug("File: %s" % file)
             (doc, dtd) = self.openFile(file)
             self.dtd=dtd
             self.initFromDOMNode(doc.documentElement, doc)
         
     def file_save(self, number, menuitem):
-        print "file save pressed %s, %s." %(number, menuitem)
+        ComLog.getLogger(__logStrLevel__).debug("file save pressed %s, %s." %(number, menuitem))
         self.saveFile()
         
     def file_save_as(self, number, menuitem):
-        print "file save as pressed %s, %s." %(number, menuitem)
+        ComLog.getLogger(__logStrLevel__).debug("file save as pressed %s, %s." %(number, menuitem))
         dialog=gtk.FileChooserDialog("Choose file to open", self, gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_OK, gtk.RESPONSE_OK,
                 gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
         xml_filter=gtk.FileFilter()
@@ -377,7 +381,7 @@ class DOMTreeViewTest(gtk.Window):
         file=dialog.get_filename()
         dialog.destroy()
         if response == gtk.RESPONSE_OK:
-            print "File: %s" % file
+            ComLog.getLogger(__logStrLevel__).debug("File: %s" % file)
             self.saveFile(file)
     
     """ 
@@ -438,9 +442,6 @@ class DOMTreeViewTest(gtk.Window):
         # Finally, return the actual menu bar created by the item factory.
         return self.item_factory.get_widget("<main>")
 
-    def print_hello(self, w, data):
-        print "hello"
-
 class AddElementMenuItem(gtk.MenuItem):
     def __init__(self, selection, dtd, label="add Child Element..."):
         gtk.MenuItem.__init__(self, label)       
@@ -488,7 +489,7 @@ class InsertElementMenuItem(gtk.MenuItem):
         __node = __model.get(__i, DOMModel.COLUMN_NODE)[0]
         if not __node.get_data(DOMTreeModel.NODE_KEY).parentNode.nodeType == __node.get_data(DOMTreeModel.NODE_KEY).parentNode.ELEMENT_NODE:
             return None
-        print __node.get_data(DOMTreeModel.NODE_KEY).parentNode
+        ComLog.getLogger(__logStrLevel__).debug( __node.get_data(DOMTreeModel.NODE_KEY).parentNode)
         __attr = ContentModelHelper(dtd). \
             getValidElementNamesInsert(__node.get_data(DOMTreeModel.NODE_KEY))
         for i in range(len(__attr)):
@@ -573,7 +574,7 @@ class ContentModelHelper:
         __state=__elem.get_start_state()
         __nodes=element.childNodes
         for i in range(len(__nodes)):
-            print "found element %s" %__nodes[i].tagName
+            ComLog.getLogger(__logStrLevel__).debug("found element %s" %__nodes[i].tagName)
             __state=__elem.next_state(__state, __nodes[i].tagName)
         return __elem.get_valid_elements(__state)
         
@@ -590,14 +591,14 @@ class ContentModelHelper:
                 element = element.previousSibling 
         __nodes.reverse()
         for i in range(len(__nodes)):
-            print "found element %s" %__nodes[i].tagName
+            ComLog.getLogger(__logStrLevel__).debug("found element %s" %__nodes[i].tagName)
             #if __elem.final_state(__state):
              #   return ret
         __state=__elem.next_state(__state, __nodes[i].tagName)
        
         __elements=__elem.get_valid_elements(__state)
         for i in range(len(__elements)):
-            print "testing element " + __elements[i]
+            ComLog.getLogger(__logStrLevel__).debug("testing element " + __elements[i])
             ooelement=oelement
             try: 
                 __tstate=__elem.next_state(__state, __elements[i])
@@ -606,11 +607,11 @@ class ContentModelHelper:
                     if element.nodeType == element.ELEMENT_NODE:
                         __tstate=__elem.next_state(__tstate, oelement.tagName)
             except KeyError, e:
-                print "element : " + __elements[i]
-                print e
+                ComLog.getLogger(__logStrLevel__).debug("element : " + __elements[i])
+                ComLog.getLogger(__logStrLevel__).debug(e)
                 continue
             ret.append(__elements[i])
-        print ret
+        ComLog.getLogger(__logStrLevel__).debug(ret)
         return ret
         
     def getValidElementNames2(self, element):
@@ -624,12 +625,12 @@ class ContentModelHelper:
     def fillList(self, elements, element, state): 
         __el = element.get_valid_elements(state)
         for i in range(len(__el)):
-            print "processing " + __el[i]
+            ComLog.getLogger(__logStrLevel__).debug("processing " + __el[i])
             if not elements.count(__el[i]):
-                print __el[i] + " is not in " + str(elements)
+                ComLog.getLogger(__logStrLevel__).debug(__el[i] + " is not in " + str(elements))
                 elements.append(__el[i])
                 if not element.final_state(state):
-                    print "calling fillist with next state"
+                    ComLog.getLogger(__logStrLevel__).debug("calling fillist with next state")
                     self.fillList(elements, element, element.next_state(state, __el[i]))
        
         
@@ -644,3 +645,10 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+################################
+# $Log: ComDOMTreeView.py,v $
+# Revision 1.13  2006-07-17 10:11:01  marc
+# added Log Tag
+# print => ComLog.getLogger()..
+#
