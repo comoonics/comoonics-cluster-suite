@@ -186,14 +186,24 @@ class DOMTreeViewTest(gtk.Window):
         self.__treeview.get_selection().connect("changed", self.selection_changed, self.__basemodelr, modelfilterr)
         self.__listview.set_model(modelfilterr)
 
-    def newFromDTDFile(self, dtd_filename):
+    def newFromDTDFile(self, dtd_filename, doc_element):
         # Here we need to create the dtd-object and create an empty document with the basename of the dtd
-        dom = xml.dom.minidom.getDOMImplementation()
-        type = dom.createDocumentType(self.DOM_QNAME, None, dtd_filename)
-        doc = dom.createDocument(None, self.DOM_QNAME, type)
+        #dom = xml.dom.minidom.getDOMImplementation()
+        #type = dom.createDocumentType(self.DOM_QNAME, None, dtd_filename)
+        #doc = dom.createDocument(None, self.DOM_QNAME, type)
         dtd = xml.parsers.xmlproc.utils.load_dtd(dtd_filename)
+        if not doc_element:
+            doc = self.createDocElementFromName(doc_element, dtd_filename)
+        else:
+            doc = self.createDocElementFromName(self.dtd.get_elements()[0], dtd_filename)
 
         return (doc, dtd)
+
+    def createDocElementFromName(self, docname, dtd_filename):
+        dom = xml.dom.minidom.getDOMImplementation()
+        type = dom.createDocumentType(docname, None, dtd_filename)
+        doc = dom.createDocument(None, docname, type)
+        return doc
 
     def openFile(self, filename):
         reader = Sax2.Reader(validate=1)
@@ -339,14 +349,31 @@ class DOMTreeViewTest(gtk.Window):
         dtd_filter.add_pattern("*.dtd")
         dtd_filter.set_name("DTD-Filter")
         dialog.add_filter(dtd_filter)
+        element_chooser = gtk.combo_box_new_text()
+        for element_txt in self.dtd.get_elements():
+            element_chooser.append_text(element_txt)
+        element_chooser.set_active(1)
+        element_chooser.show ()
+        dialog.set_extra_widget(element_chooser)
+        dialog.connect("selection-changed", self.dtd_changed, element_chooser)
         response=dialog.run()
         dtd_file=dialog.get_filename()
         dialog.destroy()
         if response == gtk.RESPONSE_OK:
             ComLog.getLogger(__logStrLevel__).debug("File: %s" % dtd_file)
-            (doc, dtd) = self.newFromDTDFile(dtd_file)
+            (doc, dtd) = self.newFromDTDFile(dtd_file, element_chooser.get_active_text())
             self.dtd=dtd
             self.initFromDOMNode(doc.documentElement, doc)
+    
+    def dtd_changed(self, filedialog, chooser):
+        ComLog.getLogger(__logStrLevel__).debug("dtd changed pressed %s, %s." %(filedialog, chooser))
+        try:
+            self.newFromDTDFile(filedialog.get_filename())
+            chooser.get_model().clear()
+            for element_txt in self.dtd.get_elements():
+                chooser.append_text(element_txt)
+        except:
+            pass
         
     def file_open(self, number, menuitem):
         ComLog.getLogger(__logStrLevel__).debug("file open pressed %s, %s." %(number, menuitem))
@@ -656,7 +683,10 @@ if __name__ == '__main__':
 
 ################################
 # $Log: ComDOMTreeView.py,v $
-# Revision 1.14  2006-07-17 11:11:32  mark
+# Revision 1.15  2006-07-17 15:22:09  marc
+# new menu is running now
+#
+# Revision 1.14  2006/07/17 11:11:32  mark
 # implemented newFromDTDFile
 #
 # Revision 1.13  2006/07/17 10:11:01  marc
