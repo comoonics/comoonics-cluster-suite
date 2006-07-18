@@ -83,14 +83,14 @@ class DOMListModel(gtk.ListStore, DOMModel):
 
     def createStoreModelFromNode(self, node):
         iter=self.append()
-        ComLog.getLogger(__logStrLevel__).debug("Node: %s, %s" % (node.nodeName, node.nodeValue))
+        ComLog.getLogger(__logStrLevel__).debug("Node: %s" % (node))
         gobj=gobject.GObject()
         gobj.set_data(DOMTreeModel.NODE_KEY, node)
         self.set_value(iter, DOMModel.COLUMN_NAME, node.nodeName)
         self.set_value(iter, DOMModel.COLUMN_VALUE, node.nodeValue)
         self.set_value(iter, DOMModel.COLUMN_EDITABLE, True)
         self.set_value(iter, DOMModel.COLUMN_NODE, gobj)
-        if node.attributes:
+        if node.attributes and len(node.attributes) > 0:
             for child in node.attributes:
                 self.createStoreModelFromNode(child)
          
@@ -176,6 +176,7 @@ class DOMTreeViewTest(gtk.Window):
         self.show_all()
 
     def initFromDOMNode(self, node, doc):
+        self.doc=doc
         self.__basemodell=DOMTreeModel(node, doc)
         self.__basemodelr=DOMListModel(node, doc)
         modelfilterl=self.__basemodell.filter_new()
@@ -192,10 +193,13 @@ class DOMTreeViewTest(gtk.Window):
         #type = dom.createDocumentType(self.DOM_QNAME, None, dtd_filename)
         #doc = dom.createDocument(None, self.DOM_QNAME, type)
         dtd = xml.parsers.xmlproc.utils.load_dtd(dtd_filename)
-        if not doc_element:
+        if doc_element:
             doc = self.createDocElementFromName(doc_element, dtd_filename)
         else:
             doc = self.createDocElementFromName(self.dtd.get_elements()[0], dtd_filename)
+
+        self.doc=doc
+        self.dtd=dtd
 
         return (doc, dtd)
 
@@ -350,17 +354,23 @@ class DOMTreeViewTest(gtk.Window):
         dtd_filter.set_name("DTD-Filter")
         dialog.add_filter(dtd_filter)
         element_chooser = gtk.combo_box_new_text()
-        for element_txt in self.dtd.get_elements():
+        active=0
+        for i in range(len(self.dtd.get_elements())):
+            element_txt=self.dtd.get_elements()[i]
+            if element_txt == self.doc.documentElement.tagName:
+                active=i
             element_chooser.append_text(element_txt)
-        element_chooser.set_active(1)
+        element_chooser.set_active(active)
         element_chooser.show ()
         dialog.set_extra_widget(element_chooser)
+        ComLog.getLogger(__logStrLevel__).debug("Systemid: %s" % self.doc.doctype.systemId)
         dialog.connect("selection-changed", self.dtd_changed, element_chooser)
+        dialog.set_filename(self.doc.doctype.systemId)
         response=dialog.run()
         dtd_file=dialog.get_filename()
         dialog.destroy()
         if response == gtk.RESPONSE_OK:
-            ComLog.getLogger(__logStrLevel__).debug("File: %s" % dtd_file)
+            ComLog.getLogger(__logStrLevel__).debug("File: %s, rootnode: %s" % (dtd_file, element_chooser.get_active_text()))
             (doc, dtd) = self.newFromDTDFile(dtd_file, element_chooser.get_active_text())
             self.dtd=dtd
             self.initFromDOMNode(doc.documentElement, doc)
@@ -412,6 +422,7 @@ class DOMTreeViewTest(gtk.Window):
         conf_filter.set_name("Conf-Filter")
         dialog.add_filter(xml_filter)
         dialog.add_filter(conf_filter)
+        dialog.set_current_name(self.filename)
         response=dialog.run()
         file=dialog.get_filename()
         dialog.destroy()
@@ -708,7 +719,10 @@ if __name__ == '__main__':
 
 ################################
 # $Log: ComDOMTreeView.py,v $
-# Revision 1.16  2006-07-18 11:08:10  mark
+# Revision 1.17  2006-07-18 12:12:12  marc
+# new is now working better. Using infos already here.
+#
+# Revision 1.16  2006/07/18 11:08:10  mark
 # bug fixes
 #
 # Revision 1.15  2006/07/17 15:22:09  marc
