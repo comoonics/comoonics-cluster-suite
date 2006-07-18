@@ -605,48 +605,72 @@ class ContentModelHelper:
         self.dtd=dtd
     
     def getValidElementNamesAppend(self, element):
+        ComLog.getLogger(__logStrLevel__).debug("in getValidElementNamesAppend")
         __elem=self.dtd.get_elem(element.tagName)
         __state=__elem.get_start_state()
         __nodes=element.childNodes
         for i in range(len(__nodes)):
+            if __nodes[i].nodeType != __nodes[i].ELEMENT_NODE:
+                continue
             ComLog.getLogger(__logStrLevel__).debug("found element %s" %__nodes[i].tagName)
             __state=__elem.next_state(__state, __nodes[i].tagName)
         return __elem.get_valid_elements(__state)
         
     def getValidElementNamesInsert(self, element):
+        ComLog.getLogger(__logStrLevel__).debug("in getValidElementNamesInsert")
         ret=list()
         oelement=element
         parent=element.parentNode
         __elem=self.dtd.get_elem(parent.tagName)
         __state=__elem.get_start_state()
         __nodes=[element]
+        # get all element up to the current
         while element.previousSibling:
+            element = element.previousSibling 
             if element.nodeType == element.ELEMENT_NODE:
                 __nodes.append(element)
-                element = element.previousSibling 
         __nodes.reverse()
+        
+        # go to the current element state
         for i in range(len(__nodes)):
             ComLog.getLogger(__logStrLevel__).debug("found element %s" %__nodes[i].tagName)
             #if __elem.final_state(__state):
-             #   return ret
-        __state=__elem.next_state(__state, __nodes[i].tagName)
+            #   return ret
+            __state=__elem.next_state(__state, __nodes[i].tagName)
        
+        # get all valid elements in that state 
         __elements=__elem.get_valid_elements(__state)
+        ComLog.getLogger(__logStrLevel__).debug("valid elements " + str(__elements))
+        
+        # test all valid elements
         for i in range(len(__elements)):
+            is_valid=True
             ComLog.getLogger(__logStrLevel__).debug("testing element " + __elements[i])
-            ooelement=oelement
+            #save the start element
+            element=oelement
             try: 
+                # get new test state 
+                ComLog.getLogger(__logStrLevel__).debug("new state with element " + __elements[i])
                 __tstate=__elem.next_state(__state, __elements[i])
-                while oelement.nextSibling:
-                    oelement=oelement.nextSibling
+                # test the whole branch with new element inserted
+                while element.nextSibling:
+                    element=element.nextSibling
                     if element.nodeType == element.ELEMENT_NODE:
-                        __tstate=__elem.next_state(__tstate, oelement.tagName)
+                        ComLog.getLogger(__logStrLevel__).debug("new state with element " + element.tagName)
+                        __tstate=__elem.next_state(__tstate, element.tagName)
+                        ComLog.getLogger(__logStrLevel__).debug("state is  " + str(__tstate) + " " + \
+                                                                str(__elem.final_state(__tstate)))
+                        if __elem.final_state(__tstate) == 0:
+                            ComLog.getLogger(__logStrLevel__).debug("state is final " + element.tagName)
+                            is_valid=False
+                            break
+                if is_valid:
+                    ret.append(__elements[i])
             except KeyError, e:
                 ComLog.getLogger(__logStrLevel__).debug("element : " + __elements[i])
                 ComLog.getLogger(__logStrLevel__).debug(e)
                 continue
-            ret.append(__elements[i])
-        ComLog.getLogger(__logStrLevel__).debug(ret)
+            ComLog.getLogger(__logStrLevel__).debug(ret)
         return ret
         
     def getValidElementNames2(self, element):
@@ -672,6 +696,7 @@ class ContentModelHelper:
         
 
 def main():
+    #filename="/tmp/cluster.conf"
     filename="../test/gfs-node1-clonetest.xml"
     if len(sys.argv) > 1:
         filename=sys.argv[1]
@@ -683,7 +708,10 @@ if __name__ == '__main__':
 
 ################################
 # $Log: ComDOMTreeView.py,v $
-# Revision 1.15  2006-07-17 15:22:09  marc
+# Revision 1.16  2006-07-18 11:08:10  mark
+# bug fixes
+#
+# Revision 1.15  2006/07/17 15:22:09  marc
 # new menu is running now
 #
 # Revision 1.14  2006/07/17 11:11:32  mark
