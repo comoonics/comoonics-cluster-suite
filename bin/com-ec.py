@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec.py,v 1.2 2006-07-11 09:24:41 marc Exp $
+# $Id: com-ec.py,v 1.3 2006-07-18 12:12:55 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/Attic/com-ec.py,v $
 
 from exceptions import Exception
@@ -140,15 +140,18 @@ except Exception, e:
         ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComModificationset.Modificationset.TAGNAME)
         businesscopy.undoModificationsets(copysetname)
     if not copysetname and not modsetname or copysetname:
-        line("Undoing executing all copysets %u" % (copysetname, len(businesscopy.copysets)))
+        line("Undoing executing %s copysets %u" % (copysetname, len(businesscopy.copysets)))
         ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComCopyset.Copyset.TAGNAME)
         businesscopy.undoCopysets(modsetname)
 
-    line("Errors during execution of businesscopy.")
+    line("Errors during execution of enterprisecopy.")
 
 ##################
 # $Log: com-ec.py,v $
-# Revision 1.2  2006-07-11 09:24:41  marc
+# Revision 1.3  2006-07-18 12:12:55  marc
+# minor change.
+#
+# Revision 1.2  2006/07/11 09:24:41  marc
 # added commandswitches -m and -c
 #
 # Revision 1.1  2006/07/07 08:40:02  marc
