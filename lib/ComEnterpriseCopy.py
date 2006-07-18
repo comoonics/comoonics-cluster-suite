@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.2 2006-07-11 09:25:07 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.3 2006-07-18 12:12:33 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/Attic/ComEnterpriseCopy.py,v $
 
 import ComDataObject
@@ -46,7 +46,7 @@ class EnterpriseCopy(ComDataObject.DataObject):
           
     def doCopysets(self, name=None):
         for copyset in self.copysets:
-            if not name or name == "all" or name == copyset.getAttribute("name", None):
+            if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
                 copyset.doCopy()
 
@@ -54,26 +54,29 @@ class EnterpriseCopy(ComDataObject.DataObject):
         ComLog.getLogger(self.__logStrLevel__).debug("Copysets: %s " % self.copysets)
         self.copysets.reverse()
         for copyset in self.copysets:
-            if not name or name == "all" or name == copyset.getAttribute("name", None):
+            if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Undoing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
                 copyset.undoCopy()
 
     def doModificationsets(self, name=None):
         for modset in self.modificationsets:
-            if not name or name == "all" or name == modset.getAttribute("name", None):
+            if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", "")):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
                 modset.doModifications()
           
     def undoModificationsets(self, name=None):
         self.modificationsets.reverse()
         for modset in self.modificationsets:
-            if not name or name == "all" or name == modset.getAttribute("name", None):
+            if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Undoing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
                 modset.undoModifications()
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.2  2006-07-11 09:25:07  marc
+# Revision 1.3  2006-07-18 12:12:33  marc
+# bugfix in selecting a modification/copyset
+#
+# Revision 1.2  2006/07/11 09:25:07  marc
 # added support for command selected copysets and modificationsets
 #
 # Revision 1.1  2006/07/07 08:41:27  marc
