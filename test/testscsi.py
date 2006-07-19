@@ -3,8 +3,8 @@ import os
 
 sys.path.append("../lib")
 
-import ComScsi
-import ComSystem
+from comoonics import ComScsi
+from comoonics import ComSystem
 
 
 ComSystem.setExecMode("ask")

@@ -5,7 +5,7 @@ sys.path.append("../lib")
 
 
 
-from ComSystem import *
+from comoonics.ComSystem import *
 
 cmd1='echo "hallo stdout"'
 cmd2='echo "hallo stderr" >&2'

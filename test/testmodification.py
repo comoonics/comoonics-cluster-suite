@@ -3,12 +3,12 @@ import traceback
 import copy
 import os
 
-sys.path.append("/home/mark/entwicklung/nashead2004/management/comoonics-clustersuite/python/lib")
+sys.path.append("../lib")
 
-import ComDevice
-import ComUtils
-import ComDataObject
-import ComModificationset
+from comoonics import ComDevice
+from comoonics import ComUtils
+from comoonics import ComDataObject
+from comoonics.enterprisecopy import ComModificationset
 
 #sourcedisk=ComDisk.Disk("/dev/sdd")
 

@@ -12,9 +12,9 @@ from xml.xpath.Context  import Context
 
 sys.path.append("../lib")
 
-import ComLVM
-import ComSystem
-import ComLog
+from comoonics import ComLVM
+from comoonics import ComSystem
+from comoonics import ComLog
 
 ComSystem.__EXEC_REALLY_DO=""
 
@@ -151,6 +151,9 @@ line("Byebye")
 
 ###############
 # $Log: testLVM.py,v $
-# Revision 1.2  2006-06-28 17:27:41  marc
+# Revision 1.3  2006-07-19 14:29:43  marc
+# changed because of change in fs-hierarchie
+#
+# Revision 1.2  2006/06/28 17:27:41  marc
 # first version
 #

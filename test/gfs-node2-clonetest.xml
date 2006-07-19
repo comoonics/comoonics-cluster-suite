@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE enterprisecopy SYSTEM "file:../../xml/comoonics-enterprise-copy.dtd">
-<enterprisecopy name='gfs-node1'>
+<enterprisecopy name='gfs-node2'>
   <copyset type='partition'>
     <source type='disk'>
       <disk name='/dev/sdb'/>
@@ -35,7 +35,7 @@
       </device>
     </source>
     <destination type='filesystem'>
-      <device id='rootfs' name='/dev/VG_SHAREDROOT_new/LV_SHAREDROOT'>
+      <device name='/dev/VG_SHAREDROOT_new/LV_SHAREDROOT' id='rootfs'>
         <filesystem clustername='vmwareclusternew' type='gfs'/>
         <mountpoint name='/mnt/dest'>
           <option value='lock_nolock' name='lockproto'/>
@@ -45,7 +45,7 @@
   </copyset>
   <copyset type='filesystem'>
     <source type='filesystem'>
-      <device id='bootfs' name='/dev/sdb1'>
+      <device name='/dev/sdb1' id='bootfs'>
         <filesystem type='ext3'/>
         <mountpoint name='/mnt/source'/>
       </device>

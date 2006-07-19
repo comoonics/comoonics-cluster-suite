@@ -13,9 +13,9 @@ from xml.dom.ext.reader import Sax2
 from xml import xpath
 
 
-import ComDisk
-import ComUtils
-import ComCopyset
+from comoonics import ComDisk
+from comoonics import ComUtils
+from comoonics.enterprisecopy import ComCopyset, ComEnterpriseCopy
 
 
 def printDom(doc):
@@ -29,6 +29,8 @@ file=os.fdopen(os.open("./example_config.xml",os.O_RDONLY))
 doc = reader.fromStream(file)
 
 #element = xpath.Evaluate('businesscopy/copyset[@type=partition]', doc)[0]
-element = xpath.Evaluate('businesscopy/copyset[@type="bootloader"]', doc)[0]
+xpathstr='%s/%s[@type="bootloader"]' % (ComEnterpriseCopy.EnterpriseCopy.TAGNAME, ComCopyset.Copyset.TAGNAME)
+print "Searching for %s" % xpathstr
+element = xpath.Evaluate(xpathstr, doc)[0]
 copyset=ComCopyset.getCopyset(element, doc)
 copyset.doCopy()

@@ -3,7 +3,7 @@ import os
 
 sys.path.append("../lib")
 
-import ComDevice
+from comoonics import ComDevice
 
 sys.path.append("../lib")
 

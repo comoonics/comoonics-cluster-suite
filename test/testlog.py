@@ -5,8 +5,8 @@ sys.path.append("../lib")
 #print sys.path
 
 try:
-    import ComLog 
-    import ComSystem
+    from comoonics import ComLog 
+    from comoonics import ComSystem
 except ImportError:
     print "Exception in import " 
     print traceback.print_exc()

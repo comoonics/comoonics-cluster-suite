@@ -4,12 +4,12 @@ import copy
 
 sys.path.append("../lib")
 
-import ComDevice
-import ComUtils
-import ComFileSystem
-import ComDataObject
-import ComCopyset
-from ComFileSystem import *
+from comoonics import ComDevice
+from comoonics import ComUtils
+from comoonics import ComFileSystem
+from comoonics import ComDataObject
+from comoonics.enterprisecopy import ComCopyset
+from comoonics.ComFileSystem import *
 
 #sourcedisk=ComDisk.Disk("/dev/sdd")
 

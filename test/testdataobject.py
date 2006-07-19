@@ -10,7 +10,7 @@ from xml import xpath
 sys.path.append("../lib")
 
 
-from ComDataObject import *
+from comoonics.ComDataObject import *
 
 
 

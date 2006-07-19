@@ -1,9 +1,9 @@
 # here is some internal information
-# $Id: testLVMCopyset.py,v 1.1 2006-06-30 12:40:14 marc Exp $
+# $Id: testLVMCopyset.py,v 1.2 2006-07-19 14:29:43 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/test/testLVMCopyset.py,v $
 
 import sys
@@ -15,12 +15,12 @@ from xml.dom.ext.reader import Sax2
 
 sys.path.append("../lib")
 
-import ComLVM
-import ComSystem
-import ComLog
-import ComCopyset
-from ComLVMCopyObject import LVMCopyObject
-from ComLVMCopyset import LVMCopyset
+from comoonics import ComLVM
+from comoonics import ComSystem
+from comoonics import ComLog
+from comoonics.enterprisecopy import ComCopyset
+from comoonics.enterprisecopy.ComLVMCopyObject import LVMCopyObject
+from comoonics.enterprisecopy.ComLVMCopyset import LVMCopyset
 
 ComSystem.__EXEC_REALLY_DO=""
 
@@ -42,7 +42,7 @@ line("XML Document")
 PrettyPrint(doc)
 
 line("sets of copyset@lvm")
-sets = Evaluate('businesscopy/copyset[@type="lvm"]', doc)
+sets = Evaluate('enterprisecopy/copyset[@type="lvm"]', doc)
 print sets
 for i in range(len(sets)):
     line("set[%u]" % i)
@@ -63,6 +63,9 @@ for i in range(len(sets)):
 
 ##################
 # $Log: testLVMCopyset.py,v $
-# Revision 1.1  2006-06-30 12:40:14  marc
+# Revision 1.2  2006-07-19 14:29:43  marc
+# changed because of change in fs-hierarchie
+#
+# Revision 1.1  2006/06/30 12:40:14  marc
 # initial revision
 #

@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: xmltest.py,v 1.7 2006-06-29 16:42:20 marc Exp $
+# $Id: xmltest.py,v 1.8 2006-07-19 14:29:43 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/test/xmltest.py,v $
 
 
@@ -26,7 +26,7 @@ import xml
 def printDom(doc):
     PrettyPrint(doc)
 
-filename="./example_config_dtd.xml"
+filename="./example_config.xml"
 if len(sys.argv) > 1:
     filename=sys.argv[1]
 
@@ -40,7 +40,10 @@ doc = reader.fromStream(file)
 printDom(doc)
 
 # $Log: xmltest.py,v $
-# Revision 1.7  2006-06-29 16:42:20  marc
+# Revision 1.8  2006-07-19 14:29:43  marc
+# changed because of change in fs-hierarchie
+#
+# Revision 1.7  2006/06/29 16:42:20  marc
 # changed validation
 #
 # Revision 1.6  2006/06/28 12:28:55  mark
