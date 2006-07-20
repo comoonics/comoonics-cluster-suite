@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComDisk.py,v 1.2 2006-07-20 10:24:42 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -60,6 +60,12 @@ class Disk(DataObject):
         if __rc != 0:
             raise ComException(__cmd)
 
+    def getPartitionTable(self):
+        rc, rv = ComSystem.execLocalGetResult(self.getDumpStdout())
+        if rc == 0:
+            return rv
+        return list()
+    
     def getDumpStdout(self):
         """ returns the command string for dumping partition information
         see sfdisk -d
@@ -111,7 +117,10 @@ class Disk(DataObject):
         return " ".join(__cmd)
     
 # $Log: ComDisk.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-07-20 10:24:42  mark
+# added getPartitionTable method
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.8  2006/07/05 12:29:34  mark
