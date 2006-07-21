@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComFileSystem.py,v 1.2 2006-07-21 15:17:19 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComFileSystem.py,v $
 
 import os
@@ -82,13 +82,24 @@ class FileSystem(DataObject):
         device: ComDevice.Device
         mountpoint: ComMountPoint.MountPoint
         """ 
+        __exclusiv=False
+        if self.hasAttribute("exlock"):
+            __lockfile=self.getAttribute("exlock")
+            __exclusiv=True
+
+        if __exclusiv:
+            if os.path.exists(__lockfile):
+                raise ComException("lockfile " + __lockfile + " exists!")
+        
         __cmd = CMD_MOUNT + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
                 " " + device.getDevicePath() + " " + mountpoint.getAttribute("name")
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("mount:" + __cmd + ": " + __ret) 
         if __rc != 0:
             raise ComException(__cmd + __ret)
-        
+        if __exclusiv:
+            __fd=open(__lockfile, 'w')
+            __fd.write(device.getDevicePath() + " is mounted ")
 
     def umountDev(self, device):
         """ umount a filesystem with the use of the device name
@@ -99,7 +110,7 @@ class FileSystem(DataObject):
         log.debug("umount:" + __cmd + ": " + __ret) 
         if __rc != 0:
             raise ComException(__cmd + __ret)
-
+        self.unlinkLockfile()
 
     def umountDir(self, mountpoint):
         """ umount a filesystem with the use of the mountpoint 
@@ -110,7 +121,7 @@ class FileSystem(DataObject):
         log.debug("umount: " + __cmd + ": " + __ret) 
         if __rc != 0:
             raise ComException(__cmd + __ret)
-
+        self.unlinkLockfile()
 
     def getName(self):
         """ returns the filesystem name/type """
@@ -181,7 +192,11 @@ class FileSystem(DataObject):
         """
         pass
         
-
+    """ private """
+    def unlinkLockfile(self):
+        if self.hasAttribute("exlock"):
+            __lockfile=self.getAttribute("exlock")
+            os.unlink(__lockfile)
 
 class extFileSystem(FileSystem):
     """ Base class for extended filesystem """
@@ -331,7 +346,10 @@ class gfsFileSystem(FileSystem):
 
             
 # $Log: ComFileSystem.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-07-21 15:17:19  mark
+# added support for lockex option
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.5  2006/07/03 10:40:24  mark
