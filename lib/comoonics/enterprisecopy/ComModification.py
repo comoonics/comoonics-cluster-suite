@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModification.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComModification.py,v 1.2 2006-07-21 15:16:56 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModification.py,v $
 import exceptions
 import xml.dom
@@ -32,6 +32,9 @@ def getModification(element, doc):
     if __type == "regexp":
         from ComRegexpModification import RegexpModification
         return RegexpModification(element, doc)
+    if __type == "exec":
+        from ComExecutionModification import ExecutionModification
+        return ExecutionModification(element, doc)
     raise exceptions.NotImplementedError("Modifcation for type: "+ __type + " is not implemented")
         
 
@@ -85,7 +88,10 @@ class Modification(DataObject):
             __reqs.append(ComRequirement.getRequirement(__elements[i], doc))
         return __reqs
 # $Log: ComModification.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-07-21 15:16:56  mark
+# added ExecutionModification
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.5  2006/07/07 11:33:44  mark
