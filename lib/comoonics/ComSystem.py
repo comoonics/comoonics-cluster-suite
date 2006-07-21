@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComSystem.py,v 1.2 2006-07-21 15:00:44 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -45,7 +45,10 @@ def execLocalGetResult(__cmd, err=False):
     if __EXEC_REALLY_DO == "ask":
         __ans=raw_input(__cmd+" (y,n)")
         if __ans != "y":
-            return [0, "skipped"]
+            if err:
+                return [0, "skipped", ""]
+            else:
+                return [0, "skipped"]
     child=popen2.Popen3(__cmd, err)
     __rc=child.wait()
     __rv=child.fromchild.readlines()
@@ -66,7 +69,10 @@ def execLocal(__cmd):
     return os.system(__cmd)
 
 # $Log: ComSystem.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-07-21 15:00:44  mark
+# minor bug fixes
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.5  2006/06/28 17:24:00  mark
