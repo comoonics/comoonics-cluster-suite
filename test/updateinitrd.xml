@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE enterprisecopy SYSTEM "file:../../xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy>
+	<modificationset type="filesystem">
+   		<device name="/dev/sdd1">
+      		<filesystem type="ext3" exlock="/var/sharelock/bootfs.lock"/>     	
+      		<mountpoint name="/mnt/tmp"/>
+			<modification type="copy">
+				<requirement type="archive" format="cpio" name="myinitrd_sr$(uname -r).img" dest="/mnt/cpio/"/>
+				<file name="etc/cluster.conf" sourcefile="/etc/cluster/cluster.conf"/>
+			</modification>		
+		</device>
+	</modificationset>
+</enterprisecopy>
