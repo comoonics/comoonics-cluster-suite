@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComRegexpModification.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComRegexpModification.py,v 1.2 2006-07-21 08:59:09 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRegexpModification.py,v $
 
 import exceptions
@@ -33,7 +33,14 @@ class RegexpModification(FileModification):
     def __init__(self, element, doc):
         FileModification.__init__(self, element, doc)
         
-    def doModifications(self, file, save=True):
+    def doModifications(self, file):
+        save=True
+        if self.hasAttribute("nobackup"):
+            if self.getAttribute("nobackup") == "1":
+                save=False
+        self.doRegexpModifications(file, save)
+        
+    def doRegexpModifications(self, file, save=True):
         __search = self.getAttribute("search")
         __replace = self.getAttribute("replace")
         if save:
@@ -59,7 +66,10 @@ class RegexpModification(FileModification):
         __dest.close()
             
 # $Log: ComRegexpModification.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-07-21 08:59:09  mark
+# added nobackup option
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.2  2006/07/07 11:35:00  mark
