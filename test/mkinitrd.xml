@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE enterprisecopy SYSTEM "file:../../xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy>
+	<modificationset type="filesystem">
+   		<device name="/dev/sdd1">
+      			<filesystem type="ext3" exlock="/var/sharelock/bootfs.lock"/>     	
+      			<mountpoint name="/mnt/tmp"/>
+					<modification type="exec" 
+						command="/opt/atix/comoonics_bootimage/mkinitrd -f myinitrd_sr$(uname -r).img $(uname -r)"/>
+		</device>
+	</modificationset>
+</enterprisecopy>
