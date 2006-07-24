@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.2 2006-07-24 09:58:30 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.3 2006-07-24 14:48:42 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -62,7 +62,7 @@ class ArchiveRequirement(Requirement):
         """
         Returns true if checks have to be performed
         """
-        return not self.getAttribute("check") == "no"
+        return not self.hasAttribute("check") or not self.getAttribute("check") == "no"
     
     def doPre(self):
         """
@@ -119,7 +119,10 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.2  2006-07-24 09:58:30  marc
+# Revision 1.3  2006-07-24 14:48:42  marc
+# check is not required
+#
+# Revision 1.2  2006/07/24 09:58:30  marc
 # support for check tag in requirement
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
