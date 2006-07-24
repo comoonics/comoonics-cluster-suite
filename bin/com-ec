@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.1 2006-07-19 14:31:06 marc Exp $
+# $Id: com-ec,v 1.2 2006-07-24 10:02:31 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/com-ec,v $
 
 from exceptions import Exception
@@ -127,7 +127,7 @@ try:
         line("Executing %s modificationsets %u" % (modsetname, len(businesscopy.modificationsets)))
         businesscopy.doModificationsets(modsetname)
 
-    line("Successfully executed businesscopy.")
+    line("Successfully executed enterprisecopy.")
 except KeyboardInterrupt:
     ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).info("Leaving because of user signal")
     sys.exit(1)
@@ -152,7 +152,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.1  2006-07-19 14:31:06  marc
+# Revision 1.2  2006-07-24 10:02:31  marc
+# businesscopy=>enterprisecopy
+#
+# Revision 1.1  2006/07/19 14:31:06  marc
 # removed com-ec.py and moved to com-ec
 #
 # Revision 1.3  2006/07/18 12:12:55  marc
