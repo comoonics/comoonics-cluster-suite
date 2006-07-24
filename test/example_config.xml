@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE enterprisecopy SYSTEM "file:../../xml/comoonics-enterprise-copy.dtd">
-<enterprisecopy>
+<!DOCTYPE enterprisecopy SYSTEM "file:///opt/atix/comoonics_cs/xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy name="&test;">
 	<copyset type="partition">
 		<source type="disk">
-			<disk name="/dev/sdc"/>
+			<disk name="/dev/sdc"/>/usr/share/doc/HTML/index.html
 		</source>
 		<destination type="disk">
 			<disk name="/dev/sda"/>
@@ -69,7 +69,7 @@
 	<modificationset type="filesystem">
 		<device refid="bootfs">
 			<modification type="copy">
-				<requirement type="archive" format="cpio" name="/home/marc/tmp/initrd-2.6.16-1.2069_FC4.img" dest="/tmp/test"/>
+				<requirement type="archive" format="cpio" check="yes" name="/home/marc/tmp/initrd-2.6.16-1.2069_FC4.img" dest="/tmp/test"/>
 				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
 			</modification>
 		</device>
