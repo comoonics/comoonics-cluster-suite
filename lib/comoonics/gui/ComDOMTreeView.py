@@ -20,7 +20,9 @@ import urllib
 from xml.dom.NodeFilter import NodeFilter
 from xml.dom.ext import PrettyPrint
 
-import ComLog
+sys.path.append("../../")
+
+from comoonics import ComLog
 
 def acceptElements(model, iter):
     if not model.get_value(iter, DOMModel.COLUMN_NODE):
@@ -121,19 +123,22 @@ class DOMNodeView(gtk.TreeView):
 
 class DOMTreeViewTest(gtk.Window):
     DOM_QNAME="enterprisecopy"
+    contextid=1
+    title="Comoonics XML Editor"
     def __init__(self, filename, parent=None):
         gtk.Window.__init__(self)
         try:
             self.set_screen(parent.get_screen())
         except AttributeError:
             self.connect('destroy', lambda *w: gtk.main_quit())
-        self.set_title(self.__class__.__name__)
+        self.updateTitle(filename)
         self.set_default_size(650, 400)
         self.set_border_width(8)
 
         menubar = self.create_main_menu()
         menubar.show()
-
+        self.statusbar = gtk.Statusbar()
+        
         (doc, dtd) = self.openFile(filename)
         self.dtd=dtd
         node=doc.documentElement
@@ -173,8 +178,13 @@ class DOMTreeViewTest(gtk.Window):
         vbox = gtk.VBox(False, 8)
         vbox.pack_start(menubar, False, False)
         vbox.add(hpaned)
+        vbox.pack_start(self.statusbar, False, False)
         self.add(vbox)
         self.show_all()
+        self.statusbar.push(self.contextid, "init succeeded")
+
+    def updateTitle(self, filename):
+        self.set_title("%s(%s)" % (self.title, filename))
 
     def initFromDOMNode(self, node, doc):
         self.doc=doc
@@ -201,6 +211,8 @@ class DOMTreeViewTest(gtk.Window):
 
         self.doc=doc
         self.dtd=dtd
+        self.updateTitle("new")
+        self.status("new document with dtdbase %s succeeded" % dtd_filename)
 
         return (doc, dtd)
 
@@ -216,10 +228,14 @@ class DOMTreeViewTest(gtk.Window):
         doc = reader.fromStream(stream)
         dtd = reader.parser._parser.get_dtd()
         self.filename=filename
+        self.updateTitle(filename)
+        self.status("open of file %s succeeded" % filename)
         return (doc, dtd)
 
     def openURI(self, uri):
         ComLog.getLogger(__logStrLevel__).debug("openURI(%s)" % uri)
+        self.updateTitle(filename)
+        self.status("open of file %s succeeded" % uri)
         return self.openFile(filename)
     
     def saveFile(self, _uri=None):
@@ -229,6 +245,8 @@ class DOMTreeViewTest(gtk.Window):
         stream=open(_uri,"w+")
         PrettyPrint(self.__basemodell.document, stream)
         self.filename=_uri
+        self.status("save to file %s succeeded" % _uri)
+        self.updateTitle(sefl.filename)
         
     def selection_changed(self, selection, dest, filter):
         (model, iter) = selection.get_selected()
@@ -240,7 +258,7 @@ class DOMTreeViewTest(gtk.Window):
             filter.refilter()
             
     def add_element(self, item, model, piter, name, iter=None):
-        ComLog.getLogger(__logStrLevel__).debug("Menu Add Element... " + name + " pressed menuitem %s, model %s, piter %s, iter %s" % (item, model, piter, iter))
+        self.status("Menu Add Element... " + name + " pressed menuitem %s, model %s, piter %s, iter %s" % (item, model, piter, iter))
         if iter:
             value = model.get_value(iter, DOMModel.COLUMN_NODE)
             ref_node=value.get_data(DOMModel.NODE_KEY)
@@ -264,12 +282,12 @@ class DOMTreeViewTest(gtk.Window):
         model.get_model().set_value(iter_newnode, DOMModel.COLUMN_NODE, gobj)
         
     def insert_element(self, item, model, iter, name):
-        ComLog.getLogger(__logStrLevel__).debug("Menu Insert Element... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
+        self.status("Menu Insert Element... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
         piter=model.iter_parent(iter)
         self.add_element(item, model, piter, name, iter)
 
     def delete_element(self, item, model, iter):
-        ComLog.getLogger(__logStrLevel__).debug("Menu Delete Element... pressed menuitem %s, model %s" % (item, model))
+        self.status("Menu Delete Element... pressed menuitem %s, model %s" % (item, model))
         value = model.get_value(iter, DOMModel.COLUMN_NODE)
         ref_node=value.get_data(DOMModel.NODE_KEY)
         piter=model.iter_parent(iter)
@@ -281,7 +299,7 @@ class DOMTreeViewTest(gtk.Window):
         model.get_model().remove(citer)
     
     def add_attribute(self, item, model, iter, name):
-        ComLog.getLogger(__logStrLevel__).debug("Menu Add Attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
+        self.status("Menu Add Attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
         value = model.get_value(iter, DOMModel.COLUMN_NODE)
         ref_node=value.get_data(DOMModel.NODE_KEY)
         ref_node.setAttributeNode(self.doc.createAttribute(name))
@@ -291,7 +309,7 @@ class DOMTreeViewTest(gtk.Window):
         self.__basemodelr.createStoreModelFromNode(ref_node)
 
     def delete_attribute(self, item, model, iter, name):
-        ComLog.getLogger(__logStrLevel__).debug("Menu Delete attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
+        self.status("Menu Delete attribute... " + name + " pressed menuitem %s, model %s, iter %s" % (item, model, iter))
         value = model.get_value(iter, DOMModel.COLUMN_NODE)
         ref_node=value.get_data(DOMModel.NODE_KEY)
         ref_node.removeAttribute(name)
@@ -301,7 +319,7 @@ class DOMTreeViewTest(gtk.Window):
     
     def edit_attribute(self, cell, path_string, new_text, view):
         model=view.get_model()
-        ComLog.getLogger(__logStrLevel__).debug("Menu Edit attribute... " + path_string + " pressed cell %s, model %s, new_text %s" % (cell, model, new_text))
+        self.status("Menu Edit attribute... " + path_string + " pressed cell %s, model %s, new_text %s" % (cell, model, new_text))
         iter = model.get_iter_from_string(path_string)
         piter= model.iter_parent(iter)
         parent_node=model.get_value(iter, DOMModel.COLUMN_NODE).get_data(DOMModel.NODE_KEY)
@@ -376,6 +394,7 @@ class DOMTreeViewTest(gtk.Window):
             (doc, dtd) = self.newFromDTDFile(dtd_file, element_chooser.get_active_text())
             self.dtd=dtd
             self.initFromDOMNode(doc.documentElement, doc)
+            self.updateTitle(filename)
     
     def dtd_changed(self, filedialog, chooser):
         ComLog.getLogger(__logStrLevel__).debug("dtd changed pressed %s, %s." %(filedialog, chooser))
@@ -435,6 +454,9 @@ class DOMTreeViewTest(gtk.Window):
     """ 
     private methods
     """
+    def status(self, text):
+        self.statusbar.push(self.contextid, text)
+    
     def create_main_menu(self):
         # This is the ItemFactoryEntry structure used to generate new menus.
         # Item 1: The menu path. The letter after the underscore indicates an
@@ -710,7 +732,7 @@ class ContentModelHelper:
 
 def main():
     #filename="/tmp/cluster.conf"
-    filename="../test/gfs-node1-clonetest.xml"
+    filename="../../../test/gfs-node1-clonetest.xml"
     if len(sys.argv) > 1:
         filename=sys.argv[1]
     dtv=DOMTreeViewTest(filename)
@@ -721,7 +743,10 @@ if __name__ == '__main__':
 
 ################################
 # $Log: ComDOMTreeView.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-07-24 09:58:55  marc
+# new gui addons.
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.17  2006/07/18 12:12:12  marc
