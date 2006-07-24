@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.2 2006-07-24 09:58:30 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -58,6 +58,12 @@ class ArchiveRequirement(Requirement):
         if not self.hasAttribute("name") or not self.hasAttribute("dest"):
             raise ArchiveRequirementException("Either name or destination not defined in element")
     
+    def check(self):
+        """
+        Returns true if checks have to be performed
+        """
+        return not self.getAttribute("check") == "no"
+    
     def doPre(self):
         """
         Unpacks the given file to dest
@@ -65,8 +71,9 @@ class ArchiveRequirement(Requirement):
         srcfile=self.getAttribute("name")
         destfile=self.getAttribute("dest")
         
-        if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
-            raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
+        if self.check():
+            if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
+                raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
         self.olddir=os.curdir
         os.chdir(destfile)
         __cmd="gzip -cd %s | cpio -i" % srcfile
@@ -88,8 +95,9 @@ class ArchiveRequirement(Requirement):
         srcfile=self.getAttribute("name")
         destfile=self.getAttribute("dest")
         
-        if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
-            raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
+        if self.check():
+            if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
+                raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
         os.chdir(destfile)
         __cmd="cp %s %s" %(srcfile, srcfile+".bak")
         try:
@@ -111,7 +119,10 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-07-24 09:58:30  marc
+# support for check tag in requirement
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.5  2006/07/04 11:00:17  marc
