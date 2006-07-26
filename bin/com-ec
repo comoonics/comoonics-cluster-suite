@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.3 2006-07-24 15:40:33 marc Exp $
+# $Id: com-ec,v 1.4 2006-07-26 10:06:33 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/com-ec,v $
 
 from exceptions import Exception
@@ -152,7 +152,7 @@ except KeyboardInterrupt:
     
 try:
     if ecopy.hasAttribute("name"):
-        line("Execution of enterprisecopy %s" % (enterprisecopy.getAttribute("name")))
+        line("Execution of enterprisecopy %s" % (ecopy.getAttribute("name")))
     else:
         line("Execution of enterprisecopy %s" % ("unknown"))
 
@@ -189,7 +189,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.3  2006-07-24 15:40:33  marc
+# Revision 1.4  2006-07-26 10:06:33  marc
+# small change
+#
+# Revision 1.3  2006/07/24 15:40:33  marc
 # added the xslt functionality
 #
 # Revision 1.2  2006/07/24 10:02:31  marc
