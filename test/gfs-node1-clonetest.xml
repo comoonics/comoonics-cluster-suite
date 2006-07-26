@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE enterprisecopy SYSTEM "file:../../xml/comoonics-enterprise-copy.dtd">
+<!DOCTYPE enterprisecopy SYSTEM "file:/opt/atix/comoonics_cs/xml/comoonics-enterprise-copy.dtd">
 <enterprisecopy name='gfs-node1'>
   <copyset type='partition'>
     <source type='disk'>
