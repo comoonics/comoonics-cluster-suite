@@ -1,8 +1,8 @@
 #!/bin/bash
 
 SETUP_PY="setup-ec.py"
-RELEASE=3
-REQUIRES="--requires=PyXML"
+RELEASE=6
+REQUIRES="--requires=PyXML,libxslt-python"
 NOAUTO_REQ="--no-autoreq"
 
 rm MANIFEST
