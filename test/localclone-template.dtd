@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ENTITY % defaultParams "
+   name CDATA #REQUIRED
+">
+
+<!ELEMENT localclone (cluster, sourcedisks, destdisks, destpartitions, kernel, dirs)>
+
+<!ELEMENT cluster EMPTY>
+<!ATTLIST cluster %defaultParams;>
+
+<!ELEMENT sourcedisks (bootdisk, rootdisk)>
+<!ELEMENT destdisks (bootdisk, rootdisk)>
+<!ELEMENT destpartitions (bootpartition, rootpartition)>
+<!ELEMENT dirs (tmp)>
+
+<!ELEMENT kernel EMPTY>
+<!ATTLIST kernel
+  version CDATA #REQUIRED>
+
+<!ELEMENT bootdisk EMPTY>
+<!ATTLIST bootdisk %defaultParams;>
+<!ELEMENT rootdisk EMPTY>
+<!ATTLIST rootdisk %defaultParams;>
+
+<!ELEMENT bootpartition EMPTY>
+<!ATTLIST bootpartition %defaultParams;>
+<!ELEMENT rootpartition EMPTY>
+<!ATTLIST rootpartition %defaultParams;>
+
+<!ELEMENT tmp EMPTY>
+<!ATTLIST tmp %defaultParams;>

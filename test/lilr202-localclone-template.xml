@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE localclone SYSTEM "localclone-template.dtd">
+<localclone>
+  <cluster name="lilr202"></cluster>
+  <sourcedisks>
+    <bootdisk name="/dev/sda"/>
+    <rootdisk name="/dev/sdb"/>
+  </sourcedisks>
+  <destdisks>
+    <bootdisk name="/dev/sdc"/>
+    <rootdisk name="/dev/sdd"/>
+  </destdisks>
+  <destpartitions>
+    <bootpartition name="/dev/sdc1"/>
+    <rootpartition name="/dev/sdd1"/>
+  </destpartitions>
+  <kernel version="2.6.9-34.0.1.ELsmp"/>
+  <dirs>
+     <tmp name="/tmp/test"/>
+  </dirs>
+</localclone>
