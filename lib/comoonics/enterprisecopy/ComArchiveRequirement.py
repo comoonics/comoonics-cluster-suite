@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.3 2006-07-24 14:48:42 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.4 2006-08-02 13:55:29 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -23,9 +23,9 @@ class ArchiveRequirementException(ComException): pass
 
 class ArchiveRequirement(Requirement):
     """
-    Requirement Class for handling archive files. The attribute format defines the type of archive. Until now only 
+    Requirement Class for handling archive files. The attribute format defines the type of archive. Until now only
     "cpio" is supported as type.
-    
+
     A xml document fragment for a archive requirement could look as follows:
 
         <device refid="bootfs">
@@ -34,9 +34,9 @@ class ArchiveRequirement(Requirement):
                 <file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
             </modification>
         </device>
-    
+
     """
-    
+
     """
     Static methods and objects/attributes
     """
@@ -57,20 +57,20 @@ class ArchiveRequirement(Requirement):
             raise ArchiveRequirementException("Format %s is not implemented for %s" % (self.getAttribute("format"), self.__class__.__name__  ))
         if not self.hasAttribute("name") or not self.hasAttribute("dest"):
             raise ArchiveRequirementException("Either name or destination not defined in element")
-    
+
     def check(self):
         """
         Returns true if checks have to be performed
         """
         return not self.hasAttribute("check") or not self.getAttribute("check") == "no"
-    
+
     def doPre(self):
         """
         Unpacks the given file to dest
         """
         srcfile=self.getAttribute("name")
         destfile=self.getAttribute("dest")
-        
+
         if self.check():
             if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
                 raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
@@ -81,25 +81,25 @@ class ArchiveRequirement(Requirement):
         if rc >> 8 != 0:
             raise RuntimeError("running \"%s\" failed: %u, %s, %s" % (__cmd, rc,rv, stderr))
 
-    
+
     def do(self):
         """
         If need be does something
         """
         pass
-    
+
     def doPost(self):
         """
         Does something afterwards
         """
         srcfile=self.getAttribute("name")
         destfile=self.getAttribute("dest")
-        
+
         if self.check():
             if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
                 raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
         os.chdir(destfile)
-        __cmd="cp %s %s" %(srcfile, srcfile+".bak")
+        __cmd="cp %s %s" %(srcfile, srcfile+self.getAttribute("bak_suffix", ".bak"))
         try:
             (rc, rv, stderr) = ComSystem.execLocalGetResult(__cmd, True)
             if rc >> 8 != 0:
@@ -119,7 +119,10 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.3  2006-07-24 14:48:42  marc
+# Revision 1.4  2006-08-02 13:55:29  marc
+# added bak_suffix attribute
+#
+# Revision 1.3  2006/07/24 14:48:42  marc
 # check is not required
 #
 # Revision 1.2  2006/07/24 09:58:30  marc
