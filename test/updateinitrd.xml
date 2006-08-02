@@ -5,8 +5,12 @@
    		<device name="/dev/sdd1">
       		<filesystem type="ext3" exlock="/var/sharelock/bootfs.lock"/>     	
       		<mountpoint name="/mnt/tmp"/>
+      		<modification type="exec" 
+						command="ccs_tool update /etc/cluster/cluster.conf"/>
+      		<modification type="exec" 
+						command='cman_tool version -r $(/opt/atix/comoonics_cs/ccs_xml_query -q query_value "cluster/@config_version")'/>
 			<modification type="copy">
-				<requirement type="archive" format="cpio" name="myinitrd_sr$(uname -r).img" dest="/mnt/cpio/"/>
+				<requirement type="archive" format="cpio" name="/mnt/tmp/myinitrd_sr$(uname -r).img" dest="/mnt/cpio/" check="no" bak_suffix=".failsafe"/>
 				<file name="etc/cluster.conf" sourcefile="/etc/cluster/cluster.conf"/>
 			</modification>		
 		</device>
