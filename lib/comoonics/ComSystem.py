@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.3 2006-08-02 12:28:26 marc Exp $
+# $Id: ComSystem.py,v 1.4 2006-08-28 15:58:27 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -29,7 +29,7 @@ def setExecMode(__mode):
     __EXEC_REALLY_DO = __mode
 
 def execLocalStatusOutput(__cmd):
-    """ exec %__cmd and return output and status """
+    """ exec %__cmd and return output and status (rc, out)"""
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
         __ans=raw_input(__cmd+" (y,n)")
@@ -40,7 +40,7 @@ def execLocalStatusOutput(__cmd):
 
 
 def execLocalGetResult(__cmd, err=False):
-    """ exec %__cmd and returns an array ouf output lines"""
+    """ exec %__cmd and returns an array ouf output lines (rc, out, err)"""
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
         __ans=raw_input(__cmd+" (y,n)")
@@ -59,7 +59,7 @@ def execLocalGetResult(__cmd, err=False):
 
 
 def execLocal(__cmd):
-    """ exec %cmd and return status """
+    """ exec %cmd and return status output goes to sys.stdout, sys.stderr"""
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
         __ans=raw_input(__cmd+" (y,n)")
@@ -69,7 +69,10 @@ def execLocal(__cmd):
     return os.system(__cmd)
 
 # $Log: ComSystem.py,v $
-# Revision 1.3  2006-08-02 12:28:26  marc
+# Revision 1.4  2006-08-28 15:58:27  marc
+# new comments
+#
+# Revision 1.3  2006/08/02 12:28:26  marc
 # minor change
 #
 # Revision 1.2  2006/07/21 15:00:44  mark
