@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.4 2006-07-26 10:06:33 marc Exp $
+# $Id: com-ec,v 1.5 2006-08-28 15:58:36 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/com-ec,v $
 
 from exceptions import Exception
@@ -40,7 +40,7 @@ def usage(argv):
     print "%s [-a|--ask] [-d|-debug] [-n|--novalidate] [-h|--help] [-x|--xslt xslt-file [-X|--onlyxslt]] xmlfilename" % argv[0]
     print '''
     executes all commands described in the <xmlfile>
-    
+
     -a|--ask ask before any command is executed
     -d|--debug be more helpfull
     -n|--novalidate don't validate the xml. Handle with care!!!
@@ -54,7 +54,7 @@ def usage(argv):
 
 def setWarnings():
     warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning, module='Com*')
-    
+
 try:
     (opts, args_proper)=getopt.getopt(sys.argv[1:], 'hadnUc:m:x:X', [ 'help', 'ask', 'debug', 'novalidate', 'copyset', 'modificationset', 'noundo' , "xslt", "onlyxslt" ])
 except getopt.GetoptError, goe:
@@ -139,17 +139,17 @@ try:
             PrettyPrint(doc)
             sys.exit(0)
     else:
-        file=os.fdopen(os.open(filename,os.O_RDONLY))
+        file=open(filename,"r")
         line("Parsing document %s " % filename)
         doc = reader.fromStream(file)
-        
+
     ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
     if ASK_MODE:
         ComSystem.__EXEC_REALLY_DO="ask"
 except KeyboardInterrupt:
     ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).info("Leaving because of user signal")
     sys.exit(1)
-    
+
 try:
     if ecopy.hasAttribute("name"):
         line("Execution of enterprisecopy %s" % (ecopy.getAttribute("name")))
@@ -189,7 +189,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.4  2006-07-26 10:06:33  marc
+# Revision 1.5  2006-08-28 15:58:36  marc
+# nop
+#
+# Revision 1.4  2006/07/26 10:06:33  marc
 # small change
 #
 # Revision 1.3  2006/07/24 15:40:33  marc
