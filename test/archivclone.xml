@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE enterprisecopy SYSTEM "file:/opt/atix/comoonics_cs/xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy name='gfs-node1'>
+  <copyset type='partition'>
+    <source type='metadata'>
+      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz"/>
+      <metafile name="./bootpartition.xml"/>
+    </source>
+    <destination type='disk'>
+      <disk name='/dev/sdd'/>
+    </destination>
+  </copyset>
+  <copyset type='partition'>
+    <source type='metadata'>
+      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz"/>
+      <metafile name="./rootpartition.xml"/>
+    </source>
+    <destination type='disk'>
+      <disk name='/dev/sde'/>
+    </destination>
+  </copyset>
+  <copyset type='lvm'>
+    <source type='metadata'>
+      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz"/>
+      <metafile name="./rootlvm.xml"/>
+    </source>
+    <destination type='lvm'>
+      <volumegroup name='VG_SHAREDROOT_new'>
+        <physicalvolume name='/dev/sde'/>
+      </volumegroup>
+    </destination>
+  </copyset>
+  <copyset type='filesystem'>
+    <source type='metadata'>
+      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz"/>
+      <metafile name="./rootfs.xml"/>
+      <data type="archiv">
+      	<archiv type="fs" format="tgz" name="/mnt/data/rootdata.tar.gz"/>
+      </data>
+    </source>
+    <destination type='filesystem'>
+      <device id='rootfs' name='/dev/VG_SHAREDROOT_new/LV_SHAREDROOT'>
+        <filesystem clustername='vmwareclusternew' type='gfs'/>
+        <mountpoint name='/mnt/dest'>
+          <option value='lock_nolock' name='lockproto'/>
+        </mountpoint>
+      </device>
+    </destination>
+  </copyset>
+  <copyset type='filesystem'>
+    <source type='metadata'>
+      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz"/>
+      <metafile name="./bootfs.xml"/>
+      <data type="archiv">
+      	<archiv type="fs" format="tgz" name="/mnt/data/bootdata.tar.gz"/>
+      </data>
+    </source>
+    <destination type='filesystem'>
+      <device name='/dev/sdd1'>
+        <filesystem type='ext3'/>
+        <mountpoint name='/mnt/dest'/>
+      </device>
+    </destination>
+  </copyset>
+  <copyset type='bootloader'>
+    <source type='none'/>
+    <destination type='disk'>
+      <disk name='/dev/sdd'/>
+      <bootloader type='grub'/>
+    </destination>
+  </copyset>
+  <modificationset type='filesystem'>
+    <device refid='rootfs'>
+      <modification search='HOSTNAME=.*' replace='HOSTNAME=testhost' type='regexp'>
+        <file name='cluster/cdsl/1/etc/sysconfig/network'/>
+      </modification>
+      <modification type='copy'>
+      	<archiv type="fs" format="tgz" name="/mnt/data/midificationdata.tar.gz"/>
+        <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
+      </modification>
+    </device>
+  </modificationset>
+  <modificationset type='filesystem'>
+    <device refid='bootfs'>
+      <modification type='copy'>
+        <requirement dest='/tmp/test' name='/mnt/source/initrd_sr-2.6.9-34.0.1.ELsmp.gz' format='cpio' type='archive'/>
+        <archiv type="fs" format="tgz" name="/mnt/data/midificationdata.tar.gz"/>
+        <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
+      </modification>
+    </device>
+  </modificationset>
+</enterprisecopy>
