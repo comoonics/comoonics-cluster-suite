@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.2 2006-07-20 10:24:42 mark Exp $
+# $Id: ComDisk.py,v 1.3 2006-09-11 16:47:48 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -39,7 +39,7 @@ class Disk(DataObject):
         return os.path.exists(self.getAttribute("name"))
 
     def getDeviceName(self):
-        """ returns the Disks device name (e.g. /dev/sda) """ 
+        """ returns the Disks device name (e.g. /dev/sda) """
         return self.getAttribute("name")
 
     def getDevicePath(self):
@@ -65,7 +65,7 @@ class Disk(DataObject):
         if rc == 0:
             return rv
         return list()
-    
+
     def getDumpStdout(self):
         """ returns the command string for dumping partition information
         see sfdisk -d
@@ -74,18 +74,27 @@ class Disk(DataObject):
 
     def hasPartitionTable(self):
         """ checks wether the disk has a partition table or not """
-        __cmd = CMD_SFDISK + " -Vq " + self.getDeviceName() + " >/dev/null 2>&1"
-        if ComSystem.execLocal(__cmd):
+        #__cmd = CMD_SFDISK + " -Vq " + self.getDeviceName() + " >/dev/null 2>&1"
+        #if ComSystem.execLocal(__cmd):
+        #    return False
+        #return True
+        __cmd = CMD_SFDISK + " -l " + self.getDeviceName()
+        rc, std, err = ComSystem.execLocalGetResult(__cmd, True)
+        if rc!=0:
+            return False
+        if (" ".join(err).upper().find("ERROR")) > 0:
             return False
         return True
-    
+
+
+
     def deletePartitionTable(self):
         """ deletes the partition table """
         __cmd = CMD_DD + " if=/dev/zero of=" + self.getDeviceName() + " bs=512 count=2 >/dev/null 2>&1"
         if ComSystem.execLocal(__cmd):
             return False
         return self.rereadPartitionTable()
-        
+
     def rereadPartitionTable(self):
         """ rereads the partition table of a disk """
         __cmd = CMD_SFDISK + " -R " + self.getDeviceName() + " >/dev/null 2>&1"
@@ -109,15 +118,18 @@ class Disk(DataObject):
         """ returns command string to restore a partition table
         config from sfdisk stdin
         see sfdisk < config
-        """ 
+        """
         __cmd = [CMD_SFDISK]
         if force:
             __cmd.append("--force")
         __cmd.append(self.getDeviceName())
         return " ".join(__cmd)
-    
+
 # $Log: ComDisk.py,v $
-# Revision 1.2  2006-07-20 10:24:42  mark
+# Revision 1.3  2006-09-11 16:47:48  mark
+# modified hasPartitionTable to support gnbd devices
+#
+# Revision 1.2  2006/07/20 10:24:42  mark
 # added getPartitionTable method
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
