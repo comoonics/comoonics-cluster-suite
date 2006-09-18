@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE modification SYSTEM "file:///opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
+<modification type="regexp" search="server.*\Z" replace="server 567\n\n" nobackup="1" options="ms">
+    <file name="./testregexp.txt"/>
+</modification>

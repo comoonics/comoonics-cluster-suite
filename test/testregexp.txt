@@ -1,0 +1,3 @@
+search asdfkj
+nameserver 1234
+nameserver 1234
