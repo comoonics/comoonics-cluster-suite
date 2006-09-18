@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SETUP_PY="setup-ec.py"
-RELEASE=7
+RELEASE=9
 REQUIRES="--requires=PyXML,libxslt-python"
 NOAUTO_REQ="--no-autoreq"
 
