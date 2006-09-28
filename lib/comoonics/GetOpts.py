@@ -6,10 +6,10 @@ Class to make getopts very easy
 """
 
 # here is some internal information
-# $Id: GetOpts.py,v 1.1 2006-09-19 10:36:59 marc Exp $
+# $Id: GetOpts.py,v 1.2 2006-09-28 08:45:42 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/GetOpts.py,v $
 
 import getopt
@@ -171,8 +171,10 @@ class BaseConfig:
         try:
             (__opts__, __args_proper__)=getopt.getopt(args, self.getoptShort(), self.getoptLong())
             for (opt, value) in __opts__:
+                if not value:
+                    value=True
                 opt=opt.lstrip("-")
-#                print "Option %s, %s" % (opt, value)
+#                ComLog.getLogger().info("Option %s, %s" % (opt, value))
                 if len(opt)==1:
                     option=self.getShortOption(opt)
                 else:
@@ -233,6 +235,9 @@ if __name__ == '__main__':
 
 ##################
 # $Log: GetOpts.py,v $
-# Revision 1.1  2006-09-19 10:36:59  marc
+# Revision 1.2  2006-09-28 08:45:42  marc
+# bugfix for options without values
+#
+# Revision 1.1  2006/09/19 10:36:59  marc
 # initial revision
 #
