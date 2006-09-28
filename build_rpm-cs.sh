@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SETUP_PY="setup-cs.py"
-RELEASE=13
+RELEASE=16
 REQUIRES="--requires=PyXML"
 NOAUTO_REQ="--no-autoreq"
 
