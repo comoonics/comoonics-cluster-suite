@@ -1,3 +1,49 @@
-search asdfkj
-nameserver 1234
-nameserver 1234
+# Uncomment to allow people in group wheel to run all commands
+# %wheel        ALL=(ALL)       ALL
+
+# Same thing without a password
+# %wheel        ALL=(ALL)       NOPASSWD: ALL
+
+# Samples
+# %users  ALL=/sbin/mount /cdrom,/sbin/umount /cdrom
+# %users  localhost=/sbin/shutdown -h now
+
+%hpsmh ALL=NOPASSWD:/etc/init.d/snmpd
+%hpsmh ALL=NOPASSWD:/usr/bin/snmptrap
+
+#----------------------------------------------------------------------------
+# host group for local machine
+#----------------------------------------------------------------------------
+Host_Alias      LOCAL = lilr000a, lilr000b
+Host_Alias      SERVER = lilr000a, lilr000b
+
+#----------------------------------------------------------------------------
+# user group definitons
+#----------------------------------------------------------------------------
+User_Alias      BB = bbrun
+User_Alias      ORA = swadmin,oracle,riegado
+
+#----------------------------------------------------------------------------
+# Run As definitons
+#----------------------------------------------------------------------------
+Runas_Alias     RUNORA = oracle
+
+#----------------------------------------------------------------------------
+# command alias definition
+#----------------------------------------------------------------------------
+Cmnd_Alias      DBSHUT=/usr/local/swadmin/misc/oracle/bin/db_shut *
+Cmnd_Alias      DBSTART=/usr/local/swadmin/misc/oracle/bin/db_start *
+Cmnd_Alias      DBABORT=/usr/local/swadmin/misc/oracle/bin/db_abort *
+Cmnd_Alias      DBRECOVER=/usr/local/swadmin/misc/oracle/bin/db_recover *
+Cmnd_Alias      LN=/bin/ln -s /usr/local/swadmin/envfiles/oracle/* /usr/local/bin/*
+
+Cmnd_Alias      SCLI = /opt/QLogic_Corporation/SANsurferCLI/scli -g
+
+
+#----------------------------------------------------------------------------
+# sudo rules definitons
+#----------------------------------------------------------------------------
+ORA        SERVER = (RUNORA) NOPASSWD:DBSHUT,DBSTART,DBABORT,DBRECOVER
+ORA        SERVER = NOPASSWD:LN
+
+BB              LOCAL = NOPASSWD:SCLI
