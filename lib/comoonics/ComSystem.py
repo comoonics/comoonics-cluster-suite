@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.4 2006-08-28 15:58:27 marc Exp $
+# $Id: ComSystem.py,v 1.5 2006-10-19 10:05:14 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -32,9 +32,11 @@ def execLocalStatusOutput(__cmd):
     """ exec %__cmd and return output and status (rc, out)"""
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
-        __ans=raw_input(__cmd+" (y,n)")
-        if __ans == "y":
+        __ans=raw_input(__cmd+" (y*,n,c)")
+        if __ans == "y" or __ans == "":
             return commands.getstatusoutput(__cmd)
+        elif __ans == "c":
+            ComSystem.__EXEC_REALLY_DO=""
         return [0,"skipped"]
     return commands.getstatusoutput(__cmd)
 
@@ -69,7 +71,10 @@ def execLocal(__cmd):
     return os.system(__cmd)
 
 # $Log: ComSystem.py,v $
-# Revision 1.4  2006-08-28 15:58:27  marc
+# Revision 1.5  2006-10-19 10:05:14  marc
+# bugfix
+#
+# Revision 1.4  2006/08/28 15:58:27  marc
 # new comments
 #
 # Revision 1.3  2006/08/02 12:28:26  marc

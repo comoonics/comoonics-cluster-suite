@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE enterprisecopy SYSTEM "file:///opt/atix/comoonics_cs/xml/comoonics-enterprise-copy.dtd">
+<!DOCTYPE enterprisecopy SYSTEM "file:///opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
 <enterprisecopy name="&test;">
 	<copyset type="partition">
 		<source type="disk">
@@ -28,7 +28,7 @@
   		</source>
   		<destination type="filesystem">
     		<device name="/dev/VG_SHAREDROOT_new/LV_SHAREDROOT" id="rootfs">
-      			<filesystem type="gfs" clustername="vmwareclusternew"/>     	
+      			<filesystem type="gfs" clustername="vmwareclusternew"/>
       			<mountpoint name="/mnt/tmp">
       				<option name="lockproto" value="lock_nolock"/>
       			</mountpoint>
@@ -44,14 +44,14 @@
   		</source>
   		<destination type="filesystem">
     		<device name="/dev/sda1">
-      			<filesystem type="ext3"/>     	
+      			<filesystem type="ext3"/>
       			<mountpoint name="/mnt/tmp"/>
    			</device>
    		</destination>
 	</copyset>
 	<copyset type="bootloader">
 		<source type="none"/>
-		<destination type="disk">	
+		<destination type="disk">
 			<disk name="/dev/sda"/>
 			<bootloader type="grub"/>
 		</destination>

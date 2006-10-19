@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComDataObject.py,v 1.2 2006-10-19 10:03:18 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -32,7 +32,7 @@ class DataObject:
     '''
     static methods
     '''
-    
+
     '''
     Public methods
     '''
@@ -58,7 +58,7 @@ class DataObject:
         self.__dict__['document']=doc
 
     def getAttribute(self,name,default=None):
-        if not self.__dict__.has_key('element') or not self.element.hasAttribute(name) and default:
+        if (not self.__dict__.has_key('element') or not self.element.hasAttribute(name)) and default!=None:
             return default
         elif not self.__dict__.has_key('element') or not self.element.hasAttribute(name):
             raise exceptions.NameError("No attribute name " + name)
@@ -75,7 +75,7 @@ class DataObject:
     def updateAttributes(self, frommap):
         '''
         Updates all attribute from frommap that are not already set
-        
+
         frommap - the NamedNodeMap of attributes that are taken as source
         '''
         for i in range(len(frommap)):
@@ -102,7 +102,7 @@ class DataObject:
         obj.element=self.element.cloneNode(True)
         obj.document=self.document
         return obj
- 
+
     def __str__(self):
         '''
         Return all attributes of element to string
@@ -116,37 +116,40 @@ class DataObject:
         for i in range(len(self.getElement().attributes)):
             str+="%s = %s, " % (self.getElement().attributes.item(i).name, self.getElement().attributes.item(i).value)
         return str
-    
+
     """
     Privat Methods
     """
-    
-    def searchReference(self, element, doc):    
+
+    def searchReference(self, element, doc):
         try:
             __xquery='//'
             __xquery+=element.tagName
             __xquery+='[@id="'
             __xquery+=element.getAttribute("refid")
             __xquery+='"]'
-            # cloneNode to be safe 
+            # cloneNode to be safe
             __element=xpath.Evaluate(__xquery, doc)[0]
             ComLog.getLogger("DataObject").debug("found refid " + \
-                                                 element.getAttribute("refid")) 
+                                                 element.getAttribute("refid"))
             __childs=xpath.Evaluate('./*', element)
             __new=__element.cloneNode(True)
             self.appendChildren(__new, __childs)
-            return __new 
+            return __new
         except exceptions.Exception:
             raise ComException("Element with id " + element.getAttribute("refid") \
                                + " not found. Query: " + __xquery)
-                
+
     def appendChildren(self, element, nodelist):
         for i in range(len(nodelist)):
             element.appendChild(nodelist[i])
-                
-                
+
+
 # $Log: ComDataObject.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-10-19 10:03:18  marc
+# bugfix
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.21  2006/07/05 13:06:20  marc

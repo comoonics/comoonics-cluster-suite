@@ -31,7 +31,7 @@ if len(sys.argv) > 1:
 lvname=None
 if len(sys.argv) > 2:
     lvname=sys.argv[2]
-    
+
 pvname=None
 if len(sys.argv) > 3:
     pvname=sys.argv[3]
@@ -56,7 +56,7 @@ for _vg in vgs:
     print _vg
     for lv in _vg.getLogicalVolumes():
         print "Logical volume: ", lv
-    
+
     for pv in _vg.getPhysicalVolumes():
         print "Physical volume: ", pv
 
@@ -66,11 +66,11 @@ for _vg in vgs:
     PrettyPrint(doc)
     doc.removeChild(_vg.getElement())
 
-vg=vgs[0]
+vg=None
 for _vg in vgs:
     if _vg.getAttribute("name") == vgname:
         vg=_vg
-   
+
 line("helperfunctions")
 
 print "ComLVM.LinuxVolumeManager.getPossiblePhysicalExtends()"
@@ -98,60 +98,66 @@ try:
     ComLVM.LinuxVolumeManager.has_lvm()
 except RuntimeError, re:
     print re
-    
+
 try:
     print "VGSCAN: "
     ComLVM.VolumeGroup.scan()
 except RuntimeError, re:
     print re
-    
-try:
-    print "VGACTIVATE: "
-    vg.activate()
-except RuntimeError, re:
-    print re
-try:
-    print "VGDEACTIVATE: "
-    vg.deactivate()
-except RuntimeError, re:
-    print re
 
-if lvname:
-    print "creating "+lvname+" on all vgs with free space"
-    for _vg in vgs:
-        ComLog.getLogger().debug("vg %s free %s" % (_vg.getAttribute("name"), _vg.getAttribute("free")))
-        if int(_vg.getAttribute("free")) > 0:
-            lv=ComLVM.LogicalVolume(lvname, _vg, doc)
-            print "Creating logical volume "+_vg.getAttribute("name")+"/"+lv.getAttribute("name")
-            lv.create()
-            print "Removing logical volume "+_vg.getAttribute("name")+"/"+lv.getAttribute("name")
-            lv.remove()
+if vg:
+    try:
+        print "VGACTIVATE: "
+        vg.activate()
+    except RuntimeError, re:
+        print re
+    try:
+        print "VGDEACTIVATE: "
+        vg.deactivate()
+    except RuntimeError, re:
+        print re
 
-if pvname and nvgname and lvname:
-    print "creating "+nvgname+" on given pvname "+pvname
-    vg=ComLVM.VolumeGroup(nvgname, doc)
-    pv=ComLVM.PhysicalVolume(pvname, vg, doc)
-    lv=ComLVM.LogicalVolume(lvname, vg, doc)
-    vg.addPhysicalVolume(pv)
-    vg.addLogicalVolume(lv)
-    print "Creating physical volume "+pv.getAttribute("name")
-    pv.create()
-    print "Creating volume group "+vg.getAttribute("name")
-    vg.create()
-    print "Creating logical volume "+vg.getAttribute("name")+"/"+lv.getAttribute("name")
-    lv.create()
-    print "Removing logical volume "+vg.getAttribute("name")+"/"+lv.getAttribute("name")
-    lv.remove()
-    print "Removing volume group "+vg.getAttribute("name")
-    vg.remove()
-    print "Creating physical volume "+pv.getAttribute("name")
-    pv.remove()
+    if lvname:
+        print "creating "+lvname+" on all vgs with free space"
+        for _vg in vgs:
+            ComLog.getLogger().debug("vg %s free %s" % (_vg.getAttribute("name"), _vg.getAttribute("free")))
+            if int(_vg.getAttribute("free")) > 0:
+                lv=ComLVM.LogicalVolume(lvname, _vg, doc)
+                print "Creating logical volume "+_vg.getAttribute("name")+"/"+lv.getAttribute("name")
+                lv.create()
+                print "Removing logical volume "+_vg.getAttribute("name")+"/"+lv.getAttribute("name")
+                lv.remove()
+
+    if pvname and nvgname and lvname:
+        print "creating "+nvgname+" on given pvname "+pvname
+        vg=ComLVM.VolumeGroup(nvgname, doc)
+        pv=ComLVM.PhysicalVolume(pvname, vg, doc)
+        lv=ComLVM.LogicalVolume(lvname, vg, doc)
+        vg.addPhysicalVolume(pv)
+        vg.addLogicalVolume(lv)
+        print "Creating physical volume "+pv.getAttribute("name")
+        pv.create()
+        print "Creating volume group "+vg.getAttribute("name")
+        vg.create()
+        print "Creating logical volume "+vg.getAttribute("name")+"/"+lv.getAttribute("name")
+        lv.create()
+        print "Removing logical volume "+vg.getAttribute("name")+"/"+lv.getAttribute("name")
+        lv.remove()
+        print "Removing volume group "+vg.getAttribute("name")
+        vg.remove()
+        print "Creating physical volume "+pv.getAttribute("name")
+        pv.remove()
+else:
+    line("Skipping rest cause lv not given")
 
 line("Byebye")
 
 ###############
 # $Log: testLVM.py,v $
-# Revision 1.3  2006-07-19 14:29:43  marc
+# Revision 1.4  2006-10-19 10:04:11  marc
+# bugfix
+#
+# Revision 1.3  2006/07/19 14:29:43  marc
 # changed because of change in fs-hierarchie
 #
 # Revision 1.2  2006/06/28 17:27:41  marc

@@ -12,7 +12,9 @@ sys.path.append("../lib")
 
 from comoonics.ComDataObject import *
 
-
+def line(str=None):
+    print
+    print "--------------------"+str+"---------------------------------"
 
 # create Reader object
 reader = Sax2.Reader()
@@ -28,4 +30,48 @@ element=xpath.Evaluate('//*[@refid="bootfs"]', doc)[0]
 obj=DataObject(element, doc)
 PrettyPrint(obj.getElement())
 print obj
+
+attribute="xyz"
+line("Testing hasAttribute(%s)" %attribute)
+if obj.hasAttribute(attribute):
+    print "Found Attribute \"%s\"!! Should not happen!!!" %attribute
+else:
+    print "No Attribute \"%s\" available. (OK)" % attribute
+
+attribute="id"
+line("Testing hasAttribute(%s)" %attribute)
+if obj.hasAttribute(attribute):
+    print "Found Attribute \"%s\"!! (OK)" %attribute
+else:
+    print "No Attribute \"%s\"!! Should not happen!!!" %attribute
+
+attribute="xyz"
+default=""
+line("Testing getAttribute(%s, %s)" %(attribute, default))
+result=obj.getAttribute(attribute, default)
+print "Found value for Attribute \"%s\"=\"%s\"" %(attribute, result)
+
+attribute="id"
+default="12"
+line("Testing getAttribute(%s, %s)" %(attribute, default))
+result=obj.getAttribute(attribute, default)
+print "Found value for Attribute \"%s\"=\"%s\"" %(attribute, result)
+
+attribute="xyz"
+line("Testing getAttribute(%s)" %(attribute))
+try:
+    result=obj.getAttribute(attribute)
+    print "Found value for Attribute \"%s\": %s !!!Should not happen !!!" %(attribute, result)
+except:
+    import sys
+    print "Exception %s caught (OK)" %sys.exc_value
+
+attribute="id"
+line("Testing getAttribute(%s)" %(attribute))
+try:
+    result=obj.getAttribute(attribute)
+    print "Found value for Attribute \"%s\": %s (OK)" %(attribute, result)
+except:
+    import sys
+    print "Exception %s caught: !!!!SHould not happen!!!" %sys.exc_value
 
