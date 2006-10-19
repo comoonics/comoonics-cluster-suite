@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.2 2006-10-19 10:02:05 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -21,10 +21,12 @@ from comoonics import ComFileSystem
 from comoonics.ComFileSystem import FileSystem
 from comoonics.ComMountpoint import MountPoint
 from ComCopyObject import CopyObjectJournaled
-from comoonics.ComExceptions import *         
+from comoonics.ComExceptions import *
 
 
 class FilesystemCopyObject(CopyObjectJournaled):
+    __logStrLevel__="FilesystemCopyObject"
+
     """ Base Class for all source and destination objects"""
     def __init__(self, element, doc):
         CopyObjectJournaled.__init__(self, element, doc)
@@ -33,7 +35,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
             self.device=Device(__device, doc)
         except Exception:
             raise ComException("device for copyset not defined")
-        try:    
+        try:
             __fs=xpath.Evaluate('device/filesystem', element)[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
         except Exception:
@@ -45,54 +47,58 @@ class FilesystemCopyObject(CopyObjectJournaled):
             raise ComException("mountpoint for copyset not defined")
         self.umountfs=False
         self.addToUndoMap(self.filesystem.__class__.__name__, "mount", "umountDir")
-        
+
     def getFileSystem(self):
         return self.filesystem
-    
+
     def getDevice(self):
         return self.device
-    
+
     def getMountpoint(self):
         return self.mountpoint
-    
+
     def setFileSystem(self, filesystem):
         __parent=self.filesystem.getElement().parentNode
         __newnode=filesystem.getElement().cloneNode(True)
         __oldnode=self.filesystem.getElement()
         self.filesystem.setElement(__newnode)
         __parent.replaceChild(__newnode, __oldnode)
-        
-    def prepareAsSource(self):   
+
+    def prepareAsSource(self):
         # Check for mounted
-        if not self.device.isMounted(self.mountpoint):
+#        ComLog.getLogger(self.__logStrLevel__).debug("Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        if self.device.getAttribute("options", "") != "skipmount" and not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
             #self.umountfs=True
         # scan filesystem options
         self.filesystem.scanOptions(self.device, self.mountpoint)
-    
+
     def cleanupSource(self):
         self.replayJournal()
         self.commitJournal()
         #if self.umountfs:
         #    self.filesystem.umountDir(self.mountpoint)
         #    self.umountfs=False
-    
+
     def cleanupDest(self):
         #self.filesystem.umountDir(self.mountpoint)
         self.replayJournal()
         self.commitJournal()
-        
+
     def prepareAsDest(self):
         # - mkfs
         # TODO add some intelligent checks
         self.filesystem.formatDevice(self.device)
         self.filesystem.mount(self.device, self.mountpoint)
         self.journal(self.filesystem, "mount", [self.mountpoint])
-        
+
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-10-19 10:02:05  marc
+# added skipmount
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.5  2006/07/06 15:09:10  mark
