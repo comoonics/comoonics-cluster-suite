@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchiv.py,v $
 
 import os
@@ -34,10 +34,17 @@ class Archiv(DataObject):
     '''
     Internal Exception classes
     '''
-    class ArchiveException(ComException): pass
+    class ArchivException(ComException): pass
 
     '''
-    Baseclass for all Archiv Objects. Shares attributes and methods for all subclasses
+    Interface/Wrapper class for all archiv handler
+    provides methods to access archives
+    method types are
+        - get/addDOMElement:    get and store DOMElements in Archiv
+        - get/addFileObj:       get and store FileObjects in Archiv
+        - extract/addFile:      extract and store file/directory in Archiv
+    IDEA: define iterator class to walk though DOMElements defined as ArchivChild
+        - has/getNextFileInfo   returns a XML defined FileInfo to work with
     '''
 
     __logStrLevel__ = "Archive"
@@ -54,63 +61,50 @@ class Archiv(DataObject):
     #    ''' opens an archive '''
     #    pass
 
-    def getElement(self, name):
+    def getDOMElement(self, name):
         '''returns an DOM Element from the given member name'''
-        pass
-
-    def getNextMemberFile(self):
-        ''' returns next File defined in DOM '''
-        pass
-
-    def getNextMemberFileInArchiv(self):
-        ''' return next File in Archiv'''
         pass
 
     def getFileObj(self, name, mode="r"):
         ''' returns a fileobject of an archiv member '''
         return self.ahandler.getFileObj(name, mode)
 
-    def getMemberInfo(self, name):
-        ''' returns a memberinfo object of an archiv menber '''
-        pass
-
-    def extractNextMemberFile(self):
-        pass
-
-    def extractFile(self, name, dest, recursive=True):
-        ''' extracts a file or dirctory from archiv'''
-        self.ahandler.extractFile(name, dest, recursive)
-
-    def extractAll(self, dest):
-        ''' extracts the whole archive'''
-        pass
-
-    def appendNextMemberFile(self):
+    def addFileObj(self, file):
+        ''' adds a file defined by fileobject to archiv '''
         pass
 
     def addFile(self, name, recursive=True):
         ''' appends a file or dirctory to archiv'''
         self.ahandler.addFile(name, recursive)
 
+    def extractFile(self, name, dest, recursive=True):
+        ''' extracts a file or directory from archiv' to destination dest '''
+        self.ahandler.extractFile(name, dest, recursive)
+
     def createArchive(self, source):
         ''' creates an archive from the whole source tree '''
         pass
 
+    def extractArchiv(self, dest):
+        ''' extracts the whole archive to dest'''
+        pass
+
+    def getMemberInfo(self, name):
+        ''' returns a memberinfo object of an archiv menber '''
+        pass
+
     def hasMember(self, name):
-        pass
-
-    def hasNextMemberFile(self):
-        pass
-
-    def hasNextMemberFileInArchiv(self):
+        ''' checks wether archive hosts member file
+            returns True/False
+        '''
         pass
 
 
 class ArchivMemberInfo(DataObject, TarInfo):
     ''' Member of an Archive'''
+    pass
 
-
-# FIXME: de we need the wrapper class ?
+#FIXME: methods should rais a kind of NotImlementedError by default
 class ArchivHandler:
     ''' Baseclass for archiv handlers'''
 
@@ -124,25 +118,63 @@ class ArchivHandler:
         ''' opens an Archiv'''
         pass
 
-    def hasMember(self, name):
-        pass
-
-    def extractFile(self, name, dest, recursive=True):
-        ''' extracts a file or dirctory from archiv'''
-        pass
-
     def getFileObj(self, name, mode="r"):
         ''' returns a fileobject of an archiv member '''
         pass
 
+    def addFileObj(self, file):
+        ''' adds a file defined by fileobject to archiv '''
+        pass
 
     def addFile(self, name, recursive=True):
-        ''' adds a file or dirctory to archiv'''
+        ''' appends a file or dirctory to archiv'''
         pass
+
+    def extractFile(self, name, dest, recursive=True):
+        ''' extracts a file or directory from archiv' to destination dest '''
+        pass
+
+    def createArchive(self, source):
+        ''' creates an archive from the whole source tree '''
+        pass
+
+    def extractArchiv(self, dest):
+        ''' extracts the whole archive to dest'''
+        pass
+
+    def getMemberInfo(self, name):
+        ''' returns a memberinfo object of an archiv menber '''
+        pass
+
+    def hasMember(self, name):
+        ''' checks wether archive hosts member file
+            returns True/False
+        '''
+        pass
+
+    def __niy(self):
+        ''' default behavior is NotImplementedError '''
+        raise ComNotImplementedError()
 
 class TarArchivHandler(ArchivHandler):
     def __init__(self, name, mode):
         self.tarfile=tarfile.open(name, mode)
+
+    def getFileObj(self, name, mode="r"):
+        ''' returns a fileobject of an archiv member '''
+        return self.tarfile.exractfile(name)
+
+    def extractFile(self, name, dest, recursive=True):
+        ''' extracts a file or directory from archiv' to destination dest '''
+        #TODO: check recursive flag
+        return self.tarfile.extract(name, dest)
+
+    def hasMember(self, name):
+        try:
+            self.tarfile.getMember(name)
+        except KeyError:
+            return False
+        return True
 
 class SimpleArchivHandler(ArchivHandler):
     def __init__(self, name, mode):
@@ -204,6 +236,9 @@ class ArchivHandlerFactory:
 
 ##################
 # $Log: ComArchiv.py,v $
-# Revision 1.1  2006-10-09 14:22:35  mark
+# Revision 1.2  2006-11-10 11:41:23  mark
+# reorganization, minor changes, comments
+#
+# Revision 1.1  2006/10/09 14:22:35  mark
 # initial check in
 #
