@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -31,7 +31,7 @@ from ComDataObject import DataObject
 import ComLog
 from ComExceptions import ComException
 
-__all__ = ["Archivee", "ArchiveHandlerFactory", "ArchiveHandler"]
+__all__ = ["Archive", "ArchiveHandlerFactory", "ArchiveHandler"]
 
 class ArchiveException(ComException):pass
 
@@ -326,7 +326,10 @@ class ArchiveHandlerFactory:
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.1  2006-11-22 16:58:19  mark
+# Revision 1.2  2006-11-22 17:01:45  mark
+# minor fix
+#
+# Revision 1.1  2006/11/22 16:58:19  mark
 # added 'e' to Archiv ;-)
 #
 # Revision 1.3  2006/11/22 16:47:26  mark
