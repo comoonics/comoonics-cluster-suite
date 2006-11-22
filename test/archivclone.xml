@@ -4,7 +4,7 @@
   <copyset type='partition'>
     <source type='metadata'>
       <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
-      	<metafile name="./bootpartition.xml"/>
+      	<file name="./bootpartition.xml"/>
       </archiv>
     </source>
     <destination type='disk'>
@@ -15,7 +15,7 @@
     <source type='metadata'>
       <!-- muss das metafile element in oder unter dem archiv element sein ? -->
       <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
-      	<metafile name="./rootpartition.xml"/>
+      	<file name="./rootpartition.xml"/>
       </archiv>
     </source>
     <destination type='disk'>
@@ -25,7 +25,7 @@
   <copyset type='lvm'>
     <source type='metadata'>
       <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
-      	<metafile name="./rootlvm.xml"/>
+      	<file name="./rootlvm.xml"/>
       </archiv>
     </source>
     <destination type='lvm'>
@@ -37,7 +37,7 @@
   <copyset type='filesystem'>
     <source type='metadata'>
       <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
-      	<metafile name="./rootfs.xml"/>
+      	<file name="./rootfs.xml"/>
       </archiv>
       <data type="archiv">
       	<archiv type="fs" format="tgz" name="/mnt/data/rootdata.tar.gz"/>
