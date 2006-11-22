@@ -10,16 +10,21 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchiv.py,v $
 
 import os
 import string
 import shutil
+import tempfile
 import xml.dom
 from xml.dom import Element, Node
+from xml.dom.ext.reader import Sax2
+
 import tarfile
 from tarfile import TarInfo
+
+
 
 import ComSystem
 from ComDataObject import DataObject
@@ -41,7 +46,7 @@ class Archiv(DataObject):
     provides methods to access archives
     method types are
         - get/addDOMElement:    get and store DOMElements in Archiv
-        - get/addFileObj:       get and store FileObjects in Archiv
+        - getFileObj:           get FileObjects from Archiv
         - extract/addFile:      extract and store file/directory in Archiv
     IDEA: define iterator class to walk though DOMElements defined as ArchivChild
         - has/getNextFileInfo   returns a XML defined FileInfo to work with
@@ -52,42 +57,55 @@ class Archiv(DataObject):
 
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
-        self.ahandler=ArchivHandlerFactory.getArchivHandler\
-            (self.getAttribute("name"), self.getAttribute("format"), self.getAttribute("type"))
+        self.ahandler=ArchivHandlerFactory.getArchivHandler \
+            (self.getAttribute("name"), self.getAttribute("format"), \
+             self.getAttribute("type"), self.getAttribute("compression", default="none"))
 
 
-    # FIXME: Do we need this ?
-    #def open(self, name, mode):
-    #    ''' opens an archive '''
-    #    pass
+    def closeAll(self):
+        ''' closes all open fds '''
+        self.ahandler.closeAll()
 
     def getDOMElement(self, name):
         '''returns an DOM Element from the given member name'''
-        pass
+        file=self.ahandler.getFileObj(name)
+        reader = Sax2.Reader()
+        doc = reader.fromStream(file)
+        return doc.documentElement
 
-    def getFileObj(self, name, mode="r"):
+    def addDOMElement(self, element, name):
+        '''adds an DOM Element as member name'''
+        fd, path = tempfile.mkstemp()
+        file = os.fdopen(fd, "w")
+        xml.dom.ext.PrettyPrint(element, file)
+        file.close()
+        try:
+            self.ahandler.addFile(path, name)
+            os.unlink(path)
+        except Exception, e:
+            os.unlink(path)
+            raise e
+
+
+    def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
-        return self.ahandler.getFileObj(name, mode)
+        return self.ahandler.getFileObj(name)
 
-    def addFileObj(self, file):
-        ''' adds a file defined by fileobject to archiv '''
-        pass
-
-    def addFile(self, name, recursive=True):
+    def addFile(self, name, arcname=None, recursive=True):
         ''' appends a file or dirctory to archiv'''
-        self.ahandler.addFile(name, recursive)
+        self.ahandler.addFile(name, arcname, recursive)
 
-    def extractFile(self, name, dest, recursive=True):
+    def extractFile(self, name, dest):
         ''' extracts a file or directory from archiv' to destination dest '''
-        self.ahandler.extractFile(name, dest, recursive)
+        self.ahandler.extractFile(name, dest)
 
-    def createArchive(self, source):
+    def createArchiv(self, source, cdir=None):
         ''' creates an archive from the whole source tree '''
-        pass
+        self.ahandler.createArchiv(source, cdir)
 
     def extractArchiv(self, dest):
         ''' extracts the whole archive to dest'''
-        pass
+        self.ahandler.extractArchiv(dest)
 
     def getMemberInfo(self, name):
         ''' returns a memberinfo object of an archiv menber '''
@@ -97,7 +115,7 @@ class Archiv(DataObject):
         ''' checks wether archive hosts member file
             returns True/False
         '''
-        pass
+        return self.ahandler.hasMember(name)
 
 
 class ArchivMemberInfo(DataObject, TarInfo):
@@ -110,32 +128,29 @@ class ArchivHandler:
 
     __logStrLevel__ = "ArchivHandler"
 
-    def __init__(self, name, mode):
+    def __init__(self, name):
         self.name=name
-        self.mode=mode
 
-    def open(self, name, mode):
-        ''' opens an Archiv'''
+    def closeAll(self):
         pass
 
-    def getFileObj(self, name, mode="r"):
+    def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
         pass
 
-    def addFileObj(self, file):
-        ''' adds a file defined by fileobject to archiv '''
-        pass
-
-    def addFile(self, name, recursive=True):
+    def addFile(self, name, arcname=None, recursive=True):
         ''' appends a file or dirctory to archiv'''
         pass
 
-    def extractFile(self, name, dest, recursive=True):
+    def extractFile(self, name, dest):
         ''' extracts a file or directory from archiv' to destination dest '''
         pass
 
-    def createArchive(self, source):
-        ''' creates an archive from the whole source tree '''
+    def createArchive(self, source, cdir):
+        ''' creates an archive from the whole source tree
+            if cdir is defined, archive handler will first change
+            into cdir directory
+        '''
         pass
 
     def extractArchiv(self, dest):
@@ -156,29 +171,97 @@ class ArchivHandler:
         ''' default behavior is NotImplementedError '''
         raise ComNotImplementedError()
 
+'''
+Archive Handlers
+'''
+
+
+''' ArchiveHandler for tar files '''
 class TarArchivHandler(ArchivHandler):
-    def __init__(self, name, mode):
-        self.tarfile=tarfile.open(name, mode)
 
-    def getFileObj(self, name, mode="r"):
+    TAR="/bin/tar"
+
+    def __init__(self, name):
+        self.tarfile=name
+        self.compression=""
+        self.compressionmode=""
+
+    def closeAll(self):
+        ''' closes all open fds '''
+        self.tarf.close()
+
+    def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
-        return self.tarfile.exractfile(name)
+        self.tarf=tarfile.open(self.tarfile, "r"+self.compressionmode)
+        file=self.tarf.extractfile(os.path.normpath(name))
+        return file
 
-    def extractFile(self, name, dest, recursive=True):
+    def extractFile(self, name, dest):
         ''' extracts a file or directory from archiv' to destination dest '''
-        #TODO: check recursive flag
-        return self.tarfile.extract(name, dest)
+        __cmd = TarArchivHandler.TAR +" -x " + self.compression + " -f " \
+                + self.tarfile + " -C " + dest + " " + name
+        __rc, __rv = ComSystem.execLocalGetResult(__cmd)
+        if __rc >> 8 != 0:
+            raise RuntimeError("running %s failed" %__cmd)
+
+    def addFile(self, name, arcname=None, recursive=True):
+        ''' appends a file or dirctory to archiv'''
+        try:
+            tarf=tarfile.open(self.tarfile, "a:"+self.compressionmode)
+        except IOError:
+            tarf=tarfile.open(self.tarfile, "w:"+self.compressionmode)
+        tarf.add(os.path.normpath(name), arcname, recursive)
+        tarf.close()
+
+
+    def createArchiv(self, source, cdir=None):
+        ''' creates an archive from the whole source tree '''
+        if not cdir:
+            cdir=os.path.cwd()
+        __cmd = TarArchivHandler.TAR +" -c " + self.compression + " -f " \
+                + self.tarfile + " -C " + cdir + " " + source
+        __rc, __rv = ComSystem.execLocalGetResult(__cmd)
+        if __rc >> 8 != 0:
+            raise RuntimeError("running %s failed" %__cmd)
+
+
+    def extractArchiv(self, dest):
+        ''' extracts the whole archive to dest'''
+        self.extractFile("", dest)
+
 
     def hasMember(self, name):
+        ''' checks if archive has a member named name '''
+        tarf = tarfile.open(self.tarfile, "r"+self.compressionmode)
         try:
-            self.tarfile.getMember(name)
+            tarf.getmember(os.path.normpath(name))
+            tarf.close()
         except KeyError:
+            tarf.close()
             return False
         return True
 
+
+''' Archive Handler for gzip compressed tar files '''
+class TarGzArchivHandler(TarArchivHandler):
+    def __init__(self, name):
+        TarArchivHandler.__init__(self, name)
+        self.compression="-z "
+        self.compressionmode=":gz"
+
+
+''' Archive Handler for bzip2 compressed tar files '''
+class TarBz2ArchivHandler(TarArchivHandler):
+    def __init__(self, name):
+        TarArchivHandler.__init__(self, name)
+        self.compression="-j "
+        self.compressionmode=":bz2"
+
+
+''' Simple Archiv Handler - uses local file system '''
 class SimpleArchivHandler(ArchivHandler):
-    def __init__(self, name, mode):
-        ArchivHandler.__init__(self, name, mode)
+    def __init__(self, name):
+        ArchivHandler.__init__(self, name)
         self.path="/tmp/" + name
         if os.path.exists(self.path) and not os.path.isdir(self.path):
             raise ArchivException("Path %s already exists" %(self.path))
@@ -188,23 +271,23 @@ class SimpleArchivHandler(ArchivHandler):
     def hasMember(self, name):
         return os.path.exitsts(self.path+"/"+name)
 
-    def extractFile(self, name, dest, recursive=True):
+    def extractFile(self, name, dest):
         ''' extracts a file or dirctory from archiv'''
         try:
             os.mkdir(dest+"/"+os.path.dirname(name))
         except: pass
         shutil.copy2(self.path+"/"+name, dest+"/"+os.path.dirname(name))
 
-    def getFileObj(self, name, mode="r"):
+    def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
         try:
-            ComLog.getLogger(Archiv.__logStrLevel__).debug("open(%s, %s)" %(self.path+"/"+name, mode))
-            file = open(self.path+"/"+name, mode)
+            ComLog.getLogger(Archiv.__logStrLevel__).debug("open(%s)" %(self.path+"/"+name))
+            file = open(self.path+"/"+name, "r")
         except:
             raise ArchivException("Cannot open %s." %(self.path+"/"+name))
         return file
 
-    def addFile(self, name, recursive=True):
+    def addFile(self, name, arcname=None,recursive=True):
         ''' adds a file or directory to archiv'''
         try:
             os.mkdir(self.path+"/"+os.path.dirname(name))
@@ -213,7 +296,7 @@ class SimpleArchivHandler(ArchivHandler):
 
 
 
-
+''' Factory class for ArchivHandler '''
 class ArchivHandlerFactory:
     ''' Factory for different archiv type handlers'''
 
@@ -226,9 +309,16 @@ class ArchivHandlerFactory:
     Static Methods
     '''
 
-    def getArchivHandler(name, format, type):
+    def getArchivHandler(name, format, type, compression="none"):
         if format == "simple":
-            return SimpleArchivHandler(name, 0)
+            return SimpleArchivHandler(name)
+        if format == "tar":
+            if compression == "none":
+                return TarArchivHandler(name)
+            if compression == "gzip":
+                return TarGzArchivHandler(name)
+            if compression == "bz2":
+                return TarBz2ArchivHandler(name)
         else:
             raise ArchivException("No ArchivHandler found for %s" %(format))
 
@@ -236,7 +326,14 @@ class ArchivHandlerFactory:
 
 ##################
 # $Log: ComArchiv.py,v $
-# Revision 1.2  2006-11-10 11:41:23  mark
+# Revision 1.3  2006-11-22 16:47:26  mark
+# first stable revision
+# Archive Handler:
+# tar
+# tar.gz
+# tar.bz2
+#
+# Revision 1.2  2006/11/10 11:41:23  mark
 # reorganization, minor changes, comments
 #
 # Revision 1.1  2006/10/09 14:22:35  mark
