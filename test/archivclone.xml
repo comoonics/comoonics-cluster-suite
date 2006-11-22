@@ -3,7 +3,7 @@
 <enterprisecopy name='test-archiveclone'>
   <copyset type='partition'>
     <source type='metadata'>
-      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./bootpartition.xml"/>
       </archive>
     </source>
@@ -14,7 +14,7 @@
   <copyset type='partition'>
     <source type='metadata'>
       <!-- muss das metafile element in oder unter dem archiv element sein ? -->
-      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./rootpartition.xml"/>
       </archive>
     </source>
@@ -24,7 +24,7 @@
   </copyset>
   <copyset type='lvm'>
     <source type='metadata'>
-      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./rootlvm.xml"/>
       </archive>
     </source>
@@ -37,11 +37,11 @@
   </copyset>
   <copyset type='filesystem'>
     <source type='metadata'>
-      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./rootfs.xml"/>
       </archive>
       <data>
-        <archive type="file" format="tgz" name="/mnt/data/rootdata.tar.gz"/>
+        <archive type="file" format="tar" compression="gzip" name="/mnt/data/rootdata.tar.gz"/>
       </data>
     </source>
     <destination type='filesystem'>
@@ -55,11 +55,11 @@
   </copyset>
   <copyset type='filesystem'>
     <source type='metadata'>
-      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./bootfs.xml"/>
       </archive>
       <data>
-        <archive type="file" format="tgz" name="/mnt/data/bootdata.tar.gz"/>
+        <archive type="file" format="tar" compression="gzip" name="/mnt/data/bootdata.tar.gz"/>
       </data>
     </source>
     <destination type='filesystem'>
@@ -83,7 +83,7 @@
       </modification>
       <modification type='copy'>
         <data>
-          <archive type="file" format="tgz" name="/mnt/data/modificationdata.tar.gz">
+          <archive type="file" format="tar" compression="gzip" name="/mnt/data/modificationdata.tar.gz">
   	         <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
   	      </archive>
   		</data>
@@ -95,7 +95,7 @@
       <modification type='copy'>
         <requirement dest='/tmp/test' name='/mnt/source/initrd_sr-2.6.9-34.0.1.ELsmp.gz' format='cpio' type='archive'/>
         <data>
-          <archive type="file" format="tgz" name="/mnt/data/midificationdata.tar.gz">
+          <archive type="file" format="tar" compression="gzip" name="/mnt/data/midificationdata.tar.gz">
  	          <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
 		  </archive>
 		</data>
