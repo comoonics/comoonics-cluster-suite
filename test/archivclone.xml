@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE enterprisecopy SYSTEM "file:/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
-<enterprisecopy name='gfs-node1'>
+<enterprisecopy name='test-archiveclone'>
   <copyset type='partition'>
     <source type='metadata'>
-      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./bootpartition.xml"/>
-      </archiv>
+      </archive>
     </source>
     <destination type='disk'>
       <disk name='/dev/sdd'/>
@@ -14,9 +14,9 @@
   <copyset type='partition'>
     <source type='metadata'>
       <!-- muss das metafile element in oder unter dem archiv element sein ? -->
-      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./rootpartition.xml"/>
-      </archiv>
+      </archive>
     </source>
     <destination type='disk'>
       <disk name='/dev/sde'/>
@@ -24,27 +24,28 @@
   </copyset>
   <copyset type='lvm'>
     <source type='metadata'>
-      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./rootlvm.xml"/>
-      </archiv>
+      </archive>
     </source>
     <destination type='lvm'>
       <volumegroup name='VG_SHAREDROOT_new'>
+        <logicalvolume name="LV_SHAREDROOT"/>
         <physicalvolume name='/dev/sde'/>
       </volumegroup>
     </destination>
   </copyset>
   <copyset type='filesystem'>
     <source type='metadata'>
-      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
       	<file name="./rootfs.xml"/>
-      </archiv>
-      <data type="archiv">
-      	<archiv type="fs" format="tgz" name="/mnt/data/rootdata.tar.gz"/>
+      </archive>
+      <data>
+        <archive type="file" format="tgz" name="/mnt/data/rootdata.tar.gz"/>
       </data>
     </source>
     <destination type='filesystem'>
-      <device id='rootfs' name='/dev/VG_SHAREDROOT_new/LV_SHAREDROOT'>
+      <device id='rootfs' name='/dev/VG_SHAREDROOTC/LV_SHAREDROOT'>
         <filesystem clustername='vmwareclusternew' type='gfs'/>
         <mountpoint name='/mnt/dest'>
           <option value='lock_nolock' name='lockproto'/>
@@ -54,11 +55,11 @@
   </copyset>
   <copyset type='filesystem'>
     <source type='metadata'>
-      <archiv type="fs" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
-      	<metafile name="./bootfs.xml"/>
-      </archiv>
-      <data type="archiv">
-      	<archiv type="fs" format="tgz" name="/mnt/data/bootdata.tar.gz"/>
+      <archive type="file" format="tgz" name="/mnt/data/metaarchiv.tar.gz">
+      	<file name="./bootfs.xml"/>
+      </archive>
+      <data>
+        <archive type="file" format="tgz" name="/mnt/data/bootdata.tar.gz"/>
       </data>
     </source>
     <destination type='filesystem'>
@@ -81,9 +82,11 @@
         <file name='cluster/cdsl/1/etc/sysconfig/network'/>
       </modification>
       <modification type='copy'>
-      	<archiv type="fs" format="tgz" name="/mnt/data/modificationdata.tar.gz">
-  	      <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
-  		</archiv>
+        <data>
+          <archive type="file" format="tgz" name="/mnt/data/modificationdata.tar.gz">
+  	         <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
+  	      </archive>
+  		</data>
       </modification>
     </device>
   </modificationset>
@@ -91,9 +94,11 @@
     <device refid='bootfs'>
       <modification type='copy'>
         <requirement dest='/tmp/test' name='/mnt/source/initrd_sr-2.6.9-34.0.1.ELsmp.gz' format='cpio' type='archive'/>
-        <archiv type="fs" format="tgz" name="/mnt/data/midificationdata.tar.gz">
- 	       <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
-		</archiv>
+        <data>
+          <archive type="file" format="tgz" name="/mnt/data/midificationdata.tar.gz">
+ 	          <file sourcefile='/etc/comoonics/copysets/gfs-node1/cluster.conf' name='etc/cluster/mycluster.conf'/>
+		  </archive>
+		</data>
       </modification>
     </device>
   </modificationset>
