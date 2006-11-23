@@ -2,31 +2,37 @@
 <!DOCTYPE enterprisecopy SYSTEM "file:/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
 <enterprisecopy name='test-archiveclone'>
   <copyset type='partition'>
-    <source type='metadata'>
-      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
-      	<file name="./bootpartition.xml"/>
-      </archive>
+    <source type='backup'>
+      <metadata>
+        <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
+        	<file name="./bootpartition.xml"/>
+        </archive>
+      </metadata>
     </source>
     <destination type='disk'>
       <disk name='/dev/sdd'/>
     </destination>
   </copyset>
   <copyset type='partition'>
-    <source type='metadata'>
-      <!-- muss das metafile element in oder unter dem archiv element sein ? -->
-      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
-      	<file name="./rootpartition.xml"/>
-      </archive>
+    <source type='backup'>
+      <metadata>
+        <!-- muss das metafile element in oder unter dem archiv element sein ? -->
+        <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
+        	<file name="./rootpartition.xml"/>
+        </archive>
+      </metadata>
     </source>
     <destination type='disk'>
       <disk name='/dev/sde'/>
     </destination>
   </copyset>
   <copyset type='lvm'>
-    <source type='metadata'>
-      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
-      	<file name="./rootlvm.xml"/>
-      </archive>
+    <source type='backup'>
+      <metadata>
+        <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
+        	<file name="./rootlvm.xml"/>
+        </archive>
+      </metadata>
     </source>
     <destination type='lvm'>
       <volumegroup name='VG_SHAREDROOT_new'>
@@ -36,10 +42,12 @@
     </destination>
   </copyset>
   <copyset type='filesystem'>
-    <source type='metadata'>
-      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
-      	<file name="./rootfs.xml"/>
-      </archive>
+    <source type='backup'>
+      <metadata>
+        <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
+      	  <file name="./rootfs.xml"/>
+        </archive>
+      </metadata>
       <data>
         <archive type="file" format="tar" compression="gzip" name="/mnt/data/rootdata.tar.gz"/>
       </data>
@@ -54,10 +62,12 @@
     </destination>
   </copyset>
   <copyset type='filesystem'>
-    <source type='metadata'>
-      <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
-      	<file name="./bootfs.xml"/>
-      </archive>
+    <source type='backup'>
+      <metadata>
+        <archive type="file" format="tar" compression="gzip" name="/mnt/data/metaarchiv.tar.gz">
+        	<file name="./bootfs.xml"/>
+        </archive>
+      </metadata>
       <data>
         <archive type="file" format="tar" compression="gzip" name="/mnt/data/bootdata.tar.gz"/>
       </data>
