@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE enterprisecopy SYSTEM "file:///opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
-<enterprisecopy name="&test;">
+<enterprisecopy name="test">
 	<copyset type="partition">
 		<source type="disk">
-			<disk name="/dev/sdc"/>/usr/share/doc/HTML/index.html
+			<disk name="/dev/sdc"/>
 		</source>
 		<destination type="disk">
 			<disk name="/dev/sda"/>
@@ -11,11 +11,12 @@
 	</copyset>
 	<copyset type="lvm">
 		<source type="lvm">
-			<volumegroup name="VG_SHAREDROOT"/>
+			<volumegroup name="centos"/>
 		</source>
 		<destination type="lvm">
-  			<volumegroup name="VG_SHAREDROOT_new">
-  				<physicalvolume name="/dev/sda"/>
+  			<volumegroup name="centos_new">
+  				<logicalvolume name="lv_swap" size="100"/>
+  				<physicalvolume name="/dev/sda2"/>
   			</volumegroup>
   		</destination>
 	</copyset>
