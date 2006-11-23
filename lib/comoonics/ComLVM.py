@@ -1,6 +1,4 @@
 """Comoonics lvm module
-
-
 here should be some more information about the module, that finds its way inot the onlinedoc
 
 """
@@ -10,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -28,26 +26,25 @@ from ComExceptions import ComException
 CMD_LVM="/usr/sbin/lvm"
 
 class LinuxVolumeManager(DataObject):
-    '''
-    Internal Exception classes
-    '''
+    """Internal Exception classes
+    """
     class LVMException(ComException): pass
     class LVMAlreadyExistsException(LVMException):pass
     class LVMNotExistsException(LVMException):pass
-    
+
     '''
     Baseclass for all LVM Objects. Shares attributes and methods for all subclasses
     '''
-    
+
     __logStrLevel__ = "LVM"
     TAGNAME="linuxvolumemanager"
     LVM_ROOT = "/etc/lvm"
-    
+
     ''' Static methods '''
-    
+
     def has_lvm():
-        ''' 
-        Just checks if lvm functionality is available. 
+        '''
+        Just checks if lvm functionality is available.
         Returns true or raises an exception (RuntimeException)
         '''
         CMD_LVM="/usr/sbin/lvm"
@@ -57,10 +54,10 @@ class LinuxVolumeManager(DataObject):
 
         if not (os.access(CMD_LVM, os.X_OK)) and (os.access("/sbin/lvm", os.X_OK)):
             CMD_LVM="/sbin/lvm"
-            
+
         if not os.access("/etc/lvm/.cache", os.R_OK):
             raise RuntimeError("LVM could not read lvm cache file")
-    
+
         f = open("/proc/devices", "r")
         lines = f.readlines()
         f.close()
@@ -73,13 +70,13 @@ class LinuxVolumeManager(DataObject):
             if name == "device-mapper":
                 __lvmDevicePresent__ = 1
                 break
-        
+
         if __lvmDevicePresent__ == 0:
             raise RuntimeError("LVM Functionality does not seam to be available")
         return 1
 
     has_lvm=staticmethod(has_lvm)
-    
+
     def vglist(doc=None):
         '''
         Returns a list of Volumegroup classes found on this system
@@ -119,7 +116,7 @@ class LinuxVolumeManager(DataObject):
 
     def lvlist(vg, doc=None):
         LinuxVolumeManager.has_lvm()
-        
+
         if not doc:
             doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
 
@@ -137,7 +134,7 @@ class LinuxVolumeManager(DataObject):
 
             if not vg:
                 vg=VolumeGroup(vgname, doc)
-                
+
             logmsg = "lv is %s/%s" % (vg.getAttribute("name"), lv)
             ComLog.getLogger(LinuxVolumeManager.__logStrLevel__).debug(logmsg)
             lv=LogicalVolume(lv, vg, doc)
@@ -226,7 +223,7 @@ devices {
         return possiblePE
 
     getPossiblePhysicalExtents=staticmethod(getPossiblePhysicalExtents)
-    
+
     def clampLVSizeRequest(size, pe, roundup=0):
         """Given a size and a PE, returns the actual size of logical volumne.
 
@@ -266,8 +263,8 @@ devices {
         return pe*64
 
     getMaxLVSize=staticmethod(getMaxLVSize)
-    
-    ''' 
+
+    '''
     Public methods
     '''
     def __init__(self, *params):
@@ -276,18 +273,18 @@ devices {
         else:
             raise IndexError('Index out of range for LinuxVolumeManager constructor (%u)' % len(params))
         self.ondisk=False
-        
+
     '''
     Methods shared by all subclasses (mostly abstract)
     '''
     def create(self): pass
-    
+
     def remove(self): pass
-    
+
     def rename(self, newname): pass
-    
+
     def resize(self, newsize): pass
-           
+
 class LogicalVolume(LinuxVolumeManager):
     '''
     Representation of the Linux Volume Manager Logical Volume
@@ -295,11 +292,11 @@ class LogicalVolume(LinuxVolumeManager):
 
     TAGNAME="logicalvolume"
     parentvg=None
-    
+
     def __init__(self, *params):
-        ''' 
+        '''
         Constructor
-        
+
         __init__(element, parent_vg, doc=None)
         __init__(name, parent_vg, doc)
         '''
@@ -343,9 +340,9 @@ class LogicalVolume(LinuxVolumeManager):
                 self.setAttribute("origin", origin)
             except:
                 continue
-            
+
         self.ondisk=True
-    
+
     def create(self):
         """
         Newly creates the logical volume
@@ -355,7 +352,7 @@ class LogicalVolume(LinuxVolumeManager):
 
         if self.ondisk and self.getAttribute("overwrite", "false") == "true":
             self.delete()
-            
+
         try:
             self.init_from_disk()
         except:
@@ -375,7 +372,7 @@ class LogicalVolume(LinuxVolumeManager):
         if rc >> 8 != 0:
             raise RuntimeError("running lvcreate on %s/%s failed: %u,%s" % (self.parentvg.getAttribute("name"), self.getAttribute("name"),rc >> 8, rv))
         self.init_from_disk()
-        
+
     def remove(self):
         """
         Removes an existing physical volume
@@ -386,7 +383,7 @@ class LogicalVolume(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' lvremove -f %s/%s' % (self.parentvg.getAttribute("name"), self.getAttribute("name")))
         if rc >> 8 != 0:
             raise RuntimeError("running lvremove on %s/%s failed: %u,%s" % (self.parentvg.getAttribute("name"), self.getAttribute("name"),rc >> 8, rv))
-        
+
     def rename(self, newname):
         """
         Renames this logical volume
@@ -398,12 +395,12 @@ class LogicalVolume(LinuxVolumeManager):
         if rc >> 8 != 0:
             raise RuntimeError("running lvrename on %s/%s failed: %u,%s" % (self.parentvg.getAttribute("name"), self.getAttribute("name"),rc >> 8, rv))
         self.init_from_disk()
-        
-        
+
+
     def resize(self, newsize=None):
         """
         Resizes this Logical volume
-        
+
         newsize - is the newsize of the logical volume. If not defined the rest of the volumegroup will be used
         """
         LinuxVolumeManager.has_lvm()
@@ -423,11 +420,11 @@ class PhysicalVolume(LinuxVolumeManager):
 
     TAGNAME="physicalvolume"
     parentvg=""
-    
+
     def __init__(self, *params):
-        ''' 
+        '''
         Constructor
-        
+
         __init__(element, parent_vg, doc=None)
         __init__(name, parent_vg, doc)
         '''
@@ -451,7 +448,7 @@ class PhysicalVolume(LinuxVolumeManager):
     '''
     The LVM methods
     '''
-    
+
     def init_from_disk(self):
         """
         Initializes this physical volume from disk and reads all attributes and sets them
@@ -473,7 +470,7 @@ class PhysicalVolume(LinuxVolumeManager):
             except:
                 continue
         self.ondisk=True
-    
+
     def create(self):
         """
         Newly creates the physical volume
@@ -484,19 +481,19 @@ class PhysicalVolume(LinuxVolumeManager):
                 lv.delete()
             self.parent.vg.delete()
             self.delete()
-            
+
         try:
             self.init_from_disk()
         except:
             pass
-        
+
         if self.ondisk:
             raise LinuxVolumeManager.LVMAlreadyExistsException(self.__class__.__name__+"("+self.getAttribute("name")+")")
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' pvcreate -f -v -y '+self.getAttribute("name"))
         if rc >> 8 != 0:
             raise RuntimeError("running pvcreate on %s failed: %u,%s" % (self.getAttribute("name"),rc >> 8, rv))
         self.init_from_disk()
-        
+
     def remove(self):
         """
         Removes an existing physical volume
@@ -507,18 +504,18 @@ class PhysicalVolume(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' pvremove -ff '+self.getAttribute("name"))
         if rc >> 8 != 0:
             raise RuntimeError("running pvremove on %s failed: %u,%s" % (self.getAttribute("name"),rc >> 8, rv))
-        
+
     def rename(self, newname):
         """
         Renames this physical volume
         """
         pass
-        
+
     def resize(self, ignore=None):
         """
         Resizes this Physical volume
         HANDLE WITH CARE: I don't now if pvresize is actually implemented
-        
+
         newname is ignored because of pvresize gets its size automatically from the underlying device
         """
         LinuxVolumeManager.has_lvm()
@@ -527,12 +524,12 @@ class PhysicalVolume(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' pvresize '+self.getAttribute("name"))
         if rc >> 8 != 0:
             raise RuntimeError("running pvresize on %s failed: %u, $s" % (self.getAttribute("name"),rc >> 8, rv))
-        
+
 class VolumeGroup(LinuxVolumeManager):
-    '''  
-    Representation of the Linux Volumen Manager Volume Group 
     '''
-    
+    Representation of the Linux Volumen Manager Volume Group
+    '''
+
     TAGNAME="volumegroup"
     pvs=dict()
     lvs=dict()
@@ -545,9 +542,9 @@ class VolumeGroup(LinuxVolumeManager):
         """
         Runs vgscan.
         """
-        
+
         LinuxVolumeManager.has_lvm()
-        
+
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgscan -v')
         if rc >> 8 != 0:
             raise RuntimeError("running vgscan failed: "+ str(rc)+", ",rv)
@@ -557,11 +554,11 @@ class VolumeGroup(LinuxVolumeManager):
     '''
     Public methods
     '''
-    
+
     def __init__(self, *params):
         '''
         Constructor
-        
+
         Valid Constructors are:
         __init__(element, doc)
         __init__(name, doc)
@@ -591,7 +588,7 @@ class VolumeGroup(LinuxVolumeManager):
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvscan | grep "[[:blank:]]%s[[:blank:]]"' % self.getAttribute("name"), True)
         if rc >> 8 == 0:
             self.ondisk=True
- 
+
     def __str__(self):
         '''
         Return all attributes of element to string
@@ -608,7 +605,7 @@ class VolumeGroup(LinuxVolumeManager):
 #        for lv in self.getLogicalVolumes():
 #            str+="%s" % lv
         return str
-       
+
     def getLogicalVolumes(self):
         return self.lvs.values()
 
@@ -617,10 +614,10 @@ class VolumeGroup(LinuxVolumeManager):
 
     def getLogicalVolume(self, name):
         return self.lvs[name]
-    
+
     def hasLogicalVolume(self, name):
         return self.lvs.has_key(name)
-    
+
     def addLogicalVolume(self, lv):
         """
         Adds a logical volume to this volume group
@@ -638,17 +635,17 @@ class VolumeGroup(LinuxVolumeManager):
 
     def getPhysicalVolumes(self):
         return self.pvs.values()
-    
+
     def getPhysicalVolumeMap(self):
         return self.pvs
-   
+
     def getPhysicalVolume(self, name):
         return self.pvs[name]
 
     def hasPhysicalVolume(self, name):
         return self.pvs.has_key(name)
-    
-    
+
+
     def addPhysicalVolume(self, pv):
         """
         Adds a physical volume to this volume group
@@ -695,7 +692,7 @@ class VolumeGroup(LinuxVolumeManager):
 
         LinuxVolumeManager.has_lvm()
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgchange -ay '+self.getAttribute("name"))
-    
+
         if rc >> 8 != 0:
             raise RuntimeError("running vgchange of %s failed: %u, %s" % (self.getAttribute("name"), rc >> 8, rv))
 
@@ -711,10 +708,10 @@ class VolumeGroup(LinuxVolumeManager):
 
         LinuxVolumeManager.has_lvm()
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgchange -an '+self.getAttribute("name"))
-    
+
         if rc >> 8 != 0:
             raise RuntimeError("running vgchange of %s failed: %u, %s" % (self.getAttribute("name"), rc >> 8, rv))
-            
+
     def create(self):
         """
         Creates this volumegroup
@@ -726,7 +723,7 @@ class VolumeGroup(LinuxVolumeManager):
             for lv in self.lvs:
                 lv.delete()
             self.delete()
-            
+
         try:
             self.init_from_disk()
         except:
@@ -739,12 +736,12 @@ class VolumeGroup(LinuxVolumeManager):
             pesize="-s %sk" % self.getAttribute("pe_size")
         except:
             pass
-        
+
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgcreate %s %s %s' % (pesize, self.getAttribute("name"), ' '.join(self.getPhysicalVolumeMap().keys())))
         if rc >> 8 != 0:
             raise RuntimeError("running vgcreate on %s failed: %u,%s" % (self.getAttribute("name"),rc >> 8, rv))
         self.init_from_disk()
-        
+
     def remove(self):
         """Removes a volume group.  Deactivates the volume group first
         """
@@ -771,11 +768,11 @@ class VolumeGroup(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgrename '+self.getAttribue("name")+" "+newname)
         if rc >> 8 != 0:
             raise RuntimeError("running vgrename on %s failed: %s, %s" % (self.getAttribute("name"), rc >> 8, rv))
-           
+
     def resize(self, newpvs):
         """
         Resizes this volumegroup
-        
+
         newpvs: must be an array of type PhysicalVolume
         """
         pvnames=""
@@ -791,7 +788,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-11-23 14:18:22  marc
+# added feature that lvs can be selected when cloning
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.8  2006/07/04 11:01:22  marc
