@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.5 2006-10-19 10:05:14 marc Exp $
+# $Id: ComSystem.py,v 1.6 2006-11-23 14:19:34 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -30,23 +30,27 @@ def setExecMode(__mode):
 
 def execLocalStatusOutput(__cmd):
     """ exec %__cmd and return output and status (rc, out)"""
+    global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
         __ans=raw_input(__cmd+" (y*,n,c)")
         if __ans == "y" or __ans == "":
             return commands.getstatusoutput(__cmd)
         elif __ans == "c":
-            ComSystem.__EXEC_REALLY_DO=""
+            __EXEC_REALLY_DO="continue"
         return [0,"skipped"]
     return commands.getstatusoutput(__cmd)
 
 
 def execLocalGetResult(__cmd, err=False):
     """ exec %__cmd and returns an array ouf output lines (rc, out, err)"""
+    global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
-        __ans=raw_input(__cmd+" (y,n)")
-        if __ans != "y":
+        __ans=raw_input(__cmd+" (y*,n,c)")
+        if __ans == "c":
+            __EXEC_REALLY_DO="continue"
+        if __ans == "n":
             if err:
                 return [0, "skipped", ""]
             else:
@@ -62,16 +66,22 @@ def execLocalGetResult(__cmd, err=False):
 
 def execLocal(__cmd):
     """ exec %cmd and return status output goes to sys.stdout, sys.stderr"""
+    global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == "ask":
-        __ans=raw_input(__cmd+" (y,n)")
-        if __ans == "y":
+        __ans=raw_input(__cmd+" (y*,n,c)")
+        if __ans == "y" or __ans=="":
             return os.system(__cmd)
+        elif __ans == "c":
+            __EXEC_REALLY_DO="continue"
         return 0
     return os.system(__cmd)
 
 # $Log: ComSystem.py,v $
-# Revision 1.5  2006-10-19 10:05:14  marc
+# Revision 1.6  2006-11-23 14:19:34  marc
+# added continue and default y
+#
+# Revision 1.5  2006/10/19 10:05:14  marc
 # bugfix
 #
 # Revision 1.4  2006/08/28 15:58:27  marc
