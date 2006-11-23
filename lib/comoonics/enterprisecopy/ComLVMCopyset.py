@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.2 2006-11-23 14:16:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -34,11 +34,11 @@ from ComCopyset import CopysetJournaled
 from ComLVMCopyObject import LVMCopyObject
 
 class LVMCopyset(CopysetJournaled):
-    
+
     def updateFromElement(edit_copyobject, source_copyobject):
         """
         Updates the whole tree from the given element
-        
+
         edit_copyobject - is the element to copy to
         source_updatecopyobject - is the element to copy from
         """
@@ -62,9 +62,9 @@ class LVMCopyset(CopysetJournaled):
 #                    LVMCopyset.updateFromElement(edit_copyobject.getPhysicalVolume(pv.getAttribute("name")), pv)
 #                else:
 #                    edit_copyobject.addPhysicalVolume(lv)
-   
+
     updateFromElement=staticmethod(updateFromElement)
-    
+
     __logStrLevel__ = "LVMCopyset"
     def __init__(self, element, doc):
         CopysetJournaled.__init__(self, element, doc)
@@ -76,21 +76,23 @@ class LVMCopyset(CopysetJournaled):
             __dest=self.getElement().getElementsByTagName('destination')[0]
         except IndexError, ie:
             raise IndexError("Destination for copyset %s not defined: %s" % (element.tagName, ie))
-        self.source=ComCopyObject.getCopyObject(__source, doc)
+        self.source=LVMCopyObject(__source, doc)
         self.source.getVolumeGroup().init_from_disk()
         self.addToUndoMap(self.source.getVolumeGroup().__class__.__name__, "create", "remove")
         self.addToUndoMap(self.source.getVolumeGroup().__class__.__name__, "activate", "deactivate")
         for pv in LinuxVolumeManager.pvlist(self.source.getVolumeGroup(), doc):
             pv.init_from_disk()
             self.source.getVolumeGroup().addPhysicalVolume(pv)
-            self.addToUndoMap(pv.__class__.__name__,"create", "remove")
+        self.addToUndoMap(pv.__class__.__name__,"create", "remove")
         for lv in LinuxVolumeManager.lvlist(self.source.getVolumeGroup(), doc):
             lv.init_from_disk()
             self.source.getVolumeGroup().addLogicalVolume(lv)
-            self.addToUndoMap(lv.__class__.__name__,"create", "remove")
-        self.dest=ComCopyObject.getCopyObject(__dest, doc)
-        LVMCopyset.updateFromElement(self.dest, self.source)
-        
+        self.addToUndoMap(lv.__class__.__name__,"create", "remove")
+        self.dest=LVMCopyObject(__dest, doc)
+        # only copy the lvs from source if dest has no lvs
+        if (len(self.dest.getVolumeGroup().getLogicalVolumes()) == 0):
+            LVMCopyset.updateFromElement(self.dest, self.source)
+
     def doCopy(self):
         # do everything
         self.prepareSource()
@@ -119,25 +121,28 @@ class LVMCopyset(CopysetJournaled):
 
         self.postSource()
         self.postDest()
-    
+
     def prepareSource(self):
         #do things like fsck, mount
         # scan for fsconfig
         self.source.prepareAsSource()
-    
+
     def postSource(self):
         self.source.cleanupSource()
-    
+
     def postDest(self):
         self.dest.cleanupDest()
-    
+
     def prepareDest(self):
         # do things like mkfs, mount
         self.dest.prepareAsDest()
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-11-23 14:16:48  marc
+# changed the instantiantion of ComLVMCopyObject
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.5  2006/07/03 16:10:44  marc
