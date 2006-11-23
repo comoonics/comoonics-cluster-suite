@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -71,6 +71,7 @@ class Archive(DataObject):
         file=self.ahandler.getFileObj(name)
         reader = Sax2.Reader()
         doc = reader.fromStream(file)
+        self.ahandler.closeAll()
         return doc.documentElement
 
     def getNextDOMElement(self):
@@ -84,6 +85,7 @@ class Archive(DataObject):
 
         reader = Sax2.Reader()
         doc = reader.fromStream(file)
+        self.ahandler.closeAll()
         return doc.documentElement
 
 
@@ -364,7 +366,10 @@ class ArchiveHandlerFactory:
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.3  2006-11-23 10:13:08  mark
+# Revision 1.4  2006-11-23 13:58:24  mark
+# minor fixes
+#
+# Revision 1.3  2006/11/23 10:13:08  mark
 # added getNextElement, getNextDOMElement
 #
 # Revision 1.2  2006/11/22 17:01:45  mark
