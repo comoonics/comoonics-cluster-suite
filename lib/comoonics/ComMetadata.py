@@ -15,10 +15,10 @@ These are represented by the class ArchiveMetadata.
 
 
 # here is some internal information
-# $Id: ComMetadata.py,v 1.1 2006-11-23 14:18:49 marc Exp $
+# $Id: ComMetadata.py,v 1.2 2006-11-23 15:30:26 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComMetadata.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -31,6 +31,7 @@ class UnsupportedMetadataException(ComException): pass
 class Metadata(DataObject):
     """ The Metadata baseclass """
     __logStrLevel__="ArchiveMetadata"
+    TAG_NAME="metadata"
     def __new__(cls, *args, **kwds):
         if len (args) > 0 and isinstance(args[0], Node):
             archives=args[0].getElementsByTagName("archive")
@@ -70,6 +71,9 @@ class ArchiveMetadata(Metadata):
         return element
 
 # $Log: ComMetadata.py,v $
-# Revision 1.1  2006-11-23 14:18:49  marc
+# Revision 1.2  2006-11-23 15:30:26  marc
+# add TAG_NAME
+#
+# Revision 1.1  2006/11/23 14:18:49  marc
 # initial revision
 #
