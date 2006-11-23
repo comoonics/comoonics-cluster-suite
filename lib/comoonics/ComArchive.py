@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -60,18 +60,32 @@ class Archive(DataObject):
         self.ahandler=ArchiveHandlerFactory.getArchiveHandler \
             (self.getAttribute("name"), self.getAttribute("format"), \
              self.getAttribute("type"), self.getAttribute("compression", default="none"))
-
+        self.child=self.element.firstChild
 
     def closeAll(self):
         ''' closes all open fds '''
         self.ahandler.closeAll()
 
     def getDOMElement(self, name):
-        '''returns an DOM Element from the given member name'''
+        '''returns a DOM Element from the given member name'''
         file=self.ahandler.getFileObj(name)
         reader = Sax2.Reader()
         doc = reader.fromStream(file)
         return doc.documentElement
+
+    def getNextDOMElement(self):
+        ''' returns a DOM representation of the next defined file
+            <file name="filename.xml"/>
+        '''
+        file=self.getNextFileObj()
+        # there is no nextElement
+        if file == None:
+            return None
+
+        reader = Sax2.Reader()
+        doc = reader.fromStream(file)
+        return doc.documentElement
+
 
     def addDOMElement(self, element, name):
         '''adds an DOM Element as member name'''
@@ -90,6 +104,30 @@ class Archive(DataObject):
     def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
         return self.ahandler.getFileObj(name)
+
+    def getNextFileObj(self):
+        ''' returns a fileobject of the next defined file
+            <file name="filename.xml"/>
+        '''
+
+        while self.child != None:
+            # This is not an element
+            if self.child.nodeType != Node.ELEMENT_NODE:
+                self.child=self.child.nextSibling
+                continue
+            # This is not a file
+            if self.child.tagName != "file":
+                self.child=self.child.nextSibling
+                continue
+            else:
+                break
+        # there is no other child
+        if self.child == None:
+            return None
+        file = self.getFileObj(self.child.getAttribute("name"))
+        self.child=self.child.nextSibling
+        return file
+
 
     def addFile(self, name, arcname=None, recursive=True):
         ''' appends a file or dirctory to archiv'''
@@ -326,7 +364,10 @@ class ArchiveHandlerFactory:
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.2  2006-11-22 17:01:45  mark
+# Revision 1.3  2006-11-23 10:13:08  mark
+# added getNextElement, getNextDOMElement
+#
+# Revision 1.2  2006/11/22 17:01:45  mark
 # minor fix
 #
 # Revision 1.1  2006/11/22 16:58:19  mark
