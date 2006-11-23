@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.2 2006-10-19 10:03:18 marc Exp $
+# $Id: ComDataObject.py,v 1.3 2006-11-23 14:17:10 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -25,7 +25,7 @@ import ComLog
 from ComExceptions import *
 
 
-class DataObject:
+class DataObject(object):
     TAGNAME="DataObject"
     __logStrLevel__ = "DataObject"
 
@@ -146,7 +146,10 @@ class DataObject:
 
 
 # $Log: ComDataObject.py,v $
-# Revision 1.2  2006-10-19 10:03:18  marc
+# Revision 1.3  2006-11-23 14:17:10  marc
+# baseclass is now object
+#
+# Revision 1.2  2006/10/19 10:03:18  marc
 # bugfix
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
