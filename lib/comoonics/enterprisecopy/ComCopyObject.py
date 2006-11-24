@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.2 2006-11-23 14:14:45 marc Exp $
+# $Id: ComCopyObject.py,v 1.3 2006-11-24 11:12:19 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -23,43 +23,68 @@ class UnsupportedCopyObjectException(ComException): pass
 #def getCopyObject(element, doc):
 #    """ Factory function to create Copy Objects"""
 #    __type=element.getAttribute("type")
-#    print "getCopyObject(%s)" %(element.tagName)
+#    #print "getCopyObject(%s)" %(element.tagName)
 #    if __type == "filesystem":
 #        from ComFilesystemCopyObject import FilesystemCopyObject
 #        return FilesystemCopyObject(element, doc)
 #    elif __type == "lvm":
 #        from ComLVMCopyObject import LVMCopyObject
 #        return LVMCopyObject(element, doc)
+#    elif __type == "backup":
+#        from ComArchivCopyObject import ArchivCopyObject
+#        return ArchivCopyObject(element, doc)
 #    else:
 #        raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, element.tagName))
-#
+
 
 class CopyObject(DataObject):
     """ Base Class for all source and destination objects"""
     __logStrLevel__ = "CopyObject"
+
+    def __new__(cls, *args, **kwds):
+        if len (args) > 0 and isinstance(args[0], Element):
+            __type=args[0].getAttribute("type")
+            #print "getCopyObject(%s)" %(element.tagName)
+            if __type == "filesystem":
+                from ComFilesystemCopyObject import FilesystemCopyObject
+                return FilesystemCopyObject(element, doc)
+            elif __type == "lvm":
+                from ComLVMCopyObject import LVMCopyObject
+                return LVMCopyObject(element, doc)
+            elif __type == "backup":
+                from ComArchivCopyObject import ArchivCopyObject
+                return ArchivCopyObject(element, doc)
+            else:
+                raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, element.tagName))
+        else:
+            raise UnsupportedMetadataException("Unsupported Metadata type because no domelement given (%u)" %(len(args)))
+
+
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
-        if element.getAttribute("type") == "backup":
-            """ resolving metadata if available """
-            emetadatas=element.getElementsByTagName("metadata")
-            ComLog.getLogger(self.__logStrLevel__).debug("Found %u metadatas" %(len(emetadatas)))
-            for emetadata in emetadatas:
-                from comoonics.ComMetadata import Metadata
-                metadata=Metadata(emetadata)
-                newmetadata=metadata.resolve()
-#                print "Newchild %s" %(newmetadata)
-                element.replaceChild(newmetadata.cloneNode(True, doc), emetadata)
 
     def prepareAsSource(self):
+        ''' prepare CopyObject as source '''
         pass
 
     def cleanupSource(self):
+        ''' do source specific cleanup '''
         pass
 
     def cleanupDest(self):
+        ''' do destination specific cleanup '''
         pass
 
     def prepareAsDest(self):
+        ''' prepare CopyObject as destination '''
+        pass
+
+    def getMetaData(self):
+        ''' returns the metadata element '''
+        pass
+
+    def updateMetaData(self, element):
+        ''' updates meta data information '''
         pass
 
 
@@ -83,7 +108,12 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.2  2006-11-23 14:14:45  marc
+# Revision 1.3  2006-11-24 11:12:19  mark
+# added getMetaData
+# added updateMetaData
+# added __new__
+#
+# Revision 1.2  2006/11/23 14:14:45  marc
 # removed factory method
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
