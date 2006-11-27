@@ -6,17 +6,20 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.3 2006-11-24 11:12:19 mark Exp $
+# $Id: ComCopyObject.py,v 1.4 2006-11-27 09:47:17 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
 from comoonics.ComJournaled import JournaledObject
 from comoonics import ComLog
+
+from xml.dom import Element
+
 
 class UnsupportedCopyObjectException(ComException): pass
 
@@ -42,20 +45,22 @@ class CopyObject(DataObject):
     __logStrLevel__ = "CopyObject"
 
     def __new__(cls, *args, **kwds):
-        if len (args) > 0 and isinstance(args[0], Element):
+        if len (args) > 0:# and isinstance(args[0], Element):
             __type=args[0].getAttribute("type")
             #print "getCopyObject(%s)" %(element.tagName)
             if __type == "filesystem":
                 from ComFilesystemCopyObject import FilesystemCopyObject
-                return FilesystemCopyObject(element, doc)
+                cls=FilesystemCopyObject
             elif __type == "lvm":
                 from ComLVMCopyObject import LVMCopyObject
-                return LVMCopyObject(element, doc)
+                cls=LVMCopyObject
             elif __type == "backup":
-                from ComArchivCopyObject import ArchivCopyObject
-                return ArchivCopyObject(element, doc)
+                from ComArchiveCopyObject import ArchiveCopyObject
+                cls=ArchiveCopyObject
             else:
                 raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, element.tagName))
+            ComLog.getLogger(CopyObject.__logStrLevel__).debug("Returning new object %s" %(cls))
+            return object.__new__(cls, args, kwds)
         else:
             raise UnsupportedMetadataException("Unsupported Metadata type because no domelement given (%u)" %(len(args)))
 
@@ -108,7 +113,10 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.3  2006-11-24 11:12:19  mark
+# Revision 1.4  2006-11-27 09:47:17  mark
+# some fixes
+#
+# Revision 1.3  2006/11/24 11:12:19  mark
 # added getMetaData
 # added updateMetaData
 # added __new__

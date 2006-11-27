@@ -6,19 +6,19 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.2 2006-11-24 11:12:47 mark Exp $
+# $Id: ComArchiveCopyObject.py,v 1.3 2006-11-27 09:47:34 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from xml import xpath
 
 from ComCopyObject import CopyObjectJournaled
 from comoonics.ComDataObject import DataObject
-from ComMetadataSerializer import MetadataSerializer
-from ComArchive import Archive
+from comoonics.ComMetadataSerializer import MetadataSerializer
+from comoonics.ComArchive import Archive
 
 class ArchiveCopyObject(CopyObjectJournaled):
     """ Class for all source and destination objects"""
@@ -26,7 +26,7 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
     def __init__(self, element, doc):
         CopyObjectJournaled.__init__(self, element, doc)
-        __serializer=this.element.getElementsByTagName("metadata")[0]
+        __serializer=self.element.getElementsByTagName("metadata")[0]
         self.serializer=MetadataSerializer(__serializer)
 
 
@@ -64,7 +64,10 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.2  2006-11-24 11:12:47  mark
+# Revision 1.3  2006-11-27 09:47:34  mark
+# some fixes
+#
+# Revision 1.2  2006/11/24 11:12:47  mark
 # adapted to new CopyObject
 #
 # Revision 1.1  2006/11/23 15:30:55  marc
