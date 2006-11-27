@@ -7,16 +7,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLVMCopyObject.py,v 1.2 2006-11-23 14:16:16 marc Exp $
+# $Id: ComLVMCopyObject.py,v 1.3 2006-11-27 12:11:09 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyObject.py,v $
 
 from ComCopyObject import CopyObject
 from comoonics.ComDataObject import DataObject
-from comoonics.ComLVM import VolumeGroup
+from comoonics.ComLVM import VolumeGroup, LinuxVolumeManager
 
 class LVMCopyObject(CopyObject):
     """ Class for all LVM source and destination objects"""
@@ -29,6 +29,13 @@ class LVMCopyObject(CopyObject):
         self.vg=VolumeGroup(vg_element, doc)
 
     def prepareAsSource(self):
+        self.getVolumeGroup().init_from_disk()
+        for pv in LinuxVolumeManager.pvlist(self.getVolumeGroup(), self.getDocument()):
+            pv.init_from_disk()
+            self.getVolumeGroup().addPhysicalVolume(pv)
+        for lv in LinuxVolumeManager.lvlist(self.getVolumeGroup(), self.getDocument()):
+            lv.init_from_disk()
+            self.getVolumeGroup().addLogicalVolume(lv)
         self.vg.activate()
 
     def cleanupSource(self):
@@ -44,9 +51,15 @@ class LVMCopyObject(CopyObject):
     def getVolumeGroup(self):
         return self.vg
 
+    def getMetaData(self):
+        return self.vg.getElement()
+
 #################
 # $Log: ComLVMCopyObject.py,v $
-# Revision 1.2  2006-11-23 14:16:16  marc
+# Revision 1.3  2006-11-27 12:11:09  marc
+# new version with metadata
+#
+# Revision 1.2  2006/11/23 14:16:16  marc
 # added logStrLevel
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
