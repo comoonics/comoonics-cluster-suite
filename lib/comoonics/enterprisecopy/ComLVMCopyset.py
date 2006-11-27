@@ -18,18 +18,18 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.2 2006-11-23 14:16:48 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.3 2006-11-27 12:11:23 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
 from comoonics import ComLog
-from comoonics.ComLVM import VolumeGroup, LinuxVolumeManager, LogicalVolume
+from comoonics.ComLVM import VolumeGroup, LinuxVolumeManager, LogicalVolume, PhysicalVolume
 
-import ComCopyObject
+from ComCopyObject import CopyObject
 from ComCopyset import CopysetJournaled
 from ComLVMCopyObject import LVMCopyObject
 
@@ -76,48 +76,50 @@ class LVMCopyset(CopysetJournaled):
             __dest=self.getElement().getElementsByTagName('destination')[0]
         except IndexError, ie:
             raise IndexError("Destination for copyset %s not defined: %s" % (element.tagName, ie))
-        self.source=LVMCopyObject(__source, doc)
-        self.source.getVolumeGroup().init_from_disk()
-        self.addToUndoMap(self.source.getVolumeGroup().__class__.__name__, "create", "remove")
-        self.addToUndoMap(self.source.getVolumeGroup().__class__.__name__, "activate", "deactivate")
-        for pv in LinuxVolumeManager.pvlist(self.source.getVolumeGroup(), doc):
-            pv.init_from_disk()
-            self.source.getVolumeGroup().addPhysicalVolume(pv)
-        self.addToUndoMap(pv.__class__.__name__,"create", "remove")
-        for lv in LinuxVolumeManager.lvlist(self.source.getVolumeGroup(), doc):
-            lv.init_from_disk()
-            self.source.getVolumeGroup().addLogicalVolume(lv)
-        self.addToUndoMap(lv.__class__.__name__,"create", "remove")
-        self.dest=LVMCopyObject(__dest, doc)
+        # Factory constructs the right copyobject
+        self.source=CopyObject(__source, doc)
+        self.addToUndoMap(VolumeGroup.__name__, "create", "remove")
+        self.addToUndoMap(VolumeGroup.__name__, "activate", "deactivate")
+        self.addToUndoMap(PhysicalVolume.__name__,"create", "remove")
+        self.addToUndoMap(LogicalVolume.__name__,"create", "remove")
+
+        # Factory constructs the right copyobject
+        self.dest=CopyObject(__dest, doc)
         # only copy the lvs from source if dest has no lvs
+#        if (len(self.dest.getVolumeGroup().getLogicalVolumes()) == 0):
+#            LVMCopyset.updateFromElement(self.dest, self.source)
+
+    def updateMetadata(self, element):
         if (len(self.dest.getVolumeGroup().getLogicalVolumes()) == 0):
-            LVMCopyset.updateFromElement(self.dest, self.source)
+            LVMCopyset.updateFromElement(self, element)
 
     def doCopy(self):
         # do everything
         self.prepareSource()
         self.prepareDest()
-        ComLog.getLogger(self.__logStrLevel__).debug("Copying volumegroup %s => %s" % (self.source.vg.getAttribute("name"), self.dest.vg.getAttribute("name")))
-        for pv in self.dest.vg.getPhysicalVolumes():
-            try:
-                pv.create()
-                self.journal(pv, "create")
-            except LinuxVolumeManager.LVMAlreadyExistsException, e:
-                ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (pv.__class__.__name__, pv.getAttribute("name")))
+        self.dest.updateMetaData(self.source.getMetaData())
+        if isinstance(self.dest, LVMCopyObject):
+            ComLog.getLogger(self.__logStrLevel__).debug("Copying volumegroup %s" % (self.dest.vg.getAttribute("name")))
+            for pv in self.dest.vg.getPhysicalVolumes():
+                try:
+                    pv.create()
+                    self.journal(pv, "create")
+                except LinuxVolumeManager.LVMAlreadyExistsException, e:
+                    ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (pv.__class__.__name__, pv.getAttribute("name")))
 
-        try:
-            self.dest.vg.create()
-            self.journal(self.dest.vg, "create")
-        except LinuxVolumeManager.LVMAlreadyExistsException, e:
-            ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (self.dest.vg.__class__.__name__, self.dest.vg.getAttribute("name")))
-        self.dest.vg.activate()
-        self.journal(self.dest.vg, "activate")
-        for lv in self.dest.vg.getLogicalVolumes():
             try:
-                lv.create()
-                self.journal(lv, "create")
+                self.dest.vg.create()
+                self.journal(self.dest.vg, "create")
             except LinuxVolumeManager.LVMAlreadyExistsException, e:
-                ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (lv.__class__.__name__, lv.getAttribute("name")))
+                ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (self.dest.vg.__class__.__name__, self.dest.vg.getAttribute("name")))
+            self.dest.vg.activate()
+            self.journal(self.dest.vg, "activate")
+            for lv in self.dest.vg.getLogicalVolumes():
+                try:
+                    lv.create()
+                    self.journal(lv, "create")
+                except LinuxVolumeManager.LVMAlreadyExistsException, e:
+                    ComLog.getLogger(self.__logStrLevel__).debug("Skipping creating of %s %s as it already exists" % (lv.__class__.__name__, lv.getAttribute("name")))
 
         self.postSource()
         self.postDest()
@@ -127,19 +129,22 @@ class LVMCopyset(CopysetJournaled):
         # scan for fsconfig
         self.source.prepareAsSource()
 
+    def prepareDest(self):
+        # do things like mkfs, mount
+        self.dest.prepareAsDest()
+
     def postSource(self):
         self.source.cleanupSource()
 
     def postDest(self):
         self.dest.cleanupDest()
 
-    def prepareDest(self):
-        # do things like mkfs, mount
-        self.dest.prepareAsDest()
-
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.2  2006-11-23 14:16:48  marc
+# Revision 1.3  2006-11-27 12:11:23  marc
+# version with metadata
+#
+# Revision 1.2  2006/11/23 14:16:48  marc
 # changed the instantiantion of ComLVMCopyObject
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
