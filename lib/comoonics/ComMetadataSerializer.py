@@ -15,16 +15,16 @@ These are represented by the class ArchiveMetadata.
 
 
 # here is some internal information
-# $Id: ComMetadataSerializer.py,v 1.1 2006-11-24 14:34:42 marc Exp $
+# $Id: ComMetadataSerializer.py,v 1.2 2006-11-27 12:13:04 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComMetadataSerializer.py,v $
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
-from xml.dom import Element
+from xml.dom import Node
 
 class UnsupportedMetadataException(ComException): pass
 
@@ -34,11 +34,11 @@ class MetadataSerializer(DataObject):
     TAG_NAME="metadata"
 
     def __new__(cls, *args, **kwds):
-        if len (args) > 0 and isinstance(args[0], Element):
+        if len (args) > 0 and isinstance(args[0], Node):
             archives=args[0].getElementsByTagName("archive")
             if len(archives) > 0:
                 cls=ArchiveMetadataSerializer
-                ComLog.getLogger(Metadata.__logStrLevel__).debug("Returning new object %s" %(cls))
+                ComLog.getLogger(MetadataSerializer.__logStrLevel__).debug("Returning new object %s" %(cls))
                 return object.__new__(cls, args, kwds)
             else:
                 raise UnsupportedMetadataException("Unsupported Metadata type in element " % (args[0].tagName))
@@ -57,12 +57,12 @@ class MetadataSerializer(DataObject):
         pass
 
 
-class ArchiveMetadataSerializer(Metadata):
+class ArchiveMetadataSerializer(MetadataSerializer):
     """ The Archive Metadata baseclass """
     __logStrLevel__="ArchiveMetadata"
     def __init__(self, element, doc=None):
         print "ArchiveMetadata constructor"
-        Metadata.__init__(self, element, doc)
+        MetadataSerializer.__init__(self, element, doc)
 
     def resolve(self):
 #        print "ArchiveMetadata.resolve"
@@ -79,11 +79,15 @@ class ArchiveMetadataSerializer(Metadata):
         earchive=self.getElement().getElementsByTagName("archive")[0]
         archive=Archive(earchive, self.getDocument())
 #        print "Created archive: %s" %(archive)
-        element=archive.addNextDOMElement(element)
+        ComLog.getLogger(self.__logStrLevel__).debug("Saving element %s to archive" %(element))
+        archive.addNextDOMElement(element)
         ComLog.getLogger(self.__logStrLevel__).debug("Saved element %s to archive element" %(element.tagName))
 
 # $Log: ComMetadataSerializer.py,v $
-# Revision 1.1  2006-11-24 14:34:42  marc
+# Revision 1.2  2006-11-27 12:13:04  marc
+# initial revision
+#
+# Revision 1.1  2006/11/24 14:34:42  marc
 # initial revision
 #
 # Revision 1.2  2006/11/23 15:30:26  marc
