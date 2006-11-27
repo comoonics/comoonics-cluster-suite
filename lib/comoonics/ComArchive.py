@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -89,8 +89,14 @@ class Archive(DataObject):
         return doc.documentElement
 
 
-    def addDOMElement(self, element, name):
+    def addNextDOMElement(self, element):
+        """ adds this element to the next file element in this archive """
+        self.addDOMElement(element)
+
+    def addDOMElement(self, element, name=None):
         '''adds an DOM Element as member name'''
+        if name == None:
+            name=self.getNextFileName()
         fd, path = tempfile.mkstemp()
         file = os.fdopen(fd, "w")
         xml.dom.ext.PrettyPrint(element, file)
@@ -102,16 +108,12 @@ class Archive(DataObject):
             os.unlink(path)
             raise e
 
-
     def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
         return self.ahandler.getFileObj(name)
 
-    def getNextFileObj(self):
-        ''' returns a fileobject of the next defined file
-            <file name="filename.xml"/>
-        '''
-
+    def getNextFileName(self):
+        """ returns the name of the next file in the archive as stated by the file element """
         while self.child != None:
             # This is not an element
             if self.child.nodeType != Node.ELEMENT_NODE:
@@ -126,8 +128,15 @@ class Archive(DataObject):
         # there is no other child
         if self.child == None:
             return None
-        file = self.getFileObj(self.child.getAttribute("name"))
+        filename=self.child.getAttribute("name")
         self.child=self.child.nextSibling
+        return filename
+
+    def getNextFileObj(self):
+        ''' returns a fileobject of the next defined file
+            <file name="filename.xml"/>
+        '''
+        file = self.getFileObj(self.getNextFileName())
         return file
 
 
@@ -366,7 +375,10 @@ class ArchiveHandlerFactory:
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.4  2006-11-23 13:58:24  mark
+# Revision 1.5  2006-11-27 12:12:50  marc
+# bug fix
+#
+# Revision 1.4  2006/11/23 13:58:24  mark
 # minor fixes
 #
 # Revision 1.3  2006/11/23 10:13:08  mark

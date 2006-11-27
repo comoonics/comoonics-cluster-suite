@@ -1,19 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE enterprisecopy SYSTEM "file:///opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
 <enterprisecopy name="testmetadata">
-    <copyset type="lvm">
-	    <source type="backup">
-	        <metadata>
-	            <archive type="file" name="./testmetadata.tar" format="tar">
-	                <file name="testlvm.xml"/>
+    <copyset type="lvm" name="backup">
+        <source type="lvm">
+            <volumegroup name="centos"/>
+        </source>
+        <destination type="backup">
+            <metadata>
+                <archive type="file" name="./testmetadata2.tar" format="tar">
+                    <file name="centos_backup.xml"/>
                 </archive>
-	        </metadata>
-	    </source>
-	    <destination type="lvm">
-	        <volumegroup name="centos_new">
-	            <logicalvolume name="lv_swap" size="100"/>
-	            <physicalvolume name="/dev/sda2"/>
-	        </volumegroup>
-	    </destination>
-	</copyset>
+            </metadata>
+        </destination>
+    </copyset>
+    <copyset type="lvm" name="restore">
+        <source type="backup">
+            <metadata>
+                <archive type="file" name="./testmetadata2.tar" format="tar">
+                    <file name="centos_backup.xml"/>
+                </archive>
+            </metadata>
+        </source>
+        <destination type="lvm">
+            <volumegroup name="centos_new">
+                <logicalvolume name="lv_swap2" size="10000"/>
+                <physicalvolume name="/dev/sdc"/>
+            </volumegroup>
+        </destination>
+    </copyset>
 </enterprisecopy>
