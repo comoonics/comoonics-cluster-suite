@@ -6,16 +6,17 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.3 2006-11-27 09:47:34 mark Exp $
+# $Id: ComArchiveCopyObject.py,v 1.4 2006-12-08 09:37:27 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from xml import xpath
 
 from ComCopyObject import CopyObjectJournaled
+from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
 from comoonics.ComMetadataSerializer import MetadataSerializer
 from comoonics.ComArchive import Archive
@@ -47,8 +48,8 @@ class ArchiveCopyObject(CopyObjectJournaled):
     def getDataArchive(self):
         ''' returns data archive object'''
         try:
-            __archive=xpath.Evaluate('data/archiv', this.element)[0]
-            return Archive(__archive)
+            __archive=xpath.Evaluate('data/archive', self.element)[0]
+            return Archive(__archive, self.document)
         except Exception:
             raise ComException("no data archiv description found")
 
@@ -64,7 +65,10 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.3  2006-11-27 09:47:34  mark
+# Revision 1.4  2006-12-08 09:37:27  mark
+# some minor fixes
+#
+# Revision 1.3  2006/11/27 09:47:34  mark
 # some fixes
 #
 # Revision 1.2  2006/11/24 11:12:47  mark
