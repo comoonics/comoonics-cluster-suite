@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.2 2006-10-19 10:02:05 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.3 2006-12-08 09:39:28 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -58,11 +58,18 @@ class FilesystemCopyObject(CopyObjectJournaled):
         return self.mountpoint
 
     def setFileSystem(self, filesystem):
+        self.setFileSystemElement(filesystem.getElement())
+
+    def setFileSystemElement(self, element):
         __parent=self.filesystem.getElement().parentNode
-        __newnode=filesystem.getElement().cloneNode(True)
+        __newnode=element.cloneNode(True)
         __oldnode=self.filesystem.getElement()
         self.filesystem.setElement(__newnode)
-        __parent.replaceChild(__newnode, __oldnode)
+        # only replace attributes
+        try:
+            __parent.replaceChild(__newnode, __oldnode)
+        except Exception, e:
+            ComLog.getLogger(FilesystemCopyObject.__logStrLevel__).warning(e)
 
     def prepareAsSource(self):
         # Check for mounted
@@ -93,9 +100,34 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.filesystem.mount(self.device, self.mountpoint)
         self.journal(self.filesystem, "mount", [self.mountpoint])
 
+    def getMetaData(self):
+        ''' returns the metadata element '''
+        return self.device.getElement()
+
+
+    def updateMetaData(self, element):
+        ''' updates meta data information '''
+        """ copy all Attributes from source to dest that are not defined
+        in dest
+        """
+        # get filesystem element
+        try:
+            __sfilesystem=element.getElementsByTagName("filesystem")[0]
+        except Exception:
+            raise ComException("filesystem for metadata not defined")
+
+        # save dest attributes
+        __attr = self.getFileSystem().getElement().attributes
+        # copy all source fs info to dest
+        self.setFileSystemElement(__sfilesystem)
+        # restore saved attibutes from dest
+        self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.2  2006-10-19 10:02:05  marc
+# Revision 1.3  2006-12-08 09:39:28  mark
+# added support for generic CopyObject Framework (Archiv)
+#
+# Revision 1.2  2006/10/19 10:02:05  marc
 # added skipmount
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
