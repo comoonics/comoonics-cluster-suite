@@ -1,8 +1,8 @@
 #!/bin/bash
 
 SETUP_PY="setup-cs.py"
-RELEASE=16
-REQUIRES="--requires=PyXML"
+RELEASE=17
+REQUIRES="--requires=PyXML,pyparted"
 NOAUTO_REQ="--no-autoreq"
 
 rm MANIFEST
