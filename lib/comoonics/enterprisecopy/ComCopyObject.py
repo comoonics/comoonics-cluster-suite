@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.4 2006-11-27 09:47:17 mark Exp $
+# $Id: ComCopyObject.py,v 1.5 2006-12-08 09:38:36 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -18,7 +18,7 @@ from comoonics.ComExceptions import ComException
 from comoonics.ComJournaled import JournaledObject
 from comoonics import ComLog
 
-from xml.dom import Element
+from xml.dom import Node
 
 
 class UnsupportedCopyObjectException(ComException): pass
@@ -45,10 +45,13 @@ class CopyObject(DataObject):
     __logStrLevel__ = "CopyObject"
 
     def __new__(cls, *args, **kwds):
-        if len (args) > 0:# and isinstance(args[0], Element):
+        if len (args) > 0 and isinstance(args[0], Node):
             __type=args[0].getAttribute("type")
             #print "getCopyObject(%s)" %(element.tagName)
-            if __type == "filesystem":
+            if __type == "disk":
+                from ComPartitionCopyObject import PartitionCopyObject
+                cls=PartitionCopyObject
+            elif __type == "filesystem":
                 from ComFilesystemCopyObject import FilesystemCopyObject
                 cls=FilesystemCopyObject
             elif __type == "lvm":
@@ -58,7 +61,7 @@ class CopyObject(DataObject):
                 from ComArchiveCopyObject import ArchiveCopyObject
                 cls=ArchiveCopyObject
             else:
-                raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, element.tagName))
+                raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, args[0].tagName))
             ComLog.getLogger(CopyObject.__logStrLevel__).debug("Returning new object %s" %(cls))
             return object.__new__(cls, args, kwds)
         else:
@@ -113,7 +116,10 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.4  2006-11-27 09:47:17  mark
+# Revision 1.5  2006-12-08 09:38:36  mark
+# added support for PartitionCopyObject
+#
+# Revision 1.4  2006/11/27 09:47:17  mark
 # some fixes
 #
 # Revision 1.3  2006/11/24 11:12:19  mark
