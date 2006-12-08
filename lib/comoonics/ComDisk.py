@@ -7,22 +7,27 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.3 2006-09-11 16:47:48 mark Exp $
+# $Id: ComDisk.py,v 1.4 2006-12-08 09:46:16 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
 import exceptions
+import parted
+
 
 import ComSystem
+import ComParted
+from ComPartition import Partition
 from ComDataObject import DataObject
 from ComExceptions import *
 
 CMD_SFDISK = "/sbin/sfdisk"
 CMD_DD="/bin/dd"
+
 
 class Disk(DataObject):
     """ Disk represents a raw disk """
@@ -45,10 +50,53 @@ class Disk(DataObject):
     def getDevicePath(self):
         return self.getDeviceName()
 
-    def createPartition(self):
-        """ creates a new partition (Not Implemented Yet)"""
-        raise exceptions.NotImplementedError()
-        pass
+    def getSize(self):
+        """ returns the size of the disk in sectors"""
+        phelper=ComParted.PartedHelper()
+
+
+    def initFromDisk(self):
+        """ reads partition information from the disk and fills up DOM
+        with new information
+        """
+        phelper=ComParted.PartedHelper()
+        if not self.exists():
+            raise ComException("Device %s not found" % self.getDeviceName())
+        dev=parted.PedDevice.get(self.getDeviceName())
+        disk=parted.PedDisk.new(dev)
+        partlist=phelper.get_primary_partitions(disk)
+        for part in partlist:
+            self.appendChild(Partition(part, self.getDocument()))
+
+    def createPartitions(self):
+        """ creates new partition table """
+        if not self.exists():
+            raise ComException("Device %s not found" % self.getDeviceName())
+
+        phelper=ComParted.PartedHelper()
+        #IDEA compare the partition configurations for update
+        #1. delete all aprtitions
+        dev=parted.PedDevice.get(self.getDeviceName())
+        disk=parted.PedDisk.new(dev)
+        disk.delete_all()
+        # create new partitions
+        for com_part in self.getAllPartitions():
+            type=com_part.getPartedType()
+            size=com_part.getPartedSizeOptimum(dev)
+            flags=com_part.getPartedFlags()
+            self.log.debug("creating partition: size: %i" % size )
+            phelper.add_partition(disk, type, size, flags)
+
+        disk.commit()
+
+
+
+    def getAllPartitions(self):
+        parts=[]
+        for elem in self.element.getElementsByTagName(Partition.TAGNAME):
+            parts.append(Partition(elem, self.document))
+        return parts
+
 
     def savePartitionTable(self, filename):
         """ saves the Disks partition table in sfdisk format to <filename>
@@ -126,7 +174,13 @@ class Disk(DataObject):
         return " ".join(__cmd)
 
 # $Log: ComDisk.py,v $
-# Revision 1.3  2006-09-11 16:47:48  mark
+# Revision 1.4  2006-12-08 09:46:16  mark
+# added full xml support.
+# included parted libraries.
+# added initFromDisk()
+# added createPartitions()
+#
+# Revision 1.3  2006/09/11 16:47:48  mark
 # modified hasPartitionTable to support gnbd devices
 #
 # Revision 1.2  2006/07/20 10:24:42  mark
