@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.3 2006-11-23 14:17:10 marc Exp $
+# $Id: ComDataObject.py,v 1.4 2006-12-08 09:44:18 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -20,8 +20,11 @@ import copy
 import string
 from xml.dom import Element, Node
 from xml import xpath
+from xml.dom.ext import PrettyPrint
+
 
 import ComLog
+import XmlTools
 from ComExceptions import *
 
 
@@ -144,9 +147,22 @@ class DataObject(object):
         for i in range(len(nodelist)):
             element.appendChild(nodelist[i])
 
+    def appendChild(self, child):
+        self.element.appendChild(child.getElement())
+
+    def updateChildrenWithPK(self, dataobject, pk="name"):
+        """ add all children from dataobject
+        if they are not already there.
+        pk is used as primary key.
+        Also adds all Attributes from dataobject if the are not present.
+        """
+        XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.3  2006-11-23 14:17:10  marc
+# Revision 1.4  2006-12-08 09:44:18  mark
+# added support for PartitionCopyobject
+#
+# Revision 1.3  2006/11/23 14:17:10  marc
 # baseclass is now object
 #
 # Revision 1.2  2006/10/19 10:03:18  marc
