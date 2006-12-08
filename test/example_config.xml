@@ -6,7 +6,40 @@
 			<disk name="/dev/sdc"/>
 		</source>
 		<destination type="disk">
-			<disk name="/dev/sda"/>
+			<disk name="/dev/sda">
+				<!--- supported types: "primary"
+					"extended" and "logical" are reserved, but not supported yet
+				-->
+				<!-- supported size:
+					[0-9]+[M,G] size in mega/gigabytes
+					1-100%: size in percentage of the whole disk
+					REMAIN: all remaining space
+					[0-9]+ size in sectors
+				-->
+				<!-- reserved attributes:
+					start: starting point [cylinders]
+					not supported yet
+					by now, all partitions will start at the first possible starting point
+				-->
+				<!-- supported flags:
+					boot
+					root
+					swap
+					hidden
+					raid
+					lvm
+					lba
+				-->
+				<partition name="1" type="primary" size="10G">
+					<flag name="boot"/>
+					<flag name="lvm"/>
+				</partition>
+				<partition name="2" type="primary" size="20%"/>
+				<!-- other posibilities:
+				<partition name="3" type="primary" size="REMAIN"/>
+				<partition name="4" type="primary" size="123456"/>
+				-->
+			</disk>
 		</destination>
 	</copyset>
 	<copyset type="lvm">
