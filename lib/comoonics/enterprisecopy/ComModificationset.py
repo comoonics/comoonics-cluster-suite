@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComModificationset.py,v 1.2 2006-12-08 09:42:04 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModificationset.py,v $
 
 import exceptions
@@ -30,6 +30,9 @@ def getModificationset(element, doc):
     if __type == "filesystem":
         from ComFilesystemModificationset import FilesystemModificationset
         return FilesystemModificationset(element, doc)
+    if __type == "partition":
+        from ComPartitionModificationset import PartitionModificationset
+        return PartitionModificationset(element, doc)
     raise exceptions.NotImplementedError("Modifcicationset for type " + __type + " is not implemented")
 
 
@@ -39,7 +42,7 @@ class Modificationset(DataObject):
         DataObject.__init__(self, element, doc)
         self.modifications=list()
         log.debug("Modificationset CWD: " + os.getcwd())
-        
+
     def doModifications(self):
         """starts the modification process"""
         self.doPre()
@@ -55,13 +58,13 @@ class Modificationset(DataObject):
                 mod.undoModification()
             except NotImplementedError, e:
                 log.warning(e)
-    
+
     def doPre(self):
         pass
-    
+
     def doPost(self):
         pass
-    
+
     def doRealModifications(self):
         for mod in self.modifications:
             try:
@@ -79,8 +82,8 @@ class Modificationset(DataObject):
         for i in range(len(emods)):
             self.modifications.append(ComModification.getModification(emods[i], doc))
         return self.modifications
-   
- 
+
+
 class ModificationsetJournaled(Modificationset, JournaledObject):
     """
     Derives anything from Modification plus journals all actions.
@@ -100,10 +103,13 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
         just calls replayJournal and undoModifications from Modificationset
         """
         Modificationset.undoModifications(self)
-        self.replayJournal()  
-   
+        self.replayJournal()
+
 # $Log: ComModificationset.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2006-12-08 09:42:04  mark
+# added support for PartitionModificationset
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.5  2006/07/06 12:40:01  mark
