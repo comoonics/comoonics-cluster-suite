@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -52,7 +52,7 @@ class Archive(DataObject):
         - has/getNextFileInfo   returns a XML defined FileInfo to work with
     '''
 
-    __logStrLevel__ = "Archivee"
+    __logStrLevel__ = "Archive"
     ''' Static methods '''
 
     def __init__(self, element, doc):
@@ -150,6 +150,7 @@ class Archive(DataObject):
 
     def createArchive(self, source, cdir=None):
         ''' creates an archive from the whole source tree '''
+        ComLog.getLogger("Copyset").debug("createArchive(%s, %s)" % (source, cdir))
         self.ahandler.createArchive(source, cdir)
 
     def extractArchive(self, dest):
@@ -375,7 +376,10 @@ class ArchiveHandlerFactory:
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.5  2006-11-27 12:12:50  marc
+# Revision 1.6  2006-12-08 09:43:50  mark
+# minor fixes
+#
+# Revision 1.5  2006/11/27 12:12:50  marc
 # bug fix
 #
 # Revision 1.4  2006/11/23 13:58:24  mark
