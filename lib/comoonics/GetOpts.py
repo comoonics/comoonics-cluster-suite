@@ -6,10 +6,10 @@ Class to make getopts very easy
 """
 
 # here is some internal information
-# $Id: GetOpts.py,v 1.2 2006-09-28 08:45:42 marc Exp $
+# $Id: GetOpts.py,v 1.3 2006-12-13 20:16:52 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/GetOpts.py,v $
 
 import getopt
@@ -36,6 +36,11 @@ class Option:
         self.value=newvalue
     def __str__(self):
         return self.value
+
+class PrivateOption(Option):
+    """Option not being listed in usage """
+    def __init__(self, name, value, required=False, short_opt=None, func=None):
+        Option.__init__(name, "", value, required, short_opt, func)
 
 class HelpOption(Option):
     def __init__(self, parent):
@@ -71,16 +76,25 @@ class BaseConfig:
         if not self.__dict__.has_key("version"):
             self.version=VersionOption(self.__version__)
         self.genShortOpts()
+        self.additional_param_str=""
 
     def genShortOpts(self):
         pass
 
+    def getAdditionalParams(self):
+        return self.additional_param_str
+
+    def setAdditionalParams(self, params):
+        self.additional_param_str=params
+
     def usage(self):
-        print >>self.__stdout__, "%s %s " %(self.__cmdname__,self.getAllOptionString())
+        print >>self.__stdout__, "%s %s %s" %(self.__cmdname__,self.getAllOptionString(),self.getAdditionalParams())
         if self.__dict__.has_key("__description__"):
             print >>self.__stdout__, "\t%s" %(self.__description__)
         for option in self.__dict__.values():
             if not isinstance(option, Option):
+                continue
+            if isinstance(option, PrivateOption):
                 continue
             print >>self.__stdout__, "\t%s" %(self.getOptionString(option))
 
@@ -177,8 +191,10 @@ class BaseConfig:
 #                ComLog.getLogger().info("Option %s, %s" % (opt, value))
                 if len(opt)==1:
                     option=self.getShortOption(opt)
-                else:
+                elif self.__dict__.has_key(opt):
                     option=self.__dict__[opt]
+                else:
+                    option=self.__dict__[opt.replace("-", "_")]
                 ret=option.func(value)
                 if ret > 0:
                     return ret
@@ -235,7 +251,11 @@ if __name__ == '__main__':
 
 ##################
 # $Log: GetOpts.py,v $
-# Revision 1.2  2006-09-28 08:45:42  marc
+# Revision 1.3  2006-12-13 20:16:52  marc
+# - added PrivatOption
+# - added AllOptionString
+#
+# Revision 1.2  2006/09/28 08:45:42  marc
 # bugfix for options without values
 #
 # Revision 1.1  2006/09/19 10:36:59  marc
