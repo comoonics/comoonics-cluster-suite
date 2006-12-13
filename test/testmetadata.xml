@@ -23,8 +23,7 @@
         </source>
         <destination type="lvm">
             <volumegroup name="centos_new">
-                <logicalvolume name="lv_swap2" size="10000"/>
-                <physicalvolume name="/dev/sdc"/>
+                <physicalvolume name="/dev/sde"/>
             </volumegroup>
         </destination>
     </copyset>
