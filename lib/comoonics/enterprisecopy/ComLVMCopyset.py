@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.3 2006-11-27 12:11:23 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.4 2006-12-13 20:18:00 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -89,14 +89,11 @@ class LVMCopyset(CopysetJournaled):
 #        if (len(self.dest.getVolumeGroup().getLogicalVolumes()) == 0):
 #            LVMCopyset.updateFromElement(self.dest, self.source)
 
-    def updateMetadata(self, element):
-        if (len(self.dest.getVolumeGroup().getLogicalVolumes()) == 0):
-            LVMCopyset.updateFromElement(self, element)
-
     def doCopy(self):
         # do everything
         self.prepareSource()
         self.prepareDest()
+        ComLog.getLogger(self.__logStrLevel__).debug("Updating metadata on %s" %(self.dest))
         self.dest.updateMetaData(self.source.getMetaData())
         if isinstance(self.dest, LVMCopyObject):
             ComLog.getLogger(self.__logStrLevel__).debug("Copying volumegroup %s" % (self.dest.vg.getAttribute("name")))
@@ -139,9 +136,18 @@ class LVMCopyset(CopysetJournaled):
     def postDest(self):
         self.dest.cleanupDest()
 
+def main():
+    pass
+
+if __name__ == '__main__':
+    main()
+
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.3  2006-11-27 12:11:23  marc
+# Revision 1.4  2006-12-13 20:18:00  marc
+# Support for Metadata
+#
+# Revision 1.3  2006/11/27 12:11:23  marc
 # version with metadata
 #
 # Revision 1.2  2006/11/23 14:16:48  marc
