@@ -5,9 +5,31 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.2 2006-12-08 09:47:40 mark Exp $
+# $Id: XmlTools.py,v 1.3 2006-12-13 20:17:15 marc Exp $
 
 import warnings
+from xml.dom import Node
+
+class ElementFilter(object):
+    FILTER_ACCEPT = 1
+    FILTER_REJECT = 2
+    FILTER_SKIP   = 3
+
+    def __init__(self, name=""):
+        self.name_filter=name
+
+    def acceptNode(self, node):
+        if node.nodeType == Node.ELEMENT_NODE:
+            if self.name_filter and type(self.name_filter) == str and self.name_filter==node.tagName:
+                return ElementFilter.FILTER_ACCEPT
+            elif self.name_filter and type(self.name_filter) == str and self.name_filter!=node.tagName:
+                return ElementFilter.FILTER_REJECT
+            elif self.name_filter and self.name_filter.match(node.tagName):
+                return ElementFilter.FILTER_ACCEPT
+            else:
+                return ElementFilter.FILTER_REJECT
+        else:
+            return ElementFilter.FILTER_REJECT
 
 def overwrite_element_with_xpaths(element, xpaths):
     """ Overwrites all node values referred with the xpaths and the given values. Xpaths has to be a map with
@@ -44,11 +66,13 @@ def overwrite_element_with_xpaths(element, xpaths):
 
     return element
 
-def merge_trees_with_pk(source, dest, doc, pk="name"):
+def merge_trees_with_pk(source, dest, doc, pk="name", filter=None):
     """ add all element children from element source to
     if they are not already there.
     doc is the destination DOMDocument
     pk is used as primary key.
+    If filter [NodeFilter] is the DOM2 Nodefilter interface is applied to any element to be checked.
+    True and False are to be returned
     Also adds all Attributes from dataobject if the are not present.
     """
     #get source childs
@@ -58,6 +82,7 @@ def merge_trees_with_pk(source, dest, doc, pk="name"):
 
     for s_child in source.childNodes:
 
+        if filter and filter.acceptNode(s_child) != ElementFilter.FILTER_ACCEPT: continue
         if s_child.nodeType != xml.dom.Node.ELEMENT_NODE: continue
 
 
@@ -113,7 +138,6 @@ def add_element_to_node_sorted(child, elem, key):
     elem.appendChild(child)
     return elem
 
-
 def main():
     xml="""<?xml version="1.0" encoding="UTF-8"?>
 <localclone>
@@ -133,13 +157,15 @@ def main():
     print "-----------_After(overwrite_element_with_xpaths)_--------------"
     PrettyPrint(doc)
 
-
 if __name__ == '__main__':
     main()
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.2  2006-12-08 09:47:40  mark
+# Revision 1.3  2006-12-13 20:17:15  marc
+# added tests and ElementFilter
+#
+# Revision 1.2  2006/12/08 09:47:40  mark
 # added merge_trees_with_pk
 # added add_element_to_node_sorted
 #
