@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -265,10 +265,12 @@ class TarArchiveHandler(ArchiveHandler):
 
 
     def createArchive(self, source, cdir=None):
-        ''' creates an archive from the whole source tree '''
+        ''' creates an archive from the whole source tree
+            stays in the same filesystem
+         '''
         if not cdir:
             cdir=os.path.cwd()
-        __cmd = TarArchiveHandler.TAR +" -c " + self.compression + " -f " \
+        __cmd = TarArchiveHandler.TAR +" -cl " + self.compression + " -f " \
                 + self.tarfile + " -C " + cdir + " " + source
         __rc, __rv = ComSystem.execLocalGetResult(__cmd)
         if __rc >> 8 != 0:
@@ -376,7 +378,10 @@ class ArchiveHandlerFactory:
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.6  2006-12-08 09:43:50  mark
+# Revision 1.7  2006-12-14 09:12:15  mark
+# added -l option to tar
+#
+# Revision 1.6  2006/12/08 09:43:50  mark
 # minor fixes
 #
 # Revision 1.5  2006/11/27 12:12:50  marc
