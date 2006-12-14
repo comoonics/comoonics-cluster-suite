@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.4 2006-12-08 09:46:16 mark Exp $
+# $Id: ComDisk.py,v 1.5 2006-12-14 09:12:53 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -63,10 +63,14 @@ class Disk(DataObject):
         if not self.exists():
             raise ComException("Device %s not found" % self.getDeviceName())
         dev=parted.PedDevice.get(self.getDeviceName())
-        disk=parted.PedDisk.new(dev)
-        partlist=phelper.get_primary_partitions(disk)
-        for part in partlist:
-            self.appendChild(Partition(part, self.getDocument()))
+        try:
+            disk=parted.PedDisk.new(dev)
+            partlist=phelper.get_primary_partitions(disk)
+            for part in partlist:
+                self.appendChild(Partition(part, self.getDocument()))
+        except parted.error:
+                self.log.debug("no partitions found")
+
 
     def createPartitions(self):
         """ creates new partition table """
@@ -77,8 +81,14 @@ class Disk(DataObject):
         #IDEA compare the partition configurations for update
         #1. delete all aprtitions
         dev=parted.PedDevice.get(self.getDeviceName())
-        disk=parted.PedDisk.new(dev)
-        disk.delete_all()
+
+        try:
+            disk=parted.PedDisk.new(dev)
+            disk.delete_all()
+        except parted.error:
+            #FIXME use generic disk types
+            disk=dev.disk_new_fresh(parted.disk_type_get("msdos"))
+
         # create new partitions
         for com_part in self.getAllPartitions():
             type=com_part.getPartedType()
@@ -174,7 +184,10 @@ class Disk(DataObject):
         return " ".join(__cmd)
 
 # $Log: ComDisk.py,v $
-# Revision 1.4  2006-12-08 09:46:16  mark
+# Revision 1.5  2006-12-14 09:12:53  mark
+# bug fix
+#
+# Revision 1.4  2006/12/08 09:46:16  mark
 # added full xml support.
 # included parted libraries.
 # added initFromDisk()
