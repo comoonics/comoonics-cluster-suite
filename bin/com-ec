@@ -8,11 +8,15 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.6 2006-09-28 08:44:45 marc Exp $
+# $Id: com-ec,v 1.7 2006-12-15 10:10:46 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
+__description__="""
+The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
+does it.
+"""
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/com-ec,v $
 
 from exceptions import Exception
@@ -24,6 +28,8 @@ from xml.dom.ext.reader import Sax2
 import getopt
 import logging
 import warnings
+sys.path.append("../lib")
+from comoonics import GetOpts
 
 sys.path.append("../lib")
 
@@ -36,89 +42,106 @@ def line(str=None):
     print
     print "--------------------"+str+"---------------------------------"
 
-def usage(argv):
-    print "%s [-a|--ask] [-d|-debug] [-n|--novalidate] [-h|--help] [-x|--xslt xslt-file [-X|--onlyxslt]] xmlfilename" % argv[0]
-    print '''
-    executes all commands described in the <xmlfile>
+class Config(GetOpts.BaseConfig):
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
+        self.novalidate=GetOpts.Option("novalidate", "novalidate don't validate the xml. Handle with care!!!", False, False, "n")
+        self.ask=GetOpts.Option("ask", "ask before any command is executed", False, False, "a")
+        self.copyset=GetOpts.Option("copyset", "<name>|all only do all or the given modification set", None, False, "c")
+        self.modificationset=GetOpts.Option("modificationset", "<name>|all only do all or the given modification set", None, False, "m")
+        self.noundo=GetOpts.Option("noundo", "don't do the undoing if anything goes wrong", False, False, "U")
+        self.xslt=GetOpts.Option("xslt", "preconvert xmlfile with given xsltfile.", None, False, "x")
+        self.onlyxslt=GetOpts.Option("onlyxslt", "only do the xslt work", False, False, "X")
+        self.setAdditionalParams("file [valuepath=value]*")
+        self.values=dict()
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) > 1:
+            for arg in args_proper[1:]:
+                (name, value)=arg.split("=")
+                self.values[name]=value
+        if len(args_proper) > 0 and os.path.isfile(args_proper[0]):
+            self.filename=args_proper[0]
+        elif len(args_proper) == 0:
+            print >>self.__stderr__, "No file given to execute."
+            self.usage()
+            return 1
+        return 0
 
-    -a|--ask ask before any command is executed
-    -d|--debug be more helpfull
-    -n|--novalidate don't validate the xml. Handle with care!!!
-    -c|--copset <name>|all only do all or the given modification set
-    -m|--modificationset <name>|all only do all or the given modification set
-    -U|--noundo don't do the undoing if anything goes wrong
-    -h|--help: this helpscreen
-    -x|--xslt xslt-file: preconvert xmlfile with given xsltfile.
-    -X|--onlyxslt: only do the xslt work
-    '''
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
 
 def setWarnings():
     warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning, module='Com*')
 
-try:
-    (opts, args_proper)=getopt.getopt(sys.argv[1:], 'hadnUc:m:x:X', [ 'help', 'ask', 'debug', 'novalidate', 'copyset=', 'modificationset=', 'noundo' , "xslt=", "onlyxslt" ])
-except getopt.GetoptError, goe:
-    print "Error parsing params: %s", goe
-    usage(sys.argv)
-    sys.exit(1)
+def applyValues(element, values):
+    from comoonics import xml_tools
+    return xml_tools.overwrite_element_with_xpaths(element, values)
 
-VALIDATE=True
-DEBUG=False
-ASK_MODE=False
+#try:
+#    (opts, args_proper)=getopt.getopt(sys.argv[1:], 'hadnUc:m:x:X', [ 'help', 'ask', 'debug', 'novalidate', 'copyset=', 'modificationset=', 'noundo' , "xslt=", "onlyxslt" ])
+#except getopt.GetoptError, goe:
+#    print "Error parsing params: %s", goe
+#    usage(sys.argv)
+#    sys.exit(1)
+
 ComLog.setLevel(logging.INFO)
-copysetname=None
-modsetname=None
-noundo=False
-xslt_mode=False
-only_xslt=False
-for (opt, value) in opts:
-#    print "Option %s" % opt
-    if opt == "-a" or opt == "--ask":
-        ASK_MODE=True
-    elif opt == "-d" or opt == "--debug":
-        DEBUG=True
-        ComLog.setLevel(logging.DEBUG)
-    elif opt == "-n" or opt == "--novalidate":
-        VALIDATE=FALSE
-    elif opt == "-c" or opt == "--copyset":
-        copysetname=value
-    elif opt == "-m" or opt == "--modificationset":
-        modsetname=value
-    elif opt == "-U" or opt == "--noundo":
-        noundo=True
-    elif opt == "-x" or opt == "--xslt":
-        xslt_mode=True
-        xslt_file=value
-    elif opt == "-X" or opt == "--onlyxslt":
-        only_xslt=True
-    elif opt == "-h" or opt == "--help":
-        usage(sys.argv)
-        sys.exit(0)
+config=Config()
+ret=config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    sys.exit(ret)
+
+#for (opt, value) in opts:
+##    print "Option %s" % opt
+#    if opt == "-a" or opt == "--ask":
+#        ASK_MODE=True
+#    elif opt == "-d" or opt == "--debug":
+#        DEBUG=True
+#        ComLog.setLevel(logging.DEBUG)
+#    elif opt == "-n" or opt == "--novalidate":
+#        VALIDATE=FALSE
+#    elif opt == "-c" or opt == "--copyset":
+#        copysetname=value
+#    elif opt == "-m" or opt == "--modificationset":
+#        modsetname=value
+#    elif opt == "-U" or opt == "--noundo":
+#        noundo=True
+#    elif opt == "-x" or opt == "--xslt":
+#        xslt_mode=True
+#        xslt_file=value
+#    elif opt == "-X" or opt == "--onlyxslt":
+#        only_xslt=True
+#    elif opt == "-h" or opt == "--help":
+#        usage(sys.argv)
+#        sys.exit(0)
 
 # filter warnings
 setWarnings()
 
 # create Reader object
-if VALIDATE:
-    reader = Sax2.Reader(validate=1)
-else:
+if config.novalidate.value:
     reader = Sax2.Reader(validate=0)
-
-if len(args_proper) > 0:
-    filename=args_proper[0]
 else:
+    reader = Sax2.Reader(validate=1)
+
+if not config.filename:
     print "No file as input given exiting."
     usage(sys.argv)
     sys.exit(1)
 
 try:
-    if xslt_mode:
+    if config.xslt.value:
         try:
            import libxslt
            import libxml2
-           file=os.fdopen(os.open(xslt_file, os.O_RDONLY))
-           n_doc = libxml2.parseFile(filename)
-           style = libxml2.parseFile(xslt_file)
+           file=os.fdopen(os.open(config.xslt.value, os.O_RDONLY))
+           n_doc = libxml2.parseFile(config.filename)
+           if config.values:
+               applyValues(n_doc, config.values)
+           style = libxml2.parseFile(config.xslt.value)
            xslt_style = libxslt.parseStylesheetDoc(style)
            params={}
            res = xslt_style.applyStylesheet(n_doc, params)
@@ -135,16 +158,18 @@ try:
             traceback.print_exc()
             sys.exit(1)
         libxslt.cleanup()
-        if only_xslt:
+        if config.onlyxslt.value:
             PrettyPrint(doc)
             sys.exit(0)
     else:
-        file=open(filename,"r")
-        line("Parsing document %s " % filename)
+        file=open(config.filename,"r")
+        line("Parsing document %s " % config.filename)
         doc = reader.fromStream(file)
+        if config.values:
+            applyValues(doc, config.values)
 
     ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
-    if ASK_MODE:
+    if config.ask.value:
         ComSystem.__EXEC_REALLY_DO="ask"
 except KeyboardInterrupt:
     ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).info("Leaving because of user signal")
@@ -156,13 +181,13 @@ try:
     else:
         line("Execution of enterprisecopy %s" % ("unknown"))
 
-    if (not copysetname and not modsetname) or copysetname:
-        line("Executing %s copysets %u" % (copysetname, len(ecopy.copysets)))
-        ecopy.doCopysets(copysetname)
+    if (not config.copyset.value and not config.modificationset.value) or config.copyset.value:
+        line("Executing %s copysets %u" % (config.copyset.value, len(ecopy.copysets)))
+        ecopy.doCopysets(config.copyset.value)
 
-    if (not copysetname and not modsetname) or modsetname:
-        line("Executing %s modificationsets %u" % (modsetname, len(ecopy.modificationsets)))
-        ecopy.doModificationsets(modsetname)
+    if (not config.copyset.value and not config.modificationset.value) or config.modificationset.value:
+        line("Executing %s modificationsets %u" % (config.modificationset.value, len(ecopy.modificationsets)))
+        ecopy.doModificationsets(config.modificationset.value)
 
     line("Successfully executed enterprisecopy.")
 except KeyboardInterrupt:
@@ -172,24 +197,28 @@ except Exception, e:
     ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Exception %s caught during copy." % e)
     import traceback
     traceback.print_exc()
-    if noundo:
+    if config.noundo.value:
         line("Skipping undo on request")
     else:
-        if not copysetname and not modsetname or modsetname:
-            line("Undoing executing %s modificationsets %u" % (modsetname, len(ecopy.modificationsets)))
+        if not config.copyset.value and not config.modificationset.value or config.modificationset.value:
+            line("Undoing executing %s modificationsets %u" % (config.modificationset.value, len(ecopy.modificationsets)))
             ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComModificationset.Modificationset.TAGNAME)
-            ecopy.undoModificationsets(copysetname)
-        if not copysetname and not modsetname or copysetname:
-            line("Undoing executing %s copysets %u" % (copysetname, len(ecopy.copysets)))
+            ecopy.undoModificationsets(config.copyset.value)
+        if not config.copyset.value and not config.modificationset.value or config.copyset.value:
+            line("Undoing executing %s copysets %u" % (config.copyset.value, len(ecopy.copysets)))
             ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Undoing %s." % ComCopyset.Copyset.TAGNAME)
-            ecopy.undoCopysets(modsetname)
+            ecopy.undoCopysets(config.modificationset.value)
 
     line("Errors during execution of enterprisecopy.")
     sys.exit(2)
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.6  2006-09-28 08:44:45  marc
+# Revision 1.7  2006-12-15 10:10:46  marc
+# added option handling
+# and overwriting parmeters.
+#
+# Revision 1.6  2006/09/28 08:44:45  marc
 # Changed the options
 #
 # Revision 1.5  2006/08/28 15:58:36  marc
