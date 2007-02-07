@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE enterprisecopy SYSTEM "file:/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy name='test-storage'>
+    <modificationset name="add_sourcedisk" type="storage" action="add" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="../lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py">
+        <disk name="Virtual Disks/atix/sourcedisk">
+            <properties>
+                <property name="size" value="10"/>
+                <property name="disk_group" value="146er"/>
+            </properties>
+        </disk>
+    </modificationset>
+    <copyset name="snap_sourcedisk" type="storage" action="add" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="../lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py">
+        <source type="volume"><disk name="Virtual Disks/atix/sourcedisk/ACTIVE"/></source>
+        <destination type="snapshot">
+            <disk name="sourcedisk_snap">
+                <properties>
+                    <!-- Fully or demand -->
+                    <property name="ALLOCATION_POLICY" value="Fully"/>
+                    <!-- vraid0, vraid1, vraid5 -->
+                    <property name="Redundancy" value="VRaid0"/>
+                </properties>
+            </disk>
+        </destination>
+    </copyset>
+    <modificationset name="snap_maplun_0" type="storage" action="map_luns" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="../lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py">
+        <disk name="Virtual Disks/atix/sourcedisk_snap">
+            <mapping lun="0">
+                <host name="server1"/>
+            </mapping>
+        </disk>
+    </modificationset>
+    <modificationset name="delete_snapshot" type="storage" action="delete_snapshot" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="../lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py">
+        <disk name="Virtual Disks/atix/sourcedisk_snap"/>
+    </modificationset>
+    <copyset name="clonedisk" type="storage" action="add_clone" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="../lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py">
+        <source type="volume"><disk name="Virtual Disks/atix/sourcedisk/ACTIVE"/></source>
+        <destination type="clone">
+            <disk name="sourcedisk_snap">
+                <properties>
+                    <!-- Fully or demand -->
+                    <property name="ALLOCATION_POLICY" value="Fully"/>
+                    <!-- vraid0, vraid1, vraid5 -->
+                    <property name="Redundancy" value="VRaid0"/>
+                    <!-- nowait -->
+                    <property name="nowait"/>
+                </properties>
+            </disk>
+        </destination>
+    </copyset>
+    <modificationset name="clone_maplun" type="storage" action="map_luns" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="../lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py">
+        <disk name="Virtual Disks/atix/sourcedisk_snap">
+            <mapping lun="1">
+                <host name="server1"/>
+            </mapping>
+        </disk>
+    </modificationset>
+    <modificationset name="delete_clone" type="storage" action="delete_clone" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="../lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py">
+        <disk name="Virtual Disks/atix/sourcedisk_snap"/>
+    </modificationset>
+</enterprisecopy>
