@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyset.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComCopyset.py,v 1.2 2007-02-09 12:24:13 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyset.py,v $
 
 import exceptions
@@ -22,42 +22,50 @@ from comoonics.ComJournaled import JournaledObject
 
 def getCopyset(element, doc):
     """ Factory function to create Copyset Objects"""
-    __type=element.getAttribute("type")
-    if __type == "partition":
-        from ComPartitionCopyset import PartitionCopyset
-        return PartitionCopyset(element, doc)
-    if __type == "lvm":
-        from ComLVMCopyset import LVMCopyset
-        return LVMCopyset(element, doc)
-    if __type == "filesystem":
-        from ComFilesystemCopyset import FilesystemCopyset
-        return FilesystemCopyset(element, doc)
-    if __type == "bootloader":
-        from ComBootloaderCopyset import BootloaderCopyset
-        return BootloaderCopyset(element, doc)
-    raise exceptions.NotImplementedError()
-
+    return Copyset(element, doc)
 
 class Copyset(DataObject):
     __logStrLevel__ = "Copyset"
     TAGNAME = "copyset"
+    def __new__(cls, *args, **kwds):
+        element=args[0]
+        __type=element.getAttribute("type")
+        if __type == "partition":
+            from ComPartitionCopyset import PartitionCopyset
+            cls=PartitionCopyset
+        elif __type == "lvm":
+            from ComLVMCopyset import LVMCopyset
+            cls=LVMCopyset
+        elif __type == "filesystem":
+            from ComFilesystemCopyset import FilesystemCopyset
+            cls=FilesystemCopyset
+        elif __type == "bootloader":
+            from ComBootloaderCopyset import BootloaderCopyset
+            cls=BootloaderCopyset
+        elif __type=="storage":
+            from comoonics.storage.ComStorageCopyset import StorageCopyset
+            cls=StorageCopyset
+        else:
+            raise exceptions.NotImplementedError()
+        return object.__new__(cls)
+
     def __init__(self, element, doc):
-        DataObject.__init__(self, element, doc)
-        
+        super(Copyset, self).__init__(element, doc)
+
     def doCopy(self):
         """starts the copy process"""
         pass
-    
+
     def undoCopy(self):
         """ Tries to undo the copy if implemented"""
         pass
-    
+
     def getSource(self):
         """returns the Source Object"""
         pass
-            
+
     def getDestination(self):
-        """ returns the Destination Object"""    
+        """ returns the Destination Object"""
         pass
 
 class CopysetJournaled(Copyset, JournaledObject):
@@ -79,9 +87,12 @@ class CopysetJournaled(Copyset, JournaledObject):
         just calls replayJournal
         """
         self.replayJournal()
-        
+
 # $Log: ComCopyset.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2007-02-09 12:24:13  marc
+# added new method and Storage Copyset
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.4  2006/06/30 12:39:46  marc
