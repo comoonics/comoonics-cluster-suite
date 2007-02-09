@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.4 2006-12-08 09:44:18 mark Exp $
+# $Id: ComDataObject.py,v 1.5 2007-02-09 11:28:30 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -21,7 +21,6 @@ import string
 from xml.dom import Element, Node
 from xml import xpath
 from xml.dom.ext import PrettyPrint
-
 
 import ComLog
 import XmlTools
@@ -47,6 +46,14 @@ class DataObject(object):
         else:
             self.element=element
         self.document=doc
+        self.properties=None
+        from comoonics.ComProperties import Properties as Props
+        properties=element.getElementsByTagName(Props.TAGNAME)
+        if len(properties) > 0:
+            self.properties=Props(properties[0], self.document)
+
+    def getProperties(self):
+        return self.properties
 
     def getElement(self):
         return self.element
@@ -125,9 +132,13 @@ class DataObject(object):
     """
 
     def searchReference(self, element, doc):
+        name="unnamed"
         try:
+            if element.hasAttribute("name"):
+                name=element.getAttribute("name")
             __xquery='//'
-            __xquery+=element.tagName
+#            __xquery+=element.tagName
+            __xquery+="*"
             __xquery+='[@id="'
             __xquery+=element.getAttribute("refid")
             __xquery+='"]'
@@ -140,7 +151,7 @@ class DataObject(object):
             self.appendChildren(__new, __childs)
             return __new
         except exceptions.Exception:
-            raise ComException("Element with id " + element.getAttribute("refid") \
+            raise ComException("Element "+element.tagName+" with name "+name+" and id " + element.getAttribute("refid") \
                                + " not found. Query: " + __xquery)
 
     def appendChildren(self, element, nodelist):
@@ -159,7 +170,10 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.4  2006-12-08 09:44:18  mark
+# Revision 1.5  2007-02-09 11:28:30  marc
+# added optional but general support for properties.
+#
+# Revision 1.4  2006/12/08 09:44:18  mark
 # added support for PartitionCopyobject
 #
 # Revision 1.3  2006/11/23 14:17:10  marc
