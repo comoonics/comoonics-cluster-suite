@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.2 2006-12-08 09:42:04 mark Exp $
+# $Id: ComModificationset.py,v 1.3 2007-02-09 12:26:12 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModificationset.py,v $
 
 import exceptions
@@ -30,18 +30,20 @@ def getModificationset(element, doc):
     if __type == "filesystem":
         from ComFilesystemModificationset import FilesystemModificationset
         return FilesystemModificationset(element, doc)
-    if __type == "partition":
+    elif __type == "partition":
         from ComPartitionModificationset import PartitionModificationset
         return PartitionModificationset(element, doc)
+    elif __type == "storage":
+        from comoonics.storage.ComStorageModificationset import StorageModificationset
+        return StorageModificationset(element, doc)
     raise exceptions.NotImplementedError("Modifcicationset for type " + __type + " is not implemented")
-
 
 class Modificationset(DataObject):
     TAGNAME = "modificationset"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
         self.modifications=list()
-        log.debug("Modificationset CWD: " + os.getcwd())
+        #log.debug("Modificationset CWD: " + os.getcwd())
 
     def doModifications(self):
         """starts the modification process"""
@@ -78,9 +80,9 @@ class Modificationset(DataObject):
     """
     privat methods
     """
-    def createModificationsList(self, emods, doc):
+    def createModificationsList(self, emods, doc, *args, **kwds):
         for i in range(len(emods)):
-            self.modifications.append(ComModification.getModification(emods[i], doc))
+            self.modifications.append(ComModification.getModification(emods[i], doc, *args, **kwds))
         return self.modifications
 
 
@@ -106,7 +108,10 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComModificationset.py,v $
-# Revision 1.2  2006-12-08 09:42:04  mark
+# Revision 1.3  2007-02-09 12:26:12  marc
+# added StorageModificationSet
+#
+# Revision 1.2  2006/12/08 09:42:04  mark
 # added support for PartitionModificationset
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
