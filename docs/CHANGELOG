@@ -4,13 +4,14 @@ IDEAS:
 	* discuss changelog format
 	* define process for changelog
 
-WARNING: All Changelogs have to be the same format as they are automatically added to the specfile!!!
+WARNING:
+    All Changelogs have to be the same format as they are automatically added to the specfile!!!
+    No empty lines between changelogs.
 
 CHANGES:
 comoonics-cs-py:
-* Fr Feb 09 2007 MG <grimme@atix.de>, 0.1-21:
+* Fri Feb 09 2007 MG <grimme@atix.de>, 0.1-21:
    added com-dsh
-
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
    added properties (ComProperties)
 
