@@ -1,0 +1,14 @@
+  <presentations>
+    <presentation>
+      <hostid>39800710B4080560D62E100000A000000000832F</hostid>
+      <lunnumber>1</lunnumber>
+      <hostname>\Hosts\WebPool\test1</hostname>
+      <scsireservationtype>none</scsireservationtype>
+    </presentation>
+    <presentation>
+      <hostid>21800710B4080560D62E100000A0000000005E0A</hostid>
+      <lunnumber>26</lunnumber>
+      <hostname>\Hosts\WebPool\backup</hostname>
+      <scsireservationtype>none</scsireservationtype>
+    </presentation>
+  </presentations>

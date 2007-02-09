@@ -1,0 +1,67 @@
+<object>
+  <objectid>27210710B4080560D62E100001D000000000F502</objectid>
+  <objectname>\Virtual Disks\WebPool\clsboot\Snap1_clsboot</objectname>
+  <objecttype>snapshot</objecttype>
+  <objectwwn></objectwwn>
+  <objecthexuid>6005-08b4-0010-2ed6-0000-d001-02f5-0000</objecthexuid>
+  <xmlintrcall>true</xmlintrcall>
+  <partitionname>Snap1_clsboot</partitionname>
+  <uid>8487.7.16.1610942644.1060566.53249.49610752</uid>
+  <parentstoragecellinfo>
+    <storagecellname>EVA5000</storagecellname>
+    <storagecellid>08000710B4080560D62E10000080000000001C00</storagecellid>
+    <storagecellwwn>5000-1FE1-5004-A160</storagecellwwn>
+  </parentstoragecellinfo>
+  <mirrorexists>no</mirrorexists>
+  <objectparentuid>0.7.16.1610942644.1060566.40960.104792064</objectparentuid>
+  <objectparenthexuid>6005-08b4-0010-2ed6-0000-a000-063f-0000</objectparenthexuid>
+  <objectparentid>00000710B4080560D62E100000A0000000003F06</objectparentid>
+  <comments></comments>
+  <creationdatetime>17-Jan-2007 03:24:36</creationdatetime>
+  <timestampmodify>3024642687</timestampmodify>
+  <previousclonesourcevdiskid>0000000000000000000000000000000000000000</previousclonesourcevdiskid>
+  <previousclonesourcevdiskhexuid>0000-0000-0000-0000-0000-0000-0000-0000</previousclonesourcevdiskhexuid>
+  <familyname>clsboot</familyname>
+  <wwlunid>6005-08b4-0010-2ed6-0000-d001-02f5-0000</wwlunid>
+  <onlinecontroller>
+    <controllername>Controller A</controllername>
+    <controllerid>00000708B4080550D62E10000000000000000000</controllerid>
+  </onlinecontroller>
+  <operationalstate>good</operationalstate>
+  <operationalstatedetail>operating_normally</operationalstatedetail>
+  <allocatedcapacity>0</allocatedcapacity>
+  <allocatedcapacityblocks>0</allocatedcapacityblocks>
+  <virtualdisktype>demand_allocated_snapshot</virtualdisktype>
+  <requestedcapacity>0</requestedcapacity>
+  <requestedcapacityblocks>0</requestedcapacityblocks>
+  <sharingrelationship>snapshot</sharingrelationship>
+  <sharinginformation>
+    <parentvdiskhexuid>6005-08b4-0010-2ed6-0000-a000-0640-0000</parentvdiskhexuid>
+    <parentvdiskid>7A200710B4080560D62E100000A0000000004006</parentvdiskid>
+    <parentvdiskname>\Virtual Disks\WebPool\clsboot</parentvdiskname>
+    <childvdiskhexuid>n/a</childvdiskhexuid>
+    <childvdiskid>n/a</childvdiskid>
+    <childvdiskname>n/a</childvdiskname>
+  </sharinginformation>
+  <redundancy>vraid5</redundancy>
+  <writecacheactual>writeback</writecacheactual>
+  <writecache>writeback</writecache>
+  <vdisksecondarystate>none</vdisksecondarystate>
+  <mirrorcache>mirrored</mirrorcache>
+  <readcache>enable</readcache>
+  <virtualdiskpresented>yes</virtualdiskpresented>
+  <presentations>
+    <presentation>
+      <hostid>21800710B4080560D62E100000A0000000005E0A</hostid>
+      <lunnumber>1</lunnumber>
+      <hostname>\Hosts\WebPool\backup</hostname>
+      <scsireservationtype>none</scsireservationtype>
+    </presentation>
+  </presentations>
+  <writeprotect>disable</writeprotect>
+  <scvdenable>enable</scvdenable>
+  <osunitid>0</osunitid>
+  <diskgroupname>\Disk Groups\146er</diskgroupname>
+  <diskgroupid>00010710B4080560D62E10000080000000001E00</diskgroupid>
+  <preferredpath>no_preference</preferredpath>
+</object>

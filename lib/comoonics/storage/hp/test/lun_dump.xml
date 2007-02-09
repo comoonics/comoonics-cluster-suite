@@ -1,0 +1,12 @@
+<object>
+  <objectid>E7880710B4080560D62E100000A0000000001207</objectid>
+  <objectname>\Hosts\WebPool\node1\11</objectname>
+  <objecttype>presentedunit</objecttype>
+  <objectwwn></objectwwn>
+  <objecthexuid>6005-08b4-0010-2ed6-0000-a000-0712-0000</objecthexuid>
+  <virtualdiskname>\Virtual Disks\WebPool\clsvarphp\ACTIVE</virtualdiskname>
+  <virtualdiskid>7E200710B4080560D62E100000A0000000005A06</virtualdiskid>
+  <hostname>\Hosts\WebPool\node1</hostname>
+  <hostid>11800710B4080560D62E100000A0000000001006</hostid>
+  <lunnumber>11</lunnumber>
+</object>

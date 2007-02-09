@@ -1,0 +1,34 @@
+<object>
+  <objectid>00010710B4080560D62E10000080000000001E00</objectid>
+  <objectname>\Disk Groups\146er</objectname>
+  <objecttype>diskgroupfolder</objecttype>
+  <objectwwn></objectwwn>
+  <objecthexuid>6005-08b4-0010-2ed6-0000-8000-001e-0000</objecthexuid>
+  <diskgroupname>146er</diskgroupname>
+  <uid>256.7.16.1610942644.1060566.32768.1966080</uid>
+  <objectparentuid>1542.6.6.101058054.101058054.101058054.101058054</objectparentuid>
+  <objectparenthexuid>0606-0606-0606-0606-0606-0606-0606-0606</objectparenthexuid>
+  <objectparentid>0606060606060606060606060606060606060606</objectparentid>
+  <comments></comments>
+  <totaldisks>88</totaldisks>
+  <levelingstate>in_progress</levelingstate>
+  <levelingprogress>99</levelingprogress>
+  <rssdiskstate>none</rssdiskstate>
+  <srclevelactual>vraid0</srclevelactual>
+  <diskdrivetype>online</diskdrivetype>
+  <requestedsparepolicy>double</requestedsparepolicy>
+  <currentsparepolicy>double</currentsparepolicy>
+  <totalstoragespace>24075370496</totalstoragespace>
+  <totalstoragespacegb>11480.03</totalstoragespacegb>
+  <usedstoragespace>20818325504</usedstoragespace>
+  <usedstoragespacegb>9926.95</usedstoragespacegb>
+  <occupancyalarmlevel>95</occupancyalarmlevel>
+  <operationalstate>good</operationalstate>
+  <operationalstatedetail>initialized_ok</operationalstatedetail>
+  <vraid0storagespace>3247538176</vraid0storagespace>
+  <vraid0storagespacegb>1548.55</vraid0storagespacegb>
+  <vraid1storagespace>1624244224</vraid1storagespace>
+  <vraid1storagespacegb>774.50</vraid1storagespacegb>
+  <vraid5storagespace>2598191104</vraid5storagespace>
+  <vraid5storagespacegb>1238.91</vraid5storagespacegb>
+</object>
