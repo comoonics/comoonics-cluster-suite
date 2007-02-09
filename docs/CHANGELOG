@@ -1,0 +1,37 @@
+This is the changelog for the comoonics-clustersuite python software
+
+IDEAS:
+	* discuss changelog format
+	* define process for changelog
+
+WARNING: All Changelogs have to be the same format as they are automatically added to the specfile!!!
+
+CHANGES:
+comoonics-cs-py:
+* Fr Feb 09 2007 MG <grimme@atix.de>, 0.1-21:
+   added com-dsh
+
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
+   added properties (ComProperties)
+
+comoonics-ec-py
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
+  changed that modset and copysets can be mixed not for copysets then modsets.
+
+comoonics-storage-py
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
+  added storage copyset/modset stuff
+  initial release
+
+comoonics-storage-hp-py
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
+  added implementation for eva
+
+  SSSU simulator for hp-eva-sssu (Storage scripting)
+
+  initial release
+
+TODO:
+
+####################
+# $Log$
