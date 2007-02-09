@@ -7,34 +7,74 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.5 2006-12-14 09:12:53 mark Exp $
+# $Id: ComDisk.py,v 1.6 2007-02-09 12:28:49 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
 import exceptions
 import parted
 
-
 import ComSystem
-import ComParted
-from ComPartition import Partition
 from ComDataObject import DataObject
 from ComExceptions import *
+import ComParted
+from ComPartition import Partition
 
 CMD_SFDISK = "/sbin/sfdisk"
 CMD_DD="/bin/dd"
 
-
 class Disk(DataObject):
+    """ Abstract Disk Baseclass that creates a disk a StorageDisk or HostDisk on demand """
+    def __new__(cls, *args, **kwds):
+        if cls==Disk.__class__:
+            cls=StorageDisk
+            element=args[0]
+            name=element.getAttribute("name")
+            if name.startswith("/"):
+                cls=HostDisk
+        return object.__new__(cls)
+    def __init__(self, element, doc=None):
+        """ default Constructur """
+        super(Disk, self).__init__(element, doc)
+
+class StorageDisk(Disk):
+    MAPPING_TAG_NAME="mapping"
+    HOST_TAG_NAME="host"
+    """ Disk represents a disk on a storage system """
+    def __init__(self, element, doc=None):
+        """ default constructur called by __new__ """
+        super(StorageDisk, self).__init__(element, doc)
+    def getHostNames(self, lun):
+        """ returns all hostnames as list for the given lun """
+        mappings=self.getElement().getElementsByTagName(self.MAPPING_TAG_NAME)
+        if type(lun)==int:
+            lun="%u" %(lun)
+        hosts=list()
+        for mapping in mappings:
+            if mapping.getAttribute("lun")==lun:
+                ehosts=mapping.getElementsByTagName(self.HOST_TAG_NAME)
+                for ehost in ehosts:
+                    hosts.append(ehost.getAttribute("name"))
+        return hosts
+
+    def getLuns(self):
+        """ returns all defined luns in this disk """
+        luns=list()
+        mappings=self.getElement().getElementsByTagName(self.MAPPING_TAG_NAME)
+        for mapping in mappings:
+            luns.append(mapping.getAttribute("lun"))
+        return luns
+
+class HostDisk(Disk):
     """ Disk represents a raw disk """
-    def __init__(self, element, doc):
+    def __init__(self, element, doc=None):
         """ creates a Disk object
         """
-        DataObject.__init__(self, element, doc)
+        super(HostDisk, self).__init__(element, doc)
         self.log=ComLog.getLogger("Disk")
 
     def getLog(self):
@@ -63,6 +103,15 @@ class Disk(DataObject):
         if not self.exists():
             raise ComException("Device %s not found" % self.getDeviceName())
         dev=parted.PedDevice.get(self.getDeviceName())
+<<<<<<< ComDisk.py
+        try:
+            disk=parted.PedDisk.new(dev)
+            partlist=phelper.get_primary_partitions(disk)
+            for part in partlist:
+                self.appendChild(Partition(part, self.getDocument()))
+        except parted.error:
+                self.log.debug("no partitions found")
+=======
         try:
             disk=parted.PedDisk.new(dev)
             partlist=phelper.get_primary_partitions(disk)
@@ -71,6 +120,7 @@ class Disk(DataObject):
         except parted.error:
                 self.log.debug("no partitions found")
 
+>>>>>>> 1.5
 
     def createPartitions(self):
         """ creates new partition table """
@@ -183,8 +233,49 @@ class Disk(DataObject):
         __cmd.append(self.getDeviceName())
         return " ".join(__cmd)
 
+def main():
+    disk_dumps=[ """
+        <disk name="Virtual Disks/atix/sourcedisk">
+            <properties>
+                <property name="size" value="10"/>
+                <property name="disk_group" value="146er"/>
+            </properties>
+        </disk>
+    """,
+    """
+        <disk name="Virtual Disks/atix/sourcedisk_snap">
+            <mapping lun="1">
+                <host name="server1"/>
+            </mapping>
+        </disk>
+    """,
+    """
+        <disk name="/dev/VolGroup00/LogVol00"/>
+    """]
+    for disk_dump in disk_dumps:
+        testDiskDump(disk_dump)
+
+def testDiskDump(dump):
+    print "Parsing dump..."
+    print dump
+    from xml.dom.ext.reader import Sax2
+    from comoonics.ComDisk import Disk
+    reader=Sax2.Reader(validate=0)
+    doc=reader.fromString(dump)
+    print "Creating disk..."
+    disk=Disk(doc.documentElement, doc)
+    print disk
+
+if __name__ == '__main__':
+    main()
+
 # $Log: ComDisk.py,v $
-# Revision 1.5  2006-12-14 09:12:53  mark
+# Revision 1.6  2007-02-09 12:28:49  marc
+# defined two implementations of disk
+# - HostDisk (for disks in servers)
+# - StorageDisks (for virtual disks on storagedevices)
+#
+# Revision 1.5  2006/12/14 09:12:53  mark
 # bug fix
 #
 # Revision 1.4  2006/12/08 09:46:16  mark
