@@ -5,7 +5,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.3 2006-12-13 20:17:15 marc Exp $
+# $Id: XmlTools.py,v 1.4 2007-02-09 11:35:44 marc Exp $
 
 import warnings
 from xml.dom import Node
@@ -138,6 +138,16 @@ def add_element_to_node_sorted(child, elem, key):
     elem.appendChild(child)
     return elem
 
+def getTextFromElement(element):
+    """ Returns the value of the first textnode found in the given element. If no textnode found None is returned """
+    return_text=None
+    children=element.childNodes
+    for child in children:
+        if child and child.nodeType == Node.TEXT_NODE:
+            return_text=child.nodeValue
+    return return_text
+
+
 def main():
     xml="""<?xml version="1.0" encoding="UTF-8"?>
 <localclone>
@@ -146,23 +156,34 @@ def main():
   <kernel version="2.6.9-34.0.1.ELsmp"/>
 </localclone>
     """
+
     from xml.dom.ext import PrettyPrint
     from xml.dom.minidom import parseString
     doc=parseString(xml)
     xpaths={"/localclone/node/@name": "myname",
             "/localclone/destdisks/disk/@name": "/dev/sda1"}
-    print "-----------_Before_-------------"
+    print "-----------_Before(overwrite_element_with_xpaths)_-------------"
     PrettyPrint(doc)
     overwrite_element_with_xpaths(doc.documentElement, xpaths)
     print "-----------_After(overwrite_element_with_xpaths)_--------------"
     PrettyPrint(doc)
+
+    xml2="<xyz>abcd</xyz>"
+    xml3="""<xyz abcd="abs"/>"""
+    doc=parseString(xml2)
+    print "getTextFromElement(%s): %s" %(xml2, getTextFromElement(doc.documentElement))
+    doc=parseString(xml3)
+    print "getTextFromElement(%s): %s" %(xml3, getTextFromElement(doc.documentElement))
 
 if __name__ == '__main__':
     main()
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.3  2006-12-13 20:17:15  marc
+# Revision 1.4  2007-02-09 11:35:44  marc
+# added getTextFromElement
+#
+# Revision 1.3  2006/12/13 20:17:15  marc
 # added tests and ElementFilter
 #
 # Revision 1.2  2006/12/08 09:47:40  mark
