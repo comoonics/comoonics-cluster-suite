@@ -1,0 +1,1424 @@
+#!/usr/bin/env python2.3
+"""
+ComDSH - The Python Distributed Shell based on pydsh but extended for redhat clustersuite
+
+com-dsh is a toolset to help simplify administration of multiple remote systems.
+
+The com-dsh command allows you to run one command on multiple hosts in parallel
+and to manage your SSH Public/ Private Keys. It also automatically detects if a
+cluster is running and makes a hostlist for all nodes if -a is given
+
+The com-dcp command enables scp like functions to/from multiple hosts simultaneously.
+"""
+
+# ------------------------------------------------------------------------------
+# About                                                                      {{{
+# Filename:      pydsh.py
+version = "0.5.3"
+# Created:       24 Mar 2004
+# Last Modified: 07 Jan 2007 Marc Grimme <grimme@atix.de>
+# Maintainer:    Marc Grimme (grimme@atix.de)
+# Copyright:     (C) 2004-2005 Dave Vehrs
+#                (C) 2007 Marc Gimme
+#
+#                This program is free software; you can redistribute it and/or
+#                modify it under the terms of the GNU General Public License as
+#                published by the Free Software Foundation; either version 2 of
+#                the License, or (at your option) any later version.
+#
+#                This program is distributed in the hope that it will be useful,
+#                but WITHOUT ANY WARRANTY; without even the implied warranty of
+#                MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#                GNU General Public License for more details.
+#
+#                You should have received a copy of the GNU General Public
+#                License along with this program; if not, write to the Free
+#                Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+#                MA  02111-1307  USA
+#
+# Note:          Inspired by DSH
+#                (http://freshmeat.net/redir/dsh/41161/url_tgz/dsh-2.0.1.tar.gz)
+#
+# Dependencies:  0.999 Pexpect (http://pexpect.sourceforge.net)
+#                Local Applications:
+#                  RSH, SSH or Telnet (SSH required for SCP functions)
+#                Remote Applications:
+#                  /bin/bash
+#                  /bin/echo
+#                  /bin/mv
+#                  /bin/sed
+#                  /bin/stty
+#                  /bin/su
+#                                                                            }}}
+# ------------------------------------------------------------------------------
+# Import modules                                                             {{{
+
+import fileinput, fcntl, getpass, os, pexpect, re
+import socket, struct, sys, termios, threading, time
+from optparse import OptionParser, OptionGroup, make_option
+
+#                                                                            }}}
+# ------------------------------------------------------------------------------
+# Configuration                                                              {{{
+
+# Default host list for the -a option.
+defaultgroup_dir = "/etc/comoonics/groups"
+homegroup_dir = "%s/.dsh/groups" %(os.environ['HOME'])
+
+allgroup_file = "%s/all" %(defaultgroup_dir)
+
+# Default shell protocol to use RSH, SSH or Telnet.
+proto = "SSH"
+
+# Default copy protocol to use SCP or RCP.
+proto_scp = "SCP"
+
+# Set maximum number of threads to spawn
+max_threads = 64
+
+# Set maximum number of threads to spawn for scp sessions
+max_threads_scp = 32
+
+# SSH Host key checking
+# Methods:   Ask      For uncertain or failed host key tests, prompt for action.
+#                     A ==  Yes to this one and any others that follow.
+#                     Y ==  Yes to this one
+#                     N ==  No to this one
+#                     S ==  Strict, no to this one and any others that follow.
+#            Accept   Automatically remove old keys and install new ones
+#            Strict   Automatically reject failed keys and remove host from
+#                     hostlist.
+ssh_hostkey = "ask"
+
+# Config Directory for SSH files.
+# Default $HOME/.ssh
+SSH_CONFIG_DIR = os.environ['HOME'] + '/.ssh/'
+
+# Location of users SSH known hosts file.
+# Default $HOME/.ssh/known_hosts
+SSH_KNOWNHOSTS_FILE = SSH_CONFIG_DIR + "known_hosts"
+
+# Enable automatic display of errors in pdb
+use_pdb = "yes"
+
+#                                                                            }}}
+# ------------------------------------------------------------------------------
+# Catch exceptions and send them to pdb                                      {{{
+
+if use_pdb == "yes" :
+    import IPython.ultraTB
+    sys.excepthook = IPython.ultraTB.FormattedTB(mode='Verbose',
+                               color_scheme='Linux', call_pdb=1)
+#                                                                            }}}
+# ------------------------------------------------------------------------------
+# System Defaults                                                            {{{
+
+sema_max_threads = threading.BoundedSemaphore(value=max_threads)
+mutex = threading.RLock()
+
+#                                                                            }}}
+# ------------------------------------------------------------------------------
+# Some prompts to watch for                                                  {{{
+
+# NOTE: If you experience difficulty with the prompt being detected on the
+# remote host, adjust the CMD_PRMPT variable to match your syntax.
+CMD_PRMPT          = re.compile('^.*?[^ ][$#%]$\Z', re.M)
+CMD_PRMPT_INT      = re.compile('^[\S@]*?[$]$\Z', re.M)
+CONNECTION_REFUSED = re.compile('^\s*?Connection refused.*\n.*?[^ ][$#%]$\Z',
+                                re.M)
+LOGIN_PROMPT       = re.compile('^\s*?[Ll]ogin:$\Z', re.M)
+PASSWORD_PROMPT    = re.compile('^\s*?[Pp]assword:$\Z', re.M)
+SSH_NEWKEY_PROMPT  = re.compile('Are you sure you want to continue ' + \
+                                'connecting (yes/no)?')
+ssh_hostkey_FAIL   = re.compile('^Host key verification failed.\s*?\r\n' + \
+                                '\S.*?[^ ][$#%]$\Z', re.M)
+SSH_KEYGEN_PROMPT  = re.compile('^Generating public/private.*', re.M)
+SU_LOGINFAIL       = re.compile('su: incorrect password\s*\r\n\S.*[$#%]\s*\Z',
+                                re.M)
+SU_DEB_LOGINFAIL   = re.compile('su: Authentication failure.\s*\r\n\s*?' + \
+                                'Sorry.\s*?\r\n\S.*?[^ ][$#%]$\Z', re.M)
+USER_PROMPT        = re.compile('^\s*?[Uu]ser:$\Z', re.M)
+#                                                                            }}}
+# ------------------------------------------------------------------------------
+# Functions
+
+def command_options (appname, usage):
+    """
+    Function: command_options
+
+    Configure command line options
+    """
+
+    # Options
+    cmd_options = [make_option("--timeout", action="store", type="int",
+                               dest="timeout", default=5, metavar="<SEC>",
+                               help="Set timeout."),
+                   make_option("-v", "--verbose", action="count",
+                               dest="verbose", help="Verbose (may be " + \
+                               " specified up to 5 times (i.e. -vvvvv)).")]
+    cmd_parser = OptionParser(option_list=cmd_options, usage=usage,
+                              version="Version: %s" % (version))
+
+    # Host Options
+    host_options = OptionGroup(cmd_parser, "Host Options")
+    host_options.add_option("-a", "--ALL", action="store_true",
+                            dest="allgroup", default=False,
+                            help="Add all nodes in %s to the hostlist."
+                            % (allgroup_file))
+    host_options.add_option("-N", "--nocluster", action="store_true",
+                            dest="nocluster", default=False,
+                            help="Disables automatic cluster detection.")
+    host_options.add_option("-g", "--group", action="append", type="string",
+                            dest="group", metavar="<FILE>",
+                            help="Adds all hosts in <FILE> to the hostlist. File comes either from /etc/dsh/group or ~/.dsh/group/")
+    host_options.add_option("-H", "--hostfile", action="append", type="string",
+                            dest="hostfiles", metavar="<FILE>",
+                            help="Adds all hosts in <FILE> to the hostlist.")
+    host_options.add_option("-i", "--ignorefailed", action="store_true",
+                            dest="ign_failed", default=False,
+                            help="Continue even if some hosts fail basic " + \
+                            "connectivity tests.")
+    host_options.add_option("-n", action="append", type="string", dest="nodes",
+                            metavar="<NODE>",help="Adds <NODE> to the " + \
+                            "hostlist.    Nodes may be sprecified as " + \
+                            "hostnames, or ip addresses (individually" + \
+                            " or as a range i.e. node01-10 or " + \
+                            "192.168.0.1-254).")
+    cmd_parser.add_option_group(host_options)
+
+    # Shell Options
+    if appname == "com-dsh" :
+        shell_options = OptionGroup(cmd_parser, "Shell Options")
+        shell_options.add_option("--dryrun", action="store_true",
+                                 dest="dryrun", default=False,
+                                 help="Lists nodes where the command will " + \
+                                      "be executed but DOES NOT run it.")
+        shell_options.add_option("--pass", action="store_true",
+                                 dest="usepass", default=False,
+                                 help="Prompt for login account password " + \
+                                      "(default is to assume SSH or RSH is " + \
+                                      "handling authentication through " + \
+                                      "private keys or host based " + \
+                                      "authentication).")
+        shell_options.add_option("--proto", action="store", type="string",
+                                 default=proto, dest="proto", metavar="<PROTO>",
+                                 help="Protocol to use (Telnet, RSH, or SSH).")
+        cmd_parser.add_option_group(shell_options)
+
+    # SCP Options
+    if appname == "com-dcp" :
+        scp_options = OptionGroup(cmd_parser, "SCP Options")
+        scp_options.add_option("--scp_mode", action="store", type="string",
+                               dest="scp_mode", default="get", metavar="<MODE>",
+                               help="SCP Mode: Get or Send")
+        scp_options.add_option("--scp_local", action="store", type="string",
+                               dest="scp_local", default="",
+                               metavar="<TARGET>",
+                               help="SCP local file or directory to send or" + \
+                               " store received file(s) in.")
+        scp_options.add_option("--scp_remote", action="store", type="string",
+                               dest="scp_remote", default="",
+                               metavar="<TARGET>",
+                               help="SCP remote file to get, or directory" + \
+                               " to store received file(s) in.")
+        scp_options.add_option("-r", "--recursive", action="store_true",
+                               dest="scp_recursive", default=False,
+                               help="Recursively copy directories.")
+        scp_options.add_option("--scp_proto", action="store", type="string",
+                               dest="scp_proto", default="scp",
+                               metavar="<PROTO>", help="SCP PROTO: SCP or RCP")
+        cmd_parser.add_option_group(scp_options)
+
+    # SSH Options
+    if appname == "com-dsh" :
+        ssh_options = OptionGroup(cmd_parser, "SSH Options")
+        ssh_options.add_option("--ssh_hostkey", action="store", type="string",
+                               dest="ssh_hostkey", default=ssh_hostkey,
+                               metavar="<ACTION>", help="SSH Host Key " + \
+                               "Checking. Options: accept, ask, or strict")
+        ssh_options.add_option("--ssh_keytype", action="store", type="string",
+                               dest="ssh_keytype", default="dsa",
+                               metavar="<TYPE>", help="SSH Key type for " + \
+                               "gen, install or revoke. Options: RSA or DSA.")
+        ssh_options.add_option("--ssh_pubkey", action="store", type="string",
+                               dest="ssh_pubkey", default="none",
+                               metavar="<ACTION>", help="SSH Public Key " + \
+                               "management. Options: gen, install, or revoke.")
+        cmd_parser.add_option_group(ssh_options)
+
+    # User Options
+    user_options = OptionGroup(cmd_parser, "User Options")
+    if appname == "com-dsh" :
+        user_options.add_option("-s", "--sudo", action="store_true",
+                                dest="sudo", default=False,
+                                help="After logging in, switch to root user.")
+    user_options.add_option("--user", action="store", type="string",
+                            dest="user", default=os.environ['USER'],
+                            metavar="<USER>", help="User to connect as.")
+    cmd_parser.add_option_group(user_options)
+    return cmd_parser
+
+def display_output (list_good, host_output, list_connfail, list_sessfail,
+                    namelen, verbose, width):
+    """
+    Function: display_output
+
+    Formats and displays results.
+    """
+
+    # Output Successful connections.
+    if len(list_good) > 0 :
+        if verbose >= 1 :
+            header_line = "\n%-" + str(namelen) + "s | Output:"
+        else :
+            header_line = "%-" + str(namelen) + "s | Output:"
+        print header_line % ("Host")
+        print "-" * (namelen + 1) + "+" + "-" * ( width - (namelen + 4))
+        for host in list_good:
+#            if verbose >= 2 :
+#                print '---> HOST: %s' % (host)
+            output_list = re.split('\r\n', host_output[host])
+            if len(output_list) > 0 :
+                firstline = output_list.pop(0)
+                if firstline != ' ' and firstline != '' :
+                    output_list.insert(0, firstline)
+                lastline = output_list.pop()
+                if lastline != "" :
+                    output_list.append(lastline)
+                for line in output_list :
+                    slashr_stripper = re.compile('\\r')
+                    clean_line = slashr_stripper.sub('', line)
+                    slashr_stripper = re.compile('%')
+                    clean_line = slashr_stripper.sub('%%', clean_line)
+#                    if verbose >= 2 :
+#                        print '-------> Line: --|%s|--' % (clean_line)
+                    output = "%-" + str(namelen) + "s | %s" % (clean_line)
+                    print output % (host)
+                if len(output_list) > 1:
+                    print "-" * (namelen + 1) + "+" + "-" * \
+                          ( width - (namelen + 4))
+            else :
+                output_line = "%-" + str(namelen) + "s | Command returned " + \
+                              "no output."
+                print output_line % (host)
+    elif verbose >= 3: print >> sys.stderr, "No hosts contacted."
+
+
+    # Output those hosts that failed connectivity tests.
+    if len(list_connfail) > 0 and verbose >= 1:
+        header_line = "\n%-" + str(namelen) + "s | The following hosts " + \
+                      "failed connectivity tests:"
+        print >> sys.stderr, header_line % ("Host")
+        print "-" * (namelen + 1) + "+" + "-" * ( width - (namelen + 4))
+        for host in list_connfail:
+            output_line = "%-" + str(namelen) + "s | %s" % \
+                          (list_connfail[host])
+            print >> sys.stderr, output_line % (host.capitalize())
+    elif verbose >= 3: print "\nAll hosts reachable."
+
+    # Output those hosts that had post TCP connect session errors.
+    if len(list_sessfail) > 0:
+        header_line = "\n%-"+str(namelen)+"s | The following hosts had " + \
+                      "session related issues:"
+        print >> sys.stderr, header_line % ("Host")
+        print "-" * (namelen + 1) + "+" + "-" * ( width - (namelen + 4))
+        for host in list_sessfail:
+            output_line = "%-" + str(namelen) + "s | %s" % \
+                          (list_sessfail[host])
+        print >> sys.stderr, output_line % (host.capitalize())
+    elif verbose >= 3:
+        print >> sys.stderr, "\nNo bad hosts."
+
+def host_loop (command, options, hostlist, password, pass_root, win_width):
+    """
+    Function: host_loop
+
+    Performs the work of looping over the hosts and running the command.
+    """
+    global ssh_hostkey
+    output_list      = {}
+    error_list       = {}
+    host_thread_list = []
+
+    class Hostthread (threading.Thread):
+        """
+        Class: Thread_Host
+
+        This is the thread than manages the remote sessions.
+        """
+
+        def __init__ (self, command, options, host,  password, pass_root,
+                      win_width):
+            """
+            Function: __init__ (for Thread_Host)
+
+            Set the vars.
+            """
+            threading.Thread.__init__(self)
+            self.command   = command
+            self.dryrun    = options.dryrun
+            self.host      = host
+            self.proto     = options.proto
+            self.sudo      = options.sudo
+            self.timeout   = options.timeout
+            self.user      = options.user
+            self.verbose   = options.verbose
+            self.password  = password
+            self.pass_root = pass_root
+            self.win_width = win_width
+
+        def run (self):
+            """
+            Function: run (for Thread_host)
+
+            This gets called for Thread_host.start()
+            """
+            sema_max_threads.acquire()
+            # Remote Connection and Authentication
+            if self.verbose >= 2:
+                mutex.acquire()
+                print '  Spawning connection attempt to %s over %s.' % (
+                      self.host.capitalize(), self.proto.upper())
+                mutex.release()
+            remote, remote_errmsg = sess_remote(self)
+            if remote == None:
+                mutex.acquire()
+                error_list[self.host] = remote_errmsg
+                mutex.release()
+                sema_max_threads.release()
+                return
+            else:
+
+                # Su to root account
+                if self.sudo :
+                    if self.verbose >= 2:
+                        mutex.acquire()
+                        print '    (%s) Switching to root user.' % (self.host)
+                        mutex.release()
+                    su_success = sess_su(remote, self.host, self.pass_root,
+                                         self.timeout, self.verbose)
+                    if su_success != True:
+                        mutex.acquire()
+                        error_list[self.host] = 'ERROR :: %s.' % (su_success)
+                        mutex.release()
+                        remote.sendline ('exit')
+                        remote.expect(pexpect.EOF)
+                        remote.close()
+                        sema_max_threads.release()
+                        return
+                    else:
+                        if self.verbose >= 3:
+                            print '    (%s) Access Granted.' % (self.host)
+                remote.sendline ('unset PROMPT_COMMAND && export ' + \
+                                 'PS1=\"\u@\h$ \"')
+                remote.expect     (CMD_PRMPT_INT)
+                remote.sendline ('stty columns %s' % (self.win_width))
+                remote.expect     (CMD_PRMPT_INT)
+
+                # Run Command
+                if self.verbose >= 2:
+                    mutex.acquire()
+                    print '    (%s) Executing: %s ' % (self.host, self.command)
+                    mutex.release()
+                if self.dryrun:
+                    mutex.acquire()
+                    output_list[self.host] = "DRYRUN:  %s-%s" % (self.host,
+                                                                 self.command)
+                    mutex.release()
+                else:
+                    remote.sendline('%s' % (self.command))
+                    time.sleep(0.1)
+                    rmtcmd_pl = remote.compile_pattern_list([pexpect.TIMEOUT,
+                                               PASSWORD_PROMPT, CMD_PRMPT_INT])
+                    pass_count = 0
+                    while True:
+                        remote_cmd = remote.expect_list(rmtcmd_pl, self.timeout)
+                        if remote_cmd == 0: # Timeout
+                            mutex.acquire()
+                            error_list[self.host] = "remote_cmd failure " + \
+                                             "(Timeout): %s" % (remote.after)
+                            remote.sendline ('exit')
+                            remote.expect(pexpect.EOF, timeout=None)
+                            print remote.before
+                            mutex.release()
+                            remote.close()
+                            sema_max_threads.release()
+                            return
+                        if remote_cmd == 1: # When prompted for password....
+                            if pass_count < 1 and self.password:
+                                remote.sendline (self.password)
+                                pass_count = pass_count + 1
+                            else:
+                                mutex.acquire()
+                                print 'Asking for password for account %s ' + \
+                                      'on %s' % (self.user, self.host)
+                                self.password = getpass.getpass(' - Enter ' + \
+                                                  'password for %s account:' % (
+                                                  options.user))
+                                mutex.release()
+                                remote.sendline (self.password)
+                            if self.verbose >= 3:
+                                mutex.acquire()
+                                print '    (%s) Sending password' % (self.host)
+                                mutex.release()
+                        if remote_cmd == 2: # Prompt!
+                            if self.verbose >= 3:
+                                mutex.acquire()
+                                print '    (%s) Execution successful.' % (
+                                      self.host.capitalize())
+                                mutex.release()
+                            break
+                    mutex.acquire()
+                    if self.verbose >= 5:
+                        print '----- Command Ouput Block -----'
+                        print '(%s) BEFORE - %s' % (self.host, remote.before)
+                        print '(%s) AFTER - %s' % (self.host, remote.after)
+                        print '-------------------------------'
+                    output_list[self.host] = re.sub(self.command, '',
+                                             re.sub('%', '%%', remote.before))
+                    mutex.release()
+                # Close remote
+                if self.sudo:
+                    if self.verbose >= 3:
+                        mutex.acquire()
+                        print '    (%s) SU Session closed.' % (
+                              self.host.capitalize())
+                        mutex.release()
+                    sess_suexit(remote)
+                if remote.isalive():
+                    remote.sendline ('exit')
+                    remote.expect(pexpect.EOF, timeout=None)
+                    time.sleep(0.1)
+                remote.close()
+                if self.verbose >= 3:
+                    mutex.acquire()
+                    print '    (%s) Session closed.' % (self.host.capitalize())
+                    mutex.release()
+            sema_max_threads.release()
+            return
+
+    # Input validation
+    if ( options.ssh_pubkey != "gen" and (not options.nodes and not
+             options.hostfiles and not options.allgroup and options.nocluster and not options.group)) :
+        print >> sys.stderr, 'ERROR :: No hosts specified.'
+        sys.exit(1)
+    if (     not options.proto.lower() == "rsh"
+         and not options.proto.lower() == "ssh"
+         and not options.proto.lower() == "telnet"):
+        print >> sys.stderr, 'ERROR :: Incorrect protocol specified.'
+        sys.exit(1)
+    if (     not options.ssh_hostkey.lower() == "accept"
+         and not options.ssh_hostkey.lower() == "ask"
+         and not options.ssh_hostkey.lower() == "strict"):
+        print >> sys.stderr, 'ERROR :: Incorrect SSH Host Key option' + \
+                 ' specified.'
+        sys.exit(1)
+    else:
+        ssh_hostkey = options.ssh_hostkey
+    if (     not options.ssh_pubkey.lower() == "gen"
+         and not options.ssh_pubkey.lower() == "install"
+         and not options.ssh_pubkey.lower() == "none"
+         and not options.ssh_pubkey.lower() == "revoke"):
+        print >> sys.stderr, 'ERROR :: Incorrect SSH Public Key option ' + \
+                             'specified.'
+        sys.exit(1)
+    if (     not options.ssh_keytype.lower() == "dsa"
+         and not options.ssh_keytype.lower() == "rsa"):
+        print >> sys.stderr, 'ERROR :: Incorrect SSH Key Type option ' + \
+                 'specified.'
+        sys.exit(1)
+    # Prompt for passwords
+    if options.usepass or options.proto.lower() ==    "telnet":
+        password = getpass.getpass('Enter password for %s:' %
+                                    (options.user))
+    if options.sudo:
+        pass_root = getpass.getpass('Enter password for root:')
+    # Load SSH Public Key
+    if options.ssh_pubkey.lower() == "install":
+        if options.ssh_keytype.lower() == "rsa":
+            my_ssh_keyfile = SSH_CONFIG_DIR + "id_rsa.pub"
+        elif options.ssh_keytype.lower() == "dsa":
+            my_ssh_keyfile = SSH_CONFIG_DIR + "id_dsa.pub"
+        if os.path.exists(my_ssh_keyfile):
+            for line in fileinput.input(my_ssh_keyfile):
+                my_ssh_pubkey = line.strip()
+        else:
+            print >> sys.stderr, 'ERROR :: Cannot find SSH Public' + \
+                                ' key file (%s)' % (my_ssh_keyfile)
+            sys.exit(1)
+        if options.verbose >= 5:
+            print '    SSH Public Key = %s' % (my_ssh_pubkey)
+    # Set command for SSH Public Key install/revoke
+    if options.ssh_pubkey.lower() == "install" or \
+       options.ssh_pubkey.lower() == "revoke":
+        ssh_hostname = socket.gethostname()
+        if options.verbose >= 5:
+            print "  SSH Hostname == %s" % (ssh_hostname)
+        command = "/bin/sed \"/^.*%s@%s/d\" " % (options.user,
+            ssh_hostname) + "~/.ssh/authorized_keys > ~/.ssh/ak.tmp && " + \
+            "/bin/mv ~/.ssh/ak.tmp ~/.ssh/authorized_keys && " + \
+            "/bin/echo \"Key removed\""
+    if options.ssh_pubkey.lower() == "install":
+        command = command + ' && /bin/echo \"%s\"' % (my_ssh_pubkey) + \
+        " >> ~/.ssh/authorized_keys && /bin/echo \"Key installed\""
+
+    # Host loop
+    for host in hostlist:
+        host_thread = Hostthread(command, options, host, password, pass_root,
+                                 win_width)
+        host_thread_list.append(host_thread)
+        host_thread.start()
+    for thread in host_thread_list:
+        thread.join()
+    return output_list, error_list
+
+def process_hostlist (all, default_group, hostfile_list, groupfile, nodes, verbose):
+    """
+    Function Process Hostlist
+
+    Expands the various input lists to one hostlist, sorted and checked
+    for dups.
+    """
+    if not hostfile_list:
+      hostfile_list = []
+    remove_nodes  = []
+
+    # print "process_hostlist (%s, %s, %s, %s, %s)" %(all, default_group, hostfile_list, nodes, verbose)
+
+    if groupfile:
+        if os.path.exists("%s/%s" %(homegroup_dir, groupfile[0])):
+            hostfile_list.append("%s/%s" %(homegroup_dir, groupfile[0]))
+        elif os.path.exists("%s/%s" %(defaultgroup_dir, groupfile[0])):
+            hostfile_list.append("%s/%s" %(defaultgroup_dir, groupfile[0]))
+        print "Found %s/%s" %(homegroup_dir, groupfile[0])
+        if verbose >= 2:
+            print "hostfile_list %s.." %(hostfile_list)
+
+    if all:
+        if default_group not in hostfile_list :
+            hostfile_list.append(default_group)
+
+    if hostfile_list:
+        for filename in hostfile_list:
+            if os.path.exists(filename):
+                if os.path.isfile(filename):
+                    if verbose >= 2:
+                        print "  Adding hosts from %s to hostlist.." % (filename)
+                    line_count = 0
+                    for line in fileinput.input(filename):
+                        line = line.strip()
+                        if line[0] != "#":
+                            if nodes:
+                                if ( line.lower() not in nodes and
+                                     line.upper() not in nodes and
+                                     line.capitalize() not in nodes ):
+                                    nodes.append(line)
+                            else:
+                                nodes = [line]
+                            line_count = line_count + 1
+                else:
+                    print "WARNING  ::    Not a file: %s" % (filename)
+                if line_count == 0:
+                    print "WARNING  ::    0 hosts added from %s" % (filename)
+            else:
+                print "WARNING  ::    Missing group file: %s" % (filename)
+
+    if nodes:
+        for node in nodes:
+            index = []
+            pad_depth = 0
+            custom_port = None
+            index     = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)(:\d+)', node)
+            if index == None:
+                index = re.search(r'(\b\D+)(\d+)-(\d+)(:\d+)', node)
+            if index == None:
+                index = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)', node)
+            if index == None:
+                index = re.search(r'(\b\D+)(\d+)-(\d+)', node)
+            if index == None:
+                continue
+            else:
+                if verbose >= 2:
+                    print "  Found multihost specification, expanding %s" % (
+                          node)
+                remove_nodes.append(node)
+                basename    = index.group(1)
+                count_start = index.group(2)
+                count_end   = int(index.group(3))
+                pad_number  = re.search(r'(\b0+)(\d+)', str(count_start))
+                if pad_number != None:
+                    pad_depth = len(pad_number.group(1)) + 1
+                if index.group(4) != None:
+                    custom_port = index.group(4)
+                count_start = int(count_start)
+                if verbose >= 3:
+                    print "    Basename:        %s" % (basename)
+                    print "    Count Start:     %s" % (count_start)
+                    print "    Count End:       %s" % (count_end)
+                    if pad_depth > 0:
+                        print "    Pad Depth:       %s" % (pad_depth)
+                    if custom_port != None:
+                        print "    Custom Port:     %s" % (custom_port)
+                if count_start >= count_end:
+                    print >> sys.stderr, "ERROR :: Node range is zero " + \
+                                        "or negative."
+                    sys.exit(1)
+                for count in range(count_start, count_end + 1):
+                    if custom_port != None:
+                        new_node = "%s%s%s" % (basename, str(count).zfill(pad_depth),
+                                               custom_port)
+                    else:
+                        new_node = "%s%s" % (basename, count.zfill(pad_depth))
+                    if new_node not in nodes :
+                        nodes.append(new_node)
+    else:
+        print "ERROR    ::    Empty nodes list."
+        sys.exit(1)
+
+    if remove_nodes:
+        for node in remove_nodes:
+            nodes.remove(node)
+
+    if verbose >= 4:
+        print "  Sorting hostlist."
+    nodes.sort(lambda a, b: cmp(a.lower(), b.lower()))
+
+    if verbose >= 3:
+        print '  Finished processing hosts.'
+    return nodes
+
+def scp (options, hostlist):
+    """
+    Function: scp
+    This function multiplexes the scp protocol to allow you to send/recieve
+    files from multiple hosts at once.
+    """
+    output_list      = {}
+    error_list       = {}
+    host_thread_list = []
+
+    class SCPthread (threading.Thread):
+        """
+        Class: SCPthread
+        """
+
+        def __init__ (self, host, options):
+            """
+            Function: __init__ (for SCPthread)
+
+            Set the vars.
+            """
+            threading.Thread.__init__(self)
+            self.host = host
+            self.mode = options.scp_mode
+            self.local = options.scp_local
+            self.proto = options.scp_proto
+            self.remote = options.scp_remote
+            self.recursive = options.scp_recursive
+            self.user = options.user
+            self.timeout = options.timeout
+            self.verbose = options.verbose
+
+        def run (self):
+            """
+            Function: run (for SCPthread)
+            """
+            global ssh_hostkey
+            sema_max_threads.acquire()
+            if self.verbose >= 2:
+                mutex.acquire()
+                print '  Spawning SCP attempt to %s.' % (
+                      self.host.capitalize())
+                mutex.release()
+            if self.mode.lower() == 'get':
+                if not os.access(self.local, os.R_OK) :
+                    os.mkdir(self.local, 0777)
+            port_exception = re.search(r'(\b\D+):(\d+)', self.host)
+            if port_exception == None:
+                port_exception = re.search(r'(\b\d+\.\d+\.\d+\.\d+):(\d+)',
+                                           self.host)
+            if self.recursive :
+                if self.mode.lower() == 'get':
+                    if port_exception == None:
+                        localdir = '%s/%s' % (self.local, self.host)
+                        os.mkdir(localdir, 0777)
+                        session = pexpect.spawn('%s -r %s@%s:%s %s' % (
+                                                self.proto, self.user,
+                                                self.host, self.remote,
+                                                localdir))
+                    else:
+                        localdir = '%s/%s' % (self.local,
+                                              port_exception.group(1))
+                        os.mkdir(localdir, 0777)
+                        session = pexpect.spawn('%s -P %s -r %s@%s:%s %s' % (
+                                       self.proto, port_exception.group(2),
+                                       self.user, port_exception.group(1),
+                                       self.remote, localdir))
+                else:
+                    if port_exception == None:
+                        session = pexpect.spawn('%s -r %s %s@%s:%s' % (
+                                  self.proto, self.local, self.user, self.host,
+                                  self.remote))
+                    else:
+                        session = pexpect.spawn('%s -P %s -r %s %s@%s:%s' % (
+                                  self.proto, port_exception.group(2),
+                                  self.local, self.user,
+                                  port_exception.group(1), self.remote))
+            else:
+                if self.mode.lower() == 'get':
+                    dir_stripper = re.compile('.*\/([^/]+$)')
+                    filename = dir_stripper.sub(r'\1', self.remote)
+                    if port_exception == None:
+                        localfile = '%s/%s.%s' % (self.local, filename,
+                                                  self.host)
+                        session = pexpect.spawn('%s %s@%s:%s %s' % (self.proto,
+                                      self.user, self.host, self.remote,
+                                      localfile))
+                    else:
+                        localfile = '%s/%s.%s' % (self.local, filename,
+                                                  port_exception.group(1))
+                        session = pexpect.spawn('%s -p %s %s@%s:%s %s' % (
+                                      self.proto, port_exception.group(2),
+                                      self.user, port_exception.group(1),
+                                      self.remote, localfile))
+                else:
+                    if port_exception == None:
+                        session = pexpect.spawn('%s %s %s@%s:%s' % (self.proto,
+                                     self.local, self.user, self.host,
+                                     self.remote))
+                    else:
+                        session = pexpect.spawn('%s -P %s %s %s@%s:%s' % (
+                                     self.proto, port_exception.group(2),
+                                     self.local, self.user,
+                                     port_exception.group(1), self.remote))
+
+            pl_scp = session.compile_pattern_list([pexpect.TIMEOUT,
+                     pexpect.EOF, SSH_NEWKEY_PROMPT, CONNECTION_REFUSED,
+                     PASSWORD_PROMPT])
+            pass_count = 0
+            while True:
+                time.sleep(0.1)
+                scp_session = session.expect_list(pl_scp, self.timeout)
+                if scp_session == 0: # Timeout
+                    mutex.acquire()
+                    error_list[self.host] = 'SCP Session Error: %s' % (
+                                            session.before)
+                    output_list[self.host] = 'None'
+                    mutex.release()
+                    break
+                if scp_session == 1: # end of file
+                    mutex.acquire()
+                    output_list[self.host] = '%s' % (session.before)
+                    mutex.release()
+                    break
+                if scp_session == 2: # First time to login to host, accept key.
+                    mutex.acquire()
+                    no_test = False
+                    if ssh_hostkey.lower() == "ask" and \
+                         ssh_hostkey.lower() != "strict":
+                        while True:
+                            ask_sshkey = raw_input('SCP can\'t verify the ' + \
+                                'identity of %s' % (host.capitalize()) + \
+                                ', accept new host key? (A/Y/N/S)')
+                            if ask_sshkey.lower() == "a":
+                                ssh_hostkey = "accept"
+                                break
+                            elif ask_sshkey.lower() == "n":
+                                no_test = True
+                                break
+                            elif ask_sshkey.lower() == "s":
+                                ssh_hostkey = "strict"
+                                break
+                            elif ask_sshkey.lower() == "y":
+                                break
+                            else:
+                                print "Invalid input, retry."
+                    if ssh_hostkey.lower() == "strict" or no_test == True:
+                        error_list[self.host] = '%s' % (host.capitalize()) + \
+                                 ': SCP host authenticity cannot be verified.'
+                        session = None
+                        mutex.release()
+                        break
+                    session.sendline ('yes')
+                    if self.verbose >= 3:
+                        print '    (%s) *** Warning: Added new SSH Host' + \
+                              'key.' % (host)
+                    mutex.release()
+                if scp_session == 3: # Connection refused.
+                    error_list[self.host] = 'Connection refused.'
+                    session = None
+                    break
+                if scp_session == 4: # When prompted for password, send it.
+                    if pass_count    <= 1:
+                        session.sendline (password)
+                        pass_count = pass_count + 1
+                    else:
+                        mutex.acquire()
+                        print 'Password failure for account %s on %s' % (
+                              self.user, host)
+                        password = getpass.getpass(' -  Enter password for ' + \
+                                                   '%s account:' % (self.user))
+                        mutex.release()
+                        session.sendline (password)
+                    if self.verbose >= 3:
+                        mutex.acquire()
+                        print '    (%s) Sending password' % (host)
+                        mutex.release()
+            sema_max_threads.release()
+
+    # Input validation
+    if (     not options.scp_mode.lower() == "get"
+         and not options.scp_mode.lower() == "send" ) :
+        print >> sys.stderr, 'ERROR :: Incorrect SCP mode specified.'
+        sys.exit(1)
+    if (     not options.scp_proto.lower() == "scp"
+         and not options.scp_proto.lower() == "rcp" ) :
+        print >> sys.stderr, 'ERROR :: Incorrect Copy protocol specified.'
+        sys.exit(1)
+    if options.scp_mode.lower() == "get" :
+        if not options.scp_local :
+            options.scp_local = './'
+        if not options.scp_remote :
+            print >> sys.stderr, 'ERROR :: Remote SCP target is not set'
+            sys.exit(1)
+        if not os.access(options.scp_local, os.R_OK) :
+            print >> sys.stderr, 'ERROR :: Local SCP destination is not' + \
+                                 ' writable'
+            sys.exit(1)
+    else :
+        if not options.scp_local :
+            print >> sys.stderr, 'ERROR :: Local SCP target is not set'
+            sys.exit(1)
+        if not options.scp_remote :
+            options.scp_remote = './'
+        if not os.access(options.scp_local, os.R_OK) :
+            print >> sys.stderr, 'ERROR :: Local SCP target is not readable'
+            sys.exit(1)
+
+    # Host Loop
+    for host in hostlist:
+        host_thread = SCPthread(host, options)
+        host_thread_list.append(host_thread)
+        host_thread.start()
+    for thread in host_thread_list:
+        thread.join()
+    return output_list, error_list
+
+def sess_remote (options):
+    """
+    Function Sess_Remote
+
+    Start the remote session.
+    """
+
+    global ssh_hostkey
+    error_hostkey = ""
+    error_return  = ""
+    testline = ""
+
+    port_exception = re.search(r'(\b\D+):(\d+)', options.host)
+    if port_exception == None:
+        port_exception = re.search(r'(\b\d+\.\d+\.\d+\.\d+):(\d+)',
+                                   options.host)
+
+    if options.proto.lower() == "rsh":                    # Spawn RSH Session
+        if port_exception == None:
+            session = pexpect.spawn ('rsh -l %s %s' % (options.user,
+                                                       options.host))
+        else:
+            session = pexpect.spawn ('rsh -p %s -l %s %s' % (
+                                      port_exception.group(2), options.user,
+                                      port_exception.group(1)))
+    elif options.proto.lower() == "ssh":                  # Spawn SSH Session
+        if port_exception == None:
+            session = pexpect.spawn ('ssh -l %s %s' % (options.user,
+                                                       options.host))
+        else:
+            session = pexpect.spawn ('ssh -p %s -l %s %s' % (
+                                      port_exception.group(2), options.user,
+                                      port_exception.group(1)))
+    elif options.proto.lower() == "telnet":               # Spawn TELNET Session
+        if port_exception == None:
+            session = pexpect.spawn ('telnet %s' % (options.host))
+        else:
+            session = pexpect.spawn ('telnet %s %s' % (port_exception.group(1),
+                                                       port_exception.group(2)))
+    else:
+        mutex.acquire()
+        print >> sys.stderr, 'ERROR    ::    No connection protocol selected.'
+        mutex.release()
+        sys.exit (1)
+    pl_ssh_login = session.compile_pattern_list([pexpect.TIMEOUT, pexpect.EOF,
+                   SSH_NEWKEY_PROMPT, CONNECTION_REFUSED, LOGIN_PROMPT,
+                   USER_PROMPT, PASSWORD_PROMPT, CMD_PRMPT])
+    pass_count = 0
+
+    while True:
+        time.sleep(1)
+        login = session.expect_list(pl_ssh_login, options.timeout)
+        if login == 0: # Timeout
+            error_return = '%s login failure (Timeout), mesg: %s' % (
+                           proto.upper(), session.before)
+            session = None
+            break
+        if login == 1: # EOF
+            error_hostkey.find(session.before, 'RSA host key for %s' %
+                               (options.host.lower()) + ' has changed and ' + \
+                               'you have requested strict checking.')
+            if error_hostkey >= 0:
+                mutex.acquire()
+                no_test = False
+                if ssh_hostkey.lower() == "ask" and \
+                     ssh_hostkey.lower() != "strict":
+                    while True:
+                        ask_sshkey = raw_input('%s' %
+                                options.host.capitalize() + \
+                                ' failed host key verfication.  Remove key' + \
+                                ' (A/Y/N/S) ?')
+                        if ask_sshkey.lower() == "a":
+                            ssh_hostkey = "accept"
+                            break
+                        elif ask_sshkey.lower() == "n":
+                            no_test = True
+                            break
+                        elif ask_sshkey.lower() == "s":
+                            ssh_hostkey = "strict"
+                            break
+                        elif ask_sshkey.lower() == "y":
+                            break
+                        else:
+                            print "Invalid input, retry."
+                if ssh_hostkey.lower() == "strict" or no_test:
+                    error_return = '%s failed SSH host key verfication.' % (
+                        options.host.capitalize())
+                    session = None
+                    mutex.release()
+                    break
+                # insert code here to remove the offending entry in known
+                # hosts and try to connect again.
+                kh_file = open(SSH_KNOWNHOSTS_FILE)
+                kh_tmpfile = []
+                for line in file(SSH_KNOWNHOSTS_FILE).readlines():
+                    testline.find(line, '%s' % (options.host.lower()))
+                    if testline < 0:
+                        kh_tmpfile.append(line)
+                os.remove(SSH_KNOWNHOSTS_FILE)
+                kh_file = open(SSH_KNOWNHOSTS_FILE, 'w')
+                for line in kh_tmpfile:
+                    kh_file.write(line)
+                kh_file.close()
+                if options.verbose >= 3:
+                    print '    (%s)' % (options.host) + '*** Warning: ' + \
+                          'Removed old SSH Host key.'
+                mutex.release()
+                session = pexpect.spawn ('ssh -l %s %s' % (options.user,
+                          options.host))
+            else:
+                error_return = '%s login failure (EOF), mesg: %s' % (
+                               options.proto.upper(), session.before)
+                session = None
+                break
+        if login == 2: # First time to login to this host, accept key.
+            mutex.acquire()
+            no_test = False
+            if ssh_hostkey.lower() == "ask" and \
+                 ssh_hostkey.lower() != "strict":
+                while True:
+                    ask_sshkey = raw_input('SSH can\'t verify the identity' + \
+                        ' of %s' % (options.host.capitalize()) + \
+                        ', accept new host key? (A/Y/N/S)')
+                    if ask_sshkey.lower() == "a":
+                        ssh_hostkey = "accept"
+                        break
+                    elif ask_sshkey.lower() == "n":
+                        no_test = True
+                        break
+                    elif ask_sshkey.lower() == "s":
+                        ssh_hostkey = "strict"
+                        break
+                    elif ask_sshkey.lower() == "y":
+                        break
+                    else:
+                        print "Invalid input, retry."
+            if ssh_hostkey.lower() == "strict" or no_test:
+                error_return = '%s' % (options.host.capitalize()) + \
+                               ': SSH host authenticity cannot be verified.'
+                session = None
+                mutex.release()
+                break
+            session.sendline ('yes')
+            if options.verbose >= 3:
+                print '    (%s) *** Warning: Added new SSH Host key.' % (
+                      options.host)
+            mutex.release()
+        if login == 3: # Connection refused.
+            error_return = 'Connection refused.'
+            session = None
+            break
+        if login == 4 or login == 5: # Prompted for user, send it.
+            session.sendline (options.user)
+            if options.verbose >= 3:
+                mutex.acquire()
+                print ' - Sending %s' % (options.user)
+                mutex.release()
+        if login == 6: # When prompted for password, send it.
+            if pass_count    <= 1:
+                session.sendline (options.password)
+                pass_count = pass_count + 1
+            else:
+                mutex.acquire()
+                print 'Password failure for account %s on %s' % (options.user,
+                       options.host)
+                options.password = getpass.getpass(' -  Enter password for ' + \
+                                           '%s account:' % (options.user))
+                mutex.release()
+                session.sendline (options.password)
+            if options.verbose >= 3:
+                mutex.acquire()
+                print '    (%s) Sending password' % (options.host)
+                mutex.release()
+        if login == 7: # Command Prompt - Success!
+            if options.verbose >= 3:
+                mutex.acquire()
+                print '    (%s) Login successful.' % (options.host)
+                mutex.release()
+            break
+
+    #print '========================================='
+    #print 'SESS BEFORE %s' % (session.before)
+    #print '========================================='
+    #print 'SESS AFTER    %s' % (session.after)
+    #print '========================================='
+    return session, error_return
+
+def sess_su (session, host, pass_root, timeout, verbose):
+    """
+    Function Sess_su
+
+    SU Authentication.
+    """
+
+    sulogin = session.sendline ('/bin/su -')
+    sulogin_pl = session.compile_pattern_list([pexpect.TIMEOUT, pexpect.EOF,
+                 PASSWORD_PROMPT, SU_LOGINFAIL, SU_DEB_LOGINFAIL, CMD_PRMPT])
+    sulogin_fail = 0
+    sulogin_retry = 0
+
+    while True:
+        time.sleep(0.1)
+        sulogin = session.expect_list (sulogin_pl, timeout)
+        if sulogin == 0: # Timeout
+            return '%s SU login failure(Timeout), message: %s' % (
+                            host.capitalize(), session.after)
+        if sulogin == 1: # EOF
+            return '%s SU login failure(EOF), message: %s' % (
+                            host.capitalize(), session.after)
+        if sulogin == 2: # When prompted for password, send it.
+            session.sendline (pass_root)
+        if sulogin == 3 or sulogin == 4: # If su fails, retry it.
+            if verbose >= 2:
+                mutex.acquire()
+                print '    Warning - %s SU login fail, trying again (%s).' % (
+                    host.capitalize(),sulogin_fail)
+                mutex.release()
+            if sulogin_retry <= 2:
+                if sulogin_fail < 2:
+                    sulogin_fail = sulogin_fail + 1
+                    session.sendline ('/bin/su -')
+                else:
+                    mutex.acquire()
+                    print 'SU failure on %s' % (host)
+                    pass_root = getpass.getpass('  Enter password for root' + \
+                                                ' account:')
+                    mutex.release()
+                    session.sendline ('/bin/su -')
+                    sulogin_fail = 0
+                    sulogin_retry = sulogin_retry + 1
+            else:
+                return '%s SU login failure - bad password' % (
+                       host.capitalize())
+        if sulogin == 5: # Command Prompt - Success!
+            break
+
+    #print '-----------------------------------------'
+    #print 'BEFORE %s' % (session.before)
+    #print '-----------------------------------------'
+    #print 'AFTER    %s' % (session.after)
+    #print '-----------------------------------------'
+    return True
+
+def sess_suexit (session):
+    """
+    Function Su_exit
+
+    Exit SU session.
+    """
+    session.sendline ('exit')
+    session. expect (CMD_PRMPT, timeout=None)
+
+def test_connectivity (hlist, options):
+    """
+    Function Test Connectivity
+
+    Establish a TCP socket to verify that a service is being offered on the
+    destination port.
+    """
+
+    # global badhosts
+    badhosts       = []
+    badmesg        = {}
+    tc_thread_list = []
+
+    class Testconn (threading.Thread):
+        """
+        Class Thread TestConn
+
+        This is the thread that is spawned to check each port.
+        """
+
+        def __init__ (self, host, port, verbose):
+            """
+            Funtion __init__ for Thread_testconn
+
+            Initialize the variables
+            """
+
+            threading.Thread.__init__(self)
+            self.host        = host
+            self.port        = port
+            self.verbose = verbose
+
+        def check_open_port (self, host, port):
+            """
+            Function Check Open Port for Thread_testConn
+
+            This checks the port.
+            """
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setblocking(1)
+            try:
+                sock.connect((host, port))
+                return 1
+            except socket.error:
+                return 0
+
+        def run (self):
+            """
+            Function Run for Thread_testConn
+
+            This is executed when Thread_testcoonn.start() is called.
+            """
+            sema_max_threads.acquire()
+            if not self.check_open_port(self.host, self.port):
+                mutex.acquire()
+                badhosts.append(self.host)
+                mutex.release()
+                if self.verbose >= 4:
+                    print "  Could not connect to %s." % (self.host)
+            else:
+                if self.verbose >= 4:
+                    print "  Connected to %s." % (self.host)
+            sema_max_threads.release()
+
+    for host in hlist:
+        port_exception = re.search(r'(\b\D+):(\d+)', host)
+        if port_exception == None:
+            port_exception = re.search(r'(\b\d+\.\d+\.\d+\.\d+):(\d+)', host)
+        if port_exception == None:
+            if options.proto.lower() == "rsh"    :
+                port = 514
+            if options.proto.lower() == "ssh"    :
+                port = 22
+            if options.proto.lower() == "telnet" :
+                port = 23
+        else:
+            host = port_exception.group(1)
+            port = int(port_exception.group(2))
+        tc_thread = Testconn(host, port, options.verbose)
+        tc_thread_list.append(tc_thread)
+        tc_thread.start()
+    for threads in tc_thread_list:
+        threads.join()
+
+    if badhosts:
+        if not options.ign_failed:
+            print >> sys.stderr, "ERROR :: Could not connect to: %s" % (
+                                badhosts)
+            sys.exit(1)
+        else:
+            for host in badhosts:
+                badmesg[host] = "    Unable to connect to %s(%s)." % (
+                    options.proto.upper(), port)
+                if port_exception == None:
+                    hlist.remove(host)
+                else:
+                    hlist.remove('%s:%s' % (host, port))
+    else:
+        if options.verbose >= 3:
+            mutex.acquire()
+            print '  Connections established with all hosts.'
+            mutex.release()
+
+    return hlist, badmesg
+
+def ssh_keygen (options):
+    """
+    Function ssh_keygen
+
+    Generate SSH keys
+    """
+    keygen = pexpect.spawn('bash')
+    keygen.expect (CMD_PRMPT, timeout=None)
+    keygen.sendline('keygen -t %s' % (
+                     options.ssh_keytype.lower()) + ' && exit')
+    keygen.interact()
+    time.sleep(0.1)
+    if keygen.isalive():
+        keygen.kill(1)
+
+def getHostsFromCluster(filename, verbose):
+    """
+    Returns all hosts from the cluster. Until now only works for RH Cluster
+    """
+    RH_CLUSTER_CONF=filename
+    hostlist=[]
+    if os.path.exists(RH_CLUSTER_CONF):
+        if os.path.isfile(RH_CLUSTER_CONF):
+            if verbose >= 2:
+                print "  Adding hosts from %s to hostlist.." % (RH_CLUSTER_CONF)
+            filein=fileinput.input(filename)
+            for line in filein:
+                if not fileinput.isfirstline():
+                    import re
+                    hostlist.append(re.split("\s+", line)[5])
+
+
+    return hostlist
+
+
+
+# ------------------------------------------------------------------------------
+# Main
+
+def main (argv):
+    """
+    Function Main (for com-dsh)
+
+    Main logic (or illogic depending on how you view it).
+    """
+
+    global ssh_hostkey
+    global sema_max_threads
+    host_output  = {}
+    bad_connect  = {}
+    bad_hostloop = {}
+    max_host_len = 0
+    password     = ""
+    pass_root    = ""
+    appname      = re.search(r'[\./]*com-dcp', argv[0])
+    hostlist     = []
+
+    # Process shell arguments
+    if appname != None:
+        usage = "usage %prog [options]"
+        appname = "com-dcp"
+        sema_max_threads = threading.BoundedSemaphore(value=max_threads_scp)
+    else:
+        usage = "usage %prog [options] <command>"
+        appname = "com-dsh"
+
+    # Command line options
+    cmdln_opts = command_options(appname, usage)
+    options, args = cmdln_opts.parse_args()
+
+    # pydcp
+    if appname == "com-dcp":
+        if options.verbose > 0:
+            print "com-dcp - Python Distributed Copy"
+        options.proto = 'ssh'
+    else:
+        if options.verbose > 0:
+            print "com-dsh - Python Distributed Shell"
+
+    if not options.nocluster and not (options.allgroup or options.hostfiles or options.nodes or options.group):
+        if options.verbose > 4:
+            print "Detecting cluster"
+        hostlist=getHostsFromCluster("/proc/cluster/nodes", options.verbose)
+        if options.verbose > 4:
+            print "Found nodes: %s" %(hostlist)
+
+
+    # Force single thread at high verbosity
+    if options.verbose >= 4:
+        sema_max_threads = threading.BoundedSemaphore(value=1)
+
+    # SSH keygen or test hostlist (used by everything else).
+    if appname == "com-dsh" and options.ssh_pubkey.lower() == "gen" :
+        ssh_keygen(options)
+        sys.exit(0)
+    else:
+        # Process host list
+        if options.verbose >= 1:
+            print "Process host list"
+        if not hostlist:
+            hostlist=process_hostlist(options.allgroup, allgroup_file,
+                                        options.hostfiles, options.group, options.nodes, options.verbose)
+        if options.verbose >= 2:
+            print '  Hostlist:  %s' % (hostlist)
+        # Max host length
+        for host in hostlist:
+            if len(host) > max_host_len:
+                max_host_len = len(host)
+        if options.verbose >= 2:
+            print '  Max Host Length:  %s' % (max_host_len)
+        # Window width
+        window = fcntl.ioctl(0, termios.TIOCGWINSZ, "\000"*8)
+        row, column = struct.unpack('hhhh', window)[0:2]
+        win_width = column - (max_host_len + 3)
+        # Test hosts for connectivity
+        if options.verbose >= 1:
+            print "Test hosts for connectivity."
+        hostlist, bad_connect = test_connectivity(hostlist, options)
+        if options.verbose >= 2:
+            print '  Revised hostlist: %s' % (hostlist)
+    if appname == "com-dcp" :
+        # pydcp (scp mode)
+        host_output, bad_hostloop = scp(options, hostlist)
+    else:
+        # pydsh
+        if options.ssh_pubkey == "none" and len(args) == 0:
+            print >> sys.stderr, 'ERROR :: No command specified.'
+            sys.exit(1)
+        command = ' '.join(args)
+        # Host Loop
+        if options.verbose >= 1:
+            print "Host loop:"
+        if options.verbose >= 2:
+            print "  Executing:      %s" % (command)
+            print "  On these hosts: %s" % (hostlist)
+        host_output, bad_hostloop = host_loop(command, options, hostlist,
+                                              password, pass_root, win_width)
+    # Display Loop
+    for node in bad_hostloop:
+        hostlist.remove(node)
+    if options.verbose >= 1:
+        print "Display loop:"
+    if options.verbose >= 3:
+        print "    Mode:      %s" % (appname)
+        print "    Successfully contacted hosts: %s" % (hostlist)
+    display_output(hostlist, host_output, bad_connect, bad_hostloop,
+                              max_host_len, options.verbose, column)
+
+# Call to main with args.
+if __name__ == "__main__" :
+    main(sys.argv[0:])
+
+# ------------------------------------------------------------------------------
+# Notes:                                                                     {{{
+#
+# 1. Best viewed in Vim with the Autofold plugin and Relaxedgreen Colorscheme.
+# 2. Developed and tested with Python version 2.3 on Debian Sid.
+#
+#                                                                            }}}
+# ------------------------------------------------------------------------------
+# vim:tw=80:sw=4:ts=4:expandtab
