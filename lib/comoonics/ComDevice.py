@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDevice.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComDevice.py,v 1.2 2007-02-09 11:29:15 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDevice.py,v $
 
 import os
@@ -20,12 +20,12 @@ import re
 
 import ComSystem
 from ComExceptions import *
-from ComDisk import Disk
+from ComDisk import HostDisk
 import ComUtils
 
-class Device(Disk):
+class Device(HostDisk):
     def __init__(self, element, doc):
-        Disk.__init__(self,element, doc)
+        HostDisk.__init__(self,element, doc)
 
     def isMounted(self, mountpoint=None):
         __lines = self.getMountList()
@@ -35,7 +35,7 @@ class Device(Disk):
         self.getLog().debug("is mounted: " + __exp)
         for __line in __lines:
            if re.search(__exp, __line):
-                return True 
+                return True
         return False
 
 
@@ -68,7 +68,10 @@ class Device(Disk):
         return o.readlines()
 
 # $Log: ComDevice.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2007-02-09 11:29:15  marc
+# changed Disk to HostDisk
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.7  2006/07/06 15:10:32  mark
