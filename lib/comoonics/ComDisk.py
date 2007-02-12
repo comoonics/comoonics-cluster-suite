@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.6 2007-02-09 12:28:49 marc Exp $
+# $Id: ComDisk.py,v 1.7 2007-02-12 15:43:12 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -103,7 +103,6 @@ class HostDisk(Disk):
         if not self.exists():
             raise ComException("Device %s not found" % self.getDeviceName())
         dev=parted.PedDevice.get(self.getDeviceName())
-<<<<<<< ComDisk.py
         try:
             disk=parted.PedDisk.new(dev)
             partlist=phelper.get_primary_partitions(disk)
@@ -111,16 +110,6 @@ class HostDisk(Disk):
                 self.appendChild(Partition(part, self.getDocument()))
         except parted.error:
                 self.log.debug("no partitions found")
-=======
-        try:
-            disk=parted.PedDisk.new(dev)
-            partlist=phelper.get_primary_partitions(disk)
-            for part in partlist:
-                self.appendChild(Partition(part, self.getDocument()))
-        except parted.error:
-                self.log.debug("no partitions found")
-
->>>>>>> 1.5
 
     def createPartitions(self):
         """ creates new partition table """
@@ -270,7 +259,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.6  2007-02-09 12:28:49  marc
+# Revision 1.7  2007-02-12 15:43:12  marc
+# removed some cvs things.
+#
+# Revision 1.6  2007/02/09 12:28:49  marc
 # defined two implementations of disk
 # - HostDisk (for disks in servers)
 # - StorageDisks (for virtual disks on storagedevices)
