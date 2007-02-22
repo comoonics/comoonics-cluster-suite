@@ -6,10 +6,10 @@ Class to make getopts very easy
 """
 
 # here is some internal information
-# $Id: GetOpts.py,v 1.3 2006-12-13 20:16:52 marc Exp $
+# $Id: GetOpts.py,v 1.4 2007-02-22 15:25:22 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/GetOpts.py,v $
 
 import getopt
@@ -18,7 +18,7 @@ import logging
 
 class NoErrorBreak(ComExceptions.ComException): pass
 
-class Option:
+class Option(object):
     def __init__(self, name, description, value, required=False, short_opt=None, func=None):
         """
            Constructor(name, description, value, required=False, short_opt=None, func=None)
@@ -56,7 +56,7 @@ class VersionOption(Option):
         print "Version: %s" %self.version
         raise NoErrorBreak("")
 
-class BaseConfig:
+class BaseConfig(object):
     def __init__(self, cmdname, description, version, options=None):
         self.__cmdname__=cmdname
         import sys
@@ -207,11 +207,12 @@ class BaseConfig:
             self.usage()
             return 1
 
-#    def __getattribute__(self, name):
-#        if self.__dict__[name].__class__ and self.__dict__[name].__class__ == Option:
-#            return self.__dict__[name].value
-#        else:
-#            return self.__dict__[name]
+    def __getattribute__(self, name):
+        attr=object.__getattribute__(self, name)
+        if isinstance(attr, Option):
+            return attr.value
+        else:
+            return attr
 
     def do(self, args_proper):
         pass
@@ -251,7 +252,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: GetOpts.py,v $
-# Revision 1.3  2006-12-13 20:16:52  marc
+# Revision 1.4  2007-02-22 15:25:22  marc
+# access to Option attributes returns now the value
+#
+# Revision 1.3  2006/12/13 20:16:52  marc
 # - added PrivatOption
 # - added AllOptionString
 #
