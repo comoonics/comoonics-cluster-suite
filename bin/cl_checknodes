@@ -53,7 +53,7 @@ class Config(GetOpts.BaseConfig):
         ComLog.setLevel(logging.DEBUG)
 
 def verbose(config, text):
-    if config.verbose.value:
+    if config.verbose:
         print text,
 
 ComLog.setLevel(logging.INFO)
@@ -64,25 +64,25 @@ if ret < 0:
 elif ret > 0:
     sys.exit(ret)
 
-reader = Sax2.Reader(validate=config.validate.value)
-conf=open(config.clusterconf.value)
+reader = Sax2.Reader(validate=config.validate)
+conf=open(config.clusterconf)
 doc=reader.fromStream(conf)
-ComLog.getLogger().debug("Parsing path %s" % config.pathnodes.value)
-nodeelements = xpath.Evaluate(config.pathnodes.value, doc)
+ComLog.getLogger().debug("Parsing path %s" % config.pathnodes)
+nodeelements = xpath.Evaluate(config.pathnodes, doc)
 if len(nodeelements) == 1:
     quorum=1
 else:
     quorum=len(nodeelements)/2+1
-clustername = xpath.Evaluate(config.pathclustername.value, doc)[0]
+clustername = xpath.Evaluate(config.pathclustername, doc)[0]
 ComLog.getLogger().debug("Found nodes %u/%u" % (len(nodeelements),quorum))
-verbose(config, "Checking cluster %s" % clustername.value)
-for times in range(int(config.times.value)):
+verbose(config, "Checking cluster %s" % clustername)
+for times in range(int(config.times)):
     reached=0 # Have already reached myself
     for node in nodeelements:
         verbose(config,".",)
         nodename=node.nodeValue
         ComLog.getLogger().debug("Found node %s, reached: %u" % (nodename, reached))
-        (rc, out) = ComSystem.execLocalStatusOutput(config.pingcmd.value %(config.pingcount.value, config.pingtimeout.value, nodename))
+        (rc, out) = ComSystem.execLocalStatusOutput(config.pingcmd %(config.pingcount, config.pingtimeout, nodename))
         if rc >> 8 == 0:
             reached=reached+1
         if reached>=quorum:

@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.8 2007-02-09 11:16:09 marc Exp $
+# $Id: com-ec,v 1.9 2007-02-22 15:25:45 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -122,7 +122,7 @@ elif ret > 0:
 setWarnings()
 
 # create Reader object
-if config.novalidate.value:
+if config.novalidate:
     reader = Sax2.Reader(validate=0)
 else:
     reader = Sax2.Reader(validate=1)
@@ -133,15 +133,15 @@ if not config.filename:
     sys.exit(1)
 
 try:
-    if config.xslt.value:
+    if config.xslt:
         try:
            import libxslt
            import libxml2
-           file=os.fdopen(os.open(config.xslt.value, os.O_RDONLY))
+           file=os.fdopen(os.open(config.xslt, os.O_RDONLY))
            n_doc = libxml2.parseFile(config.filename)
            if config.values:
                applyValues(n_doc, config.values)
-           style = libxml2.parseFile(config.xslt.value)
+           style = libxml2.parseFile(config.xslt)
            xslt_style = libxslt.parseStylesheetDoc(style)
            params={}
            res = xslt_style.applyStylesheet(n_doc, params)
@@ -157,7 +157,7 @@ try:
             traceback.print_exc()
             sys.exit(1)
         libxslt.cleanup()
-        if config.onlyxslt.value:
+        if config.onlyxslt:
             PrettyPrint(doc)
             sys.exit(0)
     else:
@@ -168,7 +168,7 @@ try:
             applyValues(doc, config.values)
 
     ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
-    if config.ask.value:
+    if config.ask:
         ComSystem.__EXEC_REALLY_DO="ask"
 except KeyboardInterrupt:
     ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).info("Leaving because of user signal")
@@ -180,17 +180,17 @@ else:
     line("Execution of enterprisecopy %s" % ("unknown"))
 
 try:
-    if not config.copyset.value and not config.modificationset.value:
+    if not config.copyset and not config.modificationset:
         line("Executing all sets %u" % (len(ecopy.allsets)))
         ecopy.doAllsets()
     else:
-        if config.copyset.value:
-            line("Executing %s copysets %u" % (config.copyset.value, len(ecopy.copysets)))
-            ecopy.doCopysets(config.copyset.value)
+        if config.copyset:
+            line("Executing %s copysets %u" % (config.copyset, len(ecopy.copysets)))
+            ecopy.doCopysets(config.copyset)
 
-        if config.modificationset.value:
-            line("Executing %s modificationsets %u" % (config.modificationset.value, len(ecopy.modificationsets)))
-            ecopy.doModificationsets(config.modificationset.value)
+        if config.modificationset:
+            line("Executing %s modificationsets %u" % (config.modificationset, len(ecopy.modificationsets)))
+            ecopy.doModificationsets(config.modificationset)
 
     line("Successfully executed enterprisecopy.")
 except KeyboardInterrupt:
@@ -201,7 +201,7 @@ except Exception, e:
     import traceback
     #print e.__str__()
     traceback.print_exc()
-    if config.noundo.value:
+    if config.noundo:
         line("Skipping undo on request")
     else:
             line("Undoing %u sets" % (len(ecopy.donesets)))
@@ -212,7 +212,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.8  2007-02-09 11:16:09  marc
+# Revision 1.9  2007-02-22 15:25:45  marc
+# all .value in Options moved away
+#
+# Revision 1.8  2007/02/09 11:16:09  marc
 # bugfix and change way of executing. Will execute any sequence of modification and copysets even mixed.
 #
 # Revision 1.7  2006/12/15 10:10:46  marc
