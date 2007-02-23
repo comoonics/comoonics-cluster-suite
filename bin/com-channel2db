@@ -1,0 +1,114 @@
+#!/usr/bin/python
+
+# here is some internal information
+# $Id: channel2db.py,v 1.1 2006/08/08 08:32:38 marc Exp $
+#
+
+__version__ = "$revision$"
+__description__="""
+Updates all rpms from the given channel in DSL and DSL stage
+"""
+
+# $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/channel2db.py,v $
+import sys
+sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
+
+from comoonics import ComLog
+from comoonics import ComSystem, ComLog, ComExceptions
+from comoonics import GetOpts
+from comoonics.cmdb.ComDSL import DSL
+from comoonics.cmdb.ComDSLStages import DSLStages
+
+import os
+import logging
+import rpm
+
+log=ComLog.getLogger(sys.argv[0])
+
+def rpm2header(rpmname):
+    # rpm.ts is an alias for rpm.TransactionSet
+    log.debug("rpmfile: "+rpmname)
+    ts = rpm.ts()
+    fdno = os.open(rpmname, os.O_RDONLY)
+    hdr = ts.hdrFromFdno(fdno)
+    os.close(fdno)
+    return hdr
+
+ComLog.setLevel(logging.INFO)
+def line(str=None):
+    print
+    print "--------------------"+str+"---------------------------------"
+
+class Config(GetOpts.BaseConfig):
+    hostname="mysql-server.gallien.atix"
+    user="atix"
+    password="atix"
+    database="atix_cmdb"
+    stage=0
+
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
+        self.database=GetOpts.Option("database", "Sets the databasename", self.database, False, "d")
+        self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
+        self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
+        self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
+        self.stage=GetOpts.Option("stage", "Sets the stage for these rpms", self.stage, False, "s")
+        self.values=dict()
+        self.setAdditionalParams("channeldir channelname channelversion [tablename]")
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) >= 1:
+            self.channeldir=args_proper[0]
+            self.headerfile="%s/headers/header.info" % self.channeldir
+        else:
+            return 1
+
+        if len(args_proper) >= 2:
+            self.channel=args_proper[1]
+        else:
+            return 1
+
+        if len(args_proper) >= 3:
+            self.channelversion=args_proper[2]
+        else:
+            return 1
+
+        self.table="dsl"
+        if len(args_proper) >= 4:
+            self.table=args_proper[3]
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+
+ComSystem.setExecMode("")
+ComSystem.__EXEC_REALLY_DO=""
+
+config=Config()
+ret=config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    config.usage()
+    sys.exit(ret)
+
+dsl=DSL(hostname=config.hostname, user=config.user, password=config.password, database=config.database)
+dslstages=DSLStages(dbhandle=dsl.db)
+
+header=open(config.headerfile, "r")
+
+for line in header:
+    line=line.splitlines(False)[0]
+    srpm=line.split(":")[1]
+    (srpm,file)=srpm.split("=")
+    rpmhdr=rpm2header(config.channeldir+"/"+file)
+    dsl.updateRPM(rpmhdr, file, config.channel, config.channelversion, config.channeldir)
+    dslstages.updateRPM(rpmhdr, config.channel, config.channelversion, int(config.stage))
+
+dsl.db.commit()
+
+# $Log: channel2db.py,v $
+# Revision 1.1  2006/08/08 08:32:38  marc
+# initial revision
+#

@@ -1,0 +1,82 @@
+#!/usr/bin/python
+
+# here is some internal information
+# $Id: getRPMDiffs.py,v 1.1 2006/08/08 08:32:38 marc Exp $
+#
+
+__version__ = "$revision$"
+__description__="""
+Compares installbase of two clusters/sources with each other
+"""
+
+# $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/getRPMDiffs.py,v $
+import sys
+sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
+
+from comoonics import ComSystem, ComLog, ComExceptions
+from comoonics import GetOpts
+from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
+
+import logging
+
+log=ComLog.getLogger(sys.argv[0])
+
+def line(str=None):
+    print
+    print "--------------------"+str+"---------------------------------"
+
+class Config(GetOpts.BaseConfig):
+    hostname="mysql-server.gallien.atix"
+    user="atix"
+    password="atix"
+    database="atix_cmdb"
+    category="unknown"
+    table="software_cmdb"
+    sourcenames=list()
+
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
+        self.database=GetOpts.Option("database", "Sets the databasename", self.database, False, "d")
+        self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
+        self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
+        self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
+        self.values=dict()
+        self.setAdditionalParams("sourcename sourcename [[sourcename]..]")
+    def do(self, args_proper):
+        if len(args_proper) >= 2:
+            for arg in args_proper:
+                self.sourcenames.append(arg)
+        else:
+            return 1
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+
+ComLog.setLevel(logging.INFO)
+
+config=Config()
+
+ret=config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    config.usage()
+    sys.exit(ret)
+
+
+software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
+
+def formatRow(row):
+    return ', '.join(row)
+
+rs=software_cmdb.getDiffsFromSources(config.sourcenames)
+ComLog.getLogger().debug("Got %u rows" % rs.num_rows())
+row=rs.fetch_row()
+while row:
+    print formatRow(row[0])
+    row=rs.fetch_row()
+
+##########
+# $Log$

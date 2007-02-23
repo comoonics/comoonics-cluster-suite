@@ -1,0 +1,87 @@
+#!/usr/bin/python
+
+# here is some internal information
+# $Id: rpm2db.py,v 1.1 2006/08/08 08:32:38 marc Exp $
+#
+
+__version__ = "$revision$"
+__description__="""
+Programm to update all installed rpms in the database
+"""
+
+# $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/rpm2db.py,v $
+import sys
+sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
+
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
+from comoonics.ComSystemInformation import SystemInformation
+from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
+from comoonics.cmdb.ComDSL import DSL
+from comoonics import GetOpts
+
+import logging
+
+ComLog.setLevel(logging.INFO)
+
+def line(str=None):
+    print
+    print "--------------------"+str+"---------------------------------"
+
+class Config(GetOpts.BaseConfig):
+    hostname="mysql-server.gallien.atix"
+    user="atix"
+    password="atix"
+    database="atix_cmdb"
+    category="unknown"
+    table="software_cmdb"
+
+    def __init__(self, systeminformation):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
+        self.database=GetOpts.Option("database", "Sets the databasename", self.database, False, "d")
+        self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
+        self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
+        self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
+        self.values=dict()
+        self.name=systeminformation.getName()
+        self.setAdditionalParams("[name=%s] [category=%s] [table=%s]" %(self.name, self.category, self.table))
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) >= 1:
+            self.name=args_proper[0]
+        if len(args_proper) >= 2:
+            self.category=args_proper[1]
+        if len(args_proper) >= 3:
+            self.table=args_proper[2]
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+
+systeminformation=SystemInformation()
+config=Config(systeminformation)
+
+ret=config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    config.usage()
+    sys.exit(ret)
+
+
+software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
+dsl=DSL(dbhandle=software_cmdb.db, table="dsl")
+
+rpms=systeminformation.getInstalledSoftware()
+
+for rpm_hdr in rpms:
+    (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
+    software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion)
+
+software_cmdb.db.commit()
+
+# $Log: rpm2db.py,v $
+# Revision 1.1  2006/08/08 08:32:38  marc
+# initial revision
+#
