@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<%
+import sys
+sys.path.append("./")
+sys.path.append("/home/marc/atix/nashead2004/management/comoonics-clustersuite/python/lib")
+from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
+if not form.getfirst("cluster"):
+  cluster=""
+else:
+  cluster=form.getfirst("cluster")
+if not form.getfirst("cluster2"):
+  cluster2=""
+else:
+  cluster2=form.getfirst("cluster2")
+if not form.getfirst("packagesearch"):
+  packagesearch=""
+else:
+  packagesearch=form.getfirst("packagesearch")
+if not form.getfirst("limitfrom"):
+  limitfrom=0
+else:
+  limitfrom=int(form.getfirst("limitfrom"))
+if not form.getfirst("limitlength"):
+  limitlength=10
+else:
+  limitlength=int(form.getfirst("limitlength"))
+rows=0
+cmdb=SoftwareCMDB(hostname="mysql-server.gallien.atix", user="atix", password="atix", database="atix_cmdb")
+
+%>
+<html>
+<body>
+<p>Select Cluster to show rpms from:</p>
+<form action="software_cmdb.psp">
+  <table>
+    <tr>
+      <td>
+        Cluster
+      </td>
+      <td>
+        <select name="cluster">
+<%
+clusters=cmdb.getClusters()
+for _cluster in clusters:
+   selected=""
+   if (_cluster == cluster): selected="selected"
+   req.write("<option %s>%s</option>" %(selected, _cluster))
+%>
+<%
+%>
+        </select>
+      </td>
+      <td>
+        compare with cluster:
+      </td>
+      <td>
+        <select name="cluster2">
+           <option></option>
+<%
+for _cluster in clusters:
+   selected=""
+   if (_cluster == cluster2): selected="selected"
+   req.write("<option %s>%s</option>" %(selected, _cluster))
+%>
+<%
+%>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Resultlength</td>
+      <td>
+<%
+req.write("<input type=\"text\" size=\"3\" maxlength=\"3\" name=\"limitlength\" value=\"%s\"/>" %(limitlength))
+%>
+      </td>
+    </tr>
+    <tr>
+      <td>Search for Software: </td>
+      <td>
+<%
+req.write("<input type=\"text\" size=\"10\" maxlength=\"100\" name=\"packagesearch\" value=\"%s\"/>" %(packagesearch))
+%>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="submit" value="Show rpms"/>
+      </td>
+    </tr>
+  </table>
+</form>
+<%
+if form.getfirst("cluster") and not form.getfirst("cluster2"):
+  req.write("""
+<table border=\"1\">
+  <tr>\n""")
+  for column in SoftwareCMDB.SELECT_FOR_SOFTWARE:
+    req.write("<th>%s</th>" %(column))
+  req.write("</tr>\n")
+  rs=cmdb.getSoftware(cluster, SoftwareCMDB.SELECT_FOR_SOFTWARE, limitfrom, limitlength, ["name LIKE \"%"+packagesearch+"%\""])
+  row=rs.fetch_row()
+  while row:
+    rows=rows+1
+    req.write("<tr>")
+    for col in row[0]:
+       req.write("<td>%s</td>" %(col))
+    row=rs.fetch_row()
+    req.write("</tr>\n")
+  req.write("""
+</table>
+""")
+elif cluster!="" and cluster2!="":
+  req.write("""
+<table border="1">
+  <tr>
+    <td></td>
+    <th colspan=\"3\">"""+cluster+"""</th>
+    <th colspan=\"3\">"""+cluster2+"""</th>
+  </tr>
+  """)
+  req.write("<tr>")
+  for column in SoftwareCMDB.COMPARE_2_SOFTWARE:
+    req.write("<th>%s</th>" %(column))
+  req.write("</tr>\n")
+  rs=cmdb.getDiffsFromSources((cluster, cluster2))
+  row=rs.fetch_row()
+  while row:
+    rows=rows+1
+    req.write("<tr>")
+    for col in row[0]:
+       req.write("<td>%s</td>" %(col))
+    row=rs.fetch_row()
+    req.write("</tr>\n")
+  req.write("""
+</table>
+""")
+%>
+<%
+if form.getfirst("cluster"):
+  req.write("""
+<table>
+  <tr>
+    <td>
+""")
+  if (limitfrom>=limitlength):
+    req.write("<form action=\"software_cmdb.psp\"\>\n")
+    req.write("<input type=\"hidden\" name=\"limitfrom\" value=\"%s\"/>\n" %(limitfrom-limitlength))
+    req.write("<input type=\"hidden\" name=\"limitlength\" value=\"%s\"/>\n" %(limitlength))
+    req.write("<input type=\"hidden\" name=\"cluster\" value=\"%s\"/>\n" %(cluster))
+    req.write("<input type=\"hidden\" name=\"cluster2\" value=\"%s\"/>\n" %(cluster2))
+    req.write("<input type=\"hidden\" name=\"packagesearch\" value=\"%s\"/>\n" %(packagesearch))
+    req.write("<input type=\"submit\" value=\"<<%s\"/>\n" %(limitlength))
+    req.write("</form>")
+  req.write("""
+    </td>
+    <td>
+""")
+  if (limitlength==rows):
+    req.write("<form action=\"software_cmdb.psp\">")
+    req.write("<input type=\"hidden\" name=\"limitfrom\" value=\"%s\"/>\n" %(limitfrom+limitlength))
+    req.write("<input type=\"hidden\" name=\"limitlength\" value=\"%s\"/>\n" %(limitlength))
+    req.write("<input type=\"hidden\" name=\"cluster\" value=\"%s\"/>\n" %(cluster))
+    req.write("<input type=\"hidden\" name=\"cluster2\" value=\"%s\"/>\n" %(cluster2))
+    req.write("<input type=\"hidden\" name=\"packagesearch\" value=\"%s\"/>\n" %(packagesearch))
+    req.write("<input type=\"submit\" value=\">>%s\"/>\n" %(limitlength))
+    req.write("</form>")
+  req.write("""
+    </td>
+  </tr>
+</table>
+""")
+%>
+<%
+%>
+</body>
+</html>
