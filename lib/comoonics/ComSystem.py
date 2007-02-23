@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.6 2006-11-23 14:19:34 marc Exp $
+# $Id: ComSystem.py,v 1.7 2007-02-23 12:42:43 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -20,6 +20,21 @@ import popen2
 
 import ComLog
 
+from comoonics.ComExceptions import ComException
+
+class ExecLocalException(ComException):
+    def __init__(self, cmd, rc, out, err):
+        self.cmd=cmd
+        self.rc=rc
+        self.out=out
+        self.err=err
+    def __str__(self):
+        return """cmd=%s, errorcode=%s
+output:
+%s
+error:
+%s
+""" %(self.cmd, self.rc, self.out, self.err)
 
 __EXEC_REALLY_DO = "ask"
 log=ComLog.getLogger("ComSystem")
@@ -41,6 +56,15 @@ def execLocalStatusOutput(__cmd):
         return [0,"skipped"]
     return commands.getstatusoutput(__cmd)
 
+
+def execLocalOutput(__cmd):
+    """ executes the given command and returns stdout output. If status is not 0 an exeception is thrown
+        and errorcode, cmd, stdout and stderr are in that exception """
+    (rc, out, err)=execLocalGetResult(__cmd, True)
+    if rc==0:
+        return out
+    else:
+        raise ExecLocalException(__cmd, rc, out, err)
 
 def execLocalGetResult(__cmd, err=False):
     """ exec %__cmd and returns an array ouf output lines (rc, out, err)"""
@@ -78,7 +102,10 @@ def execLocal(__cmd):
     return os.system(__cmd)
 
 # $Log: ComSystem.py,v $
-# Revision 1.6  2006-11-23 14:19:34  marc
+# Revision 1.7  2007-02-23 12:42:43  marc
+# added execLocalOutput
+#
+# Revision 1.6  2006/11/23 14:19:34  marc
 # added continue and default y
 #
 # Revision 1.5  2006/10/19 10:05:14  marc
