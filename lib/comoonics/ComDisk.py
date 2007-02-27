@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.7 2007-02-12 15:43:12 marc Exp $
+# $Id: ComDisk.py,v 1.8 2007-02-27 15:55:15 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -26,6 +26,8 @@ from ComPartition import Partition
 
 CMD_SFDISK = "/sbin/sfdisk"
 CMD_DD="/bin/dd"
+CMD_DMSETUP = "/sbin/dmsetup"
+CMD_KPARTX = "/sbin/kpartx"
 
 class Disk(DataObject):
     """ Abstract Disk Baseclass that creates a disk a StorageDisk or HostDisk on demand """
@@ -138,6 +140,24 @@ class HostDisk(Disk):
 
         disk.commit()
 
+        # run partx if the device is a multipath device
+        self.log.debug("ComHostDisk: checking for multipath devices")
+        if self.isDMMultipath():
+            self.log.debug("Device %s is a dm_multipath device, adding partitions" %self.getDeviceName())
+            __cmd=CMD_KPARTX + " -d " + self.getDeviceName()
+            __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+            self.log.debug(__ret)
+            __cmd=CMD_KPARTX + " -a " + self.getDeviceName()
+            __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+            self.log.debug(__ret)
+
+    def isDMMultipath(self):
+        if not os.path.exists(CMD_DMSETUP):
+            return False
+        __cmd="%s table %s --target=multipath | grep multipath"  % (CMD_DMSETUP, self.getDeviceName())
+        if ComSystem.execLocal(__cmd):
+            return False
+        return True
 
 
     def getAllPartitions(self):
@@ -259,7 +279,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.7  2007-02-12 15:43:12  marc
+# Revision 1.8  2007-02-27 15:55:15  mark
+# added support for dm_multipath
+#
+# Revision 1.7  2007/02/12 15:43:12  marc
 # removed some cvs things.
 #
 # Revision 1.6  2007/02/09 12:28:49  marc
