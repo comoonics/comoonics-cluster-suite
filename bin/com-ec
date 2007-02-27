@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.9 2007-02-22 15:25:45 marc Exp $
+# $Id: com-ec,v 1.10 2007-02-27 15:39:35 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -122,7 +122,9 @@ elif ret > 0:
 setWarnings()
 
 # create Reader object
-if config.novalidate:
+# FIXME: validation with xslt transformation does not work
+# BUG #33
+if config.novalidate or config.xslt:
     reader = Sax2.Reader(validate=0)
 else:
     reader = Sax2.Reader(validate=1)
@@ -212,7 +214,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.9  2007-02-22 15:25:45  marc
+# Revision 1.10  2007-02-27 15:39:35  mark
+# some bugfixes
+#
+# Revision 1.9  2007/02/22 15:25:45  marc
 # all .value in Options moved away
 #
 # Revision 1.8  2007/02/09 11:16:09  marc
