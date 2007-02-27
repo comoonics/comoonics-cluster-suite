@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.2 2007-02-09 12:25:22 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.3 2007-02-27 15:53:58 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 from xml.dom import Node
@@ -100,7 +100,7 @@ class EnterpriseCopy(ComDataObject.DataObject):
             if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
                 copyset.doCopy()
-                self.donesets.append(set)
+                self.donesets.append(copyset)
 
     def undoCopysets(self, name=None):
         ComLog.getLogger(self.__logStrLevel__).debug("Copysets: %s " % self.copysets)
@@ -115,7 +115,7 @@ class EnterpriseCopy(ComDataObject.DataObject):
             if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", "")):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
                 modset.doModifications()
-                self.donesets.append(set)
+                self.donesets.append(modset)
 
     def undoModificationsets(self, name=None):
         self.modificationsets.reverse()
@@ -128,7 +128,10 @@ mylogger=ComLog.getLogger(EnterpriseCopy.__logStrLevel__)
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.2  2007-02-09 12:25:22  marc
+# Revision 1.3  2007-02-27 15:53:58  mark
+# minor bugfixes
+#
+# Revision 1.2  2007/02/09 12:25:22  marc
 # copy and modsets can now be executed in userdefined order.
 #
 # Revision 1.1  2006/07/19 14:29:15  marc

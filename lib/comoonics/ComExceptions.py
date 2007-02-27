@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComExceptions.py,v 1.3 2007-02-09 11:34:10 marc Exp $
+# $Id: ComExceptions.py,v 1.4 2007-02-27 15:55:26 mark Exp $
 #
 
 
@@ -28,12 +28,19 @@ class ComException(Exception):
 
      def __str__(self):
          if isinstance(self.value, unicode):
-             self.value=self.value.decode()
+             # Don't throw a new exception if value.decode is not valid
+             try:
+                 self.value=self.value.decode()
+             except Exception:
+                 pass
          return repr(self.value)
 
 
 # $Log: ComExceptions.py,v $
-# Revision 1.3  2007-02-09 11:34:10  marc
+# Revision 1.4  2007-02-27 15:55:26  mark
+# minor bugfixes
+#
+# Revision 1.3  2007/02/09 11:34:10  marc
 # better handling of empty strings
 #
 # Revision 1.2  2006/07/26 10:06:47  marc
