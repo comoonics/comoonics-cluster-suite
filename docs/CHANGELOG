@@ -10,12 +10,18 @@ WARNING:
 
 CHANGES:
 comoonics-cs-py:
+* Tue Feb 27 2007 MH <hlawatschek@atix.de>, 0.1.22:
+    added support for dm_multipath
+    some bugfixes
 * Fri Feb 09 2007 MG <grimme@atix.de>, 0.1-21:
    added com-dsh
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
    added properties (ComProperties)
 
 comoonics-ec-py
+* Tue Feb 27 2007 MH <hlawatschek@atix.de>, 0.1.12:
+    added support for dm_multipath
+    some bugfixes
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
   changed that modset and copysets can be mixed not for copysets then modsets.
 
