@@ -34,11 +34,11 @@ supported flag name attributes: Note, that some may not be supported by the disk
 
 
 # here is some internal information
-# $Id: ComPartitionCopyset.py,v 1.3 2006-12-08 09:42:53 mark Exp $
+# $Id: ComPartitionCopyset.py,v 1.4 2007-02-27 15:54:41 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyset.py,v $
 
 import os
@@ -49,7 +49,6 @@ from xml import xpath
 
 from ComCopyset import *
 from ComCopyObject import CopyObject
-from comoonics.ComDisk import Disk
 from comoonics.ComExceptions import *
 from comoonics import ComSystem
 
@@ -129,7 +128,10 @@ class PartitionCopyset(CopysetJournaled):
 
 
 # $Log: ComPartitionCopyset.py,v $
-# Revision 1.3  2006-12-08 09:42:53  mark
+# Revision 1.4  2007-02-27 15:54:41  mark
+# changed Disk to HostDisk
+#
+# Revision 1.3  2006/12/08 09:42:53  mark
 # added support for generic CopyObject Framework
 #
 # Revision 1.2  2006/07/20 10:25:10  mark

@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.1 2006-12-08 09:42:26 mark Exp $
+# $Id: ComPartitionCopyObject.py,v 1.2 2007-02-27 15:54:28 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -21,7 +21,7 @@ from xml.dom.ext import PrettyPrint
 
 from ComCopyObject import CopyObjectJournaled
 
-from comoonics.ComDisk import Disk
+from comoonics.ComDisk import HostDisk
 from comoonics.ComExceptions import *
 
 
@@ -32,7 +32,7 @@ class PartitionCopyObject(CopyObjectJournaled):
         CopyObjectJournaled.__init__(self, element, doc)
         try:
             __disk=xpath.Evaluate('disk', element)[0]
-            self.disk=Disk(__disk, doc)
+            self.disk=HostDisk(__disk, doc)
         except Exception:
             raise ComException("disk for copyset not defined")
 
@@ -65,9 +65,12 @@ class PartitionCopyObject(CopyObjectJournaled):
 
     def updateMetaData(self, element):
         ''' updates meta data information '''
-        self.disk.updateChildrenWithPK(Disk(element, None))
+        self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.1  2006-12-08 09:42:26  mark
+# Revision 1.2  2007-02-27 15:54:28  mark
+# changed Disk to HostDisk
+#
+# Revision 1.1  2006/12/08 09:42:26  mark
 # initial check in - stable
 #
