@@ -52,8 +52,8 @@ version = "0.5.3"
 #                                                                            }}}
 # ------------------------------------------------------------------------------
 # Import modules                                                             {{{
-
-import fileinput, fcntl, getpass, os, pexpect, re
+from comoonics import pexpect
+import fileinput, fcntl, getpass, os, re
 import socket, struct, sys, termios, threading, time
 from optparse import OptionParser, OptionGroup, make_option
 
