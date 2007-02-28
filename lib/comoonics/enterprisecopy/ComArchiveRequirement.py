@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.4 2006-08-02 13:55:29 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.5 2007-02-28 10:11:42 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -70,6 +70,11 @@ class ArchiveRequirement(Requirement):
         """
         srcfile=self.getAttribute("name")
         destfile=self.getAttribute("dest")
+        __mkdir=self.getAttributeBoolean("mkdir", default=True)
+
+        if not os.path.exists(destfile) and __mkdir:
+            ComLog.getLogger(ArchiveRequirement.__logStrLevel__).debug("Path %s does not exists. I'll create it." % destfile)
+            os.makedirs(destfile)
 
         if self.check():
             if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
@@ -119,7 +124,10 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.4  2006-08-02 13:55:29  marc
+# Revision 1.5  2007-02-28 10:11:42  mark
+# added mkdir support
+#
+# Revision 1.4  2006/08/02 13:55:29  marc
 # added bak_suffix attribute
 #
 # Revision 1.3  2006/07/24 14:48:42  marc
