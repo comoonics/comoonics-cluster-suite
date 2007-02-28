@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.5 2007-02-09 11:28:30 marc Exp $
+# $Id: ComDataObject.py,v 1.6 2007-02-28 10:12:25 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -97,6 +97,23 @@ class DataObject(object):
         for i in range(len(nodemap)):
             self.setAttribute(nodemap.item(i).nodeName, nodemap.item(i).nodeValue)
 
+
+    def getAttributeBoolean(self, name, default=False):
+        ''' returns the boolean value of an attribute
+            True:  "yes"|"true" (case insensitive) | "1"
+            False: "no"|"false" (case insensitive)  | "0"
+        '''
+        if not self.hasAttribute(self):
+            return default
+        value=self.getAttribute(name).lower()
+        if value == "yes" or value == "true" or value == "1":
+            return True
+        if value == "no" or value == "false" or value == "0":
+            return False
+        return default
+
+
+
     def __copy__(self):
         class EmptyClass: pass
         obj = EmptyClass()
@@ -170,7 +187,10 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.5  2007-02-09 11:28:30  marc
+# Revision 1.6  2007-02-28 10:12:25  mark
+# added getAttributeBoolean()
+#
+# Revision 1.5  2007/02/09 11:28:30  marc
 # added optional but general support for properties.
 #
 # Revision 1.4  2006/12/08 09:44:18  mark
