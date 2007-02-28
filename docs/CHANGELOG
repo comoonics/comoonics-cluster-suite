@@ -10,6 +10,8 @@ WARNING:
 
 CHANGES:
 comoonics-cs-py:
+* Wed Feb 28 2007 MH <hlawatschek@atix.de>, 0.1.23:
+	added mountpoint mkdir option (default) (Fixes bz 24)
 * Tue Feb 27 2007 MH <hlawatschek@atix.de>, 0.1.22:
     added support for dm_multipath
     some bugfixes
@@ -19,6 +21,8 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-ec-py
+* Wed Feb 28 2007 MH <hlawatschek@atix.de>, 0.1.13:
+	added ArchiveRequirement mkdir option (default) (Fixes bz 24)
 * Tue Feb 27 2007 MH <hlawatschek@atix.de>, 0.1.12:
     added support for dm_multipath
     some bugfixes
