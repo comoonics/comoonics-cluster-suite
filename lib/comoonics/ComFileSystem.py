@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.2 2006-07-21 15:17:19 mark Exp $
+# $Id: ComFileSystem.py,v 1.3 2007-02-28 10:13:59 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComFileSystem.py,v $
 
 import os
@@ -48,7 +48,7 @@ def getFileSystem(element, doc):
     if __type == "gfs":
         return gfsFileSystem(element, doc)
     raise exceptions.NotImplementedError()
-       
+
 
 class FileSystem(DataObject):
     """ Base class for a filesystem """
@@ -75,26 +75,32 @@ class FileSystem(DataObject):
         self.maxSizeMB = 8 * 1024 * 1024
         self.maxLabelChars = 16
         self.partedFileSystemType = None
- 
+
 
     def mount(self, device, mountpoint):
         """ mount a filesystem
         device: ComDevice.Device
         mountpoint: ComMountPoint.MountPoint
-        """ 
-        __exclusiv=False
-        if self.hasAttribute("exlock"):
-            __lockfile=self.getAttribute("exlock")
-            __exclusiv=True
+        """
+
+        __exclusiv=self.getAttributeBoolean("exlock", default=False)
+        __mkdir=self.getAttributeBoolean("mkdir", default=True)
+
+        __mp=mountpoint.getAttribute("name")
+        if not os.path.exists(__mp) and __mkdir:
+            log.debug("Path %s does not exists. I'll create it." % __mp)
+            os.makedirs(__mp)
 
         if __exclusiv:
             if os.path.exists(__lockfile):
                 raise ComException("lockfile " + __lockfile + " exists!")
-        
+
+            __mkdir=self.getAttributeBoolean("mkdir")
+
         __cmd = CMD_MOUNT + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
-                " " + device.getDevicePath() + " " + mountpoint.getAttribute("name")
+                " " + device.getDevicePath() + " " + __mp
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        log.debug("mount:" + __cmd + ": " + __ret) 
+        log.debug("mount:" + __cmd + ": " + __ret)
         if __rc != 0:
             raise ComException(__cmd + __ret)
         if __exclusiv:
@@ -105,20 +111,20 @@ class FileSystem(DataObject):
         """ umount a filesystem with the use of the device name
         device: ComDevice.Device
         """
-        __cmd = CMD_UMOUNT + " " + device.getDevicePath() 
+        __cmd = CMD_UMOUNT + " " + device.getDevicePath()
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        log.debug("umount:" + __cmd + ": " + __ret) 
+        log.debug("umount:" + __cmd + ": " + __ret)
         if __rc != 0:
             raise ComException(__cmd + __ret)
         self.unlinkLockfile()
 
     def umountDir(self, mountpoint):
-        """ umount a filesystem with the use of the mountpoint 
+        """ umount a filesystem with the use of the mountpoint
         mountpoint: ComMountPoint.MountPoint
         """
         __cmd = CMD_UMOUNT + " " + mountpoint.getAttribute("name")
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        log.debug("umount: " + __cmd + ": " + __ret) 
+        log.debug("umount: " + __cmd + ": " + __ret)
         if __rc != 0:
             raise ComException(__cmd + __ret)
         self.unlinkLockfile()
@@ -153,14 +159,14 @@ class FileSystem(DataObject):
         pass
 
     def getBlockSize(self):
-        """ return the blocksize defined in filesystem element 
+        """ return the blocksize defined in filesystem element
         see scanOptions
         """
         __attr=self.getElement().xpath(self.xmlpath+"/@bsize")
         return __attr[0].value
 
     def isFormattable(self):
-        """ return if this filesystem type can be formatted 
+        """ return if this filesystem type can be formatted
         e.g ext3 is formattable, proc is not
         """
         return self.formattable
@@ -180,18 +186,18 @@ class FileSystem(DataObject):
 
     def scanDevice(self, device):
         # Do we really need this method ?
-        """ scans the device (virtual method) 
+        """ scans the device (virtual method)
         device: ComDevice.Device
         """
         pass
-    
+
     def scanOptions(self, device, mountpoint=None):
-        """ scans the filesystem for parameters e.g. blocksize (virtual method) 
+        """ scans the filesystem for parameters e.g. blocksize (virtual method)
         device: ComDevice.Device
         mountpoint: ComMountPoint.MountPoint
         """
         pass
-        
+
     """ private """
     def unlinkLockfile(self):
         if self.hasAttribute("exlock"):
@@ -207,28 +213,28 @@ class extFileSystem(FileSystem):
         self.checked = 1
         self.linuxnativefs = 1
         self.maxSizeMB = 8 * 1024 * 1024
-  
+
     def labelDevice(self, label, device):
         __devicePath = device.getDevicePath()
         __cmd = CMD_E2LABEL + " " + __devicePath + " " + label
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        log.debug("labelDevice: " +  __cmd + ": " + __ret) 
+        log.debug("labelDevice: " +  __cmd + ": " + __ret)
         if __rc:
             raise ComException(__cmd + __ret)
 
     def getLabel(self, device):
         __cmd = CMD_E2LABEL + " " + __devicePath
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        log.debug("getLabel: " + __cmd + ": " + __ret) 
-        if __rc: 
+        log.debug("getLabel: " + __cmd + ": " + __ret)
+        if __rc:
             raise ComException(__cmd + __ret)
         return __ret
-        
+
     def formatDevice(self, device):
         __devicePath = device.getDevicePath()
-        __cmd = self.getMkfsCmd() + " " + __devicePath 
+        __cmd = self.getMkfsCmd() + " " + __devicePath
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        log.debug("formatDevice: "  + __cmd + ": " + __ret) 
+        log.debug("formatDevice: "  + __cmd + ": " + __ret)
         if __rc != 0:
             raise ComException(__cmd + __ret)
 
@@ -241,7 +247,7 @@ class extFileSystem(FileSystem):
         if not rc:
             raise ComException("device with label " + label + "not found")
         return ComDevice.Device(__path[0])
-        
+
 
 class ext2FileSystem(extFileSystem):
     """ The extended2 filesystem """
@@ -277,9 +283,9 @@ class gfsFileSystem(FileSystem):
 
 
     def formatDevice(self, device):
-        __cmd = self.getMkfsCmd() + self.getOptionsString() + device.getDevicePath() 
+        __cmd = self.getMkfsCmd() + self.getOptionsString() + device.getDevicePath()
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        #self.getLog().debug("formatDevice: \n" , __cmd + __ret) 
+        #self.getLog().debug("formatDevice: \n" , __cmd + __ret)
         if __rc != 0:
             raise ComException(__cmd + __ret)
 
@@ -298,19 +304,19 @@ class gfsFileSystem(FileSystem):
         __optstr+=" "
         return __optstr
 
-                
+
     def scanOptions(self, device, mountpoint=None):
         """ Scans a mountded gfs and puts the meta information into the DOM
         raises ComException
         """
-        
+
         if mountpoint:
             __mountpoint=mountpoint.getAttribute("name")
         else:
             __mountpoint, fstype = device.scanMountPoint()
         if not __mountpoint:
             raise ComException("device " + device.getDevicePath() + " is not mounted.")
-        __cmd = CMD_GFS_TOOL + " getsb " + __mountpoint  
+        __cmd = CMD_GFS_TOOL + " getsb " + __mountpoint
         __rc, __ret = ComSystem.execLocalGetResult(__cmd)
         if __rc != 0:
             raise ComException(__cmd + __ret)
@@ -340,13 +346,16 @@ class gfsFileSystem(FileSystem):
         __journals=ComUtils.grepInLines(__ret, "  Journals = ([0-9]+)")[0]
         log.debug("scan Options Journals: " +__journals)
         self.setAttribute("journals", __journals)
-                                           
 
-        
 
-            
+
+
+
 # $Log: ComFileSystem.py,v $
-# Revision 1.2  2006-07-21 15:17:19  mark
+# Revision 1.3  2007-02-28 10:13:59  mark
+# added mountpoint mkdir support
+#
+# Revision 1.2  2006/07/21 15:17:19  mark
 # added support for lockex option
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
