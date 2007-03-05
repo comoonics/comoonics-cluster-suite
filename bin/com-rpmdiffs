@@ -32,7 +32,12 @@ class Config(GetOpts.BaseConfig):
     database="atix_cmdb"
     category="unknown"
     table="software_cmdb"
+    category=False
     sourcenames=list()
+    search=False
+    limitup=0
+    limitdown=0
+    orderby=None
 
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -41,10 +46,15 @@ class Config(GetOpts.BaseConfig):
         self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
         self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
         self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
+        self.category=GetOpts.Option("category", "Set for search as categories", self.category, False, "c")
+        self.search=GetOpts.Option("search", "search for string and select", self.search, False, "s")
+        self.limitup=GetOpts.Option("limitup", "limitup from", self.limitup, False, "L")
+        self.limitdown=GetOpts.Option("limitdown", "limitto to", self.limitdown, False, "l")
+        self.orderby=GetOpts.Option("orderby", "Orderbystring without ORDER BY", self.orderby, False, "o")
         self.values=dict()
-        self.setAdditionalParams("sourcename sourcename [[sourcename]..]")
+        self.setAdditionalParams("sourcename sourcename|searchstring [[sourcename]..]")
     def do(self, args_proper):
-        if len(args_proper) >= 2:
+        if len(args_proper) >= 2 or (len(args_proper) == 1 and self.search):
             for arg in args_proper:
                 self.sourcenames.append(arg)
         else:
@@ -68,15 +78,37 @@ elif ret > 0:
 
 software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
 
-def formatRow(row):
+def formatRow(row, colnames):
+    orderedrow=list()
+    for colname in colnames:
+        orderedrow.append(row[colname])
+    return ', '.join(orderedrow)
+
+def formatColNames(row):
     return ', '.join(row)
 
-rs=software_cmdb.getDiffsFromSources(config.sourcenames)
-ComLog.getLogger().debug("Got %u rows" % rs.num_rows())
-row=rs.fetch_row()
-while row:
-    print formatRow(row[0])
-    row=rs.fetch_row()
+if config.category and not config.search:
+   rs=software_cmdb.getDiffsFromCategories(config.sourcenames, config.limitdown, config.limitup, config.orderby)
+   colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
+elif not config.search:
+   rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, config.orderby)
+   colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
+elif config.search:
+    where=None
+    colnames=SoftwareCMDB.SELECT_FOR_SOFTWARE
+    if len(config.sourcenames)>1:
+        where=["name LIKE \"%"+config.sourcenames[1]+"%\""]
+    if config.category:
+        rs=software_cmdb.getSoftwareForCategory(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
+    else:
+        rs=software_cmdb.getSoftware(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
+if rs:
+    ComLog.getLogger().debug("Got %u rows" % rs.num_rows())
+    row=rs.fetch_row(1,1)
+    print formatColNames(colnames)
+    while row:
+        print formatRow(row[0], colnames)
+        row=rs.fetch_row(1,1)
 
 ##########
 # $Log$

@@ -6,7 +6,7 @@
 
 __version__ = "$revision$"
 __description__="""
-Programm to update all installed rpms in the database
+Programm to retrieve systeminformation from the database
 """
 
 # $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/rpm2db.py,v $
@@ -34,10 +34,10 @@ class Config(GetOpts.BaseConfig):
     user="atix"
     password="atix"
     database="atix_cmdb"
-    category="unknown"
+    systemname=None
     table="software_cmdb"
 
-    def __init__(self, systeminformation):
+    def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
         self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
         self.database=GetOpts.Option("database", "Sets the databasename", self.database, False, "d")
@@ -45,14 +45,13 @@ class Config(GetOpts.BaseConfig):
         self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
         self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
         self.values=dict()
-        self.name=systeminformation.getName()
-        self.setAdditionalParams("[category=%s] [table=%s]" %(self.category, self.table))
+        self.setAdditionalParams("[systemname] [table=%s]" %(self.table))
     def do(self, args_proper):
         import os.path
 #        if len(args_proper) >= 1:
 #            self.name=args_proper[0]
         if len(args_proper) >= 1:
-            self.category=args_proper[0]
+            self.systemname=args_proper[0]
         if len(args_proper) >= 2:
             self.table=args_proper[1]
         return 0
@@ -60,8 +59,7 @@ class Config(GetOpts.BaseConfig):
     def setDebug(self, value):
         ComLog.setLevel(logging.DEBUG)
 
-systeminformation=SystemInformation()
-config=Config(systeminformation)
+config=Config()
 
 ret=config.getopt(sys.argv[1:])
 if ret < 0:
@@ -71,23 +69,12 @@ elif ret > 0:
     sys.exit(ret)
 
 
-software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
-dsl=DSL(dbhandle=software_cmdb.db, table="dsl")
-source=Source(dbhandle=software_cmdb.db)
+source=Source(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
 
-line("Updating Systeminformation of "+systeminformation.getName())
+sysinfos=source.getSourcesAsSysteminformations(config.systemname)
 
-source.updateSystemInformation(systeminformation, config.category)
-
-line("Updating RPMS of "+systeminformation.getName())
-
-rpms=systeminformation.getInstalledSoftware()
-
-for rpm_hdr in rpms:
-    (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
-    software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion)
-
-software_cmdb.db.commit()
+for sysinfo in sysinfos:
+    print sysinfo
 
 # $Log: rpm2db.py,v $
 # Revision 1.1  2006/08/08 08:32:38  marc

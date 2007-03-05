@@ -6,7 +6,7 @@ Classes to automatically collect informations of this system.
 
 
 # here is some internal information
-# $Id: ComSystemInformation.py,v 1.1 2007-02-23 12:42:59 marc Exp $
+# $Id: ComSystemInformation.py,v 1.2 2007-03-05 16:10:56 marc Exp $
 #
 import re
 import os
@@ -21,7 +21,7 @@ ComSystem.__EXEC_REALLY_DO=""
 class SystemInformationNotFound(ComException):
     pass
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComSystemInformation.py,v $
 
 class SystemType(object):
@@ -47,7 +47,7 @@ class SystemInformation(object):
     apropriate Instance of the SystemInformationclass representing your system
     First only LinuxSystemInformation is possible.
     """
-    def check():
+    def check(*args, **kwds):
         """
         Static method that returns true if this system is of that type
         """
@@ -58,11 +58,12 @@ class SystemInformation(object):
         """
         The factory calling the apropriate constructor
         """
-        if LinuxSystemInformation.check():
-            return LinuxSystemInformation.__new__(LinuxSystemInformation)
+#        SystemInformation.log.debug("SystemInformation.__new__(args: %s, kwds: %s)" %(args, kwds))
+        if LinuxSystemInformation.check(*args, **kwds):
+            return LinuxSystemInformation.__new__(LinuxSystemInformation, *args, **kwds)
         raise SystemInformationNotFound("Could not find system information for this system")
 
-    def __init__(self):
+    def __init__(self, *args, **kwds):
         """
         The constructor instantiating an object of class SystemInformation
         """
@@ -147,11 +148,20 @@ class LinuxSystemInformation(SystemInformation):
     """
     Implementation of an unknown Linux System
     """
-    def check():
+    def check(*args, **kwds):
         ret=False
+        SystemInformation.log.debug("LinuxSystemInformation: check(args: %s, kwds: %s)" %(args, kwds))
         try:
-            out = os.uname()[0]
-            if re.compile("linux", re.I).match(out):
+            if not kwds and not args:
+                out = os.uname()[0]
+                if re.compile("linux", re.I).match(out):
+                    ret=True
+            elif kwds.has_key("operatingsystem") and \
+                (re.compile("linux", re.I).match(kwds["operatingsystem"]) or \
+                 re.compile("centos", re.I).match(kwds["operatingsystem"]) or \
+                 re.compile("fedora", re.I).match(kwds["operatingsystem"]) or \
+                 re.compile("redhat", re.I).match(kwds["operatingsystem"])):
+#                SystemInformation.log.debug("checking from keywords for LinuxSystemInformation %s" %(kwds))
                 ret=True
         finally:
             return ret
@@ -161,23 +171,34 @@ class LinuxSystemInformation(SystemInformation):
         """
         The factory calling the apropriate constructor
         """
-        if RPMLinuxSystemInformation.check():
-            return RPMLinuxSystemInformation.__new__(RPMLinuxSystemInformation)
+        if RPMLinuxSystemInformation.check(*args, **kwds):
+            return RPMLinuxSystemInformation.__new__(RPMLinuxSystemInformation, *args, **kwds)
         else:
-            return object.__new__(LinuxSystemInformation)
+            return object.__new__(LinuxSystemInformation, *args, **kwds)
 
-    def __init__(self):
-        super(LinuxSystemInformation, self).__init__()
-        (self.operatingsystem, self.name, self.kernelversion, self.uptime, self.architecture)=os.uname()
-        self.type=SystemTypes.SINGLE
+    def __init__(self, *args, **kwds):
+        super(LinuxSystemInformation, self).__init__(*args, **kwds)
+        if not kwds and not args:
+            (self.operatingsystem, self.name, self.kernelversion, self.uptime, self.architecture)=os.uname()
+            self.type=SystemTypes.SINGLE
+        elif kwds:
+            self.__dict__.update(dict(kwds))
+            self.type=SystemTypes.SINGLE
 
 class RPMLinuxSystemInformation(LinuxSystemInformation):
     RPM_CMD="rpm"
-    def check():
+    def check(*args, **kwds):
         ret=False
         try:
-            ComSystem.execLocalOutput("%s -qf $(which rpm)" %(RPMLinuxSystemInformation.RPM_CMD))
-            ret= True
+            if not kwds and not args:
+                ComSystem.execLocalOutput("%s -qf $(which rpm)" %(RPMLinuxSystemInformation.RPM_CMD))
+                ret= True
+            elif kwds.has_key("operatingsystem") and  \
+                (re.compile("linux", re.I).match(kwds["operatingsystem"]) or \
+                 re.compile("centos", re.I).match(kwds["operatingsystem"]) or \
+                 re.compile("fedora", re.I).match(kwds["operatingsystem"]) or \
+                 re.compile("redhat", re.I).match(kwds["operatingsystem"])):
+                ret=True
         finally:
             return ret
     check=staticmethod(check)
@@ -187,28 +208,37 @@ class RPMLinuxSystemInformation(LinuxSystemInformation):
         The factory calling the apropriate constructor
         """
         if RedhatSystemInformation.check():
-            return RedhatSystemInformation.__new__(RedhatSystemInformation)
+            return RedhatSystemInformation.__new__(RedhatSystemInformation, *args, **kwds)
         else:
-            return object.__new__(RPMLinuxSystemInformation)
+            return object.__new__(RPMLinuxSystemInformation, *args, **kwds)
 
-    def __init__(self):
-        super(RPMLinuxSystemInformation, self).__init__()
+    def __init__(self, *args, **kwds):
+        super(RPMLinuxSystemInformation, self).__init__(*args, **kwds)
+        if kwds:
+            self.__dict__.update(dict(kwds))
+            self.type=SystemTypes.SINGLE
 
 class RedhatSystemInformation(RPMLinuxSystemInformation):
     REDHAT_RELEASE_FILE="/etc/redhat-release"
-    def check():
+    def check(*args, **kwds):
         ret=False
         try:
-            ret=os.path.exists(RedhatSystemInformation.REDHAT_RELEASE_FILE)
+            if not kwds and not args:
+                ret=os.path.exists(RedhatSystemInformation.REDHAT_RELEASE_FILE)
+            elif kwds.has_key("operatingsystem") and \
+                 (re.compile("centos", re.I).match(kwds["operatingsystem"]) or \
+                  re.compile("fedora", re.I).match(kwds["operatingsystem"]) or \
+                  re.compile("redhat", re.I).match(kwds["operatingsystem"])):
+                ret=True
         finally:
             return ret
     check=staticmethod(check)
 
     def __new__(cls, *args, **kwds):
-        if RedhatClusterSystemInformation.check():
-            return RedhatClusterSystemInformation.__new__(RedhatClusterSystemInformation)
+        if RedhatClusterSystemInformation.check(*args, **kwds):
+            return RedhatClusterSystemInformation.__new__(RedhatClusterSystemInformation, *args, **kwds)
         else:
-            return object.__new__(RedhatSystemInformation)
+            return object.__new__(RedhatSystemInformation, *args, **kwds)
 
     def updateInstalledSoftware(self):
         import rpm
@@ -217,36 +247,48 @@ class RedhatSystemInformation(RPMLinuxSystemInformation):
         for hdr in mi:
             self.installedsoftware.append(hdr)
 
-    def __init__(self):
-        super(RedhatSystemInformation, self).__init__()
-        f=file(self.REDHAT_RELEASE_FILE, "r")
-        self.operatingsystem=f.readline().splitlines(False)[0]
-        f.close()
+    def __init__(self, *args, **kwds):
+        super(RedhatSystemInformation, self).__init__(*args, **kwds)
+        if not kwds and not args:
+            f=file(self.REDHAT_RELEASE_FILE, "r")
+            self.operatingsystem=f.readline().splitlines(False)[0]
+            f.close()
+        else:
+            self.__dict__.update(dict(kwds))
+            self.type=SystemTypes.SINGLE
 
 class RedhatClusterSystemInformation(RedhatSystemInformation):
     REDHAT_CLUSTER_CONF="/etc/cluster/cluster.conf"
     CLUSTAT_CMD="/usr/sbin/clustat"
     XPATH_CLUSTERNAME="/cluster/@name"
-    def check():
+    def check(*args, **kwds):
         ret=False
-        SystemInformation.log.debug("Checking for cluster availability")
         try:
-            if os.path.exists(RedhatClusterSystemInformation.REDHAT_CLUSTER_CONF) and ComSystem.execLocal("%s >/dev/null 2>&1" %(RedhatClusterSystemInformation.CLUSTAT_CMD))==0:
-                SystemInformation.log.debug("OK")
-                ret=True
+            if not kwds and not args:
+#                SystemInformation.log.debug("Checking for cluster availability")
+                if os.path.exists(RedhatClusterSystemInformation.REDHAT_CLUSTER_CONF) and ComSystem.execLocal("%s >/dev/null 2>&1" %(RedhatClusterSystemInformation.CLUSTAT_CMD))==0:
+#                    SystemInformation.log.debug("OK")
+                    ret=True
+#                else:
+#                    SystemInformation.log.debug("FAILED")
             else:
-                SystemInformation.log.debug("FAILED")
+                if kwds.has_key("type") and kwds["type"]=="cluster":
+                    ret=True
         finally:
             return ret
     def __new__(cls, *args, **kwds):
-        return object.__new__(RedhatClusterSystemInformation)
-    def __init__(self):
-        super(RedhatClusterSystemInformation, self).__init__()
-        reader=Sax2.Reader(validate=0)
-        f_cluster_conf=file(self.REDHAT_CLUSTER_CONF)
-        self.cluster_conf=reader.fromStream(f_cluster_conf)
-        self.type=SystemTypes.CLUSTER
-        self.name=self.getClusterName()
+        return object.__new__(RedhatClusterSystemInformation, *args, **kwds)
+    def __init__(self, *args, **kwds):
+        super(RedhatClusterSystemInformation, self).__init__(*args, **kwds)
+        if not kwds and not args:
+            reader=Sax2.Reader(validate=0)
+            f_cluster_conf=file(self.REDHAT_CLUSTER_CONF)
+            self.cluster_conf=reader.fromStream(f_cluster_conf)
+            self.type=SystemTypes.CLUSTER
+            self.name=self.getClusterName()
+        else:
+            self.__dict__.update(dict(kwds))
+            self.type=SystemTypes.CLUSTER
 
     def getClusterName(self):
         """
@@ -264,7 +306,25 @@ def main():
     print "Systeminformation: "
     print systeminformation.__class__
     print systeminformation
-    print "Getting installed software:"
+    print "Intializing from kwds:"
+    systems=[ { "type":      "single",
+                "name":             "gfs-node1",
+                "category":         "development",
+                "architecture":     "i686",
+                "operatingsystem": "CentOS release 4.4 (Final)",
+                "kernelversion":   "2.6.9-42.0.3.ELsmp"},
+              { "type":             "cluster",
+                "name":             "vmware_cluster",
+                "category":         "production",
+                "architecture":     "i686",
+                "operatingsystem": "CentOS release 4.4 (Final)",
+                "kernelversion":   "2.6.9-34.0.1.ELsmp"}]
+    for system in systems:
+        print "system: %s" %(system)
+        systeminformation=SystemInformation(**system)
+        print systeminformation.__class__
+        print systeminformation
+
 #    for hdr in systeminformation.getInstalledSoftware():
 #        print hdr["name"]
 
@@ -272,6 +332,9 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComSystemInformation.py,v $
-# Revision 1.1  2007-02-23 12:42:59  marc
+# Revision 1.2  2007-03-05 16:10:56  marc
+# first rpm version
+#
+# Revision 1.1  2007/02/23 12:42:59  marc
 # initial revision
 #

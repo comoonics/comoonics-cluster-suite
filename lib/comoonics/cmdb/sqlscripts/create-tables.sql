@@ -57,10 +57,12 @@ CREATE TABLE IF NOT EXISTS dsl_stages (
 CREATE TABLE IF NOT EXISTS sources (
   source_type ENUM('cluster', 'single', 'none') NOT NULL DEFAULT "cluster",
   name varchar(255) NOT NULL,
-  category varchar(255) NOT NULL,
+  category varchar(255) NOT NULL DEFAULT "unknown",
   architecture varchar(255) NOT NULL,
   operating_system varchar(255) NOT NULL,
   kernel_version varchar(255) NOT NULL,
+  uptime varchar(255) NULL,
+  lastimport TIMESTAMP( 14 ) ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (name)
 ) TYPE=InnoDB COMMENT='Table structure for holding informations of servers and clusters (sources).'
 
