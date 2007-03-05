@@ -9,6 +9,10 @@ WARNING:
     No empty lines between changelogs.
 
 CHANGES:
+comoonics-cmdb-py:
+* Mon Mar 05 2007 MG <grimme@atix.de>, 0.1-1
+    first rpm cmdb version (TAG CMDB_STABLE_0_1)
+
 comoonics-cs-py:
 * Wed Feb 28 2007 MH <hlawatschek@atix.de>, 0.1.23:
 	added mountpoint mkdir option (default) (Fixes bz 24)
