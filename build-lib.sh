@@ -1,4 +1,4 @@
-# $Id: build-lib.sh,v 1.1 2007-02-09 12:31:24 marc Exp $
+# $Id: build-lib.sh,v 1.2 2007-03-05 21:13:00 marc Exp $
 
 function setup {
   CHANGELOG=$(awk '
@@ -28,13 +28,16 @@ setup(name="'${NAME}'",
       url="'${URL}'",
       package_dir =  { '${PACKAGE_DIR}'},
       packages=      [ '${PACKAGES}' ],
-      scripts=       [ '${SCRIPTS}' ]
+      scripts=       [ '${SCRIPTS}' ],
      )
 ' > setup.py
-  python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}"
+  python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.1  2007-02-09 12:31:24  marc
+# Revision 1.2  2007-03-05 21:13:00  marc
+# added DOCFILES
+#
+# Revision 1.1  2007/02/09 12:31:24  marc
 # initial revision
 #
