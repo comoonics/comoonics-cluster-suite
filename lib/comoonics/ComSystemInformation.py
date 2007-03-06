@@ -6,7 +6,7 @@ Classes to automatically collect informations of this system.
 
 
 # here is some internal information
-# $Id: ComSystemInformation.py,v 1.2 2007-03-05 16:10:56 marc Exp $
+# $Id: ComSystemInformation.py,v 1.3 2007-03-06 07:05:20 marc Exp $
 #
 import re
 import os
@@ -21,7 +21,7 @@ ComSystem.__EXEC_REALLY_DO=""
 class SystemInformationNotFound(ComException):
     pass
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComSystemInformation.py,v $
 
 class SystemType(object):
@@ -154,13 +154,13 @@ class LinuxSystemInformation(SystemInformation):
         try:
             if not kwds and not args:
                 out = os.uname()[0]
-                if re.compile("linux", re.I).match(out):
+                if re.compile("linux", re.I).search(out):
                     ret=True
             elif kwds.has_key("operatingsystem") and \
-                (re.compile("linux", re.I).match(kwds["operatingsystem"]) or \
-                 re.compile("centos", re.I).match(kwds["operatingsystem"]) or \
-                 re.compile("fedora", re.I).match(kwds["operatingsystem"]) or \
-                 re.compile("redhat", re.I).match(kwds["operatingsystem"])):
+                (re.compile("linux", re.I).search(kwds["operatingsystem"]) or \
+                 re.compile("centos", re.I).search(kwds["operatingsystem"]) or \
+                 re.compile("fedora", re.I).search(kwds["operatingsystem"]) or \
+                 re.compile("redhat", re.I).search(kwds["operatingsystem"])):
 #                SystemInformation.log.debug("checking from keywords for LinuxSystemInformation %s" %(kwds))
                 ret=True
         finally:
@@ -194,10 +194,10 @@ class RPMLinuxSystemInformation(LinuxSystemInformation):
                 ComSystem.execLocalOutput("%s -qf $(which rpm)" %(RPMLinuxSystemInformation.RPM_CMD))
                 ret= True
             elif kwds.has_key("operatingsystem") and  \
-                (re.compile("linux", re.I).match(kwds["operatingsystem"]) or \
-                 re.compile("centos", re.I).match(kwds["operatingsystem"]) or \
-                 re.compile("fedora", re.I).match(kwds["operatingsystem"]) or \
-                 re.compile("redhat", re.I).match(kwds["operatingsystem"])):
+                (re.compile("linux", re.I).search(kwds["operatingsystem"]) or \
+                 re.compile("centos", re.I).search(kwds["operatingsystem"]) or \
+                 re.compile("fedora", re.I).search(kwds["operatingsystem"]) or \
+                 re.compile("redhat", re.I).search(kwds["operatingsystem"])):
                 ret=True
         finally:
             return ret
@@ -226,9 +226,9 @@ class RedhatSystemInformation(RPMLinuxSystemInformation):
             if not kwds and not args:
                 ret=os.path.exists(RedhatSystemInformation.REDHAT_RELEASE_FILE)
             elif kwds.has_key("operatingsystem") and \
-                 (re.compile("centos", re.I).match(kwds["operatingsystem"]) or \
-                  re.compile("fedora", re.I).match(kwds["operatingsystem"]) or \
-                  re.compile("redhat", re.I).match(kwds["operatingsystem"])):
+                 (re.compile("centos", re.I).search(kwds["operatingsystem"]) or \
+                  re.compile("fedora", re.I).search(kwds["operatingsystem"]) or \
+                  re.compile("redhat", re.I).search(kwds["operatingsystem"])):
                 ret=True
         finally:
             return ret
@@ -332,7 +332,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComSystemInformation.py,v $
-# Revision 1.2  2007-03-05 16:10:56  marc
+# Revision 1.3  2007-03-06 07:05:20  marc
+# would not find linux in redhat rhel4 with match. Changed to search.
+#
+# Revision 1.2  2007/03/05 16:10:56  marc
 # first rpm version
 #
 # Revision 1.1  2007/02/23 12:42:59  marc
