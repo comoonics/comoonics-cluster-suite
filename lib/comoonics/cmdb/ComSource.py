@@ -4,7 +4,7 @@ Class for the dsl
 Methods for filling and getting informations for sources for CMDB
 """
 # here is some internal information
-# $Id: ComSource.py,v 1.1 2007-03-05 16:10:30 marc Exp $
+# $Id: ComSource.py,v 1.2 2007-03-06 06:54:15 marc Exp $
 #
 
 import os
@@ -30,7 +30,9 @@ class Source(BaseDB):
 
     def getSourcesAsSysteminformations(self, name=None):
         sysinfos=list()
-        selectquery="SELECT source_type AS type, name, category, architecture, operating_system AS operatingsystem, kernel_version AS kernelversion, uptime, lastimport FROM sources"
+        # to be compatible with mysql-python rhel4 and mysql4.1 dateformat it has to be formated
+        selectquery="SELECT source_type AS type, name, category, architecture, operating_system AS operatingsystem, "+\
+                    "kernel_version AS kernelversion, uptime, DATE_FORMAT(lastimport, '%Y%m%d%H%i%s') AS lastimport FROM sources"
         if name and name != "":
             selectquery+=" WHERE name LIKE \"%"+name+"%\";"
         Source.log.debug("getSourcesAsSysteminformations: %s" %(selectquery))
@@ -100,7 +102,10 @@ class Source(BaseDB):
 
 ######################
 # $Log: ComSource.py,v $
-# Revision 1.1  2007-03-05 16:10:30  marc
+# Revision 1.2  2007-03-06 06:54:15  marc
+# be compatible with mysql4.1 and mysql-python on rhel4
+#
+# Revision 1.1  2007/03/05 16:10:30  marc
 # first rpm version
 #
 # Revision 1.1  2007/02/23 12:42:23  marc
