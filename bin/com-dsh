@@ -99,7 +99,7 @@ SSH_CONFIG_DIR = os.environ['HOME'] + '/.ssh/'
 SSH_KNOWNHOSTS_FILE = SSH_CONFIG_DIR + "known_hosts"
 
 # Enable automatic display of errors in pdb
-use_pdb = "yes"
+use_pdb = "no"
 
 #                                                                            }}}
 # ------------------------------------------------------------------------------
@@ -122,8 +122,8 @@ mutex = threading.RLock()
 
 # NOTE: If you experience difficulty with the prompt being detected on the
 # remote host, adjust the CMD_PRMPT variable to match your syntax.
-CMD_PRMPT          = re.compile('^.*?[^ ][$#%]$\Z', re.M)
-CMD_PRMPT_INT      = re.compile('^[\S@]*?[$]$\Z', re.M)
+CMD_PRMPT          = re.compile('^.*?[^ ][$#%].*$\Z', re.M)
+CMD_PRMPT_INT      = re.compile('^[\S@]*?[$].*$\Z', re.M)
 CONNECTION_REFUSED = re.compile('^\s*?Connection refused.*\n.*?[^ ][$#%]$\Z',
                                 re.M)
 LOGIN_PROMPT       = re.compile('^\s*?[Ll]ogin:$\Z', re.M)
