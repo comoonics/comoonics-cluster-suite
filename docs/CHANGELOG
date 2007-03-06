@@ -25,6 +25,8 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-ec-py
+* Tue Mar 06 2007 MG <grimme@atix.de>, 0.1-14:
+    changed prompt for com-dsh to work with linux shell prompts better and removed ipython dependency
 * Wed Feb 28 2007 MH <hlawatschek@atix.de>, 0.1.13:
 	added ArchiveRequirement mkdir option (default) (Fixes bz 24)
 * Tue Feb 27 2007 MH <hlawatschek@atix.de>, 0.1.12:
