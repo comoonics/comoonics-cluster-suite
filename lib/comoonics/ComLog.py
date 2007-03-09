@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.3 2007-03-09 08:45:38 marc Exp $
+# $Id: ComLog.py,v 1.4 2007-03-09 08:49:55 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -27,6 +27,9 @@ __default_log.setLevel(logging.DEBUG)
 
 
 def getLogger(name=""):
+    """
+    Returns a new logger for the given name with derived level from rootlogger.
+    """
     return logging.getLogger(name)
 #    return __default_log
 
@@ -60,11 +63,17 @@ def main():
         setLevel(loggers[loggername], loggername)
         __testLogger(loggername)
 
+    __line("mylogger without level")
+    __testLogger("mylogger")
+
 if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.3  2007-03-09 08:45:38  marc
+# Revision 1.4  2007-03-09 08:49:55  marc
+# just another test and little more docu
+#
+# Revision 1.3  2007/03/09 08:45:38  marc
 # implemented the loggernames and levels and a testingfunction
 #
 # Revision 1.2  2007/03/05 16:12:04  marc
