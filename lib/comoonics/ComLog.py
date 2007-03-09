@@ -6,15 +6,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.2 2007-03-05 16:12:04 marc Exp $
+# $Id: ComLog.py,v 1.3 2007-03-09 08:45:38 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
 #import exceptions
 
+global __default_log
 logging.basicConfig()
 __default_log=logging.getLogger("")
 __default_log.setLevel(logging.DEBUG)
@@ -26,17 +27,47 @@ __default_log.setLevel(logging.DEBUG)
 
 
 def getLogger(name=""):
+    return logging.getLogger(name)
+#    return __default_log
 
-    return __default_log
+#def setLogger(name, logger):
+#    __default_log=logger
+#
+def setLevel(debuglevel, name=""):
+    logging.getLogger(name).setLevel(debuglevel)
 
-def setLogger(name, logger):
-    __default_log=logger
+def getLevel():
+    __default_log.getEffectiveLevel()
 
-def setLevel(debuglevel):
-    __default_log.setLevel(debuglevel)
+def __testLogger(name):
+    logger=getLogger(name)
+    logger.debug("debug")
+    logger.info("info")
+    logger.warning("warning")
+    logger.error("error")
+    logger.critical("critical")
+
+def __line(text):
+    getLogger().info("-------------------------- %s --------------------------------------" %(text))
+
+def main():
+    getLogger().info("Testing ComLog:")
+    loggers={"test1": logging.DEBUG,
+             "test2": logging.INFO,
+             "test3": logging.WARNING}
+    for loggername in loggers.keys():
+        __line("%s level: %s" %(loggername, logging.getLevelName(loggers[loggername])))
+        setLevel(loggers[loggername], loggername)
+        __testLogger(loggername)
+
+if __name__ == "__main__":
+    main()
 
 # $Log: ComLog.py,v $
-# Revision 1.2  2007-03-05 16:12:04  marc
+# Revision 1.3  2007-03-09 08:45:38  marc
+# implemented the loggernames and levels and a testingfunction
+#
+# Revision 1.2  2007/03/05 16:12:04  marc
 # added setLogger
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
