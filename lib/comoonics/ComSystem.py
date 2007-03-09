@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.7 2007-02-23 12:42:43 marc Exp $
+# $Id: ComSystem.py,v 1.8 2007-03-09 09:27:58 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -21,6 +21,9 @@ import popen2
 import ComLog
 
 from comoonics.ComExceptions import ComException
+
+SIMULATE="simulate"
+ASK="ask"
 
 class ExecLocalException(ComException):
     def __init__(self, cmd, rc, out, err):
@@ -36,7 +39,8 @@ error:
 %s
 """ %(self.cmd, self.rc, self.out, self.err)
 
-__EXEC_REALLY_DO = "ask"
+global __EXEC_REALLY_DO
+__EXEC_REALLY_DO = ASK
 log=ComLog.getLogger("ComSystem")
 
 def setExecMode(__mode):
@@ -47,12 +51,15 @@ def execLocalStatusOutput(__cmd):
     """ exec %__cmd and return output and status (rc, out)"""
     global __EXEC_REALLY_DO
     log.debug(__cmd)
-    if __EXEC_REALLY_DO == "ask":
+    if __EXEC_REALLY_DO == ASK:
         __ans=raw_input(__cmd+" (y*,n,c)")
         if __ans == "y" or __ans == "":
             return commands.getstatusoutput(__cmd)
         elif __ans == "c":
             __EXEC_REALLY_DO="continue"
+        return [0,"skipped"]
+    elif __EXEC_REALLY_DO == SIMULATE:
+        log.info("SIMULATE: "+__cmd)
         return [0,"skipped"]
     return commands.getstatusoutput(__cmd)
 
@@ -70,7 +77,7 @@ def execLocalGetResult(__cmd, err=False):
     """ exec %__cmd and returns an array ouf output lines (rc, out, err)"""
     global __EXEC_REALLY_DO
     log.debug(__cmd)
-    if __EXEC_REALLY_DO == "ask":
+    if __EXEC_REALLY_DO == ASK:
         __ans=raw_input(__cmd+" (y*,n,c)")
         if __ans == "c":
             __EXEC_REALLY_DO="continue"
@@ -78,7 +85,10 @@ def execLocalGetResult(__cmd, err=False):
             if err:
                 return [0, "skipped", ""]
             else:
-                return [0, "skipped"]
+                return [0, "skipped", None]
+    elif __EXEC_REALLY_DO == SIMULATE:
+        log.info("SIMULATE: "+__cmd)
+        return [0,"skipped",None]
     child=popen2.Popen3(__cmd, err)
     __rc=child.wait()
     __rv=child.fromchild.readlines()
@@ -92,17 +102,51 @@ def execLocal(__cmd):
     """ exec %cmd and return status output goes to sys.stdout, sys.stderr"""
     global __EXEC_REALLY_DO
     log.debug(__cmd)
-    if __EXEC_REALLY_DO == "ask":
+    if __EXEC_REALLY_DO == ASK:
         __ans=raw_input(__cmd+" (y*,n,c)")
         if __ans == "y" or __ans=="":
             return os.system(__cmd)
         elif __ans == "c":
             __EXEC_REALLY_DO="continue"
         return 0
+    elif __EXEC_REALLY_DO == SIMULATE:
+        log.info("SIMULATE: "+__cmd)
+        return 0
+
     return os.system(__cmd)
 
+def test(level):
+    global __EXEC_REALLY_DO
+    __EXEC_REALLY_DO=level
+    cmd1='echo "hallo stdout"'
+    cmd2='echo "hallo stderr" >&2'
+
+    print execLocalOutput(cmd1)
+    print execLocalStatusOutput(cmd1)
+    print execLocalGetResult(cmd1)
+    print execLocalOutput(cmd2)
+    print execLocalStatusOutput(cmd2)
+    print execLocalGetResult(cmd2, True)
+
+    print execLocalStatusOutput("/bin/false")
+    print execLocal("/bin/false")
+
+def __line(text):
+    print("-------------------------- %s --------------------------------------" %(text))
+
+if __name__=="__main__":
+    __line("level: "+SIMULATE)
+    test(SIMULATE)
+    __line("level: "+"")
+    test("")
+    __line("level: "+ASK)
+    test(ASK)
+
 # $Log: ComSystem.py,v $
-# Revision 1.7  2007-02-23 12:42:43  marc
+# Revision 1.8  2007-03-09 09:27:58  marc
+# added simulate and testing
+#
+# Revision 1.7  2007/02/23 12:42:43  marc
 # added execLocalOutput
 #
 # Revision 1.6  2006/11/23 14:19:34  marc
