@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.8 2007-03-09 09:27:58 marc Exp $
+# $Id: ComSystem.py,v 1.9 2007-03-09 09:39:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -85,10 +85,13 @@ def execLocalGetResult(__cmd, err=False):
             if err:
                 return [0, "skipped", ""]
             else:
-                return [0, "skipped", None]
+                return [0, "skipped"]
     elif __EXEC_REALLY_DO == SIMULATE:
         log.info("SIMULATE: "+__cmd)
-        return [0,"skipped",None]
+        if err:
+            return [0,"skipped", None]
+        else:
+            return [0, "skipped"]
     child=popen2.Popen3(__cmd, err)
     __rc=child.wait()
     __rv=child.fromchild.readlines()
@@ -143,7 +146,10 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.8  2007-03-09 09:27:58  marc
+# Revision 1.9  2007-03-09 09:39:47  marc
+# bugfix with err=False
+#
+# Revision 1.8  2007/03/09 09:27:58  marc
 # added simulate and testing
 #
 # Revision 1.7  2007/02/23 12:42:43  marc
