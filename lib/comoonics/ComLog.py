@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.4 2007-03-09 08:49:55 marc Exp $
+# $Id: ComLog.py,v 1.5 2007-03-09 09:09:57 marc Exp $
 #
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -42,6 +42,33 @@ def setLevel(debuglevel, name=""):
 def getLevel():
     __default_log.getEffectiveLevel()
 
+def debugTraceLog(nameorlogger=None):
+    logTrace(nameorlogger, logging.DEBUG)
+
+def infoTraceLog(nameorlogger=None):
+    logTrace(nameorlogger, logging.INFO)
+
+def warningTraceLog(nameorlogger=None):
+    logTrace(nameorlogger, logging.WARNING)
+
+def criticalTraceLog(nameorlogger=None):
+    logTrace(nameorlogger, logging.CRITICAL)
+
+def errorTraceLog(nameorlogger=None):
+    logTrace(nameorlogger, logging.ERROR)
+
+def logTrace(nameorlogger=None, level=logging.DEBUG):
+    if nameorlogger and type(nameorlogger)==str:
+        logger=getLogger(nameorlogger)
+    elif nameorlogger and isinstance(nameorlogger, logging.Logger):
+        logger=nameorlogger
+    else:
+        logger=getLogger()
+    if logger.getEffectiveLevel() == level:
+#        pass
+        import traceback
+        logger.log(level, traceback.format_exc())
+
 def __testLogger(name):
     logger=getLogger(name)
     logger.debug("debug")
@@ -49,6 +76,16 @@ def __testLogger(name):
     logger.warning("warning")
     logger.error("error")
     logger.critical("critical")
+    __line("Error for "+name)
+    try:
+        from exceptions import IOError
+        raise IOError("testioerror")
+    except:
+        debugTraceLog(name)
+        infoTraceLog(name)
+        warningTraceLog(name)
+        errorTraceLog(name)
+        criticalTraceLog(name)
 
 def __line(text):
     getLogger().info("-------------------------- %s --------------------------------------" %(text))
@@ -70,7 +107,10 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.4  2007-03-09 08:49:55  marc
+# Revision 1.5  2007-03-09 09:09:57  marc
+# added logTrace and friends.
+#
+# Revision 1.4  2007/03/09 08:49:55  marc
 # just another test and little more docu
 #
 # Revision 1.3  2007/03/09 08:45:38  marc
