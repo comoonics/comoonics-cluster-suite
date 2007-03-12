@@ -5,7 +5,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.4 2007-02-09 11:35:44 marc Exp $
+# $Id: XmlTools.py,v 1.5 2007-03-12 17:03:18 mark Exp $
 
 import warnings
 from xml.dom import Node
@@ -100,6 +100,9 @@ def merge_trees_with_pk(source, dest, doc, pk="name", filter=None):
             # lets copy things from the source
             # - create new element
             d_child=doc.createElement(tagname)
+            # - add all Attributes
+            for attrnode in xpath.Evaluate("@*", s_child):
+                d_child.setAttribute(attrnode.name, s_child.getAttribute(attrnode.name))
             # - add child
             #print "add new child"
             add_element_to_node_sorted(d_child, dest, pk)
@@ -180,7 +183,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.4  2007-02-09 11:35:44  marc
+# Revision 1.5  2007-03-12 17:03:18  mark
+# Bug Fix: compares pk attributes: fixes bz #35
+#
+# Revision 1.4  2007/02/09 11:35:44  marc
 # added getTextFromElement
 #
 # Revision 1.3  2006/12/13 20:17:15  marc
