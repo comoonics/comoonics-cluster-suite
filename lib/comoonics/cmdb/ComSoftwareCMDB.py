@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.5 2007-03-14 14:57:21 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.6 2007-03-14 15:11:37 marc Exp $
 #
 
 import os
@@ -220,9 +220,10 @@ class SoftwareCMDB(BaseDB):
 
             whererest=""
             if where and type(where)==str and where!="":
-                whererest="\n   AND "+where
+                whererest="\n   AND "+newdbs[0]+"."+where
             elif where and type(where)==list:
-                whererest="\n   AND "+"\n   "+" AND ".join(where)
+                thestr="\n   AND "+newdbs[0]+"."
+                whererest=thestr+thestr.join(where)
 
             queries.append("SELECT "+newdbs[0]+"."+allcolnames[0]+" AS "+allcolnamesr[0]+", \n      "+", ".join(selectcols)+\
                            "\n"+"\n".join(joins)+\
@@ -307,7 +308,10 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.5  2007-03-14 14:57:21  marc
+# Revision 1.6  2007-03-14 15:11:37  marc
+# compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3) (3rd)
+#
+# Revision 1.5  2007/03/14 14:57:21  marc
 # compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3)
 #
 # Revision 1.4  2007/03/14 14:37:24  marc
