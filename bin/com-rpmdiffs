@@ -38,6 +38,9 @@ class Config(GetOpts.BaseConfig):
     limitup=0
     limitdown=0
     orderby=None
+    onlydiffs=False
+    onlynotinstalled=False
+    searchstring=""
 
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -47,10 +50,13 @@ class Config(GetOpts.BaseConfig):
         self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
         self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
         self.category=GetOpts.Option("category", "Set for search as categories", self.category, False, "c")
-        self.search=GetOpts.Option("search", "search for string and select", self.search, False, "s")
+        self.search=GetOpts.Option("search", "search for only one source", self.search, False, "1")
+        self.searchstring=GetOpts.Option("searchstring", "search for string", self.searchstring, False, "s")
         self.limitup=GetOpts.Option("limitup", "limitup from", self.limitup, False, "L")
         self.limitdown=GetOpts.Option("limitdown", "limitto to", self.limitdown, False, "l")
         self.orderby=GetOpts.Option("orderby", "Orderbystring without ORDER BY", self.orderby, False, "o")
+        self.onlydiffs=GetOpts.Option("onlydiffs", "Only display differences. But not uninstalled software", self.onlydiffs, False, "O")
+        self.onlynotinstalled=GetOpts.Option("onlynotinstalled", "Only display differenceds", self.onlynotinstalled, False, "N")
         self.values=dict()
         self.setAdditionalParams("sourcename sourcename|searchstring [[sourcename]..]")
     def do(self, args_proper):
@@ -87,17 +93,19 @@ def formatRow(row, colnames):
 def formatColNames(row):
     return ', '.join(row)
 
+where=None
+if len(config.sourcenames)>1 and config.search and (not config.searchstring or config.searchstring==""):
+    config.searchstring=config.sourcenames[1]
+if config.searchstring:
+    where=["name LIKE \"%"+config.searchstring+"%\""]
 if config.category and not config.search:
-   rs=software_cmdb.getDiffsFromCategories(config.sourcenames, config.limitdown, config.limitup, config.orderby)
+   rs=software_cmdb.getDiffsFromCategories(config.sourcenames, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs)
    colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
 elif not config.search:
-   rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, config.orderby)
+   rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs)
    colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
 elif config.search:
-    where=None
     colnames=SoftwareCMDB.SELECT_FOR_SOFTWARE
-    if len(config.sourcenames)>1:
-        where=["name LIKE \"%"+config.sourcenames[1]+"%\""]
     if config.category:
         rs=software_cmdb.getSoftwareForCategory(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
     else:
