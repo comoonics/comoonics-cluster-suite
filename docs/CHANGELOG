@@ -10,6 +10,8 @@ WARNING:
 
 CHANGES:
 comoonics-cmdb-py:
+* Tue Mar 14 2007 MG <grimme@atix.de>, 0.1-10
+    fixed wrong where clause in ComSoftwareCMDB/selectOnlyDiffs and wrong update in ComBaseDB/updateRPM
 * Tue Mar 14 2007 MG <grimme@atix.de>, 0.1-9
     fixed sqlqueries so that it is compatible with mysql3 and abigouserrors with com-rpm2diffs (4th)
 * Tue Mar 14 2007 MG <grimme@atix.de>, 0.1-8

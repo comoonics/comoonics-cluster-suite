@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.7 2007-03-14 15:26:34 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.8 2007-03-14 16:51:42 marc Exp $
 #
 
 import os
@@ -268,7 +268,7 @@ class SoftwareCMDB(BaseDB):
         query="SELECT rpms0."+colnames[0]+" AS "+allcolnamesr[0]+", "+','.join(columns)+"\n FROM "+dbs[0]+"\n"+\
               "\n ".join(joins)+\
               "\n WHERE "+" AND ".join(wherelst)+"\n   AND ("+\
-              " OR ".join(BaseDB.BinOperatorFromList(version_unequalcols, "!="))+")\n   AND ("+\
+              " OR ".join(BaseDB.BinOperatorFromList(version_unequalcols, "!="))+"\n   OR "+\
               " OR ".join(BaseDB.BinOperatorFromList(subversion_unequalcols, "!="))+")"+\
               whererest
         return query
@@ -308,7 +308,10 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.7  2007-03-14 15:26:34  marc
+# Revision 1.8  2007-03-14 16:51:42  marc
+# fixed AND instead of OR in OnlyDiffs Join
+#
+# Revision 1.7  2007/03/14 15:26:34  marc
 # compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3) (4th)
 #
 # Revision 1.6  2007/03/14 15:11:37  marc
