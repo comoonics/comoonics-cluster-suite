@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.3 2007-03-14 13:16:48 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.4 2007-03-14 14:37:24 marc Exp $
 #
 
 import os
@@ -167,7 +167,9 @@ class SoftwareCMDB(BaseDB):
         self.log.debug("colnames/l[%u]:%s" %(l, colnames))
         m=len(sourcenames)
         self.log.debug("sourcenames/m[%u]:%s" %(m, sourcenames))
+        p=0
         for i in range(len(sourcenames)*(len(sourcenames)-1)):
+            qname="q%u" %(i)
             j=i%l
             n=i%m
             if n==0:
@@ -175,11 +177,13 @@ class SoftwareCMDB(BaseDB):
                     notinstalled.append("\""+SoftwareCMDB.NOT_INSTALLED_STRING+"\"")
             newcolnames=list(allcolnames[1:])
             newdbs=list(dbs)
+            newdbs2=list()
             for k in range(len(notinstalled)):
 #                self.log.debug("newcolnames[%u], j=%u, k=%u, len(notinstalled)=%u" %((n*len(notinstalled)+k)%len(allcolnames[1:]), j, k, len(notinstalled)))
                 newcolnames[(n*len(notinstalled)+k)%len(allcolnames[1:])]=notinstalled[k]
                 if k%l==0:
                     self.log.debug("[%u] dbs removing: k mod l: %u, k mod m: %u, n: %u, dbs[%u], %s/%s=removing" %(i, k%l, k%m, n, (n%m)%len(newdbs), newdbs[(n%m)%len(newdbs)], newdbs))
+                    newdbs2.append(newdbs[(n%m)%len(newdbs)])
                     del newdbs[(n%m)%len(newdbs)]
             selectcols=list()
             joins=list()
@@ -197,7 +201,7 @@ class SoftwareCMDB(BaseDB):
                     whereequals.append("%s.clustername=\""+sourcenames[o]+"\"")
                     o+=1
                 elif k%l==0:
-                    wherenot.append(" AND (name,architecture) NOT IN (SELECT name, architecture FROM "+self.tablename+" WHERE clustername=\""+sourcenames[o]+"\")")
+                    wherenot.append(" AND (name,architecture) NOT IN (SELECT %s.name, %s.architecture FROM "+self.tablename+" AS %s WHERE %s.clustername=\""+sourcenames[o]+"\")")
                     o+=1
             o=0
             for k in range(len(selectcols)):
@@ -211,20 +215,22 @@ class SoftwareCMDB(BaseDB):
                 joins[k]=joins[k] %(newdbs[k])
                 whereequals[k]=whereequals[k] %(newdbs[k])
 
+            for k in range(len(wherenot)):
+                wherenot[k]=wherenot[k] %(qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k])
+
             whererest=""
             if where and type(where)==str and where!="":
                 whererest="\n   AND "+where
             elif where and type(where)==list:
                 whererest="\n   AND "+"\n   "+" AND ".join(where)
 
-            queries.append("SELECT "+allcolnames[0]+" AS "+allcolnamesr[0]+", \n      "+", ".join(selectcols)+\
+            queries.append("SELECT "+newdbs[0]+"."+allcolnames[0]+" AS "+allcolnamesr[0]+", \n      "+", ".join(selectcols)+\
                            "\n"+"\n".join(joins)+\
                            "\n   WHERE "+\
                            " AND ".join(whereequals)+\
                            "\n   "+\
                            "\n   ".join(wherenot)+
                            whererest)
-
         return queries
 
     def selectQueryOnlyDiffs(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None):
@@ -301,7 +307,10 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.3  2007-03-14 13:16:48  marc
+# Revision 1.4  2007-03-14 14:37:24  marc
+# compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3)
+#
+# Revision 1.3  2007/03/14 13:16:48  marc
 # added support for comparing multiple n>2 sources
 #
 # Revision 1.2  2007/03/05 16:10:30  marc
