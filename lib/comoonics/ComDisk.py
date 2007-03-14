@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.8 2007-02-27 15:55:15 mark Exp $
+# $Id: ComDisk.py,v 1.9 2007-03-14 14:20:18 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -32,7 +32,7 @@ CMD_KPARTX = "/sbin/kpartx"
 class Disk(DataObject):
     """ Abstract Disk Baseclass that creates a disk a StorageDisk or HostDisk on demand """
     def __new__(cls, *args, **kwds):
-        if cls==Disk.__class__:
+        if cls==Disk:
             cls=StorageDisk
             element=args[0]
             name=element.getAttribute("name")
@@ -279,7 +279,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.8  2007-02-27 15:55:15  mark
+# Revision 1.9  2007-03-14 14:20:18  marc
+# bugfix for constructor
+#
+# Revision 1.8  2007/02/27 15:55:15  mark
 # added support for dm_multipath
 #
 # Revision 1.7  2007/02/12 15:43:12  marc
