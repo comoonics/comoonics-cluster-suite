@@ -10,6 +10,8 @@ WARNING:
 
 CHANGES:
 comoonics-cmdb-py:
+* Tue Mar 14 2007 MG <grimme@atix.de>, 0.1-5
+    added support for multiple sources (n>=2)
 * Mon Mar 05 2007 MG <grimme@atix.de>, 0.1-1
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 

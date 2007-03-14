@@ -4,7 +4,7 @@ Class for the BaseDB
 FIXME: Should become a singleton based on table, dbname, user, pw
 """
 # here is some internal information
-# $Id: ComBaseDB.py,v 1.2 2007-03-05 16:10:30 marc Exp $
+# $Id: ComBaseDB.py,v 1.3 2007-03-14 13:16:48 marc Exp $
 #
 
 import MySQLdb
@@ -50,8 +50,10 @@ class BaseDB(object):
 
     def BinOperatorFromList(thelist, operator_str):
         ret_list=list()
-        for i in range(len(thelist)/2):
-            ret_list.append(thelist[i]+operator_str+thelist[i+1])
+        for i in range(len(thelist)):
+            thelist2=list(thelist[i+1:])
+            for j in range(len(thelist2)):
+                ret_list.append(thelist[i]+operator_str+thelist2[j])
         return ret_list
     BinOperatorFromList=staticmethod(BinOperatorFromList)
 
@@ -113,5 +115,16 @@ class BaseDB(object):
                 self.log.debug("update %s" % updatequery)
                 self.db.query(updatequery)
 
+def test():
+    testlist=[ "a", "b", "c", "d" ]
+    print "Testing Binoperator with: "
+    print BaseDB.BinOperatorFromList(testlist, "!=")
+
+if __name__=="__main__":
+    test()
+
 ########################
-# $log$
+# $Log: ComBaseDB.py,v $
+# Revision 1.3  2007-03-14 13:16:48  marc
+# added support for comparing multiple n>2 sources
+#
