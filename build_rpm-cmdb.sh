@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# $Id: build_rpm-cmdb.sh,v 1.4 2007-03-14 14:39:00 marc Exp $
+# $Id: build_rpm-cmdb.sh,v 1.5 2007-03-14 14:58:01 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=6
+RELEASE=7
 REQUIRES="--requires=comoonics-cs-py,MySQL-python"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cmdb-py"
@@ -25,7 +25,10 @@ setup
 
 ##############
 # $Log: build_rpm-cmdb.sh,v $
-# Revision 1.4  2007-03-14 14:39:00  marc
+# Revision 1.5  2007-03-14 14:58:01  marc
+# compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3)
+#
+# Revision 1.4  2007/03/14 14:39:00  marc
 # compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3)
 #
 # Revision 1.3  2007/03/14 13:17:13  marc

@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.4 2007-03-14 14:37:24 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.5 2007-03-14 14:57:21 marc Exp $
 #
 
 import os
@@ -201,7 +201,7 @@ class SoftwareCMDB(BaseDB):
                     whereequals.append("%s.clustername=\""+sourcenames[o]+"\"")
                     o+=1
                 elif k%l==0:
-                    wherenot.append(" AND (name,architecture) NOT IN (SELECT %s.name, %s.architecture FROM "+self.tablename+" AS %s WHERE %s.clustername=\""+sourcenames[o]+"\")")
+                    wherenot.append(" AND (%s.name,%s.architecture) NOT IN (SELECT %s.name, %s.architecture FROM "+self.tablename+" AS %s WHERE %s.clustername=\""+sourcenames[o]+"\")")
                     o+=1
             o=0
             for k in range(len(selectcols)):
@@ -216,7 +216,7 @@ class SoftwareCMDB(BaseDB):
                 whereequals[k]=whereequals[k] %(newdbs[k])
 
             for k in range(len(wherenot)):
-                wherenot[k]=wherenot[k] %(qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k])
+                wherenot[k]=wherenot[k] %(newdbs[0], newdbs[0], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k])
 
             whererest=""
             if where and type(where)==str and where!="":
@@ -307,7 +307,10 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.4  2007-03-14 14:37:24  marc
+# Revision 1.5  2007-03-14 14:57:21  marc
+# compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3)
+#
+# Revision 1.4  2007/03/14 14:37:24  marc
 # compatible with mysql3 dialect and ambigousness. (RHEL4 has mysql3)
 #
 # Revision 1.3  2007/03/14 13:16:48  marc
