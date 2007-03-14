@@ -7,16 +7,17 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.9 2007-03-14 14:20:18 marc Exp $
+# $Id: ComDisk.py,v 1.10 2007-03-14 15:07:15 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
 import exceptions
 import parted
+import time
 
 import ComSystem
 from ComDataObject import DataObject
@@ -122,6 +123,7 @@ class HostDisk(Disk):
         #IDEA compare the partition configurations for update
         #1. delete all aprtitions
         dev=parted.PedDevice.get(self.getDeviceName())
+        #dev.open()
 
         try:
             disk=parted.PedDisk.new(dev)
@@ -140,6 +142,9 @@ class HostDisk(Disk):
 
         disk.commit()
 
+        #dev.sync()
+        #dev.close()
+
         # run partx if the device is a multipath device
         self.log.debug("ComHostDisk: checking for multipath devices")
         if self.isDMMultipath():
@@ -150,6 +155,9 @@ class HostDisk(Disk):
             __cmd=CMD_KPARTX + " -a " + self.getDeviceName()
             __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
             self.log.debug(__ret)
+        #FIXME: crappy fix to give os some time to create devicefiles.
+        time.sleep(10)
+
 
     def isDMMultipath(self):
         if not os.path.exists(CMD_DMSETUP):
@@ -279,7 +287,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.9  2007-03-14 14:20:18  marc
+# Revision 1.10  2007-03-14 15:07:15  mark
+# workaround for bug bz#36
+#
+# Revision 1.9  2007/03/14 14:20:18  marc
 # bugfix for constructor
 #
 # Revision 1.8  2007/02/27 15:55:15  mark
