@@ -4,7 +4,7 @@ Class for the BaseDB
 FIXME: Should become a singleton based on table, dbname, user, pw
 """
 # here is some internal information
-# $Id: ComBaseDB.py,v 1.3 2007-03-14 13:16:48 marc Exp $
+# $Id: ComBaseDB.py,v 1.4 2007-03-14 16:51:21 marc Exp $
 #
 
 import MySQLdb
@@ -92,25 +92,25 @@ class BaseDB(object):
         rpm: if not given updatequery is always applyed if selectquery returns more then 0 rows
         keys: keys to compare with default (name, version, release, arch) selectquery has to be formulated apropriate
         """
-        self.log.debug("selectquery: %s" % selectquery)
+        #self.log.debug("selectquery: %s" % selectquery)
         rs=self.selectQuery(selectquery)
         rows=rs.fetch_row(1, 2)
         if len(rows) == 0:
             self.log.debug("insert %s" % insertquery)
             self.db.query(insertquery)
         else:
-            ret=True
+            ret=False
             row=rows[0]
             prefix=self.tablename+"."
             for key in keys:
-#                self.log.debug("mappingkey: "+key)
+#                self.log.debug("mappingkey: "+key+", keymapping %s" %(keymapping))
                 if keymapping and type(keymapping) == dict and keymapping.has_key(key) and keymapping[key] != None:
                     mapping=keymapping[key]
                 else:
                     mapping=rpm[key]
-#                self.log.debug("row[%s]:%s == %s: " %(prefix+key, row[prefix+key], mapping))
 
-                ret=ret and row[prefix+key] != mapping
+                ret=ret or row[prefix+key] != mapping
+#                self.log.debug("row[%s]:%s == %s: ret: %s" %(prefix+key, row[prefix+key], mapping, ret))
             if ret:
                 self.log.debug("update %s" % updatequery)
                 self.db.query(updatequery)
@@ -125,6 +125,9 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComBaseDB.py,v $
-# Revision 1.3  2007-03-14 13:16:48  marc
+# Revision 1.4  2007-03-14 16:51:21  marc
+# fixed update error
+#
+# Revision 1.3  2007/03/14 13:16:48  marc
 # added support for comparing multiple n>2 sources
 #
