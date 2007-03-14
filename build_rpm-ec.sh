@@ -4,8 +4,8 @@
 
 source ./build-lib.sh
 
-RELEASE=13
-REQUIRES="--requires=PyXML,libxslt-python,comoonics-cs-py"
+RELEASE=14
+REQUIRES="--requires=PyXML,libxslt-python,comoonics-cs-py,comoonics-cs"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-ec-py"
 VERSION="0.1"
