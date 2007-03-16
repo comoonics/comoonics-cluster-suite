@@ -26,6 +26,11 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Fri Mar 16 2007 MH <hlawatschek@atix.de>, 0.1.27:
+	added /bin/cl_checknodes
+* Wed Mar 14 2007 MH <hlawatschek@atix.de>, 0.1.26:
+	added sleep after partition creation (Fixes bz #36)
+	bug fix in XmlTool.py
 * Wed Feb 28 2007 MH <hlawatschek@atix.de>, 0.1.23:
 	added mountpoint mkdir option (default) (Fixes bz 24)
 * Tue Feb 27 2007 MH <hlawatschek@atix.de>, 0.1.22:
