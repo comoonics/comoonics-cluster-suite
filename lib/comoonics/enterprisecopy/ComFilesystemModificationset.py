@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.2 2007-03-26 07:58:49 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -39,7 +39,7 @@ class FilesystemModificationset(ModificationsetJournaled):
             self.device=Device(__device, doc)
         except Exception:
             raise ComException("device for copyset not defined")
-        try:    
+        try:
             __fs=xpath.Evaluate('device/filesystem', element)[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
         except Exception:
@@ -55,10 +55,11 @@ class FilesystemModificationset(ModificationsetJournaled):
         log.debug("Modifications: %u" % len(self.modifications))
         log.debug("Filesystemodificationset CWD: " + self.cwd)
         self.addToUndoMap(self.filesystem.__class__.__name__, "mount", "umountDir")
-        self.addToUndoMap(os.__class__.__name__, "chdir", "chdir")
-        
+        self.addToUndoMap("os", "chdir", "chdir")
+
     def doPre(self):
         # mount Filesystem
+        super(FilesystemModificationset, self).doPre()
         if not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
@@ -66,9 +67,10 @@ class FilesystemModificationset(ModificationsetJournaled):
         os.chdir(self.mountpoint.getAttribute("name"))
         self.journal(os, "chdir", __cwd)
         log.debug("CWD: " + os.getcwd())
-        
-    
+
+
     def doPost(self):
+        super(FilesystemModificationset, self).doPost()
         self.replayJournal()
         self.commitJournal()
         #os.chdir(self.cwd)
@@ -76,12 +78,16 @@ class FilesystemModificationset(ModificationsetJournaled):
         #if self.umountfs:
         #    self.filesystem.umountDir(self.mountpoint)
         log.debug("CWD: " + os.getcwd())
-        
+
     def getModifications(self):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2007-03-26 07:58:49  marc
+# - fixed a undo bug with chdir
+# - calling parent methods for doPre/doPost (Requirements)
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.6  2006/07/06 15:09:33  mark
