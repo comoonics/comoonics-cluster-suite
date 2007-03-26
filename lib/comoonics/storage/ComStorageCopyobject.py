@@ -3,11 +3,11 @@ CopyObject implementation for Storage implementations.
 """
 
 # here is some internal information
-# $Id: ComStorageCopyobject.py,v 1.1 2007-02-09 11:36:16 marc Exp $
+# $Id: ComStorageCopyobject.py,v 1.2 2007-03-26 08:12:22 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/Attic/ComStorageCopyobject.py,v $
 
 from comoonics.enterprisecopy.ComCopyObject import CopyObjectJournaled
@@ -27,6 +27,10 @@ class StorageCopyObject(CopyObjectJournaled):
     def __init__(self, element, doc, storage):
         super(StorageCopyObject, self).__init__(element, doc)
         self.storage=storage
+        self.addToUndoMap(self.storage.__class__.__name__, "add", "delete")
+        self.addToUndoMap(self.storage.__class__.__name__, "add_clone", "delete_clone")
+        self.addToUndoMap(self.storage.__class__.__name__, "add_snapshot", "delete_snapshot")
+        self.addToUndoMap(self.storage.__class__.__name__, "map_luns", "unmap_luns")
         self.disk=Disk(self.getElement().getElementsByTagName("disk")[0], self.getDocument())
 
     def prepareAsSource(self):
@@ -59,16 +63,25 @@ class StorageCopyObject(CopyObjectJournaled):
 
     def doAction(self, action, sourcecopyobject):
         """ does what it is required to do """
+        return self._action(action, sourcecopyobject)
+
+    def _action(self, action, sourcecopyobject):
         methodname="%s_%s" %(action, self.getAttribute("type"))
-        mylogger.debug("%s.doAction(%s, %s, %s)" %(self.storage.getConnectionName(), action, self.getDisk(), sourcecopyobject))
+        mylogger.debug("%s.undoAction(%s, %s, %s)" %(self.storage.getConnectionName(), action, self.getDisk(), sourcecopyobject))
         method=getattr(self.storage, methodname)
-        return method(self.getDisk(), sourcecopyobject.getDisk())
+        returncode=method(self.getDisk(), sourcecopyobject.getDisk())
+        if returncode:
+            self.journal(self.storage, methodname, self.getDisk(), sourcecopyobject)
+        return returncode
 
 mylogger=ComLog.getLogger(StorageCopyObject.__logStrLevel__)
 
 
 ########################
 # $Log: ComStorageCopyobject.py,v $
-# Revision 1.1  2007-02-09 11:36:16  marc
+# Revision 1.2  2007-03-26 08:12:22  marc
+# - added support for undoing and journaling
+#
+# Revision 1.1  2007/02/09 11:36:16  marc
 # initial revision
 #
