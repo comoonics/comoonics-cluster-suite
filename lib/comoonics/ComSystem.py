@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.9 2007-03-09 09:39:47 marc Exp $
+# $Id: ComSystem.py,v 1.10 2007-03-26 08:36:10 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -24,6 +24,8 @@ from comoonics.ComExceptions import ComException
 
 SIMULATE="simulate"
 ASK="ask"
+SKIPPED="skipped"
+CONTINUE="continue"
 
 class ExecLocalException(ComException):
     def __init__(self, cmd, rc, out, err):
@@ -47,20 +49,34 @@ def setExecMode(__mode):
     """ set the mode for system execution """
     __EXEC_REALLY_DO = __mode
 
+def askExecModeCmd(__cmd):
+    global __EXEC_REALLY_DO
+    if __EXEC_REALLY_DO == ASK:
+        __ans=raw_input(__cmd+" (y*,n,c)")
+        if __ans == "c":
+            __EXEC_REALLY_DO=CONTINUE
+        if __ans == "y" or __ans == "" or __ans=="c":
+            return True
+        return False
+    elif __EXEC_REALLY_DO == SIMULATE:
+        log.info("SIMULATE: "+__cmd)
+        return False
+    return True
+
 def execLocalStatusOutput(__cmd):
     """ exec %__cmd and return output and status (rc, out)"""
     global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == ASK:
         __ans=raw_input(__cmd+" (y*,n,c)")
-        if __ans == "y" or __ans == "":
+        if __ans == "c":
+            __EXEC_REALLY_DO=CONTINUE
+        if __ans == "y" or __ans == "" or __ans == "c":
             return commands.getstatusoutput(__cmd)
-        elif __ans == "c":
-            __EXEC_REALLY_DO="continue"
-        return [0,"skipped"]
+        return [0,SKIPPED]
     elif __EXEC_REALLY_DO == SIMULATE:
         log.info("SIMULATE: "+__cmd)
-        return [0,"skipped"]
+        return [0,SKIPPED]
     return commands.getstatusoutput(__cmd)
 
 
@@ -80,18 +96,18 @@ def execLocalGetResult(__cmd, err=False):
     if __EXEC_REALLY_DO == ASK:
         __ans=raw_input(__cmd+" (y*,n,c)")
         if __ans == "c":
-            __EXEC_REALLY_DO="continue"
+            __EXEC_REALLY_DO=CONTINUE
         if __ans == "n":
             if err:
-                return [0, "skipped", ""]
+                return [0, SKIPPED, ""]
             else:
-                return [0, "skipped"]
+                return [0, SKIPPED]
     elif __EXEC_REALLY_DO == SIMULATE:
         log.info("SIMULATE: "+__cmd)
         if err:
-            return [0,"skipped", None]
+            return [0,SKIPPED, None]
         else:
-            return [0, "skipped"]
+            return [0, SKIPPED]
     child=popen2.Popen3(__cmd, err)
     __rc=child.wait()
     __rv=child.fromchild.readlines()
@@ -110,7 +126,7 @@ def execLocal(__cmd):
         if __ans == "y" or __ans=="":
             return os.system(__cmd)
         elif __ans == "c":
-            __EXEC_REALLY_DO="continue"
+            __EXEC_REALLY_DO=CONTINUE
         return 0
     elif __EXEC_REALLY_DO == SIMULATE:
         log.info("SIMULATE: "+__cmd)
@@ -146,7 +162,11 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.9  2007-03-09 09:39:47  marc
+# Revision 1.10  2007-03-26 08:36:10  marc
+# - added askExecModeCmd
+# - cosmetic issues and better readability
+#
+# Revision 1.9  2007/03/09 09:39:47  marc
 # bugfix with err=False
 #
 # Revision 1.8  2007/03/09 09:27:58  marc
