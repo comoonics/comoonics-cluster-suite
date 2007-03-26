@@ -4,12 +4,13 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_Storage.py,v 1.1 2007-02-09 11:36:16 marc Exp $
+# $Id: ComHP_EVA_Storage.py,v 1.2 2007-03-26 08:08:10 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_Storage.py,v $
 
+from exceptions import TypeError
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
 from comoonics.storage.hp.ComHP_EVA_SSSU import HP_EVA_SSSU, CommandError
@@ -71,15 +72,23 @@ class HP_EVA_Storage(Storage):
             self.sssu=HP_EVA_SSSU(self.manager, self.username, self.password, self.system, self.autoconnect, self.cmd, logfile, cmdlogfile)
             self.sssu.connect()
 
-    def map_luns(self, disk, source=None):
+    def map_luns(self, *params):
         """ Lunmaps the given disk. Hosts and luns are integrated insite the disk and returns the luns if need be. """
+        if not params or len(params)==0:
+            raise TypeError("map_luns takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("map_luns takes at lease 1 argument %u given." %(len(params)))
+        disk=params[0]
+        source=None
+        if len(params)==2:
+            source=params[1]
         luns=list()
         for lun in disk.getLuns():
             for host in disk.getHostNames(lun):
                 try:
                     self.sssu.cmd("add lun %s vdisk=\"%s\" host=\"%s\"" %(lun, disk.getAttribute("name"), host))
-                    if host.count("/")>0:
-                        self.sssu.cmd("ls lun \"%s/%s\" xml" %(host[:host.rindex("/")], lun))
+                    if host.count("\\")>0:
+                        self.sssu.cmd("ls lun \"%s\\%s\" xml" %(host,lun))
                     else:
                         self.sssu.cmd("ls lun \"%s\" xml" %(lun))
                     lun=None
@@ -90,32 +99,61 @@ class HP_EVA_Storage(Storage):
                     raise ErrorDuringExecution("Could not add lun to storage\nExecution errorcode %u: \ncmd: %s" %(self.sssu.last_error_code, self.sssu.last_cmd), ce)
         return luns
 
-    def unmap_luns(self, disk, source=None):
+    def unmap_luns(self, *params):
         """ Lunmaps the given disk. Hosts and luns are integrated insite the disk. """
+        if not params or len(params)==0:
+            raise TypeError("unmap_luns takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("unmap_luns takes at lease 1 argument %u given." %(len(params)))
+        disk=params[0]
+        source=None
+        if len(params)==2:
+            source=params[1]
         luns=list()
         for lun in disk.getLuns():
             for host in disk.getHostNames(lun):
                 try:
-                    if host.count("/")>0:
-                        path="%/"%(host[:host.rindex("/")])
+                    if host.count("\\")>0:
+                        path=host+"\\"
                     else:
                         path=""
                     if self.sssu.cmd("ls lun \"%s%s\" xml" %(path,lun))==0 and self.sssu.xml_output:
                         luns.append(HP_EVA_Object.fromXML(self.sssu.xml_output))
                     self.sssu.cmd("delete lun \"%s%s\"" %(path,lun))
                 except CommandError, ce:
-                    raise ErrorDuringExecution("Could not add lun to storage\nExecution errorcode %u: \ncmd: %s" %(self.sssu.last_error_code, self.sssu.last_cmd), ce)
+                    raise ErrorDuringExecution("Could not delete lun from storage\nExecution errorcode %u: \ncmd: %s" %(self.sssu.last_error_code, self.sssu.last_cmd), ce)
         return luns
 
-    def _delete(self, type, name, properties, checkfunc=None):
+    def _delete(self, _type, name, properties, checkfunc=None):
         try:
             vdisk=None
-            if self.sssu.cmd("ls %s \"%s\" xml" %(type, name))==0 and self.sssu.xml_output:
+            default_params={ "vdisk" : [ "WAIT_FOR_COMPLETION" ]}
+            allowed_params={ "vdisk":  [ "WAIT_FOR_COMPLETION", "NOWAIT_FOR_COMPLETION"] }
+            # this means we are called as undo in consequence as called like add so we have to make the name
+            # and move other paramaters away
+            if _type=="vdisk" and properties and properties.has_key("vdisk"):
+                name=properties["vdisk"].getAttribute("value")+"\\"+name
+            # clear all other properties except those allowed for delete
+            if properties:
+                for key in properties.keys():
+                    if allowed_params.has_key(_type) and key in allowed_params[_type]:
+                        pass
+                    else:
+                        del properties[key]
+            if default_params.has_key(_type):
+                if not properties:
+                    properties=dict()
+                for def_parm in default_params[_type]:
+                    properties[def_parm]=True
+                    if type(properties) != dict:
+                        mylogger.debug("property[%s]=%s, type=%s" %(def_parm, properties[def_parm].getAttribute("name"), type(properties[def_parm].getAttribute("name"))))
+
+            if self.sssu.cmd("ls %s \"%s\" xml" %(_type, name))==0 and self.sssu.xml_output:
                 vdisk=HP_EVA_Object.fromXML(self.sssu.xml_output)
                 mylogger.debug("deleting vdisk %s" %(vdisk.objectname))
                 if isinstance(vdisk, HP_EVA_Object):
                     if not checkfunc or (checkfunc and checkfunc(vdisk)):
-                        self.sssu.cmd("delete %s \"%s\"" %(type, name), properties)
+                        self.sssu.cmd("delete %s \"%s\"" %(_type, name), properties)
                 return vdisk
             else:
                 raise ErrorDuringExecution("Could not delete %s %s from storage. %s %s does not exist" %(type, name, type, name))
@@ -127,7 +165,12 @@ class HP_EVA_Storage(Storage):
             mylogger.debug("add %s \"%s\" %s" %(type, name, properties))
             if self.sssu.cmd("add %s \"%s\"" %(type, name), properties)==0:
                 if type=="vdisk":
-                    self.sssu.cmd("ls %s \"%s/ACTIVE\" xml" %(type, name))
+                    self.sssu.cmd("ls %s \"%s\\ACTIVE\" xml" %(type, name))
+                elif type=="snapshot":
+                    vdisk=properties["vdisk"].getAttribute("value")
+                    if vdisk.find("\\ACTIVE")>0:
+                        vdisk=vdisk[:vdisk.rindex("\\ACTIVE")]
+                    self.sssu.cmd("ls %s \"%s\\%s\" xml" %(type, vdisk, name))
                 else:
                     self.sssu.cmd("ls %s \"%s\" xml" %(type, name))
                 vdisk=None
@@ -139,33 +182,65 @@ class HP_EVA_Storage(Storage):
         except CommandError, ce:
             raise ErrorDuringExecution("Could not add %s %s to storage\nExecution errorcode %u: \ncmd: %s\noutput: %s" %(type, name, ce.errorcode, ce.cmd, ce.output))
 
-    def add(self, disk, source=None):
+    def add(self, *params):
         """ Adds the given disk. Parameters are packed as properties insite the disk. """
+        if not params or len(params)==0:
+            raise TypeError("add takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("add takes at lease 1 argument %u given." %(len(params)))
+        disk=params[0]
         return self._add("vdisk", disk.getAttribute("name"), disk.getProperties())
 
-    def add_snapshot(self, destdisk, sourcedisk):
+    def add_snapshot(self, *params):
         """ Snapshots the given sourcedisk to destdisk. Options are packed as properties insite of destdisk."""
+        if not params or len(params)==0:
+            raise TypeError("add_snapshot takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("add_snapshot takes at lease 1 argument %u given." %(len(params)))
+        destdisk=params[0]
+        sourcedisk=params[1]
         properties=destdisk.getProperties()
         properties.setProperty("vdisk", sourcedisk.getAttribute("name"))
         return self._add("snapshot", destdisk.getAttribute("name"), properties)
 
-    def add_clone(self, destdisk, sourcedisk):
+    def add_clone(self, *params):
         """ Clones the given sourcedisk to destdisk. Options are packed as properties insite of destdisk. """
+        if not params or len(params)==0:
+            raise TypeError("add_clone takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("add_clone takes at lease 1 argument %u given." %(len(params)))
+        destdisk=params[0]
+        sourcedisk=params[1]
         properties=destdisk.getProperties()
         properties["vdisk"]=sourcedisk.getAttribute("name")
         return self._add("snapshot", destdisk.getAttribute("name"), properties)
 
-    def delete(self, disk, source=None):
+    def delete(self, *params):
         """ Deletes the given disk. If you only want to support the deleting of snapshots use delete_snaphot. """
+        if not params or len(params)==0:
+            raise TypeError("delete takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("delete takes at lease 1 argument %u given." %(len(params)))
+        disk=params[0]
         return self._delete("vdisk", disk.getAttribute("name"), disk.getProperties())
 
-    def delete_snapshot(self, disk, source=None):
+    def delete_snapshot(self, *params):
         """ Deletes the given disk only if its a snapshot. """
-        return self._delete("snapshot", disk.getAttribute("name"), disk.getProperties(), self.isSnapshot)
+        if not params or len(params)==0:
+            raise TypeError("delete_snapshot takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("delete_snapshot takes at lease 1 argument %u given." %(len(params)))
+        disk=params[0]
+        return self._delete("vdisk", disk.getAttribute("name"), disk.getProperties(), self.isSnapshot)
 
-    def delete_clone(self, disk, source=None):
+    def delete_clone(self, *params):
         """ Deletes the given disk only if its a clone. """
-        return self._delete("snapshot", disk.getAttribute("name"), disk.getProperties(), self.isClone)
+        if not params or len(params)==0:
+            raise TypeError("delete_clone takes at lease 1 argument 0 given.")
+        elif params and len(params)>2:
+            raise TypeError("delete_clone takes at lease 1 argument %u given." %(len(params)))
+        disk=params[0]
+        return self._delete("vdisk", disk.getAttribute("name"), disk.getProperties(), self.isClone)
 
     def close(self):
         """ Closes the connection """
@@ -231,6 +306,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_Storage.py,v $
-# Revision 1.1  2007-02-09 11:36:16  marc
+# Revision 1.2  2007-03-26 08:08:10  marc
+# - changed methods called by CopyObjects or Modifications to *params in order to being able to undo with same parameters the do
+# - fixed a bug for "\"s instead of "/"s in the path
+#
+# Revision 1.1  2007/02/09 11:36:16  marc
 # initial revision
 #
