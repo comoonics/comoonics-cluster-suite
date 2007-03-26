@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyset.py,v 1.2 2007-02-09 12:24:13 marc Exp $
+# $Id: ComCopyset.py,v 1.3 2007-03-26 07:53:09 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyset.py,v $
 
 import exceptions
@@ -19,12 +19,13 @@ from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
 from comoonics.ComJournaled import JournaledObject
+from comoonics.enterprisecopy.ComRequirement import Requirements
 
 def getCopyset(element, doc):
     """ Factory function to create Copyset Objects"""
     return Copyset(element, doc)
 
-class Copyset(DataObject):
+class Copyset(DataObject, Requirements):
     __logStrLevel__ = "Copyset"
     TAGNAME = "copyset"
     def __new__(cls, *args, **kwds):
@@ -50,7 +51,8 @@ class Copyset(DataObject):
         return object.__new__(cls)
 
     def __init__(self, element, doc):
-        super(Copyset, self).__init__(element, doc)
+        DataObject.__init__(self, element, doc)
+        Requirements.__init__(self, element, doc)
 
     def doCopy(self):
         """starts the copy process"""
@@ -67,6 +69,16 @@ class Copyset(DataObject):
     def getDestination(self):
         """ returns the Destination Object"""
         pass
+
+    def doPre(self):
+        super(Copyset, self).doPre()
+        if self.getSource():
+            self.getSource().doPre()
+
+    def doPost(self):
+        super(Copyset, self).doPost()
+        if self.getDestination():
+            self.getDestination().doPost()
 
 class CopysetJournaled(Copyset, JournaledObject):
     """
@@ -89,7 +101,10 @@ class CopysetJournaled(Copyset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComCopyset.py,v $
-# Revision 1.2  2007-02-09 12:24:13  marc
+# Revision 1.3  2007-03-26 07:53:09  marc
+# added Requirements
+#
+# Revision 1.2  2007/02/09 12:24:13  marc
 # added new method and Storage Copyset
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
