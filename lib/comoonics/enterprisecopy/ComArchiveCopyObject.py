@@ -6,15 +6,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.4 2006-12-08 09:37:27 mark Exp $
+# $Id: ComArchiveCopyObject.py,v 1.5 2007-03-26 07:51:36 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from xml import xpath
 
+from comoonics import ComLog
 from ComCopyObject import CopyObjectJournaled
 from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
@@ -24,6 +25,7 @@ from comoonics.ComArchive import Archive
 class ArchiveCopyObject(CopyObjectJournaled):
     """ Class for all source and destination objects"""
     __logStrLevel__ = "ArchiveCopyObject"
+    log=ComLog.getLogger(__logStrLevel__)
 
     def __init__(self, element, doc):
         CopyObjectJournaled.__init__(self, element, doc)
@@ -55,17 +57,22 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 
     def prepareAsDest(self):
-        pass
+        ''' writes all metadata to archive'''
+        self.log.debug("cleanupDest()")
+        self.serializer.serialize(self.metadata)
 
     def cleanupDest(self):
-        ''' writes all metadata to archive'''
-        self.serializer.serialize(self.metadata)
+        pass
 
 
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.4  2006-12-08 09:37:27  mark
+# Revision 1.5  2007-03-26 07:51:36  marc
+# - added logging
+# - moved serializer.serialize to prepareAsDest (if not it is also called by undo)
+#
+# Revision 1.4  2006/12/08 09:37:27  mark
 # some minor fixes
 #
 # Revision 1.3  2006/11/27 09:47:34  mark
