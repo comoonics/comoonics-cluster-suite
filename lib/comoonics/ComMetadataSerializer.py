@@ -15,10 +15,10 @@ These are represented by the class ArchiveMetadata.
 
 
 # here is some internal information
-# $Id: ComMetadataSerializer.py,v 1.2 2006-11-27 12:13:04 marc Exp $
+# $Id: ComMetadataSerializer.py,v 1.3 2007-03-26 08:34:01 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComMetadataSerializer.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -31,6 +31,7 @@ class UnsupportedMetadataException(ComException): pass
 class MetadataSerializer(DataObject):
     """ The Metadata baseclass """
     __logStrLevel__="MetadataSerializer"
+    log=ComLog.getLogger(__logStrLevel__)
     TAG_NAME="metadata"
 
     def __new__(cls, *args, **kwds):
@@ -39,7 +40,7 @@ class MetadataSerializer(DataObject):
             if len(archives) > 0:
                 cls=ArchiveMetadataSerializer
                 ComLog.getLogger(MetadataSerializer.__logStrLevel__).debug("Returning new object %s" %(cls))
-                return object.__new__(cls, args, kwds)
+                return object.__new__(cls, *args, **kwds)
             else:
                 raise UnsupportedMetadataException("Unsupported Metadata type in element " % (args[0].tagName))
         else:
@@ -61,8 +62,8 @@ class ArchiveMetadataSerializer(MetadataSerializer):
     """ The Archive Metadata baseclass """
     __logStrLevel__="ArchiveMetadata"
     def __init__(self, element, doc=None):
-        print "ArchiveMetadata constructor"
         MetadataSerializer.__init__(self, element, doc)
+        ComLog.getLogger(ArchiveMetadataSerializer.__logStrLevel__).debug("ArchiveMetadata constructor")
 
     def resolve(self):
 #        print "ArchiveMetadata.resolve"
@@ -84,7 +85,11 @@ class ArchiveMetadataSerializer(MetadataSerializer):
         ComLog.getLogger(self.__logStrLevel__).debug("Saved element %s to archive element" %(element.tagName))
 
 # $Log: ComMetadataSerializer.py,v $
-# Revision 1.2  2006-11-27 12:13:04  marc
+# Revision 1.3  2007-03-26 08:34:01  marc
+# - changed logging to new type
+# - fixed an unlikely constructor issue
+#
+# Revision 1.2  2006/11/27 12:13:04  marc
 # initial revision
 #
 # Revision 1.1  2006/11/24 14:34:42  marc
