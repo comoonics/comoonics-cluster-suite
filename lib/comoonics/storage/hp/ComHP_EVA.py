@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA.py,v 1.1 2007-02-09 11:36:16 marc Exp $
+# $Id: ComHP_EVA.py,v 1.2 2007-03-26 08:09:28 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA.py,v $
 
 import re
@@ -34,17 +34,17 @@ class HP_EVA_Object(object):
             ot_elements=element.getElementsByTagName("objecttype")
             if len(ot_elements)==1:
                 objecttype=XmlTools.getTextFromElement(ot_elements[0])
-                #ComLog.getLogger().debug("objecttype: %s, %s" %(objecttype, localmap))
+                #mylogger.debug("objecttype: %s, %s" %(objecttype, localmap))
         if localmap.has_key("HP_EVA_%s" %(element.nodeName.capitalize())) and not theclass and not objecttype:
             myclass=localmap["HP_EVA_%s" %(element.nodeName.capitalize())]
-            ComLog.getLogger().debug("theclass: %s" %(myclass))
+            #mylogger.debug("theclass: %s" %(myclass))
             instance=HP_EVA_Object.fromXML(element, myclass)
         elif objecttype and localmap.has_key("HP_EVA_%s" %(objecttype.capitalize())) and not theclass:
             myclass=localmap["HP_EVA_%s" %(objecttype.capitalize())]
-            ComLog.getLogger().debug("theclass: %s" %(myclass))
+            #mylogger.debug("theclass: %s" %(myclass))
             instance=HP_EVA_Object.fromXML(element, myclass)
         elif theclass:
-            ComLog.getLogger().debug("theclass: %s" %(theclass))
+            #mylogger.debug("theclass: %s" %(theclass))
             instance=object.__new__(theclass)
             instance.__init__()
             for child in element.childNodes:
@@ -54,14 +54,14 @@ class HP_EVA_Object(object):
                     if paramvalue:
                         paramvalue=paramvalue.strip()
                     if paramname and paramvalue and paramvalue!="":
-                        ComLog.getLogger().debug("setattr(%s, %s, %s)" %(theclass, paramname, paramvalue))
+                        #mylogger.debug("setattr(%s, %s, %s)" %(theclass, paramname, paramvalue))
                         setattr(instance, paramname, paramvalue)
                     elif paramname == "parentstoragecellinfo":
                         ids=child.getElementsByTagName("storagecellid")
                         if len(ids)==1:
                             id=XmlTools.getTextFromElement(ids[0])
                             if HP_EVA_Storagecells.has_key(id):
-                                ComLog.getLogger().debug("storagecellkey: %s, keys: %s, has_key:%u" %(id, HP_EVA_Storagecells.names(), HP_EVA_Storagecells.has_key(id)))
+                                #mylogger.debug("storagecellkey: %s, keys: %s, has_key:%u" %(id, HP_EVA_Storagecells.names(), HP_EVA_Storagecells.has_key(id)))
                                 instance.setParent(HP_EVA_Storagecells.get(id))
                     elif paramname:
                         setattr(instance, paramname, HP_EVA_Object.fromXML(child))
@@ -102,7 +102,7 @@ class HP_EVA_Object(object):
             self.objectparenthexuid="0000-0000-0000-0000-0000-0000-0000-0000"
             self.objectparentid="0000000000000000000000000000000000000000"
         if kwds:
-            ComLog.getLogger().debug("type: %s, kwds%s: %s" %(self.objecttype, type(kwds), kwds))
+            #mylogger.debug("type: %s, kwds%s: %s" %(self.objecttype, type(kwds), kwds))
             for key in kwds.keys():
                 self.__dict__[key]=kwds[key]
 
@@ -156,7 +156,7 @@ class HP_EVA_Object(object):
         attribs=self.getChildAttribs(parentname)
         buf="%s%s\n" %(prefix, parentname)
         if attribs and (type(attribs)==tuple or type(attribs)==list):
-#            ComLog.getLogger().debug("attribs(%s)" ", ".join(attribs))
+#            mylogger.debug("attribs(%s)" ", ".join(attribs))
             for key in attribs:
                 buf=buf+HP_EVA_Object.formatPair(key, getattr(self, key), prefix+tab, tab, centerjust, fillchar)+"\n"
         elif attribs and type(attribs)==dict:
@@ -236,7 +236,7 @@ class HP_EVA_Object(object):
                 elif type(value) == str or type(value) == unicode:
                     HP_EVA_Object.appendAttrib(rootel, doc, key, value)
 #                else:
-#                    ComLog.getLogger().debug("HP_EVA_Object.appendAttribMap: %s, %s, %s" %(key, value, type(value)))
+#                    mylogger.debug("HP_EVA_Object.appendAttribMap: %s, %s, %s" %(key, value, type(value)))
 
     appendAttribMap=staticmethod(appendAttribMap)
     def appendAttrib(baseelement, doc, key, value):
@@ -251,13 +251,13 @@ class HP_EVA_Virtualdisk(HP_EVA_Object):
     def __init__(self, **kwds):
         super(HP_EVA_Virtualdisk, self).__init__(**kwds)
         if self.objecttype=="virtualdisk":
-            self.objectname="%s/ACTIVE" %(self.objectname)
+            self.objectname="%s\ACTIVE" %(self.objectname)
 class HP_EVA_Snapshot(HP_EVA_Virtualdisk):
     """ Representation of an EVA-VDisk """
     def __init__(self, **kwds):
         super(HP_EVA_Snapshot, self).__init__(**kwds)
         if self.objecttype=="virtualdisk":
-            self.objectname="%s/ACTIVE" %(self.objectname)
+            self.objectname="%s\ACTIVE" %(self.objectname)
 class HP_EVA_Presentedunit(HP_EVA_Object): pass
 
 class HP_EVA_Host(HP_EVA_Object):
@@ -339,7 +339,7 @@ class HP_EVA_Presentations(HP_EVA_Object):
         self.presentation=list()
 
     def __setattr__(self, name, value):
-#        ComLog.getLogger().debug("HP_EVA_Presentations.setattr(%s, %s, %s)" %(self.__class__, name, value))
+#        mylogger.debug("HP_EVA_Presentations.setattr(%s, %s, %s)" %(self.__class__, name, value))
         if name == "presentation" and value:
             self.presentation.append(value)
         else:
@@ -600,6 +600,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA.py,v $
-# Revision 1.1  2007-02-09 11:36:16  marc
+# Revision 1.2  2007-03-26 08:09:28  marc
+# - removed some logging
+# - fixed a bug for referencing Paths with "\"s instead of "/"s
+#
+# Revision 1.1  2007/02/09 11:36:16  marc
 # initial revision
 #
