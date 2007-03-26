@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.2 2006-12-08 09:39:51 mark Exp $
+# $Id: ComFilesystemCopyset.py,v 1.3 2007-03-26 07:57:30 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -45,7 +45,7 @@ class FilesystemCopyset(Copyset):
             self.dest=CopyObject(__dest, doc)
         except Exception, e:
         #except None:
-            print ("EXCEPTION: %s\n" %e)
+            #print ("EXCEPTION: %s\n" %e)
             ComLog.getLogger(__logStrLevel__).warning(e)
             raise ComException("destination for copyset not defined")
 
@@ -153,7 +153,10 @@ class FilesystemCopyset(Copyset):
                            % self.source.__name__, self.dest.__name__)
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.2  2006-12-08 09:39:51  mark
+# Revision 1.3  2007-03-26 07:57:30  marc
+# kicked out a nasty print (Mr. Hlawatschek!)
+#
+# Revision 1.2  2006/12/08 09:39:51  mark
 # added support for generic CopyObject Framework
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
