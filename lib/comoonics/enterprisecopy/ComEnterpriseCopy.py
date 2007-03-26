@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.3 2007-02-27 15:53:58 mark Exp $
+# $Id: ComEnterpriseCopy.py,v 1.4 2007-03-26 07:54:31 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 from xml.dom import Node
@@ -63,72 +63,91 @@ class EnterpriseCopy(ComDataObject.DataObject):
         for set in self.allsets:
             if isinstance(set, ComCopyset.Copyset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
-                set.doCopy()
                 self.donesets.append(set)
+                set.doPre()
+                set.doCopy()
+                set.doPost()
             elif isinstance(set, ComModificationset.Modificationset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
-                set.doModifications()
                 self.donesets.append(set)
+                set.doPre()
+                set.doModifications()
+                set.doPost()
 
     def undo(self, name=None):
         self.undoDonesets(name)
 
     def undoDonesets(self, name=None):
-        ComLog.getLogger(self.__logStrLevel__).debug("Allsets: %s " % self.allsets)
+        ComLog.getLogger(self.__logStrLevel__).debug("name: %s, donesets: sets: %s " %(name, self.donesets))
         self.donesets.reverse()
         for set in self.donesets:
             if isinstance(set, ComCopyset.Copyset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                ComLog.getLogger(self.__logStrLevel__).info("Undoing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                set.undoRequirements()
                 set.undoCopy()
             elif isinstance(set, ComModificationset.Modificationset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                ComLog.getLogger(self.__logStrLevel__).info("Undoing Modificationset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                set.undoRequirements()
                 set.undoModifications()
 
     def undoAllsets(self, name=None):
-        ComLog.getLogger(self.__logStrLevel__).debug("Allsets: %s " % self.allsets)
+        ComLog.getLogger(self.__logStrLevel__).debug("name: %s, allsets: %s " %(name, self.allsets))
         self.allsets.reverse()
         for set in self.allsets:
             if isinstance(set, ComCopyset.Copyset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                ComLog.getLogger(self.__logStrLevel__).info("Undoing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                set.undoRequirements()
                 set.undoCopy()
             elif isinstance(set, ComModificationset.Modificationset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                ComLog.getLogger(self.__logStrLevel__).info("Undoing modificationset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                set.undoRequirements()
                 set.undoModifications()
 
     def doCopysets(self, name=None):
         for copyset in self.copysets:
             if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
-                copyset.doCopy()
                 self.donesets.append(copyset)
+                copyset.doPre()
+                copyset.doCopy()
+                copyset.doPost()
 
     def undoCopysets(self, name=None):
-        ComLog.getLogger(self.__logStrLevel__).debug("Copysets: %s " % self.copysets)
+        ComLog.getLogger(self.__logStrLevel__).debug("name %s, copysets: %s " %(name, self.copysets))
         self.copysets.reverse()
         for copyset in self.copysets:
             if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Undoing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
+                copyset.undoRequirements()
                 copyset.undoCopy()
 
     def doModificationsets(self, name=None):
         for modset in self.modificationsets:
             if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", "")):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
-                modset.doModifications()
                 self.donesets.append(modset)
+                modset.doPre()
+                modset.doModifications()
+                modset.doPost()
 
     def undoModificationsets(self, name=None):
+        ComLog.getLogger(self.__logStrLevel__).debug("name %s, modificationsets: %s " %(name, self.modificationsets))
         self.modificationsets.reverse()
         for modset in self.modificationsets:
             if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Undoing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
+                modset.undoRequirements()
                 modset.undoModifications()
 
 mylogger=ComLog.getLogger(EnterpriseCopy.__logStrLevel__)
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.3  2007-02-27 15:53:58  mark
+# Revision 1.4  2007-03-26 07:54:31  marc
+# - bugfixes in outputting the right strings
+# - calling doPre and doPost for each Copyset and Modificationset (Requirements)
+#
+# Revision 1.3  2007/02/27 15:53:58  mark
 # minor bugfixes
 #
 # Revision 1.2  2007/02/09 12:25:22  marc
