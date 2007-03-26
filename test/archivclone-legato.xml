@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE enterprisecopy SYSTEM "file:/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy name='test-archiveclone-legato-job1'>
+  <!-- SHORT DESCRIPTION:
+     All metadatas are stored in a special directory on the backupserver which is also backuped by the
+     backupprocess initiated by the filessystembackup
+     THOUGHTS:
+     !!The backupjob is named as "job1" should be later incoporated in an xsl template!!
+  -->
+  <copyset type='partition'>
+    <source type='disk'>
+      <disk name='/dev/cciss/c0d0'/>
+    </source>
+    <destination type='backup'>
+      <metadata>
+        <archive type="backup" format="legato" name="MMG">
+          <properties>
+            <property name="level" value="full"/>
+            <property name="client" value="wspbackup.messe-muenchen.de"/>
+            <property name="server" value="wspbackup.messe-muenchen.de"/>
+          </properties>
+          <file name="job1_partition.xml"/>
+        </archive>
+      </metadata>
+    </destination>
+  </copyset>
+  <copyset type='lvm'>
+    <source type='lvm'>
+      <volumegroup name='backuptest'/>
+    </source>
+    <destination type='backup'>
+      <metadata>
+        <archive type="backup" format="legato" name="MMG">
+          <properties>
+            <property name="level" value="full"/>
+            <property name="client" value="wspbackup.messe-muenchen.de"/>
+            <property name="server" value="wspbackup.messe-muenchen.de"/>
+          </properties>
+          <file name="job1_lvm.xml"/>
+        </archive>
+      </metadata>
+    </destination>
+  </copyset>
+  <copyset type='filesystem'>
+    <source type='filesystem'>
+      <device id='rootfs' name='/dev/backuptest/lv_backup'>
+        <filesystem clustername='testcluster' type='gfs'/>
+        <mountpoint name='/var/lib/com-ec/source'>
+          <option value='lock_nolock' name='lockproto'/>
+        </mountpoint>
+      </device>
+    </source>
+    <destination type='backup'>
+      <metadata>
+        <archive type="backup" format="legato" name="MMG">
+          <properties>
+            <property name="level" value="full"/>
+            <property name="client" value="wspbackup.messe-muenchen.de"/>
+            <property name="server" value="wspbackup.messe-muenchen.de"/>
+          </properties>
+          <file name="job1_filesystem.xml"/>
+        </archive>
+      </metadata>
+      <data>
+        <archive type="backup" format="legato" name="MMG">
+          <properties>
+            <property name="level" value="full"/>
+            <property name="client" value="wspbackup.messe-muenchen.de"/>
+            <property name="server" value="wspbackup.messe-muenchen.de"/>
+          </properties>
+        </archive>
+      </data>
+    </destination>
+  </copyset>
+</enterprisecopy>
