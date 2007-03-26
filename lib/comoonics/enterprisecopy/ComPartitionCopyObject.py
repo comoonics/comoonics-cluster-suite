@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.2 2007-02-27 15:54:28 mark Exp $
+# $Id: ComPartitionCopyObject.py,v 1.3 2007-03-26 08:01:32 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -41,6 +41,8 @@ class PartitionCopyObject(CopyObjectJournaled):
 
 
     def prepareAsSource(self):
+        for journal_command in self.disk.resolveDeviceName():
+            self.journal(self.disk, journal_command)
         self.disk.initFromDisk()
 
     def cleanupSource(self):
@@ -68,7 +70,10 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.2  2007-02-27 15:54:28  mark
+# Revision 1.3  2007-03-26 08:01:32  marc
+# - added support for resolvDeviceName()
+#
+# Revision 1.2  2007/02/27 15:54:28  mark
 # changed Disk to HostDisk
 #
 # Revision 1.1  2006/12/08 09:42:26  mark
