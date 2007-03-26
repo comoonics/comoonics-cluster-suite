@@ -6,22 +6,24 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.5 2006-12-08 09:38:36 mark Exp $
+# $Id: ComCopyObject.py,v 1.6 2007-03-26 07:52:25 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
 from comoonics.ComJournaled import JournaledObject
 from comoonics import ComLog
+from comoonics.enterprisecopy.ComRequirement import Requirements
 
 from xml.dom import Node
 
 
 class UnsupportedCopyObjectException(ComException): pass
+class UnsupportedMetadataException(ComException): pass
 
 #def getCopyObject(element, doc):
 #    """ Factory function to create Copy Objects"""
@@ -40,7 +42,7 @@ class UnsupportedCopyObjectException(ComException): pass
 #        raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, element.tagName))
 
 
-class CopyObject(DataObject):
+class CopyObject(DataObject, Requirements):
     """ Base Class for all source and destination objects"""
     __logStrLevel__ = "CopyObject"
 
@@ -70,6 +72,7 @@ class CopyObject(DataObject):
 
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
+        Requirements.__init__(self, element, doc)
 
     def prepareAsSource(self):
         ''' prepare CopyObject as source '''
@@ -116,7 +119,10 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.5  2006-12-08 09:38:36  mark
+# Revision 1.6  2007-03-26 07:52:25  marc
+# added Requirements for CopyObjects
+#
+# Revision 1.5  2006/12/08 09:38:36  mark
 # added support for PartitionCopyObject
 #
 # Revision 1.4  2006/11/27 09:47:17  mark
