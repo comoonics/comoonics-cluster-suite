@@ -6,13 +6,14 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.5 2007-03-09 09:09:57 marc Exp $
+# $Id: ComLog.py,v 1.6 2007-03-26 08:31:13 marc Exp $
 #
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
+import traceback
 #import exceptions
 
 global __default_log
@@ -66,8 +67,10 @@ def logTrace(nameorlogger=None, level=logging.DEBUG):
         logger=getLogger()
     if logger.getEffectiveLevel() == level:
 #        pass
-        import traceback
-        logger.log(level, traceback.format_exc())
+        from StringIO import StringIO
+        buf=StringIO()
+        traceback.print_exc(None, buf)
+        logger.log(level, buf.getvalue())
 
 def __testLogger(name):
     logger=getLogger(name)
@@ -107,7 +110,10 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.5  2007-03-09 09:09:57  marc
+# Revision 1.6  2007-03-26 08:31:13  marc
+# - added logTrace and debugLogTrace and the like
+#
+# Revision 1.5  2007/03/09 09:09:57  marc
 # added logTrace and friends.
 #
 # Revision 1.4  2007/03/09 08:49:55  marc
