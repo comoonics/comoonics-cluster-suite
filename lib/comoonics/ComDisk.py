@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.10 2007-03-14 15:07:15 mark Exp $
+# $Id: ComDisk.py,v 1.11 2007-03-26 08:27:03 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -21,9 +21,11 @@ import time
 
 import ComSystem
 from ComDataObject import DataObject
-from ComExceptions import *
+from ComExceptions import ComException
+from comoonics import ComLog
 import ComParted
 from ComPartition import Partition
+from comoonics.ComLVM import LogicalVolume, LinuxVolumeManager, VolumeGroup
 
 CMD_SFDISK = "/sbin/sfdisk"
 CMD_DD="/bin/dd"
@@ -39,7 +41,7 @@ class Disk(DataObject):
             name=element.getAttribute("name")
             if name.startswith("/"):
                 cls=HostDisk
-        return object.__new__(cls)
+        return object.__new__(cls, *args, **kwds)
     def __init__(self, element, doc=None):
         """ default Constructur """
         super(Disk, self).__init__(element, doc)
@@ -73,22 +75,51 @@ class StorageDisk(Disk):
         return luns
 
 class HostDisk(Disk):
+    log=ComLog.getLogger("HostDisk")
+    LABEL_PREFIX="LABEL="
+    class DeviceNameResolver(object):
+        key=None
+        def getKey(self):
+            return self.key
+        def resolve(self, value):
+            pass
+
+    class DeviceNameResolverError(ComException):
+        pass
+    resolver=dict()
+
     """ Disk represents a raw disk """
     def __init__(self, element, doc=None):
         """ creates a Disk object
         """
         super(HostDisk, self).__init__(element, doc)
-        self.log=ComLog.getLogger("Disk")
+        self.log.debug("__init__")
+        self.devicename=None
+
+    def is_lvm(self):
+        return hasattr(self, "volumegroup") and hasattr(self, "logicalvolume")
+
+    def is_lvm_activated(self):
+        return self.is_lvm() and self.logicalvolume.isActivated()
+
+    def lvm_vg_activate(self):
+        self.volumegroup.activate()
+
+    def lvm_vg_deactivate(self):
+        self.volumegroup.deactivate()
 
     def getLog(self):
         return self.log
 
     def exists(self):
-        return os.path.exists(self.getAttribute("name"))
+        return os.path.exists(self.getDeviceName())
 
     def getDeviceName(self):
         """ returns the Disks device name (e.g. /dev/sda) """
-        return self.getAttribute("name")
+        if hasattr(self, "devicename") and self.devicename != None:
+            return self.devicename
+        else:
+            return self.getAttribute("name")
 
     def getDevicePath(self):
         return self.getDeviceName()
@@ -97,14 +128,61 @@ class HostDisk(Disk):
         """ returns the size of the disk in sectors"""
         phelper=ComParted.PartedHelper()
 
+    def refByLabel(self):
+        """
+        is disk referenced by Label? returns True or False
+        Format <disk name="LABEL=..."/>
+        """
+        return self.getDeviceName()[:len(self.LABEL_PREFIX)]==self.LABEL_PREFIX
+
+    def resolveDeviceNameByKeyValue(self, key, value):
+        """
+        resolves a device name by searching for a method to resolve it by key and the resolve via value as
+        Parameter
+        """
+        if self.resolver.has_key(key):
+            name=self.resolver[key].resolve(value)
+            if name and name != "":
+                self.devicename=name
+            else:
+                raise HostDisk.DeviceNameResolverError("Could not resolve device \"%s\" for type \"%s\"" %(value, key))
+        else:
+            raise HostDisk.DeviceNameResolverError("Could not find resolver for device referrenced by %s=%s" %(key, value))
+
+    def resolveDeviceName(self):
+        """
+        resolves the given devicenames and returns a list of executed commands.
+        """
+        journal_cmds=list()
+        if len(self.getDeviceName().split("="))==2:
+            (key, value)=self.getDeviceName().split("=")
+            self.resolveDeviceNameByKeyValue(key, value)
+        if LogicalVolume.isValidLVPath(self.getDeviceName()):
+            self.initLVM()
+            if self.getAttribute("options", "") != "skipactivate" and not self.is_lvm_activated():
+                self.lvm_vg_activate()
+                journal_cmds.append("lvm_vg_activate")
+        return journal_cmds
+
+    def initLVM(self):
+        (vgname, lvname)=LogicalVolume.splitLVPath(self.getDeviceName())
+        self.volumegroup=VolumeGroup(vgname, self.getDocument())
+        self.logicalvolume=LogicalVolume(lvname, self.volumegroup, self.getDocument())
+        self.volumegroup.init_from_disk()
+        self.logicalvolume.init_from_disk()
 
     def initFromDisk(self):
-        """ reads partition information from the disk and fills up DOM
+        """ reads partition informatbbion from the disk and fills up DOM
         with new information
         """
+        self.log.debug("initFromDisk()")
+
         phelper=ComParted.PartedHelper()
+        if self.refByLabel():
+            pass
         if not self.exists():
-            raise ComException("Device %s not found" % self.getDeviceName())
+            raise ComException("Device %s not found or no LVM Device!" % self.getDeviceName())
+
         dev=parted.PedDevice.get(self.getDeviceName())
         try:
             disk=parted.PedDisk.new(dev)
@@ -112,7 +190,7 @@ class HostDisk(Disk):
             for part in partlist:
                 self.appendChild(Partition(part, self.getDocument()))
         except parted.error:
-                self.log.debug("no partitions found")
+            self.log.debug("no partitions found")
 
     def createPartitions(self):
         """ creates new partition table """
@@ -123,7 +201,6 @@ class HostDisk(Disk):
         #IDEA compare the partition configurations for update
         #1. delete all aprtitions
         dev=parted.PedDevice.get(self.getDeviceName())
-        #dev.open()
 
         try:
             disk=parted.PedDisk.new(dev)
@@ -250,6 +327,17 @@ class HostDisk(Disk):
         __cmd.append(self.getDeviceName())
         return " ".join(__cmd)
 
+# Initing the resolvers
+try:
+    from comoonics.scsi.ComSCSIResolver import SCSIWWIDResolver, FCTransportResolver
+    res=SCSIWWIDResolver()
+    HostDisk.resolver[res.getKey()]=res
+    res=FCTransportResolver()
+    HostDisk.resolver[res.getKey()]=res
+except ImportError:
+    import warnings
+    warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
+
 def main():
     disk_dumps=[ """
         <disk name="Virtual Disks/atix/sourcedisk">
@@ -287,7 +375,13 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.10  2007-03-14 15:07:15  mark
+# Revision 1.11  2007-03-26 08:27:03  marc
+# - added more logging
+# - added DeviceNameResolving
+# - added resolvers for DeviceNameResolving
+# - added lvm awareness (will autoactivate a non activated volume group)
+#
+# Revision 1.10  2007/03/14 15:07:15  mark
 # workaround for bug bz#36
 #
 # Revision 1.9  2007/03/14 14:20:18  marc
