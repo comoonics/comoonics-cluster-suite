@@ -4,15 +4,16 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.1 2007-02-09 11:36:16 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.2 2007-03-26 08:06:30 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
+import logging
 from comoonics.ComDataObject import DataObject
-from comoonics import pexpect, ComLog
+from comoonics import pexpect, ComLog, ComSystem
 from comoonics import ComExceptions
 from xml.dom import Node
 from ComHP_EVA import HP_EVA_Object
@@ -32,6 +33,9 @@ Command %s, exited with errorcode %u
 Output:
 %s
 """ %(self.cmd, self.errorcode, self.output)
+
+CMD_LOG_LEVEL=15
+CMD_LOG_LEVEL_NAME="SSSU_CMD"
 
 class HP_EVA_SSSU(object):
     __logStrLevel__="HP_EVA_SSSU"
@@ -148,7 +152,7 @@ class HP_EVA_SSSU(object):
         """
         Sets an option to this system (Command: set system)
         """
-        pass
+        self.cmd("set system %s manage" %(system))
 
     def disconnect(self):
         """
@@ -163,6 +167,10 @@ class HP_EVA_SSSU(object):
 
         self.last_cmd=cmd+HP_EVA_SSSU.DELIM+self.toParams(params)
 
+        mylogger.log(CMD_LOG_LEVEL, self.last_cmd)
+        if not ComSystem.askExecModeCmd(self.last_cmd):
+            return 0
+
         self.sssu_shell.sendline(self.last_cmd)
         self.sssu_shell.expect(match)
         self.last_output=self.sssu_shell.before
@@ -174,7 +182,7 @@ class HP_EVA_SSSU(object):
                 raise CommandError(1, self.last_cmd, self.sssu_shell.before)
             else:
                 thematch=self.sssu_shell.match
-                mylogger.debug("self.sssu_shell.match.group(1): %s" %(thematch.group(1)))
+                #mylogger.debug("self.sssu_shell.match.group(1): %s" %(thematch.group(1)))
                 self.last_error_code=int(thematch.group(1))
                 if self.last_error_code == 0:
                     self.xml_output=self.LastOutput2XML()
@@ -189,10 +197,20 @@ class HP_EVA_SSSU(object):
             buf=params
         elif params and type(params)==list or type(params)==tuple:
             buf=HP_EVA_SSSU.DELIM.join(params)
+        elif params and isinstance(params, dict):
+            for property in params.keys():
+                #mylogger.debug("Property: %s" %(property))
+                mylogger.debug("toParams(%s): %s" %(property,params[property]))
+                buf+=property
+                if type(params[property])==bool:
+                    pass
+                else:
+                    buf+="=\""+params[property]+"\""
+                buf+=HP_EVA_SSSU.DELIM
         elif params and isinstance(params, Properties):
             for property in params.iter():
                 #mylogger.debug("Property: %s" %(property))
-                mylogger.debug("toParams(%s): %s" %(property.getAttribute("name"),property.getAttribute("value")))
+                mylogger.debug("toParams(%s): %s, bool?:%s" %(property.getAttribute("name"),property.getAttribute("value"),type(property.getAttribute("value"))))
                 if property.hasAttribute("name"):
                     buf+=property.getAttribute("name")
                     if property.getAttribute("value") and type(property.getAttribute("value"))==bool:
@@ -227,6 +245,7 @@ class HP_EVA_SSSU(object):
 
 
 mylogger=ComLog.getLogger(HP_EVA_SSSU.__logStrLevel__)
+logging.addLevelName(CMD_LOG_LEVEL, CMD_LOG_LEVEL_NAME)
 
 def main():
     from xml.dom.ext import PrettyPrint
@@ -251,6 +270,11 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.1  2007-02-09 11:36:16  marc
+# Revision 1.2  2007-03-26 08:06:30  marc
+# - added better logging (own loglevel for SSSU)
+# - added ask mode for commands
+# - added support for a dict as parameters to cmd
+#
+# Revision 1.1  2007/02/09 11:36:16  marc
 # initial revision
 #
