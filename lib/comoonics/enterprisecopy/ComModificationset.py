@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.3 2007-02-09 12:26:12 marc Exp $
+# $Id: ComModificationset.py,v 1.4 2007-03-26 08:00:58 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModificationset.py,v $
 
 import exceptions
@@ -20,7 +20,8 @@ import os
 from comoonics.ComDataObject import DataObject
 from comoonics.ComJournaled import JournaledObject
 from comoonics import ComLog
-import ComModification
+from comoonics.enterprisecopy import ComModification
+from comoonics.enterprisecopy.ComRequirement import Requirements
 
 log=ComLog.getLogger("ModificationSet")
 
@@ -38,18 +39,17 @@ def getModificationset(element, doc):
         return StorageModificationset(element, doc)
     raise exceptions.NotImplementedError("Modifcicationset for type " + __type + " is not implemented")
 
-class Modificationset(DataObject):
+class Modificationset(DataObject, Requirements):
     TAGNAME = "modificationset"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
+        Requirements.__init__(self, element, doc)
         self.modifications=list()
         #log.debug("Modificationset CWD: " + os.getcwd())
 
     def doModifications(self):
         """starts the modification process"""
-        self.doPre()
         self.doRealModifications()
-        self.doPost()
 
     def undoModifications(self):
         """undos all modifications """
@@ -57,20 +57,17 @@ class Modificationset(DataObject):
         self.modifications.reverse()
         for mod in self.modifications:
             try:
+                mod.undoRequirements()
                 mod.undoModification()
             except NotImplementedError, e:
                 log.warning(e)
 
-    def doPre(self):
-        pass
-
-    def doPost(self):
-        pass
-
     def doRealModifications(self):
         for mod in self.modifications:
             try:
+                mod.doPre()
                 mod.doModification()
+                mod.doPost()
             except NotImplementedError, e:
                 log.warning(e)
 
@@ -108,7 +105,10 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComModificationset.py,v $
-# Revision 1.3  2007-02-09 12:26:12  marc
+# Revision 1.4  2007-03-26 08:00:58  marc
+# - added Requirements and more functionality to parents
+#
+# Revision 1.3  2007/02/09 12:26:12  marc
 # added StorageModificationSet
 #
 # Revision 1.2  2006/12/08 09:42:04  mark
