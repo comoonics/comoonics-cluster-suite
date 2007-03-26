@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.6 2007-02-28 10:12:25 mark Exp $
+# $Id: ComDataObject.py,v 1.7 2007-03-26 08:19:16 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -72,6 +72,8 @@ class DataObject(object):
             return default
         elif not self.__dict__.has_key('element') or not self.element.hasAttribute(name):
             raise exceptions.NameError("No attribute name " + name)
+        elif self.element.hasAttribute(name) and self.element.getAttribute(name)=="":
+            return True
         return self.element.getAttribute(name)
 
     def hasAttribute(self, name):
@@ -80,7 +82,10 @@ class DataObject(object):
     def setAttribute(self, name, value):
         if not self.element and not isinstance(Element, self.element):
             raise exceptions.IndexError("Element not defined or wrong instance.")
-        self.element.setAttribute(name, str(value))
+        if type(value)==bool:
+            self.element.setAttribute(name, "")
+        else:
+            self.element.setAttribute(name, str(value))
 
     def updateAttributes(self, frommap):
         '''
@@ -187,7 +192,10 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.6  2007-02-28 10:12:25  mark
+# Revision 1.7  2007-03-26 08:19:16  marc
+# - added boolean attributes as true ones with attributes without values
+#
+# Revision 1.6  2007/02/28 10:12:25  mark
 # added getAttributeBoolean()
 #
 # Revision 1.5  2007/02/09 11:28:30  marc
