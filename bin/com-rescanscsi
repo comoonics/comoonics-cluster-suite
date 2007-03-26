@@ -1,0 +1,78 @@
+#!/usr/bin/python
+
+# here is some internal information
+# $Id: rpm2db.py,v 1.1 2006/08/08 08:32:38 marc Exp $
+#
+
+__version__ = "$revision$"
+__description__="""
+Programm to rescan the scsibus
+"""
+
+# $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/rpm2db.py,v $
+import sys
+from comoonics import ComLog
+from comoonics import GetOpts
+from comoonics.scsi import ComSCSI
+
+import logging
+
+ComLog.setLevel(logging.INFO)
+
+log=ComLog.getLogger("com-rescanscsi")
+
+def line(str=None):
+    print
+    print "--------------------"+str+"---------------------------------"
+
+class Config(GetOpts.BaseConfig):
+    hosts=None
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
+        self.fibre=GetOpts.Option("fibre", "scan only fibre channel hbas", False, False, "F", self.fibreChannel)
+        self.qlogic=GetOpts.Option("qlogic", "scan qlogichbas with old qlogic way", False, False, "q")
+        self.remove=GetOpts.Option("remove", "only remove scsidisks", False, False, "r")
+        self.add=GetOpts.Option("add", "only add scsidisks", False, False, "a")
+        self.setAdditionalParams("[host]*")
+    def do(self, args_proper):
+        import os.path
+#        if len(args_proper) >= 1:
+#            self.name=args_proper[0]
+        if len(args_proper) >= 0:
+            if not self.hosts:
+                self.hosts=list()
+            self.hosts+=args_proper
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+
+    def fibreChannel(self, value):
+        self.hosts=ComSCSI.getFCHosts()
+        log.debug("hosts %s" %(self.hosts))
+
+config=Config()
+
+ret=config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    config.usage()
+    sys.exit(ret)
+
+if not config.hosts and not config.qlogic:
+    config.hosts=ComSCSI.getSCSIHosts()
+if not config.hosts and config.qlogic:
+    config.hosts=ComSCSI.getQlaHosts()
+for host in config.hosts:
+    log.info("Rescanning "+host)
+    if not config.qlogic:
+        ComSCSI.rescan(host, not config.remove, not config.add)
+    else:
+        ComSCSI.rescan_qla(host, not config.remove, not config.add)
+
+# $Log: rpm2db.py,v $
+# Revision 1.1  2006/08/08 08:32:38  marc
+# initial revision
+#
