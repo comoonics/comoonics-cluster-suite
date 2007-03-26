@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -29,13 +29,16 @@ from ComDataObject import DataObject
 import ComLog
 from ComExceptions import ComException
 
+from exceptions import ImportError
+
 __all__ = ["Archive", "ArchiveHandlerFactory", "ArchiveHandler"]
 
-class ComNotImplementedError(ComException): pass
+class NotImplementedError(ComException): pass
 
 class ArchiveException(ComException):pass
 
 class Archive(DataObject):
+    log=ComLog.getLogger("Archive")
     '''
     Internal Exception classes
     '''
@@ -56,10 +59,12 @@ class Archive(DataObject):
     ''' Static methods '''
 
     def __init__(self, element, doc):
-        DataObject.__init__(self, element, doc)
+        super(Archive, self).__init__(element, doc)
+        self.log.debug("getArchiveHandler(%s, %s, %s, %s, %s)" %(self.getAttribute("name"), self.getAttribute("format"), \
+             self.getAttribute("type"), self.getAttribute("compression", default="none"), self.getProperties()))
         self.ahandler=ArchiveHandlerFactory.getArchiveHandler \
             (self.getAttribute("name"), self.getAttribute("format"), \
-             self.getAttribute("type"), self.getAttribute("compression", default="none"))
+             self.getAttribute("type"), self.getAttribute("compression", default="none"), self.getProperties())
         self.child=self.element.firstChild
 
     def closeAll(self):
@@ -106,6 +111,7 @@ class Archive(DataObject):
             os.unlink(path)
         except Exception, e:
             os.unlink(path)
+            ComLog.debugTraceLog(self.log)
             raise e
 
     def getFileObj(self, name):
@@ -173,12 +179,17 @@ class ArchiveMemberInfo(DataObject, TarInfo):
     pass
 
 #FIXME: methods should rais a kind of NotImlementedError by default
-class ArchiveHandler:
+class ArchiveHandler(object):
     ''' Baseclass for archiv handlers'''
+    NONE="none"
+
+    FORMAT=NONE
+    COMPRESSION=NONE
+    TYPE=NONE
 
     __logStrLevel__ = "ArchiveHandler"
 
-    def __init__(self, name):
+    def __init__(self, name, properties=None):
         self.name=name
 
     def closeAll(self):
@@ -219,7 +230,7 @@ class ArchiveHandler:
 
     def __niy(self):
         ''' default behavior is NotImplementedError '''
-        raise ComNotImplementedError()
+        raise NotImplementedError()
 
 '''
 Archivee Handlers
@@ -228,10 +239,12 @@ Archivee Handlers
 
 ''' ArchiveeHandler for tar files '''
 class TarArchiveHandler(ArchiveHandler):
-
+    FORMAT="tar"
+    TYPE="file"
     TAR="/bin/tar"
 
-    def __init__(self, name):
+    def __init__(self, name, properties=None):
+        super(TarArchiveHandler, self).__init__(name, properties)
         self.tarfile=name
         self.compression=""
         self.compressionmode=""
@@ -296,29 +309,31 @@ class TarArchiveHandler(ArchiveHandler):
 
 ''' Archivee Handler for gzip compressed tar files '''
 class TarGzArchiveHandler(TarArchiveHandler):
-    def __init__(self, name):
-        TarArchiveHandler.__init__(self, name)
+    COMPRESSION="gzip"
+    def __init__(self, name, properties=None):
+        TarArchiveHandler.__init__(self, name, properties)
         self.compression="-z "
         self.compressionmode=":gz"
 
 
 ''' Archivee Handler for bzip2 compressed tar files '''
 class TarBz2ArchiveHandler(TarArchiveHandler):
-    def __init__(self, name):
-        TarArchiveHandler.__init__(self, name)
+    COMPRESSION="bz2"
+    def __init__(self, name, properties=None):
+        TarArchiveHandler.__init__(self, name, properties)
         self.compression="-j "
         self.compressionmode=":bz2"
 
 
 ''' Simple Archive Handler - uses local file system '''
 class SimpleArchiveHandler(ArchiveHandler):
-    def __init__(self, name):
-        ArchiveHandler.__init__(self, name)
+    FORMAT="simple"
+    TYPE="file"
+    def __init__(self, name, properties=None):
+        ArchiveHandler.__init__(self, name, properties)
         self.path="/tmp/" + name
         if os.path.exists(self.path) and not os.path.isdir(self.path):
             raise ArchiveException("Path %s already exists" %(self.path))
-        if not os.path.exists(self.path):
-            os.mkdir(self.path)
 
     def hasMember(self, name):
         return os.path.exists(self.path+"/"+name)
@@ -344,41 +359,158 @@ class SimpleArchiveHandler(ArchiveHandler):
         try:
             os.mkdir(self.path+"/"+os.path.dirname(name))
         except: pass
-        shutil.copy2(name, self.path+"/"+name)
+        shutil.copy2(name, self.path+"/"+arcname)
+
+    def createArchive(self, source, cdir=None):
+        ''' creates an archive from the whole source tree
+            stays in the same filesystem
+            @source: is the sourcedirectory to copy from
+            @cdir:   is a chdir directory to change to
+         '''
+#        try:
+#            os.mkdir(self.path+"/"+os.path.dirname(cdir))
+#        except: pass
+        if cdir !=None:
+            ComLog.getLogger(Archive.__logStrLevel__).debug("changing to directory "+cdir)
+            os.chdir(cdir)
+        ComLog.getLogger(Archive.__logStrLevel__).debug("Copy from "+source+" to "+self.path+"/")
+        shutil.copytree(source, self.path+"/")
 
 
+class IncompatibleArchiveHandlerClass(ComException):
+    def __str__(self):
+        return "The Class "+self.value+" is incompatible to register to ArchiveHandlerFactory"
 
 ''' Factory class for ArchiveHandler '''
-class ArchiveHandlerFactory:
-    ''' Factory for different archiv type handlers'''
+class ArchiveHandlerFactoryClass:
+    """
+    Factory for different archiv type handlers
+    """
 
     '''
     Internal Exception classes
     '''
 
     __logStrLevel__ = "ArchiveHandlerFactory"
-    '''
-    Static Methods
-    '''
+    log=ComLog.getLogger("ArchiveHandlerFactory")
 
-    def getArchiveHandler(name, format, type, compression="none"):
-        if format == "simple":
-            return SimpleArchiveHandler(name)
-        if format == "tar":
-            if compression == "none":
-                return TarArchiveHandler(name)
-            if compression == "gzip":
-                return TarGzArchiveHandler(name)
-            if compression == "bz2":
-                return TarBz2ArchiveHandler(name)
+    """ The static registry for all registered handlers """
+    _registry=dict()
+
+    def __init__(self):
+        """
+        Default contstructor that preregisters all default classes
+        """
+        self.registerArchiveHandler(SimpleArchiveHandler)
+        self.registerArchiveHandler(TarArchiveHandler)
+        self.registerArchiveHandler(TarGzArchiveHandler)
+        self.registerArchiveHandler(TarBz2ArchiveHandler)
+
+    def registerArchiveHandler(self, theclass):
+
+        if type(theclass)!=type:
+            raise IncompatibleArchiveHandlerClass(theclass)
+        instance=object.__new__(theclass)
+        if not isinstance(instance, ArchiveHandler):
+            raise IncompatibleArchiveHandlerClass(theclass)
+        #self.log.debug("ComArchive.registerArchiveHandler(%s)" %(theclass))
+        element=theclass
+        if not self._registry.has_key(theclass.FORMAT):
+            self._registry[theclass.FORMAT]=dict()
+        if not self._registry[theclass.FORMAT].has_key(theclass.TYPE):
+            self._registry[theclass.FORMAT][theclass.TYPE]=dict()
+        self._registry[theclass.FORMAT][theclass.TYPE][theclass.COMPRESSION]=theclass
+
+    def getArchiveHandler(self, name, format, thetype=ArchiveHandler.NONE, compression=ArchiveHandler.NONE, properties=None):
+        """
+        Returns the handler registered for the given format and type combination
+        """
+        if self._registry.has_key(format) and \
+           self._registry[format].has_key(thetype) and \
+           self._registry[format][thetype].has_key(compression):
+            instance=object.__new__(self._registry[format][thetype][compression])
+            instance.__init__(name, properties)
+            return instance
         else:
-            raise ArchiveException("No ArchiveHandler found for %s" %(format))
+            raise ArchiveException("No ArchiveHandler found for %s, %s, %s, %s" %(name, format, thetype, compression))
 
-    getArchiveHandler=staticmethod(getArchiveHandler)
+    def __str__(self):
+        return "%s" %(self._registry)
+"""
+The ArchiveHandlerFactory
+Concept:
+Is a static reference to ArchiveHandlerFactoryClass that holds registered ArchiveImplementations.
+Every Implementation registers with a formatname and other optional Parameters like i.e. compression or type.
+By default the following implementations are registered:
+format      compression          Class
+simple      "none"/None          SimpleArchiveHandler
+tar         "none"/None          TarArchiveHandler
+tar         "gzip"               TarGzArchiveHandler
+tar         "bz2"                TarBz2ArchiveHandler
+
+otherwise it raises an ArchiveException("No ArchiveHandler found for %s" %(format))
+
+New handler should best register in their automatically executed __init__.py Module of their module
+with given format, [type] and [compression] if needed.. I.e.
+__init.py__:
+ArchiveHandler.registerArchiveHandler(handlerClass)
+format, type, compression are defined in the class itself over the static attributes:
+FORMAT, TYPE, COMPRESSION
+all default to NONE
+"""
+global ArchiveHandlerFactory
+ArchiveHandlerFactory=ArchiveHandlerFactoryClass()
+
+"""
+Testing starts here
+"""
+class myTarArchiveHandler(TarArchiveHandler):
+    FORMAT="testformat"
+    TYPE="testtype"
+    pass
+class myTarBz2ArchiveHandler(TarBz2ArchiveHandler):
+    FORMAT="testformat"
+    TYPE="testtype"
+    pass
+class myTarGzArchiveHandler(TarGzArchiveHandler):
+    FORMAT="testformat"
+    TYPE="testtype"
+    pass
+
+def __TestRegisterArchiveHandler(theclass):
+    print "Registering class: %s" %(theclass)
+    ArchiveHandlerFactory.registerArchiveHandler(theclass)
+    print "registry: %s" %(ArchiveHandlerFactory)
+
+def __TestRetreiveArchiveHandler(theclass):
+    print "Retreiving data: %s, %s, %s" %(theclass.FORMAT, theclass.TYPE, theclass.COMPRESSION)
+    print ArchiveHandlerFactory.getArchiveHandler("testname", theclass.FORMAT, theclass.TYPE, theclass.COMPRESSION)
+
+def main():
+    print "Testing ArchivHandlerFactory"
+    print "Registry: "
+    print ArchiveHandlerFactory
+    __TestRegisterArchiveHandler(myTarArchiveHandler)
+    __TestRegisterArchiveHandler(myTarGzArchiveHandler)
+    __TestRegisterArchiveHandler(myTarBz2ArchiveHandler)
+
+    print "Retreiving data from registry:"
+    __TestRetreiveArchiveHandler(myTarArchiveHandler)
+    __TestRetreiveArchiveHandler(myTarGzArchiveHandler)
+    __TestRetreiveArchiveHandler(myTarBz2ArchiveHandler)
+    __TestRetreiveArchiveHandler(SimpleArchiveHandler)
+
+if __name__ == '__main__':
+    main()
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.8  2007-03-08 10:54:05  marc
+# Revision 1.9  2007-03-26 08:18:09  marc
+# - added some autotests
+# - added 3 tier hierarchy for ArchiveHandlers (format, type, compression)
+# - added more generic handling of ArchiveHandlers (register to a static registry)
+#
+# Revision 1.8  2007/03/08 10:54:05  marc
 # fixed bugs from eclipse
 #
 # Revision 1.7  2006/12/14 09:12:15  mark
