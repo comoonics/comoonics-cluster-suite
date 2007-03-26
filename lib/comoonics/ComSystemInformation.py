@@ -6,7 +6,7 @@ Classes to automatically collect informations of this system.
 
 
 # here is some internal information
-# $Id: ComSystemInformation.py,v 1.3 2007-03-06 07:05:20 marc Exp $
+# $Id: ComSystemInformation.py,v 1.4 2007-03-26 08:37:31 marc Exp $
 #
 import re
 import os
@@ -21,7 +21,7 @@ ComSystem.__EXEC_REALLY_DO=""
 class SystemInformationNotFound(ComException):
     pass
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComSystemInformation.py,v $
 
 class SystemType(object):
@@ -110,14 +110,14 @@ class SystemInformation(object):
         """
         return self.uptime
 
-    def getInstalledSoftware(self):
+    def getInstalledSoftware(self, name=None):
         """
         Returns a list of installed software
         """
-        self.updateInstalledSoftware()
+        self.updateInstalledSoftware(name)
         return self.installedsoftware
 
-    def updateInstalledSoftware(self):
+    def updateInstalledSoftware(self, name=None):
         """
         protected method that updates the installedsoftwarelist
         Does nothing here
@@ -240,10 +240,12 @@ class RedhatSystemInformation(RPMLinuxSystemInformation):
         else:
             return object.__new__(RedhatSystemInformation, *args, **kwds)
 
-    def updateInstalledSoftware(self):
+    def updateInstalledSoftware(self, name=None):
         import rpm
         ts=rpm.ts()
         mi=ts.dbMatch()
+        if name:
+            mi.pattern("name", rpm.RPMMIRE_GLOB, name)
         for hdr in mi:
             self.installedsoftware.append(hdr)
 
@@ -332,7 +334,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComSystemInformation.py,v $
-# Revision 1.3  2007-03-06 07:05:20  marc
+# Revision 1.4  2007-03-26 08:37:31  marc
+# - changed getInstalledSoftware and updateInstalledSoftware to work with only selected software and all (default)
+#
+# Revision 1.3  2007/03/06 07:05:20  marc
 # would not find linux in redhat rhel4 with match. Changed to search.
 #
 # Revision 1.2  2007/03/05 16:10:56  marc
