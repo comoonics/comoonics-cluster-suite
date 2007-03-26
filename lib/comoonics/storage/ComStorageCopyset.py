@@ -63,19 +63,20 @@ Example Configuration for the HP_EVA implementation:
 
 
 # here is some internal information
-# $Id: ComStorageCopyset.py,v 1.1 2007-02-09 11:36:16 marc Exp $
+# $Id: ComStorageCopyset.py,v 1.2 2007-03-26 08:12:56 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/Attic/ComStorageCopyset.py,v $
 
-from comoonics.enterprisecopy.ComCopyset import CopysetJournaled
+from comoonics.enterprisecopy.ComCopyset import Copyset
 from comoonics.storage.ComStorage import Storage
 from comoonics.storage.ComStorageCopyobject import StorageCopyObject
+from comoonics.ComJournaled import JournaledObject
 from comoonics import ComLog
 
-class StorageCopyset(CopysetJournaled):
+class StorageCopyset(Copyset):
     """ The class for a storagecopyset. It will automatically instantiate the proper storage object and find the
     right methods to execute via the types of source and destination or the children of the disk element.
     """
@@ -86,10 +87,6 @@ class StorageCopyset(CopysetJournaled):
 
     def __init__(self, element, doc):
         super(StorageCopyset, self).__init__(element, doc)
-        self.addToUndoMap(Storage.__name__, "add", "delete")
-        self.addToUndoMap(Storage.__name__, "add_clone", "delete_clone")
-        self.addToUndoMap(Storage.__name__, "add_snapshot", "delete_snapshot")
-        self.addToUndoMap(Storage.__name__, "map_luns", "unmap_luns")
         self.implementation=self.getElement().getAttribute("implementation")
         mylogger.debug("%s@%s Implementation: %s" %(self.getElement().tagName, self.getElement().getAttribute("name"), self.implementation))
         self.storage=Storage.getStorageObject(self.implementation, self.getElement())
@@ -102,6 +99,11 @@ class StorageCopyset(CopysetJournaled):
         ret=self.destination.doAction(self.getAttribute("action"), self.source)
         self.source.cleanupSource()
         self.destination.cleanupDest()
+
+    def undoCopy(self):
+        self.destination.undoRequirements()
+        if isinstance(self.destination, JournaledObject):
+            self.destination.replayJournal()
 
 mylogger=ComLog.getLogger(StorageCopyset.__logStrLevel__)
 
@@ -141,6 +143,9 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComStorageCopyset.py,v $
-# Revision 1.1  2007-02-09 11:36:16  marc
+# Revision 1.2  2007-03-26 08:12:56  marc
+# - added support for journaling
+#
+# Revision 1.1  2007/02/09 11:36:16  marc
 # initial revision
 #
