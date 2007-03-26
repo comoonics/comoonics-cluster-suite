@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -37,6 +37,7 @@ class LinuxVolumeManager(DataObject):
     '''
 
     __logStrLevel__ = "LVM"
+    log=ComLog.getLogger(__logStrLevel__)
     TAGNAME="linuxvolumemanager"
     LVM_ROOT = "/etc/lvm"
 
@@ -98,7 +99,7 @@ class LinuxVolumeManager(DataObject):
                 continue
             if not vgname or vgname=="":
                 continue
-            ComLog.getLogger(LinuxVolumeManager.__logStrLevel__).debug("vg %s, pv %s" %(vgname, pvname))
+            self.log.debug("vg %s, pv %s" %(vgname, pvname))
             if vgs.has_key(vgname):
                 vg=vgs[vgname]
             else:
@@ -136,7 +137,7 @@ class LinuxVolumeManager(DataObject):
                 vg=VolumeGroup(vgname, doc)
 
             logmsg = "lv is %s/%s" % (vg.getAttribute("name"), lv)
-            ComLog.getLogger(LinuxVolumeManager.__logStrLevel__).debug(logmsg)
+            self.log.debug(logmsg)
             lv=LogicalVolume(lv, vg, doc)
             lv.init_from_disk()
             lvs.append( lv )
@@ -164,7 +165,7 @@ class LinuxVolumeManager(DataObject):
                 (dev, vgname) = line.strip().split(':')
             except:
                 continue
-            ComLog.getLogger(LinuxVolumeManager.__logStrLevel__).debug("pv is %s in vg %s" %(dev, vgname))
+            self.log.debug("pv is %s in vg %s" %(dev, vgname))
             vg=VolumeGroup(vgname, doc)
             pv=PhysicalVolume(dev, vg, doc)
             vg.addPhysicalVolume(pv)
@@ -277,6 +278,14 @@ devices {
     '''
     Methods shared by all subclasses (mostly abstract)
     '''
+    def checkAttribute(self, attribute, position):
+        attr=self.getAttribute("attrs", "")
+        self.log.debug("checkAttribute(%s, %u)==%s"%(attribute, position, self.getAttribute("attrs", "")))
+        if len(attr)>position and attr[position]==attribute:
+            return True
+        else:
+            return False
+
     def create(self): pass
 
     def remove(self): pass
@@ -290,8 +299,51 @@ class LogicalVolume(LinuxVolumeManager):
     Representation of the Linux Volume Manager Logical Volume
     '''
 
+    class LVMInvalidLVPathException(LinuxVolumeManager.LVMException): pass
+
+    ATTRIB_ACTIVATED="a"
+    ATTRIB_ACTIVATED_POS=4
     TAGNAME="logicalvolume"
     parentvg=None
+    DEV_PATH="/dev"
+    MAPPER_PATH=DEV_PATH+"/mapper"
+
+    LVPATH_SPLIT_PATTERNS=["^%s/([^-]+)-([^/-]+)$" %(MAPPER_PATH), "^%s/([^/]+)/([^/]+)$" %(DEV_PATH)]
+
+    """
+    static methods
+    """
+    def isValidLVPath(path, doc=None):
+        """
+        returns True if this path is a valid path to a logical volume and if that volume either activated or not exists.
+        Supported paths are /dev/mapper/<vg_name>-<lv_name> or /dev/<vg_name>/<lv_name>.
+        """
+        try:
+            (vgname, lvname)=LogicalVolume.splitLVPath(path)
+            if not doc:
+                doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
+            vg=VolumeGroup(vgname, doc)
+            vg.init_from_disk()
+            lv=LogicalVolume(lvname, vg, doc)
+            lv.init_from_disk()
+            return True
+        except LinuxVolumeManager.LVMException:
+            ComLog.debugTraceLog(LogicalVolume.log)
+            return False
+    isValidLVPath=staticmethod(isValidLVPath)
+
+    def splitLVPath(path):
+        """
+        just splits the given path in vgname and lvname. Returns (vgname, lvname) or raises an LVMException.
+        """
+        import re
+        for pattern in LogicalVolume.LVPATH_SPLIT_PATTERNS:
+            match=re.match(pattern, path)
+            if match:
+                return match.groups()
+        raise LogicalVolume.LVMInvalidLVPathException("Path %s is not a valid LVM Path" %(path))
+
+    splitLVPath=staticmethod(splitLVPath)
 
     def __init__(self, *params):
         '''
@@ -305,7 +357,7 @@ class LogicalVolume(LinuxVolumeManager):
         elif len(params) == 3:
             if isinstance(params[0], Node):
                 LinuxVolumeManager.__init__(self, params[0], params[2])
-            elif isinstance(params[0], type("")):
+            elif isinstance(params[0], basestring):
                 LinuxVolumeManager.__init__(self, params[2].createElement(LogicalVolume.TAGNAME), params[2])
                 self.setAttribute("name", params[0])
             else:
@@ -320,6 +372,8 @@ class LogicalVolume(LinuxVolumeManager):
     '''
     The LVM methods
     '''
+    def isActivated(self):
+        return self.checkAttribute(self.ATTRIB_ACTIVATED, self.ATTRIB_ACTIVATED_POS)
 
     def init_from_disk(self):
         """
@@ -351,7 +405,7 @@ class LogicalVolume(LinuxVolumeManager):
         size=""
 
         if self.ondisk and self.getAttribute("overwrite", "false") == "true":
-            self.delete()
+            self.remove()
 
         try:
             self.init_from_disk()
@@ -433,7 +487,7 @@ class PhysicalVolume(LinuxVolumeManager):
         elif len(params) == 3:
             if isinstance(params[0], Node):
                 LinuxVolumeManager.__init__(self, params[0], params[2])
-            elif isinstance(params[0], type("")):
+            elif isinstance(params[0], basestring):
                 LinuxVolumeManager.__init__(self, params[2].createElement(self.TAGNAME), params[0])
                 self.setAttribute("name", params[0])
             else:
@@ -479,8 +533,8 @@ class PhysicalVolume(LinuxVolumeManager):
         if self.ondisk and self.getAttribute("overwrite", "false") == "true":
             for lv in self.parentvg.lvs:
                 lv.delete()
-            self.parent.vg.delete()
-            self.delete()
+            self.parentvg.remove()
+            self.remove()
 
         try:
             self.init_from_disk()
@@ -530,6 +584,8 @@ class VolumeGroup(LinuxVolumeManager):
     Representation of the Linux Volumen Manager Volume Group
     '''
 
+    ATTRIB_CLUSTERED="c"
+    ATTRIB_CLUSTERED_POS=5
     TAGNAME="volumegroup"
     pvs=dict()
     lvs=dict()
@@ -567,7 +623,7 @@ class VolumeGroup(LinuxVolumeManager):
         self.lvs=dict()
         if (len(params) == 2):
             if isinstance(params[0], Node):
-                ComLog.getLogger().debug("createing volumegroup %s/%s from element" % (params[0].tagName, params[0].getAttribute("name")))
+                self.log.debug("createing volumegroup %s/%s from element" % (params[0].tagName, params[0].getAttribute("name")))
                 LinuxVolumeManager.__init__(self, params[0], params[1])
                 # init all lvs
                 __lvs=self.getElement().getElementsByTagName(LogicalVolume.TAGNAME)
@@ -577,8 +633,8 @@ class VolumeGroup(LinuxVolumeManager):
                 __pvs=self.getElement().getElementsByTagName(PhysicalVolume.TAGNAME)
                 for i in range(len(__pvs)):
                     self.addPhysicalVolume(PhysicalVolume(__pvs[i], self, params[1]))
-            elif isinstance(params[0], type("")):
-                ComLog.getLogger().debug("createing volumegroup %s from new element" % params[0])
+            elif isinstance(params[0], basestring):
+                self.log.debug("createing volumegroup %s from new element" % params[0])
                 LinuxVolumeManager.__init__(self, params[1].createElement(self.TAGNAME), params[1])
                 self.setAttribute("name", params[0])
             else:
@@ -605,6 +661,9 @@ class VolumeGroup(LinuxVolumeManager):
 #        for lv in self.getLogicalVolumes():
 #            str+="%s" % lv
         return str
+
+    def isClustered(self):
+        return self.checkAttribute(self.ATTRIB_CLUSTERED, self.ATTRIB_CLUSTERED_POS)
 
     def getLogicalVolumes(self):
         return self.lvs.values()
@@ -712,6 +771,28 @@ class VolumeGroup(LinuxVolumeManager):
         if rc >> 8 != 0:
             raise RuntimeError("running vgchange of %s failed: %u, %s" % (self.getAttribute("name"), rc >> 8, rv))
 
+    def clustered(self):
+        """
+        Set clusteredflag to yes by vgchange -cy.
+        """
+
+        LinuxVolumeManager.has_lvm()
+        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgchange -cy '+self.getAttribute("name"))
+
+        if rc >> 8 != 0:
+            raise RuntimeError("running vgchange of %s failed: %u, %s" % (self.getAttribute("name"), rc >> 8, rv))
+
+    def notclustered(self):
+        """
+        Unset clusteredflag to yes by vgchange -cn.
+        """
+
+        LinuxVolumeManager.has_lvm()
+        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgchange -cn '+self.getAttribute("name"))
+
+        if rc >> 8 != 0:
+            raise RuntimeError("running vgchange of %s failed: %u, %s" % (self.getAttribute("name"), rc >> 8, rv))
+
     def create(self):
         """
         Creates this volumegroup
@@ -721,8 +802,8 @@ class VolumeGroup(LinuxVolumeManager):
 
         if self.ondisk and self.getAttribute("overwrite", "false") == "true":
             for lv in self.lvs:
-                lv.delete()
-            self.delete()
+                lv.remove()
+            self.remove()
 
         try:
             self.init_from_disk()
@@ -740,6 +821,8 @@ class VolumeGroup(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgcreate %s %s %s' % (pesize, self.getAttribute("name"), ' '.join(self.getPhysicalVolumeMap().keys())))
         if rc >> 8 != 0:
             raise RuntimeError("running vgcreate on %s failed: %u,%s" % (self.getAttribute("name"),rc >> 8, rv))
+        if self.isClustered():
+            self.clustered()
         self.init_from_disk()
 
     def remove(self):
@@ -765,7 +848,7 @@ class VolumeGroup(LinuxVolumeManager):
         LinuxVolumeManager.has_lvm()
         if not self.ondisk:
             raise LinuxVolumeManager.LVMNotExistsException(self.__class__.__name__+"("+self.getAttribute("name")+")")
-        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgrename '+self.getAttribue("name")+" "+newname)
+        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgrename '+self.getAttribute("name")+" "+newname)
         if rc >> 8 != 0:
             raise RuntimeError("running vgrename on %s failed: %s, %s" % (self.getAttribute("name"), rc >> 8, rv))
 
@@ -786,9 +869,30 @@ class VolumeGroup(LinuxVolumeManager):
         if rc >> 8 != 0:
             raise RuntimeError("running vgresize on %s failed: %s, %s" % (self.getAttribute("name"), rc >> 8, rv))
 
+def __line__(str):
+    print "---------------------------------------%s-----------------------------" %(str)
+
+def test():
+    devicenames=["/dev/sda", "/dev/cciss/c0d0p1", "zipfl", "/dev/mapper/abc-def", "/dev/abc/def", "/dev/mapper/abc/def", "/dev/abc/def/geh" ]
+    for device in devicenames:
+        __line__("device="+device)
+        try:
+            (vgname, lvname)=LogicalVolume.splitLVPath(device)
+            print "Found: vgname: %s, lvname: %s" %(vgname, lvname)
+        except LogicalVolume.LVMInvalidLVPathException, e:
+            print e.value
+
+if __name__=="__main__":
+    test()
+
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.2  2006-11-23 14:18:22  marc
+# Revision 1.3  2007-03-26 08:33:04  marc
+# - added simple internal testing
+# - added LVM attributes
+# - changed logging
+#
+# Revision 1.2  2006/11/23 14:18:22  marc
 # added feature that lvs can be selected when cloning
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
