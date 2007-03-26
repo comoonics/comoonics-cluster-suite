@@ -7,14 +7,15 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.3 2007-02-28 10:13:59 mark Exp $
+# $Id: ComFileSystem.py,v 1.4 2007-03-26 08:29:17 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComFileSystem.py,v $
 
 import os
+import os.path
 import exceptions
 import xml.dom
 
@@ -83,19 +84,16 @@ class FileSystem(DataObject):
         mountpoint: ComMountPoint.MountPoint
         """
 
-        __exclusiv=self.getAttributeBoolean("exlock", default=False)
-        __mkdir=self.getAttributeBoolean("mkdir", default=True)
+        __exclusiv=self.getAttribute("exlock", "")
+        __mkdir=self.getAttributeBoolean("mkdir", True)
 
         __mp=mountpoint.getAttribute("name")
         if not os.path.exists(__mp) and __mkdir:
             log.debug("Path %s does not exists. I'll create it." % __mp)
             os.makedirs(__mp)
 
-        if __exclusiv:
-            if os.path.exists(__lockfile):
-                raise ComException("lockfile " + __lockfile + " exists!")
-
-            __mkdir=self.getAttributeBoolean("mkdir")
+        if __exclusiv and __exclusive != "" and os.path.exists(__exclusiv):
+            raise ComException("lockfile " + __exclusiv + " exists!")
 
         __cmd = CMD_MOUNT + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
                 " " + device.getDevicePath() + " " + __mp
@@ -104,7 +102,7 @@ class FileSystem(DataObject):
         if __rc != 0:
             raise ComException(__cmd + __ret)
         if __exclusiv:
-            __fd=open(__lockfile, 'w')
+            __fd=open(__exclusiv, 'w')
             __fd.write(device.getDevicePath() + " is mounted ")
 
     def umountDev(self, device):
@@ -158,12 +156,12 @@ class FileSystem(DataObject):
         """
         pass
 
-    def getBlockSize(self):
-        """ return the blocksize defined in filesystem element
-        see scanOptions
-        """
-        __attr=self.getElement().xpath(self.xmlpath+"/@bsize")
-        return __attr[0].value
+#    def getBlockSize(self):
+#        """ return the blocksize defined in filesystem element
+#        see scanOptions
+#        """
+#        __attr=self.getElement().xpath(self.xmlpath+"/@bsize")
+#        return __attr[0].value
 
     def isFormattable(self):
         """ return if this filesystem type can be formatted
@@ -180,9 +178,6 @@ class FileSystem(DataObject):
 
     def getMkfsCmd(self):
         return self.cmd_mkfs
-
-    def getLog(self):
-        return self.log
 
     def scanDevice(self, device):
         # Do we really need this method ?
@@ -223,6 +218,8 @@ class extFileSystem(FileSystem):
             raise ComException(__cmd + __ret)
 
     def getLabel(self, device):
+        # BUG: Cannot function!!!!
+        __devicePath=""
         __cmd = CMD_E2LABEL + " " + __devicePath
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("getLabel: " + __cmd + ": " + __ret)
@@ -242,9 +239,10 @@ class extFileSystem(FileSystem):
         """ try to find Device with label
         returns Device
         """
+        import ComDevice
         __cmd="/sbin/findfs LABEL=" + label
-        __rc, __path = execLocalGetResult(__cmd)
-        if not rc:
+        __rc, __path = ComSystem.execLocalGetResult(__cmd)
+        if not __rc:
             raise ComException("device with label " + label + "not found")
         return ComDevice.Device(__path[0])
 
@@ -321,38 +319,51 @@ class gfsFileSystem(FileSystem):
         if __rc != 0:
             raise ComException(__cmd + __ret)
 
-        __bsize=ComUtils.grepInLines(__ret, "  sb_bsize = ([0-9]*)")[0]
-        log.debug("scan Options bsize: " + __bsize)
-        self.setAttribute("bsize", __bsize)
+        if __ret == ComSystem.SKIPPED:
+            # Just to keep up working when SIMULATING
+            self.setAttribute("bsize", "4096")
+            self.setAttribute("lockproto", "lock_dlm")
+            self.setAttribute("clustername", "testcluster")
+            self.setAttribute("journals", "4")
+        else:
+            __bsize=ComUtils.grepInLines(__ret, "  sb_bsize = ([0-9]*)")[0]
+            log.debug("scan Options bsize: " + __bsize)
+            self.setAttribute("bsize", __bsize)
 
-        __lockproto=ComUtils.grepInLines(__ret, "  sb_lockproto = (.*)")[0]
-        log.debug("scan Options lockproto: " + __lockproto)
-        self.setAttribute("lockproto",__lockproto)
+            __lockproto=ComUtils.grepInLines(__ret, "  sb_lockproto = (.*)")[0]
+            log.debug("scan Options lockproto: " + __lockproto)
+            self.setAttribute("lockproto",__lockproto)
 
-        __locktable=ComUtils.grepInLines(__ret, "  sb_locktable = .*?:(.*)")
-        if len(__locktable) == 1:
-            log.debug("scan Options locktable: " + __locktable[0])
-            self.setAttribute("locktable", __locktable[0])
+            __locktable=ComUtils.grepInLines(__ret, "  sb_locktable = .*?:(.*)")
+            if len(__locktable) == 1:
+                log.debug("scan Options locktable: " + __locktable[0])
+                self.setAttribute("locktable", __locktable[0])
 
-        __clustername=ComUtils.grepInLines(__ret, "  sb_locktable = (.*?):.*")
-        if len(__clustername) == 1:
-            log.debug("scan Options clustername: " +__clustername[0])
-            self.setAttribute("clustername", __clustername[0])
+            __clustername=ComUtils.grepInLines(__ret, "  sb_locktable = (.*?):.*")
+            if len(__clustername) == 1:
+                log.debug("scan Options clustername: " +__clustername[0])
+                self.setAttribute("clustername", __clustername[0])
 
-        __cmd = CMD_GFS_TOOL + " df " + __mountpoint
-        __rc, __ret = ComSystem.execLocalGetResult(__cmd)
-        if __rc != 0:
-            raise ComException(__cmd + __ret)
-        __journals=ComUtils.grepInLines(__ret, "  Journals = ([0-9]+)")[0]
-        log.debug("scan Options Journals: " +__journals)
-        self.setAttribute("journals", __journals)
+            __cmd = CMD_GFS_TOOL + " df " + __mountpoint
+            __rc, __ret = ComSystem.execLocalGetResult(__cmd)
+            if __rc != 0:
+                raise ComException(__cmd + __ret)
+            __journals=ComUtils.grepInLines(__ret, "  Journals = ([0-9]+)")[0]
+            log.debug("scan Options Journals: " +__journals)
+            self.setAttribute("journals", __journals)
 
 
 
 
 
 # $Log: ComFileSystem.py,v $
-# Revision 1.3  2007-02-28 10:13:59  mark
+# Revision 1.4  2007-03-26 08:29:17  marc
+# - fixed some never used bugs
+# - fixed bug with exclusive locking
+# - added support for skipped filesystemdetection
+# - logging
+#
+# Revision 1.3  2007/02/28 10:13:59  mark
 # added mountpoint mkdir support
 #
 # Revision 1.2  2006/07/21 15:17:19  mark
