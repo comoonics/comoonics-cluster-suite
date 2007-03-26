@@ -6,16 +6,17 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComRequirement.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComRequirement.py,v 1.2 2007-03-26 08:04:29 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRequirement.py,v $
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
 from comoonics.ComJournaled import JournaledObject
+from comoonics import ComLog
 
 class UnsupportedRequirementException(ComException): pass
 
@@ -25,6 +26,9 @@ def getRequirement(element, doc):
     if __type == "archive":
         from ComArchiveRequirement import ArchiveRequirement
         return ArchiveRequirement(element, doc)
+    if __type == "scsi":
+        from ComSCSIRequirement import SCSIRequirement
+        return SCSIRequirement(element, doc)
     else:
         raise UnsupportedRequirementException("Unsupported Requirement type %s in element " % (__type, element.tagName))
 
@@ -32,11 +36,12 @@ class Requirement(DataObject):
     """
     Requirement baseclass is responsible for resolving requirements needed for the copy or modificationsets.
     """
-    
+
     """
     Static methods and objects/attributes
     """
     __logStrLevel__ = "Requirement"
+    log=ComLog.getLogger(__logStrLevel__)
     TAGNAME = "requirement"
 
     """
@@ -48,25 +53,42 @@ class Requirement(DataObject):
         Creates a new requirement instance
         """
         DataObject.__init__(self, element, doc)
-    
+
+    def isPre(self):
+        """
+        checks if this requirement has to be run before (doPre) or after (doPost). default True
+        """
+        if self.hasAttribute("order") and self.getAttribute("order")!="pre" and self.getAttribute("order")!="before":
+            return False
+        return True
+
+    def isPost(self):
+        """
+        checks if this requirement has to be run before (doPre) or after (doPost). default True
+        """
+        if self.hasAttribute("order") and (self.getAttribute("order")=="post" or self.getAttribute("order")=="after"):
+            return True
+        return False
+
     def doPre(self):
         """
         Does something previously
         """
         pass
-    
+
     def do(self):
         """
         If need be does something
+        called pre AND post
         """
         pass
-    
+
     def doPost(self):
         """
         Does something afterwards
         """
         pass
-    
+
     def doUndo(self):
         """
         Undos this requirement
@@ -87,15 +109,58 @@ class RequirementJournaled(Requirement, JournaledObject):
         self.__journal__=list()
         self.__undomap__=dict()
 
-    def undoCopy(self):
+    def undoRequirement(self):
         """
         just calls replayJournal
         """
         self.replayJournal()
 
+class Requirements(object):
+    __logStrLevel__ = "RequirementJournaled"
+    log=ComLog.getLogger(__logStrLevel__)
+    def __init__(self, element, doc):
+        __reqs=list()
+        __elements=element.getElementsByTagName(Requirement.TAGNAME)
+        for i in range(len(__elements)):
+            __reqs.append(getRequirement(__elements[i], doc))
+        self.requirements=__reqs
+        self.log.debug("__init__: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
+    def getRequirements(self):
+        return self.requirements
+    def doPre(self):
+        """ do preprocessing
+        """
+        self.log.debug("doPre: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
+        for i in range(len(self.requirements)):
+            if self.requirements[i].isPre():
+                self.requirements[i].doPre()
+            self.requirements[i].do()
+
+    def doPost(self):
+        """ do postprocessing
+        """
+        self.log.debug("doPost: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
+        for i in range(len(self.requirements)):
+            if self.requirements[i].isPost():
+                self.requirements[i].doPost()
+            self.requirements[i].do()
+
+    def undoRequirements(self):
+        """ undo the requirements """
+        for req in self.requirements:
+            if isinstance(req, RequirementJournaled):
+                req.undoRequirement()
+
+
 ###################################
 # $Log: ComRequirement.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2007-03-26 08:04:29  marc
+# - added class Requirments as parentclass for all children needing requirements
+# - changed undoCopy to undoRequirement
+# - logging
+# - added support Requirements called after or before executing a child (see doPre, doPost and do)
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.4  2006/06/30 12:40:29  marc
