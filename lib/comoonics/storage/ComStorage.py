@@ -4,10 +4,10 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComStorage.py,v 1.1 2007-02-09 11:36:16 marc Exp $
+# $Id: ComStorage.py,v 1.2 2007-03-26 08:10:22 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComStorage.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -52,15 +52,15 @@ class Storage(object):
             if cls:
                 try:
                     inst=object.__new__(cls)
-                    mylogger.debug("class is %s" %(cls))
+                    log.debug("class is %s" %(cls))
                     inst.__init__(element=the_element)
                     connname=inst.getConnectionName()
                     if not StorageConnections.has_key(connname):
-                        mylogger.debug("Creating new storage connection %s %s" %(connname, StorageConnections.keys()))
+                        log.debug("Creating new storage connection %s %s" %(connname, StorageConnections.keys()))
                         StorageConnections[connname]=inst
                         return inst
                     else:
-                        mylogger.debug("Returning already established storage connection %s" %(connname))
+                        log.debug("Returning already established storage connection %s" %(connname))
                         return StorageConnections[connname]
                 except:
                     import traceback
@@ -85,10 +85,20 @@ class Storage(object):
             self.fromElement(kwds["element"])
 
     def fromElement(self, element):
-        """ initializes Storage connection from element """
+        """
+        initializes Storage connection from element.
+        First properties are read and then attributes in the element. Results to attributes precedence.
+        """
+        from comoonics.ComProperties import Properties
+        props=element.getElementsByTagName(Properties.TAGNAME)
+        if len(props)>1:
+            self.properties=Properties(props[0])
+            for propertyname in self.properties.keys():
+                log.debug("Setting attribute %s, %s" %(propertyname, self.properties[propertyname].getAttribute("value")))
+                setattr(self, propertyname, self.properties[propertyname].getAttribute("value"))
         for attribute in element.attributes:
             self.__dict__[attribute.name]=attribute.value
-#            mylogger.debug("attribute(%s)=%s" %(attribute.name, getattr(self, attribute.name)))
+#            log.debug("attribute(%s)=%s" %(attribute.name, getattr(self, attribute.name)))
 
     def getConnectionName(self):
         """ for singleton implementation if you want to have only one connection per storage system you can use
@@ -140,8 +150,8 @@ class Storage(object):
     def close(self):
         """ Cleans up and closes all open connections to the storagesystem """
 
-mylogger=ComLog.getLogger(Storage.__logStrLevel__)
-mylogger.debug("IMPORTING: "+__name__)
+log=ComLog.getLogger(Storage.__logStrLevel__)
+log.debug("IMPORTING: "+__name__)
 StorageConnections=dict()
 
 def main():
@@ -152,6 +162,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComStorage.py,v $
-# Revision 1.1  2007-02-09 11:36:16  marc
+# Revision 1.2  2007-03-26 08:10:22  marc
+# - better logging
+# - added support for XML-properties
+#
+# Revision 1.1  2007/02/09 11:36:16  marc
 # initial revision
 #
