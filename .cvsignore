@@ -1,2 +1,5 @@
 *.pyc
 setup.py
+MANIFEST
+build
+dist
