@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.3 2006-12-08 09:39:28 mark Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.4 2007-03-26 07:56:34 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -26,6 +26,7 @@ from comoonics.ComExceptions import *
 
 class FilesystemCopyObject(CopyObjectJournaled):
     __logStrLevel__="FilesystemCopyObject"
+    log=ComLog.getLogger(__logStrLevel__)
 
     """ Base Class for all source and destination objects"""
     def __init__(self, element, doc):
@@ -33,8 +34,9 @@ class FilesystemCopyObject(CopyObjectJournaled):
         try:
             __device=xpath.Evaluate('device', element)[0]
             self.device=Device(__device, doc)
-        except Exception:
-            raise ComException("device for copyset not defined")
+        except Exception, e:
+            ComLog.debugTraceLog(self.log)
+            raise ComException("device for copyset not defined (%s)" %(e))
         try:
             __fs=xpath.Evaluate('device/filesystem', element)[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
@@ -47,6 +49,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
             raise ComException("mountpoint for copyset not defined")
         self.umountfs=False
         self.addToUndoMap(self.filesystem.__class__.__name__, "mount", "umountDir")
+        self.addToUndoMap(self.device.__class__.__name__, "lvm_vg_activate", "lvm_vg_deactivate")
 
     def getFileSystem(self):
         return self.filesystem
@@ -73,7 +76,9 @@ class FilesystemCopyObject(CopyObjectJournaled):
 
     def prepareAsSource(self):
         # Check for mounted
-#        ComLog.getLogger(self.__logStrLevel__).debug("Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        #self.log.debug("prepareAsSource: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        for journal_command in self.device.resolveDeviceName():
+            self.journal(self.device, journal_command)
         if self.device.getAttribute("options", "") != "skipmount" and not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
@@ -82,6 +87,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.filesystem.scanOptions(self.device, self.mountpoint)
 
     def cleanupSource(self):
+        self.log.debug("cleanupSource()")
         self.replayJournal()
         self.commitJournal()
         #if self.umountfs:
@@ -89,6 +95,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
         #    self.umountfs=False
 
     def cleanupDest(self):
+        self.log.debug("cleanupDest()")
         #self.filesystem.umountDir(self.mountpoint)
         self.replayJournal()
         self.commitJournal()
@@ -96,6 +103,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
     def prepareAsDest(self):
         # - mkfs
         # TODO add some intelligent checks
+        #self.log.debug("prepareAsDest: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        if self.device.getAttribute("options", "") != "skipactivate" and not self.device.is_lvm_activated():
+            self.device.lvm_vg_activate()
+            self.journal(self.device, "lvm_vg_activate")
         self.filesystem.formatDevice(self.device)
         self.filesystem.mount(self.device, self.mountpoint)
         self.journal(self.filesystem, "mount", [self.mountpoint])
@@ -124,7 +135,12 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.3  2006-12-08 09:39:28  mark
+# Revision 1.4  2007-03-26 07:56:34  marc
+# - added more logging
+# - added support for resolveDeviceName (see ComDisk and ComDevice)
+# - added support for activating a not activated LVM volume group
+#
+# Revision 1.3  2006/12/08 09:39:28  mark
 # added support for generic CopyObject Framework (Archiv)
 #
 # Revision 1.2  2006/10/19 10:02:05  marc
