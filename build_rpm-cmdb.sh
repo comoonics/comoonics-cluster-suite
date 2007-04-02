@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# $Id: build_rpm-cmdb.sh,v 1.8 2007-03-14 16:56:29 marc Exp $
+# $Id: build_rpm-cmdb.sh,v 1.9 2007-04-02 11:55:31 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=10
-REQUIRES="--requires=comoonics-cs-py,MySQL-python"
+RELEASE=17
+REQUIRES="--requires=comoonics-cs-py,comoonics-db-py,MySQL-python"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cmdb-py"
 VERSION="0.1"
@@ -25,7 +25,10 @@ setup
 
 ##############
 # $Log: build_rpm-cmdb.sh,v $
-# Revision 1.8  2007-03-14 16:56:29  marc
+# Revision 1.9  2007-04-02 11:55:31  marc
+# Hilti RPM Control
+#
+# Revision 1.8  2007/03/14 16:56:29  marc
 # fixed AND instead of OR in OnlyDiffs Join
 #
 # Revision 1.7  2007/03/14 15:26:34  marc
