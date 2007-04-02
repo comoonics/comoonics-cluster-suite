@@ -11,7 +11,6 @@ Compares installbase of two clusters/sources with each other
 
 # $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/getRPMDiffs.py,v $
 import sys
-sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
 
 from comoonics import ComSystem, ComLog, ComExceptions
 from comoonics import GetOpts
@@ -33,6 +32,7 @@ class Config(GetOpts.BaseConfig):
     category="unknown"
     table="software_cmdb"
     category=False
+    master=None
     sourcenames=list()
     search=False
     limitup=0
@@ -40,6 +40,7 @@ class Config(GetOpts.BaseConfig):
     orderby=None
     onlydiffs=False
     onlynotinstalled=False
+    installed=False
     searchstring=""
 
     def __init__(self):
@@ -50,6 +51,7 @@ class Config(GetOpts.BaseConfig):
         self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
         self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
         self.category=GetOpts.Option("category", "Set for search as categories", self.category, False, "c")
+        self.master=GetOpts.Option("master", "Compare a master with others", self.master, False, "m")
         self.search=GetOpts.Option("search", "search for only one source", self.search, False, "1")
         self.searchstring=GetOpts.Option("searchstring", "search for string", self.searchstring, False, "s")
         self.limitup=GetOpts.Option("limitup", "limitup from", self.limitup, False, "L")
@@ -57,10 +59,11 @@ class Config(GetOpts.BaseConfig):
         self.orderby=GetOpts.Option("orderby", "Orderbystring without ORDER BY", self.orderby, False, "o")
         self.onlydiffs=GetOpts.Option("onlydiffs", "Only display differences. But not uninstalled software", self.onlydiffs, False, "O")
         self.onlynotinstalled=GetOpts.Option("onlynotinstalled", "Only display differenceds", self.onlynotinstalled, False, "N")
+        self.installed=GetOpts.Option("installed", "Also display equal packages", self.installed, False, "i")
         self.values=dict()
         self.setAdditionalParams("sourcename sourcename|searchstring [[sourcename]..]")
     def do(self, args_proper):
-        if len(args_proper) >= 2 or (len(args_proper) == 1 and self.search):
+        if len(args_proper) >= 2 or (len(args_proper) == 1 and (self.search or self.master or self.category)):
             for arg in args_proper:
                 self.sourcenames.append(arg)
         else:
@@ -87,32 +90,35 @@ software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=
 def formatRow(row, colnames):
     orderedrow=list()
     for colname in colnames:
-        orderedrow.append(row[colname])
+        orderedrow.append(str(row[colname]))
     return ', '.join(orderedrow)
 
 def formatColNames(row):
     return ', '.join(row)
 
+colnames=None
 where=None
 if len(config.sourcenames)>1 and config.search and (not config.searchstring or config.searchstring==""):
     config.searchstring=config.sourcenames[1]
 if config.searchstring:
     where=["name LIKE \"%"+config.searchstring+"%\""]
-if config.category and not config.search:
-   rs=software_cmdb.getDiffsFromCategories(config.sourcenames, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs)
-   colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
-elif not config.search:
+if config.category and not config.search and not config.master:
+   colnames=software_cmdb.getColnamesForDiffCategory(config.sourcenames[0])
+   rs=software_cmdb.getDiffsFromCategory(config.sourcenames[0], None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs)
+elif not config.search and not config.master and not config.category:
    rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs)
    colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
-elif config.search:
+elif not config.category and not config.search and config.master:
+   rs=software_cmdb.getDiffsFromSourcesByMaster(config.sourcenames, config.master, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
+   colnames=software_cmdb.getColnamesForMaster((not config.onlynotinstalled or not config.onlydiffs) and config.installed)
+elif config.search and not config.master:
     colnames=SoftwareCMDB.SELECT_FOR_SOFTWARE
-    if config.category:
-        rs=software_cmdb.getSoftwareForCategory(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
-    else:
-        rs=software_cmdb.getSoftware(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
+    rs=software_cmdb.getSoftware(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
 if rs:
     ComLog.getLogger().debug("Got %u rows" % rs.num_rows())
     row=rs.fetch_row(1,1)
+    if not colnames:
+        colnames=row[0].keys()
     print formatColNames(colnames)
     while row:
         print formatRow(row[0], colnames)
