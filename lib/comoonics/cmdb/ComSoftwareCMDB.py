@@ -4,12 +4,14 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.8 2007-03-14 16:51:42 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.9 2007-04-02 11:13:34 marc Exp $
 #
 
 import os
 from comoonics.cmdb.ComBaseDB import BaseDB
 from comoonics import ComLog
+from comoonics.db.ComDBLogger import DBLogger
+from ComSource import Source
 
 class SoftwareCMDB(BaseDB):
     """
@@ -27,6 +29,9 @@ class SoftwareCMDB(BaseDB):
                         "version",
                         "subversion",
                         "architecture")
+    SELECT_FOR_DIFFS_MASTER=("sourcename", "name", "version_master", "subversion_master", "architecture_master", "version_diffs", "subversion_diffs", "architecture_diffs")
+
+    DIFFS_COLNAME="diffs"
 
     log=ComLog.getLogger("SoftwareCMDB")
 
@@ -70,12 +75,6 @@ class SoftwareCMDB(BaseDB):
             row=rs.fetch_row()
         return clusters
 
-    def getSoftwareForCategory(self, category, select="*", limitup=0, limitdown=0, where=None, orderby=None):
-        from ComSource import Source
-        source=Source(dbhandle=self.db)
-        sname=source.getSourceForCategory(category)
-        return self.getSoftware(sname, select, limitup, limitdown, where)
-
     def getSoftware(self, clustername, select="*", limitup=0, limitdown=0, where=None, orderby=None):
         if where==None:
             where=list()
@@ -89,39 +88,174 @@ class SoftwareCMDB(BaseDB):
         self.log.debug("query: %s" %(query))
         return self.selectQuery(query)
 
-    def getColnamesForDiff(sourcenames, colnames=COMPARE_2_SOFTWARE):
+    def getColnamesForMaster(Installed=False):
+        cols=list(SoftwareCMDB.SELECT_FOR_DIFFS_MASTER)
+        if Installed:
+            cols.append(SoftwareCMDB.DIFFS_COLNAME)
+        return cols
+    getColnamesForMaster=staticmethod(getColnamesForMaster)
+
+    def getColnamesForDiff(self, sourcenames, colnames=COMPARE_2_SOFTWARE):
         colnames_ret=list()
         colnames_ret.append(colnames[0])
         for sourcename in sourcenames:
             for colname in colnames[1:]:
-                colnames_ret.append(colname+"_"+BaseDB.formatToSQLCompat(sourcename))
+                colnames_ret.append(colname+"_"+self.escapeSQL(sourcename))
         return colnames_ret
-    getColnamesForDiff=staticmethod(getColnamesForDiff)
 
-    def getDiffsFromCategories(self, categories, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True):
+    def getColnamesForDiffCategory(self, category, colnames=COMPARE_2_SOFTWARE):
+        source=Source(dbhandle=self.db)
+        sourcenames=source.getSourcesForCategory(category)
+        colnames_ret=list()
+        colnames_ret.append(colnames[0])
+        for sourcename in sourcenames:
+            for colname in colnames[1:]:
+                colnames_ret.append(colname+"_"+self.escapeSQL(sourcename))
+        return colnames_ret
+
+    def getDiffsFromSourcesByMaster(self, sourcenames, master, colnames=None, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True, Installed=False):
+        """
+        Returns a resultset of differences of the given sourcenames.
+        Parameter are the sourcesnames to compare
+        """
+        orderbyclause=BaseDB.resolveOrderBy(orderby)
+        limit=BaseDB.getLimit(limitup, limitdown)
+        self.log.debug("where: %s" %(where))
+        self.log.debug("orderbyclause: %s, limit: %s, diffs: %s, notinstalled: %s, Installed: %s" %(orderbyclause, limit, Diffs, NotInstalled, Installed))
+        if not colnames:
+            self.log.debug("getting colnames")
+            colnames=self.SELECT_FOR_DIFFS_MASTER
+        j=0
+#        ComLog.getLogger().debug("query %s" % query)
+        queries=list()
+        for sourcename in sourcenames:
+            if Installed:
+                queries.append(self.selectQueryOnlyEqualInstalledByMaster(sourcename, master, colnames, where, Diffs or NotInstalled))
+            if Diffs:
+                queries.append(self.selectQueryOnlyDiffsByMaster(sourcename, master, colnames, where, Installed))
+            if NotInstalled:
+                queries.append(self.selectQueryNotInstalledByMaster(sourcename, master, colnames, where, True, Installed))
+                queries.append(self.selectQueryNotInstalledByMaster(sourcename, master, colnames, where, False, Installed))
+        union="\n UNION \n".join(queries)
+        if orderbyclause and orderbyclause!="":
+            union+="\n"+orderbyclause
+        if limit and limit != "":
+            union+="\n"+limit
+        self.log.debug("union: "+union)
+        return self.selectQuery(union)
+
+    def selectQueryNotInstalledByMaster(self, sourcename, master, colnames, where=None, order=True, withInstalled=False, alladdcols=["version", "subversion", "architecture"], diffcols=["version", "subversion"]):
+        if not order:
+            _master=sourcename
+            _sourcename=master
+            _colname="rpms"
+        else:
+            _master=master
+            _sourcename=sourcename
+            _colname="master"
+        _colnames=list(colnames)
+        _colnames[0]="\"%s\" AS %s" %(sourcename, _colnames[0])
+        _colnames[1]="%s.name AS %s" %(_colname, _colnames[1])
+        newlen=len(_colnames[2:])
+        for i in range(newlen):
+            if int(i/len(alladdcols))==0 and order:
+                _colnames[i+2]="master.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+            elif int(i/len(alladdcols)) != 0 and not order:
+                _colnames[i+2]="rpms.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+            elif int(i/len(alladdcols))==0 and not order:
+                _colnames[i+2]="\"not installed\" AS %s" %(_colnames[i+2])
+            elif int(i/len(alladdcols))!=0 and order:
+                _colnames[i+2]="\"not installed\" AS %s" %(_colnames[i+2])
+        if withInstalled and order:
+            _colnames.append("2 AS "+SoftwareCMDB.DIFFS_COLNAME)
+        elif withInstalled and not order:
+            _colnames.append("3 AS "+SoftwareCMDB.DIFFS_COLNAME)
+        whererest=""
+        if where and type(where)==str and where!="":
+            whererest="\n   AND "+_colname+"."+where
+        elif where and type(where)==list:
+            thestr="\n   AND "+_colname+"."
+            whererest=thestr+thestr.join(where)
+        query="""SELECT %s
+        FROM %s AS %s
+        WHERE %s.clustername = "%s" AND
+           (name, architecture) NOT IN (SELECT rpms.name, rpms.architecture FROM software_cmdb AS rpms WHERE clustername="%s") %s""" \
+         %(", ".join(_colnames), self.tablename, _colname, _colname, _master, _sourcename, whererest)
+        return query
+
+    def selectQueryOnlyDiffsByMaster(self, sourcename, master, colnames, where=None, withInstalled=False, alladdcols=["version", "subversion", "architecture"], diffcols=["version", "subversion"]):
+        _colnames=list(colnames)
+        _colnames[0]="rpms.clustername AS "+_colnames[0]
+        _colnames[1]="rpms.name AS "+_colnames[1]
+        newlen=len(_colnames[2:])
+        for i in range(newlen):
+            if int(i/len(alladdcols))==0:
+                _colnames[i+2]="master.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+            else:
+                _colnames[i+2]="rpms.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+        if withInstalled:
+            _colnames.append("1 AS "+SoftwareCMDB.DIFFS_COLNAME)
+        whererest=""
+        if where and type(where)==str and where!="":
+            whererest="\n   AND master+."+where
+        elif where and type(where)==list:
+            thestr="\n   AND master."
+            whererest=thestr+thestr.join(where)
+        query="""SELECT %s
+        FROM %s AS master
+        JOIN %s as rpms USING (name, architecture)
+        WHERE (master.version != rpms.version OR master.subversion!=rpms.subversion)
+           AND master.clustername="%s" AND rpms.clustername="%s" %s""" \
+        %(", ".join(_colnames), self.tablename, self.tablename, master, sourcename, whererest)
+        return query
+
+    def selectQueryOnlyEqualInstalledByMaster(self, sourcename, master, colnames, where=None, withInstalled=False, alladdcols=["version", "subversion", "architecture"], diffcols=["version", "subversion"]):
+        _colnames=list(colnames)
+        _colnames[0]="rpms.clustername AS "+_colnames[0]
+        _colnames[1]="rpms.name AS "+_colnames[1]
+        newlen=len(_colnames[2:])
+        for i in range(newlen):
+            if int(i/len(alladdcols))==0:
+                _colnames[i+2]="master.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+            else:
+                _colnames[i+2]="rpms.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+        if withInstalled:
+            _colnames.append("0 AS "+SoftwareCMDB.DIFFS_COLNAME)
+        whererest=""
+        if where and type(where)==str and where!="":
+            whererest="\n   AND master+."+where
+        elif where and type(where)==list:
+            thestr="\n   AND master."
+            whererest=thestr+thestr.join(where)
+        query="""SELECT %s
+        FROM %s AS master
+        JOIN %s as rpms USING (name, architecture, version, subversion)
+        WHERE master.clustername="%s" AND rpms.clustername="%s" %s""" \
+        %(", ".join(_colnames), self.tablename, self.tablename, master, sourcename, whererest)
+        return query
+
+    def getDiffsFromCategory(self, category, colnames=None, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True):
         """
         Returns a resultset of differences of the given categories.
         Parameter are the sourcesnames to compare
-        RESTRICTION: Right now only the first 2 categories can be compared (SHOULD BE FIXED)
         """
-        from ComSource import Source
         sources=list()
         source=Source(dbhandle=self.db)
-        for category in categories:
-            sname=source.getSourceForCategory(category)
-            if sname:
-                sources.append(sname)
-        if len(sources) == 0:
+        snames=source.getSourcesForCategory(category)
+        if len(snames) == 0:
             return None
         else:
-            return self.getDiffsFromSources(sources, SoftwareCMDB.getColnamesForDiff(categories), limitup, limitdown, where, orderby, Diffs, NotInstalled)
+            snames=self.escapeSQL(snames)
+            return self.getDiffsFromSources(snames, colnames, limitup, limitdown, where, orderby, Diffs, NotInstalled)
 
     def getDiffsFromSources(self, sourcenames, colnames=None, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True):
         """
         Returns a resultset of differences of the given sourcenames.
         Parameter are the sourcesnames to compare
-        RESTRICTION: Right now only the first 2 sourcenames can be compared (SHOULD BE FIXED)
         """
+        if not sourcenames or type(sourcenames)!=list or len(sourcenames)<=1:
+            return None
+
         orderbyclause=BaseDB.resolveOrderBy(orderby)
         limit=BaseDB.getLimit(limitup, limitdown)
         self.log.debug("where: %s" %(where))
@@ -191,7 +325,7 @@ class SoftwareCMDB(BaseDB):
             wherenot=list()
             o=0
             for k in range(len(allcolnamesr[1:])):
-                selectcols.append(newcolnames[k]+" AS "+allcolnamesr[k+1])
+                selectcols.append(newcolnames[k]+" AS \""+allcolnamesr[k+1]+"\"")
                 if k%l==0 and newcolnames[k].find(SoftwareCMDB.NOT_INSTALLED_STRING)<0:
 #                    self.log.debug("add join and whereequals k mod m %u; %u, m:%u" %(k%m, len(notinstalled), m))
                     if len(joins)==0:
@@ -225,7 +359,7 @@ class SoftwareCMDB(BaseDB):
                 thestr="\n   AND "+newdbs[0]+"."
                 whererest=thestr+thestr.join(where)
 
-            queries.append("SELECT "+newdbs[0]+"."+allcolnames[0]+" AS "+allcolnamesr[0]+", \n      "+", ".join(selectcols)+\
+            queries.append("SELECT "+newdbs[0]+"."+allcolnames[0]+" AS \""+allcolnamesr[0]+"\", \n      "+", ".join(selectcols)+\
                            "\n"+"\n".join(joins)+\
                            "\n   WHERE "+\
                            " AND ".join(whereequals)+\
@@ -248,8 +382,8 @@ class SoftwareCMDB(BaseDB):
         wherelst=list()
         for i in range(len(sourcenames)):
             formatedname=self.formatToSQLCompat(sourcenames[i])
-            columns.append("rpms"+str(i)+"."+colnames[1]+" AS "+allcolnamesr[j+1]+", rpms"+str(i)+"."+colnames[2]+" AS "+\
-                           allcolnamesr[j+2]+", rpms"+str(i)+"."+colnames[3]+" AS "+allcolnamesr[j+3])
+            columns.append("rpms"+str(i)+"."+colnames[1]+" AS \""+allcolnamesr[j+1]+"\", rpms"+str(i)+"."+colnames[2]+" AS \""+\
+                           allcolnamesr[j+2]+"\", rpms"+str(i)+"."+colnames[3]+" AS \""+allcolnamesr[j+3]+"\"")
             dbs.append(self.tablename+" AS rpms"+str(i))
             if i > 0:
                 joins.append("JOIN "+dbs[i]+" USING (name, architecture) ")
@@ -259,13 +393,14 @@ class SoftwareCMDB(BaseDB):
 
             j+=3
 
+        # If special names are filter that where clause is generated here
         whererest=""
         if where and type(where)==str and where!="":
             whererest="\n   AND rpms0."+where
         elif where and type(where)==list:
             whererest="\n   AND rpms0."+"\n   AND rpms0.".join(where)
 
-        query="SELECT rpms0."+colnames[0]+" AS "+allcolnamesr[0]+", "+','.join(columns)+"\n FROM "+dbs[0]+"\n"+\
+        query="SELECT rpms0."+colnames[0]+" AS \""+allcolnamesr[0]+"\", "+','.join(columns)+"\n FROM "+dbs[0]+"\n"+\
               "\n ".join(joins)+\
               "\n WHERE "+" AND ".join(wherelst)+"\n   AND ("+\
               " OR ".join(BaseDB.BinOperatorFromList(version_unequalcols, "!="))+"\n   OR "+\
@@ -273,22 +408,26 @@ class SoftwareCMDB(BaseDB):
               whererest
         return query
 
-    def updateRPM(self, rpm, name, channelname, channelversion):
+    def updateRPM(self, _rpm, name, channelname, channelversion):
         """
         Updates the given rpmheader in the software_cmdb of this cluster
         rpm: the rpm-header defined by python-rpm with extensions like in ComDSL (channelname and -version)
         name: the name of the cluster/system
         """
         insertquery="INSERT INTO %s VALUES(\"rpm\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\");" \
-                    %(self.tablename, name, channelname, channelversion, rpm["name"], rpm["version"], rpm["release"], rpm["arch"])
+                    %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"])
         updatequery="UPDATE %s SET clustername=\"%s\", channel=\"%s\", channelversion=\"%s\", name=\"%s\", version=\"%s\", subversion=\"%s\", architecture=\"%s\" WHERE clustername=\"%s\" AND name=\"%s\";" \
-                    %(self.tablename, name, channelname, channelversion, rpm["name"], rpm["version"], rpm["release"], rpm["arch"], name, rpm["name"])
+                    %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], name, _rpm["name"])
         selectquery="SELECT name, version, subversion AS \"release\", architecture AS \"arch\", channel AS channelname, channelversion FROM %s WHERE clustername=\"%s\" AND name=\"%s\" AND architecture=\"%s\";" \
-                    %(self.tablename, name, rpm["name"], rpm["arch"])
+                    %(self.tablename, name, _rpm["name"], _rpm["arch"])
         #    ComLog.getLogger().debug("select %s" % selectquery)
-        super(SoftwareCMDB, self).updateRPM(insertquery, updatequery, selectquery, rpm,
+        ret=super(SoftwareCMDB, self).updateRPM(insertquery, updatequery, selectquery, _rpm,
                                                ["version", "release", "channelname", "channelversion"],
                                                { "channelname": channelname, "channelversion": channelversion})
+        if ret==1:
+            self.dblog.log(DBLogger.DB_LOG_LEVEL, "Added new software package %s-%s.%s.%s (table: %s)" %(_rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], self.tablename))
+        elif ret>1:
+            self.dblog.log(DBLogger.DB_LOG_LEVEL, "Updated existing software package %s-%s.%s.%s (table: %s)" %(_rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], self.tablename))
 
 def test():
     colnames=["name", "c1", "c2", "c3"]
@@ -308,7 +447,12 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.8  2007-03-14 16:51:42  marc
+# Revision 1.9  2007-04-02 11:13:34  marc
+# For Hilti RPM Control :
+# - added MasterCompare
+# - some bugfixes
+#
+# Revision 1.8  2007/03/14 16:51:42  marc
 # fixed AND instead of OR in OnlyDiffs Join
 #
 # Revision 1.7  2007/03/14 15:26:34  marc
