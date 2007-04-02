@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.11 2007-03-26 08:27:03 marc Exp $
+# $Id: ComDisk.py,v 1.12 2007-04-02 11:46:45 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -159,8 +159,10 @@ class HostDisk(Disk):
             self.resolveDeviceNameByKeyValue(key, value)
         if LogicalVolume.isValidLVPath(self.getDeviceName()):
             self.initLVM()
+            self.lvm_activated=False
             if self.getAttribute("options", "") != "skipactivate" and not self.is_lvm_activated():
                 self.lvm_vg_activate()
+                self.lvm_activated=True
                 journal_cmds.append("lvm_vg_activate")
         return journal_cmds
 
@@ -191,6 +193,10 @@ class HostDisk(Disk):
                 self.appendChild(Partition(part, self.getDocument()))
         except parted.error:
             self.log.debug("no partitions found")
+
+    def restore(self):
+        if self.lvm_activated:
+            self.lvm_vg_deactivate()
 
     def createPartitions(self):
         """ creates new partition table """
@@ -375,7 +381,11 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.11  2007-03-26 08:27:03  marc
+# Revision 1.12  2007-04-02 11:46:45  marc
+# MMG Backup Legato Integration:
+# - Journaling for vg_activation
+#
+# Revision 1.11  2007/03/26 08:27:03  marc
 # - added more logging
 # - added DeviceNameResolving
 # - added resolvers for DeviceNameResolving

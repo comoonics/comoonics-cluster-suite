@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLVMCopyObject.py,v 1.4 2006-12-13 20:17:41 marc Exp $
+# $Id: ComLVMCopyObject.py,v 1.5 2007-04-02 11:49:22 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyObject.py,v $
 
 from ComCopyObject import CopyObject
@@ -35,10 +35,13 @@ class LVMCopyObject(CopyObject):
         for pv in LinuxVolumeManager.pvlist(self.getVolumeGroup(), self.getDocument()):
             pv.init_from_disk()
             self.getVolumeGroup().addPhysicalVolume(pv)
+        self.activated=False
         for lv in LinuxVolumeManager.lvlist(self.getVolumeGroup(), self.getDocument()):
             lv.init_from_disk()
             self.getVolumeGroup().addLogicalVolume(lv)
-        self.vg.activate()
+            if lv.isActivated() and not self.activated:
+                self.activated=True
+                self.vg.activate()
 
     def updateMetaData(self, element):
         ComLog.getLogger(self.__logStrLevel__).debug("%u logical volumes cloning all from source" %(len(self.getVolumeGroup().getLogicalVolumes())))
@@ -54,10 +57,11 @@ class LVMCopyObject(CopyObject):
 
     def cleanupSource(self):
         pass
-#        self.vg.deactivate()
 
     def cleanupDest(self):
         self.cleanupSource()
+        if self.activated:
+            self.vg.deactivate()
 
     def prepareAsDest(self):
         pass
@@ -109,7 +113,11 @@ if __name__ == '__main__':
 
 #################
 # $Log: ComLVMCopyObject.py,v $
-# Revision 1.4  2006-12-13 20:17:41  marc
+# Revision 1.5  2007-04-02 11:49:22  marc
+# MMG Backup Legato Integration:
+# - Journaling for vg_activation
+#
+# Revision 1.4  2006/12/13 20:17:41  marc
 # Support for Metadata
 #
 # Revision 1.3  2006/11/27 12:11:09  marc
