@@ -48,7 +48,7 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
-* Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-3:
+* Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-4:
    initial revision
 
 comoonics-ec-py
