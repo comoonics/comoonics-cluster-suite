@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.3 2007-03-26 08:01:32 marc Exp $
+# $Id: ComPartitionCopyObject.py,v 1.4 2007-04-02 11:50:45 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -57,6 +57,7 @@ class PartitionCopyObject(CopyObjectJournaled):
             self.journal(self.disk, "noPartitionTable")
 
         self.disk.createPartitions()
+        self.disk.restore()
 
     def prepareAsDest(self):
         pass
@@ -70,7 +71,11 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.3  2007-03-26 08:01:32  marc
+# Revision 1.4  2007-04-02 11:50:45  marc
+# MMG Backup Legato Integration:
+# - calling restore on Disk e.g. to deactivate vg
+#
+# Revision 1.3  2007/03/26 08:01:32  marc
 # - added support for resolvDeviceName()
 #
 # Revision 1.2  2007/02/27 15:54:28  mark
