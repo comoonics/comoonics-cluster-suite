@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -99,7 +99,7 @@ class LinuxVolumeManager(DataObject):
                 continue
             if not vgname or vgname=="":
                 continue
-            self.log.debug("vg %s, pv %s" %(vgname, pvname))
+            LinuxVolumeManager.log.debug("vg %s, pv %s" %(vgname, pvname))
             if vgs.has_key(vgname):
                 vg=vgs[vgname]
             else:
@@ -137,7 +137,7 @@ class LinuxVolumeManager(DataObject):
                 vg=VolumeGroup(vgname, doc)
 
             logmsg = "lv is %s/%s" % (vg.getAttribute("name"), lv)
-            self.log.debug(logmsg)
+            LinuxVolumeManager.log.debug(logmsg)
             lv=LogicalVolume(lv, vg, doc)
             lv.init_from_disk()
             lvs.append( lv )
@@ -165,7 +165,7 @@ class LinuxVolumeManager(DataObject):
                 (dev, vgname) = line.strip().split(':')
             except:
                 continue
-            self.log.debug("pv is %s in vg %s" %(dev, vgname))
+            LinuxVolumeManager.log.debug("pv is %s in vg %s" %(dev, vgname))
             vg=VolumeGroup(vgname, doc)
             pv=PhysicalVolume(dev, vg, doc)
             vg.addPhysicalVolume(pv)
@@ -887,7 +887,11 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.3  2007-03-26 08:33:04  marc
+# Revision 1.4  2007-04-02 11:48:16  marc
+# MMG Backup Legato Integration:
+# - only logging
+#
+# Revision 1.3  2007/03/26 08:33:04  marc
 # - added simple internal testing
 # - added LVM attributes
 # - changed logging
