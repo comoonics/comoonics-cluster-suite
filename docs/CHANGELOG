@@ -10,6 +10,10 @@ WARNING:
 
 CHANGES:
 comoonics-cmdb-py:
+* Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-17
+    - added Master Compare
+    - added DBLogging
+    - added pedendency on comoonics.db
 * Tue Mar 14 2007 MG <grimme@atix.de>, 0.1-10
     fixed wrong where clause in ComSoftwareCMDB/selectOnlyDiffs and wrong update in ComBaseDB/updateRPM
 * Tue Mar 14 2007 MG <grimme@atix.de>, 0.1-9
@@ -26,6 +30,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-29:
+    fix in ComSystemInformation to make name setable
 * Fri Mar 16 2007 MH <hlawatschek@atix.de>, 0.1.27:
 	added /bin/cl_checknodes
 * Wed Mar 14 2007 MH <hlawatschek@atix.de>, 0.1.26:
@@ -40,6 +46,10 @@ comoonics-cs-py:
    added com-dsh
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
    added properties (ComProperties)
+
+comoonics-db-py
+* Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-3:
+   initial revision
 
 comoonics-ec-py
 * Tue Mar 06 2007 MG <grimme@atix.de>, 0.1-14:
