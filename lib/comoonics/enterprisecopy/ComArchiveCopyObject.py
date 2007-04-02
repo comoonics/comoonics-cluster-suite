@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.5 2007-03-26 07:51:36 marc Exp $
+# $Id: ComArchiveCopyObject.py,v 1.6 2007-04-02 11:48:55 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from xml import xpath
@@ -58,7 +58,7 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
     def prepareAsDest(self):
         ''' writes all metadata to archive'''
-        self.log.debug("cleanupDest()")
+        self.log.debug("prepareAsDest()")
         self.serializer.serialize(self.metadata)
 
     def cleanupDest(self):
@@ -68,7 +68,10 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.5  2007-03-26 07:51:36  marc
+# Revision 1.6  2007-04-02 11:48:55  marc
+# *** empty log message ***
+#
+# Revision 1.5  2007/03/26 07:51:36  marc
 # - added logging
 # - moved serializer.serialize to prepareAsDest (if not it is also called by undo)
 #
