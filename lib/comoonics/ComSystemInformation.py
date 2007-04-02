@@ -6,7 +6,7 @@ Classes to automatically collect informations of this system.
 
 
 # here is some internal information
-# $Id: ComSystemInformation.py,v 1.4 2007-03-26 08:37:31 marc Exp $
+# $Id: ComSystemInformation.py,v 1.5 2007-04-02 11:22:52 marc Exp $
 #
 import re
 import os
@@ -21,7 +21,7 @@ ComSystem.__EXEC_REALLY_DO=""
 class SystemInformationNotFound(ComException):
     pass
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComSystemInformation.py,v $
 
 class SystemType(object):
@@ -179,7 +179,10 @@ class LinuxSystemInformation(SystemInformation):
     def __init__(self, *args, **kwds):
         super(LinuxSystemInformation, self).__init__(*args, **kwds)
         if not kwds and not args:
-            (self.operatingsystem, self.name, self.kernelversion, self.uptime, self.architecture)=os.uname()
+            (self.operatingsystem, self.name, self.kernelversion, self.kerneltime, self.architecture)=os.uname()
+            fs=open("/proc/uptime", "r")
+            self.uptime=fs.readline().splitlines()[0].split(".")[0]
+            fs.close()
             self.type=SystemTypes.SINGLE
         elif kwds:
             self.__dict__.update(dict(kwds))
@@ -334,7 +337,11 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComSystemInformation.py,v $
-# Revision 1.4  2007-03-26 08:37:31  marc
+# Revision 1.5  2007-04-02 11:22:52  marc
+# For Hilti RPM Control:
+# - made name setable
+#
+# Revision 1.4  2007/03/26 08:37:31  marc
 # - changed getInstalledSoftware and updateInstalledSoftware to work with only selected software and all (default)
 #
 # Revision 1.3  2007/03/06 07:05:20  marc
