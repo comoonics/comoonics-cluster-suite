@@ -1,9 +1,9 @@
-# $Id: build-lib.sh,v 1.2 2007-03-05 21:13:00 marc Exp $
+# $Id: build-lib.sh,v 1.3 2007-04-02 12:09:38 marc Exp $
 
 function setup {
   CHANGELOG=$(awk '
 BEGIN { changelogfound=0; }
-/^comoonics-cs-py/{ changelogfound=1; next };
+/^'${NAME}'/{ changelogfound=1; next };
 /^comoonics/ { changelogfound=0; next };
 {
   if (changelogfound == 1) {
@@ -35,7 +35,10 @@ setup(name="'${NAME}'",
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.2  2007-03-05 21:13:00  marc
+# Revision 1.3  2007-04-02 12:09:38  marc
+# stable changelog generation
+#
+# Revision 1.2  2007/03/05 21:13:00  marc
 # added DOCFILES
 #
 # Revision 1.1  2007/02/09 12:31:24  marc
