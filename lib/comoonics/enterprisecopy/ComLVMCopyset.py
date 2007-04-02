@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.4 2006-12-13 20:18:00 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.5 2007-04-02 11:49:57 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -92,9 +92,9 @@ class LVMCopyset(CopysetJournaled):
     def doCopy(self):
         # do everything
         self.prepareSource()
-        self.prepareDest()
         ComLog.getLogger(self.__logStrLevel__).debug("Updating metadata on %s" %(self.dest))
         self.dest.updateMetaData(self.source.getMetaData())
+        self.prepareDest()
         if isinstance(self.dest, LVMCopyObject):
             ComLog.getLogger(self.__logStrLevel__).debug("Copying volumegroup %s" % (self.dest.vg.getAttribute("name")))
             for pv in self.dest.vg.getPhysicalVolumes():
@@ -144,7 +144,11 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.4  2006-12-13 20:18:00  marc
+# Revision 1.5  2007-04-02 11:49:57  marc
+# MMG Backup Legato Integration:
+# - moved prepareDest where it belongs to
+#
+# Revision 1.4  2006/12/13 20:18:00  marc
 # Support for Metadata
 #
 # Revision 1.3  2006/11/27 12:11:23  marc
