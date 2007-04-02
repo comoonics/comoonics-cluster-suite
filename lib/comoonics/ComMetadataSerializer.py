@@ -15,10 +15,10 @@ These are represented by the class ArchiveMetadata.
 
 
 # here is some internal information
-# $Id: ComMetadataSerializer.py,v 1.3 2007-03-26 08:34:01 marc Exp $
+# $Id: ComMetadataSerializer.py,v 1.4 2007-04-02 11:47:38 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComMetadataSerializer.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -51,7 +51,7 @@ class MetadataSerializer(DataObject):
 
     """ resolves this metadata object. This is an abstract method and has to be implemented by the childrenclasses """
     def resolve(self):
-        pass
+        return None
 
     """ Serializes the given element into this MetadataObject """
     def serialize(self, element):
@@ -85,7 +85,11 @@ class ArchiveMetadataSerializer(MetadataSerializer):
         ComLog.getLogger(self.__logStrLevel__).debug("Saved element %s to archive element" %(element.tagName))
 
 # $Log: ComMetadataSerializer.py,v $
-# Revision 1.3  2007-03-26 08:34:01  marc
+# Revision 1.4  2007-04-02 11:47:38  marc
+# MMG Backup Legato Integration:
+# - resolve returns None instead of pass
+#
+# Revision 1.3  2007/03/26 08:34:01  marc
 # - changed logging to new type
 # - fixed an unlikely constructor issue
 #
