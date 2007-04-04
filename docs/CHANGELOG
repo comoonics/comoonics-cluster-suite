@@ -30,6 +30,10 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-30:
+    - Fix for ComParted to detect the right partition size with special geometry
+    - Fix for LVM to be able to resolve PVs via Devices
+    - Bugfix in LVM Handling of Disks
 * Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-29:
     fix in ComSystemInformation to make name setable
 * Fri Mar 16 2007 MH <hlawatschek@atix.de>, 0.1.27:
@@ -52,6 +56,8 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-15:
+    - Fix for Filesystem-, Partition and LVMCopyobjects to being able to resolve Names in Sources and Dests
 * Tue Mar 06 2007 MG <grimme@atix.de>, 0.1-14:
     changed prompt for com-dsh to work with linux shell prompts better and removed ipython dependency
 * Wed Feb 28 2007 MH <hlawatschek@atix.de>, 0.1.13:
@@ -62,18 +68,26 @@ comoonics-ec-py
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
   changed that modset and copysets can be mixed not for copysets then modsets.
 
+comoonics-scsi-py
+* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-1:
+  initial revision
+
 comoonics-storage-py
-* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
+* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2:
+  only a cosmetic change in Storage
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1 :
   added storage copyset/modset stuff
   initial release
 
 comoonics-storage-hp-py
-* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
+* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2:
+  - Added timeouts for EVA Commands (default 60secs)
+  - Added timeout after mapping and unmapping of disks (default 1sec)
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1 :
   added implementation for eva
-
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
-  initial release
+comoonics-end-not-change
 
 TODO:
 
