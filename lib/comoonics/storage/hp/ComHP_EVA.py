@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA.py,v 1.2 2007-03-26 08:09:28 marc Exp $
+# $Id: ComHP_EVA.py,v 1.3 2007-04-04 12:37:07 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA.py,v $
 
 import re
@@ -573,6 +573,10 @@ def main():
     vdisk=HP_EVA_Object(classtype="vdisk", objectid="DC200".ljust(34,"F")+"2", objectname="vdisk2")
     print "Vdisk:"
     print vdisk
+    param="objectid"
+    print "hasattr(%s): %s" %(param, hasattr(vdisk, param))
+    print "getattr(%s): %s" %(param, getattr(vdisk, param))
+    print "Objectid: "+vdisk.objectid
 
 def testHP_ObjectFromXML(filename, xml=True):
     from xml.dom.ext.reader import Sax2
@@ -600,7 +604,11 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA.py,v $
-# Revision 1.2  2007-03-26 08:09:28  marc
+# Revision 1.3  2007-04-04 12:37:07  marc
+# MMG Backup Legato Integration :
+# - extended testing
+#
+# Revision 1.2  2007/03/26 08:09:28  marc
 # - removed some logging
 # - fixed a bug for referencing Paths with "\"s instead of "/"s
 #
