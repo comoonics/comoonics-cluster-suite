@@ -3,7 +3,7 @@ Class for the BackupHandlerImplementation.
 Derives everything from ComArchiv->ArchivHandler. But perhaps in Future some specific Backupmethods are neccesary.
 """
 # here is some internal information
-# $Id: ComBackupHandler.py,v 1.1 2007-03-26 07:48:58 marc Exp $
+# $Id: ComBackupHandler.py,v 1.2 2007-04-04 12:45:37 marc Exp $
 #
 
 
@@ -33,6 +33,10 @@ class BackupHandler(ArchiveHandler):
         ''' extracts a file or dirctory from archiv'''
         raise NotImplementedError
 
+    def extractArchive(self, dest):
+        ''' extracts the whole archive to dest'''
+        raise NotImplementedError
+
     def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
         raise NotImplementedError
@@ -54,6 +58,10 @@ class BackupHandler(ArchiveHandler):
 
 ########################
 # $Log: ComBackupHandler.py,v $
-# Revision 1.1  2007-03-26 07:48:58  marc
+# Revision 1.2  2007-04-04 12:45:37  marc
+# MMG Backup Legato Integration :
+# - added extractArchive (just for the reference)
+#
+# Revision 1.1  2007/03/26 07:48:58  marc
 # initial revision
 #
