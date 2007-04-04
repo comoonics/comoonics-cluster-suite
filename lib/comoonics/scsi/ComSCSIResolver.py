@@ -5,11 +5,11 @@ Classes for resolving scsi devices by different selektors
 
 
 # here is some internal information
-# $Id: ComSCSIResolver.py,v 1.1 2007-03-26 08:04:58 marc Exp $
+# $Id: ComSCSIResolver.py,v 1.2 2007-04-04 12:33:58 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/scsi/ComSCSIResolver.py,v $
 
 from comoonics import ComLog
@@ -32,8 +32,12 @@ class SCSIWWIDResolver(HostDisk.DeviceNameResolver):
 class FCTransportResolver(HostDisk.DeviceNameResolver):
     key="fctransport"
     def resolve(self, value):
-        (wwwn, lun)=value.split(":")
-        return ComSCSI.getBlockDeviceForWWWNLun(wwwn, lun)
+        if len(value.split(":"))==2:
+            (wwwn, lun)=value.split(":")
+            return ComSCSI.getBlockDeviceForWWWNLun(wwwn, lun)
+        else:
+            (wwwn, lun, other)=value.split(":")
+            return "%s%s" %(ComSCSI.getBlockDeviceForWWWNLun(wwwn, lun), other)
 
 def test():
     res=SCSIWWIDResolver()
@@ -46,6 +50,10 @@ if __name__=="__main__":
 
 ###########################
 # $Log: ComSCSIResolver.py,v $
-# Revision 1.1  2007-03-26 08:04:58  marc
+# Revision 1.2  2007-04-04 12:33:58  marc
+# MMG Backup Legato Integration :
+# - short "hack" for partitions
+#
+# Revision 1.1  2007/03/26 08:04:58  marc
 # initial revision
 #
