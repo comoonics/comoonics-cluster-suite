@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.4 2007-03-26 07:56:34 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.5 2007-04-04 12:51:30 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -86,6 +86,19 @@ class FilesystemCopyObject(CopyObjectJournaled):
         # scan filesystem options
         self.filesystem.scanOptions(self.device, self.mountpoint)
 
+    def prepareAsDest(self):
+        # - mkfs
+        # TODO add some intelligent checks
+        #self.log.debug("prepareAsDest: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        for journal_command in self.device.resolveDeviceName():
+            self.journal(self.device, journal_command)
+#        if self.device.getAttribute("options", "") != "skipactivate" and not self.device.is_lvm_activated():
+#            self.device.lvm_vg_activate()
+#            self.journal(self.device, "lvm_vg_activate")
+        self.filesystem.formatDevice(self.device)
+        self.filesystem.mount(self.device, self.mountpoint)
+        self.journal(self.filesystem, "mount", [self.mountpoint])
+
     def cleanupSource(self):
         self.log.debug("cleanupSource()")
         self.replayJournal()
@@ -99,17 +112,6 @@ class FilesystemCopyObject(CopyObjectJournaled):
         #self.filesystem.umountDir(self.mountpoint)
         self.replayJournal()
         self.commitJournal()
-
-    def prepareAsDest(self):
-        # - mkfs
-        # TODO add some intelligent checks
-        #self.log.debug("prepareAsDest: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
-        if self.device.getAttribute("options", "") != "skipactivate" and not self.device.is_lvm_activated():
-            self.device.lvm_vg_activate()
-            self.journal(self.device, "lvm_vg_activate")
-        self.filesystem.formatDevice(self.device)
-        self.filesystem.mount(self.device, self.mountpoint)
-        self.journal(self.filesystem, "mount", [self.mountpoint])
 
     def getMetaData(self):
         ''' returns the metadata element '''
@@ -135,7 +137,11 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.4  2007-03-26 07:56:34  marc
+# Revision 1.5  2007-04-04 12:51:30  marc
+# MMG Backup Legato Integration:
+# - moved prepareAsDest and added resolving
+#
+# Revision 1.4  2007/03/26 07:56:34  marc
 # - added more logging
 # - added support for resolveDeviceName (see ComDisk and ComDevice)
 # - added support for activating a not activated LVM volume group
