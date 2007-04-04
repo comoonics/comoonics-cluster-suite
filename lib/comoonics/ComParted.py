@@ -12,10 +12,18 @@ import parted
 import math
 import string
 
-__version__ = "$Revision: 1.1 $"
+from comoonics.ComExceptions import ComException
+from comoonics import ComLog
+
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComParted.py,v $
 
+class PartitioningError(ComException): pass
+
 class PartedHelper:
+    __logStrLevel__="PartedHelper"
+    log=ComLog.getLogger(__logStrLevel__)
+
     """
     Utility class to work with pyparted
     """
@@ -51,8 +59,13 @@ class PartedHelper:
 
     def end_sector_to_cyl(self, device, sector):
         """Return the closest cylinder (round up) to sector on device."""
-        return int(math.ceil(float((sector + 1))
+        maxcyl=device.cylinders
+        _cyls=int(math.ceil(float((sector + 1))
                              / (device.heads * device.sectors)))
+        if _cyls>maxcyl:
+            _cyls=maxcyl
+        self.log.debug("end_sector_to_cyl %u > %u? %s" %(_cyls, maxcyl, _cyls>maxcyl))
+        return _cyls
 
     def start_cyl_to_sector(self, device, cyl):
         "Return the sector corresponding to cylinder as a starting cylinder."
@@ -90,7 +103,7 @@ class PartedHelper:
             disk = disks[diskname]
             part = disk.next_partition()
             while part:
-                if get_partition_name(part) == partname:
+                if self.get_partition_name(part) == partname:
                     return part
 
                 part = disk.next_partition(part)
@@ -153,13 +166,13 @@ class PartedHelper:
     def get_all_partitions(self, disk):
         """Return a list of all PedPartition objects on disk."""
         func = lambda part: part.is_active()
-        return filter_partitions(disk, func)
+        return self.filter_partitions(disk, func)
 
     def get_logical_partitions(self, disk):
         """Return a list of logical PedPartition objects on disk."""
         func = lambda part: (part.is_active()
                              and part.type & parted.PARTITION_LOGICAL)
-        return filter_partitions(disk, func)
+        return self.filter_partitions(disk, func)
 
     def get_primary_partitions(self, disk):
         """Return a list of primary PedPartition objects on disk."""
@@ -170,13 +183,13 @@ class PartedHelper:
         """Return a list of RAID-type PedPartition objects on disk."""
         func = lambda part: (part.is_active()
                              and part.get_flag(parted.PARTITION_RAID) == 1)
-        return filter_partitions(disk, func)
+        return self.filter_partitions(disk, func)
 
     def get_lvm_partitions(self, disk):
         """Return a list of physical volume-type PedPartition objects on disk."""
         func = lambda part: (part.is_active()
                              and part.get_flag(parted.PARTITION_LVM) == 1)
-        return filter_partitions(disk, func)
+        return self.filter_partitions(disk, func)
 
     def getDefaultDiskType(self):
         """Get the default partition table type for this architecture."""
@@ -211,7 +224,7 @@ class PartedHelper:
                     raise PartitioningError, msg
             part = disk.next_partition (part)
         if not status:
-            raise PartitioningError, ("Not enough free space on %s to create "
-                                      "new partition" % (device,))
+            raise PartitioningError("Not enough free space on %s to create "
+                                    "new partition" % (disk.dev.path))
         return newp
 
