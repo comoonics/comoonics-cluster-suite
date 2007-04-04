@@ -6,11 +6,11 @@ API for working with scsi and linux
 
 
 # here is some internal information
-# $Id: ComSCSI.py,v 1.1 2007-03-26 08:04:58 marc Exp $
+# $Id: ComSCSI.py,v 1.2 2007-04-04 12:32:44 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/scsi/ComSCSI.py,v $
 
 from comoonics import ComLog
@@ -96,7 +96,7 @@ def rescan(host=None, add=True, remove=True):
         else:
             raise SCSIException("sysfile for host %s does not exist or is not writable (%s)" %(host, SCSISCAN_PATH %(host)))
 
-def rescan_qla(host=None, add=True, remove=True):
+def rescan_qla(host=None, add=True, remove=True, timeout=5):
     if not host:
         for host in getQlaHosts():
             rescan_qla(host)
@@ -105,6 +105,9 @@ def rescan_qla(host=None, add=True, remove=True):
             rescan_qla(_host)
     elif os.path.isfile(SCSISCAN_PATH %(host)) and os.access(SCSISCAN_PATH %(host), os.W_OK):
         qlarescan(host)
+        import time
+        log.debug("rescan_qla: wait(%u)" %(timeout))
+        time.sleep(timeout)
         qlarescan_disks(host, add, remove)
     else:
         raise SCSIException("sysfile for host %s does not exist or is not writable (%s)" %(host, SCSISCAN_PATH %(host)))
@@ -351,7 +354,7 @@ def getBlockDeviceForWWWNLun(wwwn, lun, hosts=None):
         if os.path.exists(blockdev_file):
             return "/dev/"+os.path.basename(os.readlink(blockdev_file))
     else:
-        raise SCSIException("Could not find blockdevice for wwwn: %s, lun: %u" %(wwwn, lun))
+        raise SCSIException("Could not find blockdevice for wwwn: %s, lun: %u" %(wwwn, int(lun)))
 
 def test():
     __line("Testing scsihosts")
@@ -371,6 +374,10 @@ if __name__=="__main__":
 
 ###########################
 # $Log: ComSCSI.py,v $
-# Revision 1.1  2007-03-26 08:04:58  marc
+# Revision 1.2  2007-04-04 12:32:44  marc
+# MMG Backup Legato Integration :
+# - added timeout after rescan
+#
+# Revision 1.1  2007/03/26 08:04:58  marc
 # initial revision
 #
