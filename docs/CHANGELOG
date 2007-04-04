@@ -9,6 +9,14 @@ WARNING:
     No empty lines between changelogs.
 
 CHANGES:
+comoonics-backup-py:
+* Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
+   initial revision
+
+comoonics-backup-legato-py:
+* Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
+   initial revision
+
 comoonics-cmdb-py:
 * Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-17
     - added Master Compare
