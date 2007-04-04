@@ -4,10 +4,10 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComStorage.py,v 1.2 2007-03-26 08:10:22 marc Exp $
+# $Id: ComStorage.py,v 1.3 2007-04-04 12:35:05 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComStorage.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -91,14 +91,15 @@ class Storage(object):
         """
         from comoonics.ComProperties import Properties
         props=element.getElementsByTagName(Properties.TAGNAME)
-        if len(props)>1:
+        #log.debug("fromElement: %s, %u" %(element, len(props)))
+        if len(props)>=1:
             self.properties=Properties(props[0])
             for propertyname in self.properties.keys():
-                log.debug("Setting attribute %s, %s" %(propertyname, self.properties[propertyname].getAttribute("value")))
+                log.debug("fromElement: Setting attribute %s, %s" %(propertyname, self.properties[propertyname].getAttribute("value")))
                 setattr(self, propertyname, self.properties[propertyname].getAttribute("value"))
         for attribute in element.attributes:
             self.__dict__[attribute.name]=attribute.value
-#            log.debug("attribute(%s)=%s" %(attribute.name, getattr(self, attribute.name)))
+#            log.debug("fromElement: attribute(%s)=%s" %(attribute.name, getattr(self, attribute.name)))
 
     def getConnectionName(self):
         """ for singleton implementation if you want to have only one connection per storage system you can use
@@ -162,7 +163,11 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComStorage.py,v $
-# Revision 1.2  2007-03-26 08:10:22  marc
+# Revision 1.3  2007-04-04 12:35:05  marc
+# MMG Backup Legato Integration :
+# - just logging
+#
+# Revision 1.2  2007/03/26 08:10:22  marc
 # - better logging
 # - added support for XML-properties
 #
