@@ -7,17 +7,18 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.12 2007-04-02 11:46:45 marc Exp $
+# $Id: ComDisk.py,v 1.13 2007-04-04 12:48:44 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
 import exceptions
 import parted
 import time
+from xml.dom import Document, DOMImplementation
 
 import ComSystem
 from ComDataObject import DataObject
@@ -77,6 +78,7 @@ class StorageDisk(Disk):
 class HostDisk(Disk):
     log=ComLog.getLogger("HostDisk")
     LABEL_PREFIX="LABEL="
+    TAGNAME="disk"
     class DeviceNameResolver(object):
         key=None
         def getKey(self):
@@ -88,10 +90,28 @@ class HostDisk(Disk):
         pass
     resolver=dict()
 
-    """ Disk represents a raw disk """
-    def __init__(self, element, doc=None):
+    """ Disk represents a raw disk
+        Possible constructors:
+        __init__(self, element, doc=None)  type(element)=Node
+        __init__(self, name, doc=None) type(name)==str
+    """
+    def __init__(self, *params):
         """ creates a Disk object
         """
+        if len(params)==1:
+            doc=DOMImplementation.createDocument(None, self.TAGNAME, None)
+        elif len(params)==2:
+            doc=params[1]
+        else:
+            raise exceptions.TypeError("""Wrong number of arguments to constructor of HostDisk.
+   Either __init__(self, element, doc=None) or
+          __init__(self, name, doc=None) are supported.""")
+
+        if isinstance(params[0], basestring):
+            element=doc.createElement(self.TAGNAME)
+            element.setAttribute("name", params[0])
+        else:
+            element=params[0]
         super(HostDisk, self).__init__(element, doc)
         self.log.debug("__init__")
         self.devicename=None
@@ -155,7 +175,7 @@ class HostDisk(Disk):
         """
         journal_cmds=list()
         if len(self.getDeviceName().split("="))==2:
-            (key, value)=self.getDeviceName().split("=")
+            (key, value)=self.getDeviceName().split("=")[:2]
             self.resolveDeviceNameByKeyValue(key, value)
         if LogicalVolume.isValidLVPath(self.getDeviceName()):
             self.initLVM()
@@ -183,7 +203,7 @@ class HostDisk(Disk):
         if self.refByLabel():
             pass
         if not self.exists():
-            raise ComException("Device %s not found or no LVM Device!" % self.getDeviceName())
+            raise ComException("Device %s not found or no valid device!" % self.getDeviceName())
 
         dev=parted.PedDevice.get(self.getDeviceName())
         try:
@@ -195,7 +215,7 @@ class HostDisk(Disk):
             self.log.debug("no partitions found")
 
     def restore(self):
-        if self.lvm_activated:
+        if hasattr(self, "lvm_activated") and self.lvm_activated:
             self.lvm_vg_deactivate()
 
     def createPartitions(self):
@@ -381,7 +401,12 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.12  2007-04-02 11:46:45  marc
+# Revision 1.13  2007-04-04 12:48:44  marc
+# MMG Backup Legato Integration:
+# - small Bugfixed for LVM handling
+# - added constructur with just a name instead of element
+#
+# Revision 1.12  2007/04/02 11:46:45  marc
 # MMG Backup Legato Integration:
 # - Journaling for vg_activation
 #
