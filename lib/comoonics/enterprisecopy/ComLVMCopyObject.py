@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLVMCopyObject.py,v 1.5 2007-04-02 11:49:22 marc Exp $
+# $Id: ComLVMCopyObject.py,v 1.6 2007-04-04 12:52:20 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyObject.py,v $
 
 from ComCopyObject import CopyObject
@@ -29,19 +29,26 @@ class LVMCopyObject(CopyObject):
         self.vg=None
         vg_element = element.getElementsByTagName(VolumeGroup.TAGNAME)[0]
         self.vg=VolumeGroup(vg_element, doc)
+        self.activated=False
 
     def prepareAsSource(self):
         self.getVolumeGroup().init_from_disk()
         for pv in LinuxVolumeManager.pvlist(self.getVolumeGroup(), self.getDocument()):
             pv.init_from_disk()
             self.getVolumeGroup().addPhysicalVolume(pv)
-        self.activated=False
         for lv in LinuxVolumeManager.lvlist(self.getVolumeGroup(), self.getDocument()):
             lv.init_from_disk()
             self.getVolumeGroup().addLogicalVolume(lv)
-            if lv.isActivated() and not self.activated:
+            if not lv.isActivated() and not self.activated:
                 self.activated=True
                 self.vg.activate()
+
+    def prepareAsDest(self):
+        self.activated=True
+        for pv in self.getVolumeGroup().getPhysicalVolumes():
+            self.getVolumeGroup().delPhysicalVolume(pv)
+            pv.resolveName()
+            self.getVolumeGroup().addPhysicalVolume(pv)
 
     def updateMetaData(self, element):
         ComLog.getLogger(self.__logStrLevel__).debug("%u logical volumes cloning all from source" %(len(self.getVolumeGroup().getLogicalVolumes())))
@@ -56,15 +63,12 @@ class LVMCopyObject(CopyObject):
             #ComLog.getLogger(self.__logStrLevel__).debug("Successfully updated the dom structure for volumegroup")
 
     def cleanupSource(self):
-        pass
-
-    def cleanupDest(self):
-        self.cleanupSource()
         if self.activated:
             self.vg.deactivate()
 
-    def prepareAsDest(self):
-        pass
+    def cleanupDest(self):
+        if self.activated:
+            self.vg.deactivate()
 
     def getVolumeGroup(self):
         return self.vg
@@ -113,7 +117,11 @@ if __name__ == '__main__':
 
 #################
 # $Log: ComLVMCopyObject.py,v $
-# Revision 1.5  2007-04-02 11:49:22  marc
+# Revision 1.6  2007-04-04 12:52:20  marc
+# MMG Backup Legato Integration
+# - moved prepareAsDest and added activation support for not activated devices as Destination
+#
+# Revision 1.5  2007/04/02 11:49:22  marc
 # MMG Backup Legato Integration:
 # - Journaling for vg_activation
 #
