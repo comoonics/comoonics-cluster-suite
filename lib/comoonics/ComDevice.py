@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDevice.py,v 1.2 2007-02-09 11:29:15 marc Exp $
+# $Id: ComDevice.py,v 1.3 2007-04-04 12:47:39 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDevice.py,v $
 
 import os
@@ -24,6 +24,7 @@ from ComDisk import HostDisk
 import ComUtils
 
 class Device(HostDisk):
+    TAGNAME="device"
     def __init__(self, element, doc):
         HostDisk.__init__(self,element, doc)
 
@@ -68,7 +69,11 @@ class Device(HostDisk):
         return o.readlines()
 
 # $Log: ComDevice.py,v $
-# Revision 1.2  2007-02-09 11:29:15  marc
+# Revision 1.3  2007-04-04 12:47:39  marc
+# MMG Backup Legato Integration:
+# -added Tagname
+#
+# Revision 1.2  2007/02/09 11:29:15  marc
 # changed Disk to HostDisk
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
