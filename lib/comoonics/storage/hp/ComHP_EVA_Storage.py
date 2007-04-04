@@ -4,10 +4,10 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_Storage.py,v 1.2 2007-03-26 08:08:10 marc Exp $
+# $Id: ComHP_EVA_Storage.py,v 1.3 2007-04-04 12:36:42 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_Storage.py,v $
 
 from exceptions import TypeError
@@ -28,10 +28,19 @@ class HP_EVA_Storage(Storage):
         super(HP_EVA_Storage, self).__init__(**kwds)
         (self.manager,self.system)=self.system.split("/")
 
+        if not hasattr(self, "timeout"):
+            self.timeout=1
+        if kwds.has_key("timeout"):
+            self.cmd=kwds["timout"]
+
         if not hasattr(self, "cmd"):
+#            mylogger.debug("setting cmd cause not set kwds: %s" %(kwds))
             self.cmd=HP_EVA_SSSU.SSSU_CMD
+#        else:
+#            mylogger.debug("cmd already set to cause %s" %(self.cmd))
         if kwds.has_key("cmd"):
             self.cmd=kwds["cmd"]
+
         self.log=None
         if kwds.has_key("log"):
             self.log=kwds["log"]
@@ -48,6 +57,7 @@ class HP_EVA_Storage(Storage):
             self.connect()
         self.sssu=None
 
+
     def getConnectionName(self):
         """ for singleton implementation if you want to have only one connection per storage system you can use
         this string as unique reference.
@@ -63,7 +73,7 @@ class HP_EVA_Storage(Storage):
     def connect(self):
         """ Connects to the storage system """
         if not self.isConnected():
-            mylogger.debug("system: %s, manager: %s" %(self.system,self.manager))
+            mylogger.debug("system: %s, manager: %s, cmd: %s" %(self.system,self.manager,self.cmd))
             logfile=cmdlogfile=None
             if self.log:
                 logfile = file(self.log, "w")
@@ -97,6 +107,7 @@ class HP_EVA_Storage(Storage):
                         luns.append(lun)
                 except CommandError, ce:
                     raise ErrorDuringExecution("Could not add lun to storage\nExecution errorcode %u: \ncmd: %s" %(self.sssu.last_error_code, self.sssu.last_cmd), ce)
+        self.wait()
         return luns
 
     def unmap_luns(self, *params):
@@ -122,7 +133,14 @@ class HP_EVA_Storage(Storage):
                     self.sssu.cmd("delete lun \"%s%s\"" %(path,lun))
                 except CommandError, ce:
                     raise ErrorDuringExecution("Could not delete lun from storage\nExecution errorcode %u: \ncmd: %s" %(self.sssu.last_error_code, self.sssu.last_cmd), ce)
+        self.wait()
         return luns
+
+    def wait(self):
+        """Sometimes host is not fast enough to see the lun so we'll wait here"""
+        import time
+        mylogger.debug("wait(%u)" %(self.timeout))
+        time.sleep(self.timeout)
 
     def _delete(self, _type, name, properties, checkfunc=None):
         try:
@@ -161,21 +179,42 @@ class HP_EVA_Storage(Storage):
             raise ErrorDuringExecution("Could not delete %s %s to storage\nExecution errorcode %u: \ncmd: %s" %(type, name, self.sssu.last_error_code, self.sssu.last_cmd), ce)
 
     def _add(self, type, name, properties):
+        #
+        # THOUGTS: We need to check disk for
+        #  operationalstate .....................: attention
+        # VS
+        #  operationalstate .....................: good
+        # to simulate something like WAIT_FOR_COMLETITION
+        #
         try:
             mylogger.debug("add %s \"%s\" %s" %(type, name, properties))
             if self.sssu.cmd("add %s \"%s\"" %(type, name), properties)==0:
                 if type=="vdisk":
-                    self.sssu.cmd("ls %s \"%s\\ACTIVE\" xml" %(type, name))
+                    lscmd="ls %s \"%s\\ACTIVE\" xml" %(type, name)
                 elif type=="snapshot":
                     vdisk=properties["vdisk"].getAttribute("value")
                     if vdisk.find("\\ACTIVE")>0:
                         vdisk=vdisk[:vdisk.rindex("\\ACTIVE")]
-                    self.sssu.cmd("ls %s \"%s\\%s\" xml" %(type, vdisk, name))
+                    lscmd="ls %s \"%s\\%s\" xml" %(type, vdisk, name)
                 else:
-                    self.sssu.cmd("ls %s \"%s\" xml" %(type, name))
-                vdisk=None
-                if self.sssu.xml_output:
-                    vdisk=HP_EVA_Object.fromXML(self.sssu.xml_output)
+                    lscmd="ls %s \"%s\" xml" %(type, name)
+                operational=False
+                iterations=0
+                maxiterations=10
+                while not operational and iterations<maxiterations:
+                    self.sssu.cmd(lscmd)
+                    vdisk=None
+                    if self.sssu.xml_output:
+                        vdisk=HP_EVA_Object.fromXML(self.sssu.xml_output)
+                        if hasattr(vdisk, "operationalstate"):
+                            mylogger.debug("_add: operationalstate: %s" %(getattr(vdisk, "operationalstate")))
+                            if getattr(vdisk, "operationalstate")=="good":
+                                operational=True
+                            else:
+                                import time
+                                mylogger.debug("_add: operationalstate is not good waiting(%u).." %(iterations))
+                                time.sleep(5)
+                                iterations+=1
                 return vdisk
             else:
                 raise ErrorDuringExecution("Could not add %s %s to storage.\nExecution errorcode %u: \ncmd: %s, output: %s" %(type, name, self.sssu.last_error_code, self.sssu.last_cmd, self.sssu.last_output))
@@ -306,7 +345,11 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_Storage.py,v $
-# Revision 1.2  2007-03-26 08:08:10  marc
+# Revision 1.3  2007-04-04 12:36:42  marc
+# MMG Backup Legato Integration:
+# - added wait method
+#
+# Revision 1.2  2007/03/26 08:08:10  marc
 # - changed methods called by CopyObjects or Modifications to *params in order to being able to undo with same parameters the do
 # - fixed a bug for "\"s instead of "/"s in the path
 #
