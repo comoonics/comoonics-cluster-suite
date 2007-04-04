@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -503,6 +503,18 @@ class PhysicalVolume(LinuxVolumeManager):
     The LVM methods
     '''
 
+    def resolveName(self):
+        """
+        Will automatically try to detect the specified device. Implicitly the same functionality as in
+        HostDisk.resolve() is used.
+        """
+        from comoonics.ComDevice import Device
+        device=Device(self.getAttribute("name"), self.getDocument())
+        cmds=device.resolveDeviceName()
+        self.log.debug("resolveName: setting name from %s => %s." %(self.getAttribute("name"), device.getDeviceName()))
+        self.setAttribute("name", device.getDeviceName())
+        return cmds
+
     def init_from_disk(self):
         """
         Initializes this physical volume from disk and reads all attributes and sets them
@@ -887,7 +899,11 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.4  2007-04-02 11:48:16  marc
+# Revision 1.5  2007-04-04 12:49:23  marc
+# MMG Backup Legato Integration :
+# - added resolveName for resolving PVs of devices
+#
+# Revision 1.4  2007/04/02 11:48:16  marc
 # MMG Backup Legato Integration:
 # - only logging
 #
