@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.4 2007-04-02 11:50:45 marc Exp $
+# $Id: ComPartitionCopyObject.py,v 1.5 2007-04-04 12:52:56 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -45,6 +45,11 @@ class PartitionCopyObject(CopyObjectJournaled):
             self.journal(self.disk, journal_command)
         self.disk.initFromDisk()
 
+    def prepareAsDest(self):
+        for journal_command in self.disk.resolveDeviceName():
+            self.journal(self.disk, journal_command)
+        self.disk.initFromDisk()
+
     def cleanupSource(self):
         self.commitJournal()
 
@@ -59,9 +64,6 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.createPartitions()
         self.disk.restore()
 
-    def prepareAsDest(self):
-        pass
-
     def getMetaData(self):
         ''' returns the metadata element '''
         return self.disk.getElement()
@@ -71,7 +73,11 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.4  2007-04-02 11:50:45  marc
+# Revision 1.5  2007-04-04 12:52:56  marc
+# MMG Backup Legato Integration
+# - moved prepareAsDest
+#
+# Revision 1.4  2007/04/02 11:50:45  marc
 # MMG Backup Legato Integration:
 # - calling restore on Disk e.g. to deactivate vg
 #
