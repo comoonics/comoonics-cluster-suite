@@ -2,16 +2,19 @@
 Class for the EMC-Legator BackupHandlerImplementation.
 """
 # here is some internal information
-# $Id: ComEMCLegatoBackupHandler.py,v 1.1 2007-03-26 07:48:58 marc Exp $
+# $Id: ComEMCLegatoBackupHandler.py,v 1.2 2007-04-04 12:46:30 marc Exp $
 #
 
+import os
+import os.path
+import tempfile
+from exceptions import KeyError
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics.backup.ComBackupHandler import BackupHandler
 from ComEMCLegatoNetworker import LegatoNetworker, LegatoBackupLevel
-
-from exceptions import KeyError
+from comoonics.ComArchive import NotImplementedError
 
 LEGATO_CMD="/usr/sbin/savefs"
 
@@ -59,9 +62,12 @@ class EMCLegatoBackupHandler(BackupHandler):
         """
         super(EMCLegatoBackupHandler, self).__init__(name, properties)
         self.networker=None
+        self.openfiles=list()
         try:
             self.networker=LegatoNetworker(properties.getAttribute("client"), name, properties.getAttribute("server"))
-            self.level=properties.getAttribute("level")
+            self.level=EMCLegatoBackupLevel.FULL
+            if properties.has_key("level"):
+                self.level=properties.getAttribute("level")
         except KeyError, ke:
             raise EMCLegatoBackupHandlerConfigurationError(ke.__str__(), None)
 
@@ -110,8 +116,46 @@ class EMCLegatoBackupHandler(BackupHandler):
         self.networker.executeSaveFs(self.level, source)
         os.chdir(olddir)
 
+    def extractArchive(self, dest):
+        """ extracts the whole archive to dest.
+        @dest: destinationdirectory given as path
+        """
+        # for legato we need to cut the last part.
+        _dest=os.path.dirname(os.path.normpath(dest))
+        self.extractFile(self.name, _dest)
+
+    def extractFile(self, name, dest):
+        """ extracts a single file from the archive to dest.
+        @name: the name of the file to be restored. If None the whole archive will be restored
+        @dest: destinationdirectory given as path
+        """
+        self.log.debug("extracting Archive: %s => %s" %(self.name, dest))
+        self.networker.executeRecover(name, dest)
+
+    def getFileObj(self, name):
+        ''' returns a fileobject of an archiv member '''
+        self.tmppath=tempfile.mkdtemp()
+        path=os.path.normpath("%s/%s" %(self.name, name))
+        self.log.debug("getFileObj(%s)=>%s" %(path, self.tmppath))
+        self.extractFile(path, self.tmppath)
+        filename=os.path.normpath("%s/%s" %(self.tmppath, name))
+        filep=open(filename)
+        self.openfiles.append(filename)
+        return filep
+
+    def closeAll(self):
+        for filename in self.openfiles:
+            if os.path.exists(filename):
+                os.unlink(filename)
+        if os.path.exists(self.tmppath):
+            os.rmdir(self.tmppath)
+
 ########################
 # $Log: ComEMCLegatoBackupHandler.py,v $
-# Revision 1.1  2007-03-26 07:48:58  marc
+# Revision 1.2  2007-04-04 12:46:30  marc
+# MMG Backup Legato Integration:
+# - added restoreMethods (extractArchive, getFileobj, extractFile)
+#
+# Revision 1.1  2007/03/26 07:48:58  marc
 # initial revision
 #
