@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.2 2007-03-26 08:06:30 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.3 2007-04-04 12:35:52 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
@@ -54,7 +54,7 @@ class HP_EVA_SSSU(object):
 
     SSSU_CMD="sssu"
 
-    def __init__(self, manager, username, password, system, auto_connect=True, command=None, logfile=None, cmdlog=None):
+    def __init__(self, manager, username, password, system, auto_connect=True, command=None, logfile=None, cmdlog=None, timeout=60):
         """
         Initializes the connection to the HP EVA. But not connects. This will be done implicitly or directly via
         the connect method.
@@ -64,6 +64,7 @@ class HP_EVA_SSSU(object):
         self.password=password
         self.system=system
         self.logfile=logfile
+        self.timeout=timeout
         if isinstance(self.logfile, basestring):
             self.logfile=file(self.logfile, "w")
         self.cmdlog=cmdlog
@@ -104,7 +105,7 @@ class HP_EVA_SSSU(object):
         Connects to the HP EVA MA. With the parameters given to the constructor.
         """
         mylogger.debug("spawning shell %s" %(self.sssu_cmd))
-        self.sssu_shell=pexpect.spawn(self.sssu_cmd)
+        self.sssu_shell=pexpect.spawn(self.sssu_cmd, [], self.timeout)
         self.sssu_shell.logfile=self.logfile
         self.sssu_shell.cmdlogfile=self.cmdlog
         if not self.sssu_shell.isalive():
@@ -270,7 +271,11 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.2  2007-03-26 08:06:30  marc
+# Revision 1.3  2007-04-04 12:35:52  marc
+# MMG Backup Legato Integration:
+# - raised the default timeout for pexpect to 60secs
+#
+# Revision 1.2  2007/03/26 08:06:30  marc
 # - added better logging (own loglevel for SSSU)
 # - added ask mode for commands
 # - added support for a dict as parameters to cmd
