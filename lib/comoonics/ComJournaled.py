@@ -6,14 +6,15 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComJournaled.py,v 1.2 2007-03-26 08:30:27 marc Exp $
+# $Id: ComJournaled.py,v 1.3 2007-04-10 15:36:38 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComJournaled.py,v $
 
 import ComLog
+import inspect
 
 class JournaledObject:
     """
@@ -52,7 +53,7 @@ class JournaledObject:
         """
         Removes a already added method from the undomap
         """
-        if self.__undomap__.hasKey(classname+"."+methodname):
+        if self.__undomap__.has_key(classname+"."+methodname):
             self.__undomap__.pop(classname+"."+methodname)
 
     def journal(self, *params):
@@ -78,7 +79,10 @@ class JournaledObject:
             ComLog.getLogger(JournaledObject.__logStrLevel__).debug("Journalentry: %s, %s" %(je.method, je.ref.__class__))
             undomethod=""
             try:
-                undomethod=self.__undomap__[str(je.ref.__class__.__name__+"."+je.method)]
+                if inspect.ismodule(je.ref):
+                    undomethod=self.__undomap__[str(je.ref.__name__+"."+je.method)]
+                else:
+                    undomethod=self.__undomap__[str(je.ref.__class__.__name__+"."+je.method)]
                 ComLog.getLogger(JournaledObject.__logStrLevel__).debug("Undomethod: %s(%s)" % (undomethod, je.params))
                 if not je.params or (type(je.params)==list and len(je.params) == 0):
                     # changed call of replay
@@ -104,7 +108,10 @@ class JournaledObject:
 
 ####################
 # $Log: ComJournaled.py,v $
-# Revision 1.2  2007-03-26 08:30:27  marc
+# Revision 1.3  2007-04-10 15:36:38  marc
+# added Journalsupport for modules
+#
+# Revision 1.2  2007/03/26 08:30:27  marc
 # - cleaned up a little bit
 # - fixed a bug that only occured with methods with journal-methods with arguments
 #
