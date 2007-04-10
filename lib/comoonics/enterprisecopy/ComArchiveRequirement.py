@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.5 2007-02-28 10:11:42 mark Exp $
+# $Id: ComArchiveRequirement.py,v 1.6 2007-04-10 16:51:24 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -57,6 +57,7 @@ class ArchiveRequirement(Requirement):
             raise ArchiveRequirementException("Format %s is not implemented for %s" % (self.getAttribute("format"), self.__class__.__name__  ))
         if not self.hasAttribute("name") or not self.hasAttribute("dest"):
             raise ArchiveRequirementException("Either name or destination not defined in element")
+        self.order=Requirement.BOTH
 
     def check(self):
         """
@@ -124,7 +125,10 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.5  2007-02-28 10:11:42  mark
+# Revision 1.6  2007-04-10 16:51:24  marc
+# changed to order.BOTH
+#
+# Revision 1.5  2007/02/28 10:11:42  mark
 # added mkdir support
 #
 # Revision 1.4  2006/08/02 13:55:29  marc
