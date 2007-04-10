@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModification.py,v 1.4 2007-03-26 08:00:08 marc Exp $
+# $Id: ComModification.py,v 1.5 2007-04-10 16:52:17 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModification.py,v $
 import exceptions
 import xml.dom
@@ -58,7 +58,6 @@ class Modification(DataObject, Requirements):
         self.doPre()
         self.doRealModifications()
         self.doPost()
-        pass
 
     def undoModification(self):
         """ undos this modification if necessary """
@@ -89,7 +88,10 @@ class ModificationJournaled(Modification, JournaledObject):
 
 
 # $Log: ComModification.py,v $
-# Revision 1.4  2007-03-26 08:00:08  marc
+# Revision 1.5  2007-04-10 16:52:17  marc
+# removed an unnecessary pass
+#
+# Revision 1.4  2007/03/26 08:00:08  marc
 # - moved the requirements to parentclass Requirements
 # - added ModificationJournaled
 #
