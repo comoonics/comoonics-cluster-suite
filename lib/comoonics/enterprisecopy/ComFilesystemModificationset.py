@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.2 2007-03-26 07:58:49 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.3 2007-04-10 15:36:24 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -55,19 +55,21 @@ class FilesystemModificationset(ModificationsetJournaled):
         log.debug("Modifications: %u" % len(self.modifications))
         log.debug("Filesystemodificationset CWD: " + self.cwd)
         self.addToUndoMap(self.filesystem.__class__.__name__, "mount", "umountDir")
-        self.addToUndoMap("os", "chdir", "chdir")
+        self.addToUndoMap(os.__name__, "chdir", "chdir")
+        self.addToUndoMap(self.device.__class__.__name__, "lvm_vg_activate", "lvm_vg_deactivate")
 
     def doPre(self):
         # mount Filesystem
-        super(FilesystemModificationset, self).doPre()
+        for journal_command in self.device.resolveDeviceName():
+            self.journal(self.device, journal_command)
         if not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
         __cwd=os.getcwd()
         os.chdir(self.mountpoint.getAttribute("name"))
         self.journal(os, "chdir", __cwd)
-        log.debug("CWD: " + os.getcwd())
-
+        log.debug("doPre() CWD: " + os.getcwd())
+        super(FilesystemModificationset, self).doPre()
 
     def doPost(self):
         super(FilesystemModificationset, self).doPost()
@@ -77,13 +79,16 @@ class FilesystemModificationset(ModificationsetJournaled):
         #umount Filesystem
         #if self.umountfs:
         #    self.filesystem.umountDir(self.mountpoint)
-        log.debug("CWD: " + os.getcwd())
+        log.debug("doPost() CWD: " + os.getcwd())
 
     def getModifications(self):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.2  2007-03-26 07:58:49  marc
+# Revision 1.3  2007-04-10 15:36:24  marc
+# changed order for executing the requirements after mounting
+#
+# Revision 1.2  2007/03/26 07:58:49  marc
 # - fixed a undo bug with chdir
 # - calling parent methods for doPre/doPost (Requirements)
 #
