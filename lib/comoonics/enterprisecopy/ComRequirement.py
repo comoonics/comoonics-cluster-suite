@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComRequirement.py,v 1.2 2007-03-26 08:04:29 marc Exp $
+# $Id: ComRequirement.py,v 1.3 2007-04-10 16:54:04 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRequirement.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -43,6 +43,9 @@ class Requirement(DataObject):
     __logStrLevel__ = "Requirement"
     log=ComLog.getLogger(__logStrLevel__)
     TAGNAME = "requirement"
+    PRE=1
+    POST=2
+    BOTH=3
 
     """
     Public methods
@@ -53,12 +56,13 @@ class Requirement(DataObject):
         Creates a new requirement instance
         """
         DataObject.__init__(self, element, doc)
+        self.order=Requirement.PRE
 
     def isPre(self):
         """
         checks if this requirement has to be run before (doPre) or after (doPost). default True
         """
-        if self.hasAttribute("order") and self.getAttribute("order")!="pre" and self.getAttribute("order")!="before":
+        if (self.hasAttribute("order") and self.getAttribute("order")!="pre" and self.getAttribute("order")!="before") or self.order==Requirement.POST:
             return False
         return True
 
@@ -66,7 +70,7 @@ class Requirement(DataObject):
         """
         checks if this requirement has to be run before (doPre) or after (doPost). default True
         """
-        if self.hasAttribute("order") and (self.getAttribute("order")=="post" or self.getAttribute("order")=="after"):
+        if (self.hasAttribute("order") and (self.getAttribute("order")=="post" or self.getAttribute("order")=="after")) or self.order==Requirement.POST or self.order==Requirement.BOTH:
             return True
         return False
 
@@ -116,13 +120,14 @@ class RequirementJournaled(Requirement, JournaledObject):
         self.replayJournal()
 
 class Requirements(object):
-    __logStrLevel__ = "RequirementJournaled"
+    __logStrLevel__ = "Requirements"
     log=ComLog.getLogger(__logStrLevel__)
     def __init__(self, element, doc):
         __reqs=list()
         __elements=element.getElementsByTagName(Requirement.TAGNAME)
         for i in range(len(__elements)):
-            __reqs.append(getRequirement(__elements[i], doc))
+            if __elements[i].parentNode == element:
+                __reqs.append(getRequirement(__elements[i], doc))
         self.requirements=__reqs
         self.log.debug("__init__: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
     def getRequirements(self):
@@ -154,7 +159,10 @@ class Requirements(object):
 
 ###################################
 # $Log: ComRequirement.py,v $
-# Revision 1.2  2007-03-26 08:04:29  marc
+# Revision 1.3  2007-04-10 16:54:04  marc
+# added attribute order for allowing requirements with doPre and doPost being called not only one method. (see ArchiveRequirement)
+#
+# Revision 1.2  2007/03/26 08:04:29  marc
 # - added class Requirments as parentclass for all children needing requirements
 # - changed undoCopy to undoRequirement
 # - logging
