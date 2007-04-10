@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.4 2007-03-26 08:00:58 marc Exp $
+# $Id: ComModificationset.py,v 1.5 2007-04-10 16:53:09 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModificationset.py,v $
 
 import exceptions
@@ -41,6 +41,7 @@ def getModificationset(element, doc):
 
 class Modificationset(DataObject, Requirements):
     TAGNAME = "modificationset"
+    __logStrLevel__="Modificationset"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
         Requirements.__init__(self, element, doc)
@@ -65,9 +66,9 @@ class Modificationset(DataObject, Requirements):
     def doRealModifications(self):
         for mod in self.modifications:
             try:
-                mod.doPre()
+                #mod.doPre()
                 mod.doModification()
-                mod.doPost()
+                #mod.doPost()
             except NotImplementedError, e:
                 log.warning(e)
 
@@ -105,7 +106,11 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComModificationset.py,v $
-# Revision 1.4  2007-03-26 08:00:58  marc
+# Revision 1.5  2007-04-10 16:53:09  marc
+# mod.doPre and mod.doPost is called by mod.doModification.
+# Could be changed back later not clear of dependencies.
+#
+# Revision 1.4  2007/03/26 08:00:58  marc
 # - added Requirements and more functionality to parents
 #
 # Revision 1.3  2007/02/09 12:26:12  marc
