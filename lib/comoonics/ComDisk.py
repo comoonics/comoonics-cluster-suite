@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.13 2007-04-04 12:48:44 marc Exp $
+# $Id: ComDisk.py,v 1.14 2007-04-11 14:45:22 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -200,6 +200,7 @@ class HostDisk(Disk):
         self.log.debug("initFromDisk()")
 
         phelper=ComParted.PartedHelper()
+        #FIXME: create LabelResolver
         if self.refByLabel():
             pass
         if not self.exists():
@@ -401,7 +402,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.13  2007-04-04 12:48:44  marc
+# Revision 1.14  2007-04-11 14:45:22  mark
+# added FIXME
+#
+# Revision 1.13  2007/04/04 12:48:44  marc
 # MMG Backup Legato Integration:
 # - small Bugfixed for LVM handling
 # - added constructur with just a name instead of element
