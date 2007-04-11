@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.5 2007-04-04 12:52:56 marc Exp $
+# $Id: ComPartitionCopyObject.py,v 1.6 2007-04-11 14:34:29 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -48,8 +48,7 @@ class PartitionCopyObject(CopyObjectJournaled):
     def prepareAsDest(self):
         for journal_command in self.disk.resolveDeviceName():
             self.journal(self.disk, journal_command)
-        self.disk.initFromDisk()
-
+        
     def cleanupSource(self):
         self.commitJournal()
 
@@ -73,7 +72,10 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.5  2007-04-04 12:52:56  marc
+# Revision 1.6  2007-04-11 14:34:29  mark
+# resolves bz#44
+#
+# Revision 1.5  2007/04/04 12:52:56  marc
 # MMG Backup Legato Integration
 # - moved prepareAsDest
 #
