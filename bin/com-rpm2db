@@ -80,7 +80,7 @@ line("Updating Systeminformation of "+systeminformation.getName())
 
 source.updateSystemInformation(systeminformation, config.category)
 
-line("Updating RPMS of "+systeminformation.getName())
+line("Updating RPMS of "+systeminformation.getName()+ " filter: %s" %(config.rpmfiles))
 
 if not config.rpmfiles or len(config.rpmfiles) == 0:
     rpms=systeminformation.getInstalledSoftware()
@@ -89,9 +89,13 @@ else:
     for rpmname in config.rpmfiles:
         rpms+=systeminformation.getInstalledSoftware(rpmname)
 
+rpmnames=list()
+for rpm_hdr in rpms:
+    rpmnames.append(rpm_hdr["name"])
+
 for rpm_hdr in rpms:
     (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
-    software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion)
+    software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion, rpmnames.count(rpm_hdr["name"]))
 
 software_cmdb.db.commit()
 

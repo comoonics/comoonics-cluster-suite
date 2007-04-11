@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.9 2007-04-02 11:13:34 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.10 2007-04-11 11:48:40 marc Exp $
 #
 
 import os
@@ -408,21 +408,28 @@ class SoftwareCMDB(BaseDB):
               whererest
         return query
 
-    def updateRPM(self, _rpm, name, channelname, channelversion):
+    def updateRPM(self, _rpm, name, channelname, channelversion, count=1):
         """
         Updates the given rpmheader in the software_cmdb of this cluster
         rpm: the rpm-header defined by python-rpm with extensions like in ComDSL (channelname and -version)
         name: the name of the cluster/system
+        count: the amount of rpms found with this name
         """
         insertquery="INSERT INTO %s VALUES(\"rpm\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\");" \
                     %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"])
+        selectquery="SELECT name, version, subversion AS \"release\", architecture AS \"arch\", channel AS channelname, channelversion FROM %s WHERE clustername=\"%s\" AND name=\"%s\" AND architecture=\"%s\"" \
+                    %(self.tablename, name, _rpm["name"], _rpm["arch"])
         updatequery="UPDATE %s SET clustername=\"%s\", channel=\"%s\", channelversion=\"%s\", name=\"%s\", version=\"%s\", subversion=\"%s\", architecture=\"%s\" WHERE clustername=\"%s\" AND name=\"%s\";" \
                     %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], name, _rpm["name"])
-        selectquery="SELECT name, version, subversion AS \"release\", architecture AS \"arch\", channel AS channelname, channelversion FROM %s WHERE clustername=\"%s\" AND name=\"%s\" AND architecture=\"%s\";" \
-                    %(self.tablename, name, _rpm["name"], _rpm["arch"])
-        #    ComLog.getLogger().debug("select %s" % selectquery)
+        unequal_list=["version", "release", "channelname", "channelversion"]
+        if count > 1:
+            selectquery += " AND version=\"%s\"" %(_rpm["version"])
+            updatequery="UPDATE %s SET clustername=\"%s\", channel=\"%s\", channelversion=\"%s\", name=\"%s\", subversion=\"%s\", architecture=\"%s\" WHERE clustername=\"%s\" AND name=\"%s\" AND version=\"%s\";" \
+                        %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["release"], _rpm["arch"], name, _rpm["name"], _rpm["version"])
+            unequal_list=["release", "channelname", "channelversion"]
+        ComLog.getLogger().debug("select %s" % selectquery)
         ret=super(SoftwareCMDB, self).updateRPM(insertquery, updatequery, selectquery, _rpm,
-                                               ["version", "release", "channelname", "channelversion"],
+                                               unequal_list,
                                                { "channelname": channelname, "channelversion": channelversion})
         if ret==1:
             self.dblog.log(DBLogger.DB_LOG_LEVEL, "Added new software package %s-%s.%s.%s (table: %s)" %(_rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], self.tablename))
@@ -447,7 +454,11 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.9  2007-04-02 11:13:34  marc
+# Revision 1.10  2007-04-11 11:48:40  marc
+# Hilti RPM Control
+# - support for multiple RPMs with same name
+#
+# Revision 1.9  2007/04/02 11:13:34  marc
 # For Hilti RPM Control :
 # - added MasterCompare
 # - some bugfixes
