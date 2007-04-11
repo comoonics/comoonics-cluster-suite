@@ -6,7 +6,7 @@ Classes to automatically collect informations of this system.
 
 
 # here is some internal information
-# $Id: ComSystemInformation.py,v 1.5 2007-04-02 11:22:52 marc Exp $
+# $Id: ComSystemInformation.py,v 1.6 2007-04-11 11:49:13 marc Exp $
 #
 import re
 import os
@@ -21,7 +21,7 @@ ComSystem.__EXEC_REALLY_DO=""
 class SystemInformationNotFound(ComException):
     pass
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComSystemInformation.py,v $
 
 class SystemType(object):
@@ -221,6 +221,15 @@ class RPMLinuxSystemInformation(LinuxSystemInformation):
             self.__dict__.update(dict(kwds))
             self.type=SystemTypes.SINGLE
 
+    def updateInstalledSoftware(self, name=None):
+        import rpm
+        ts=rpm.ts()
+        mi=ts.dbMatch()
+        if name:
+            mi.pattern("name", rpm.RPMMIRE_GLOB, name)
+        for hdr in mi:
+            self.installedsoftware.append(hdr)
+
 class RedhatSystemInformation(RPMLinuxSystemInformation):
     REDHAT_RELEASE_FILE="/etc/redhat-release"
     def check(*args, **kwds):
@@ -242,15 +251,6 @@ class RedhatSystemInformation(RPMLinuxSystemInformation):
             return RedhatClusterSystemInformation.__new__(RedhatClusterSystemInformation, *args, **kwds)
         else:
             return object.__new__(RedhatSystemInformation, *args, **kwds)
-
-    def updateInstalledSoftware(self, name=None):
-        import rpm
-        ts=rpm.ts()
-        mi=ts.dbMatch()
-        if name:
-            mi.pattern("name", rpm.RPMMIRE_GLOB, name)
-        for hdr in mi:
-            self.installedsoftware.append(hdr)
 
     def __init__(self, *args, **kwds):
         super(RedhatSystemInformation, self).__init__(*args, **kwds)
@@ -337,7 +337,11 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComSystemInformation.py,v $
-# Revision 1.5  2007-04-02 11:22:52  marc
+# Revision 1.6  2007-04-11 11:49:13  marc
+# Hilti RPM Control
+# - moved the updateSoftware to right place
+#
+# Revision 1.5  2007/04/02 11:22:52  marc
 # For Hilti RPM Control:
 # - made name setable
 #
