@@ -42,6 +42,7 @@ class Config(GetOpts.BaseConfig):
     onlynotinstalled=False
     installed=False
     searchstring=""
+    select=None
 
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -53,6 +54,7 @@ class Config(GetOpts.BaseConfig):
         self.category=GetOpts.Option("category", "Set for search as categories", self.category, False, "c")
         self.master=GetOpts.Option("master", "Compare a master with others", self.master, False, "m")
         self.search=GetOpts.Option("search", "search for only one source", self.search, False, "1")
+        self.select=GetOpts.Option("select", "select only given colunms", self.select, False, "S")
         self.searchstring=GetOpts.Option("searchstring", "search for string", self.searchstring, False, "s")
         self.limitup=GetOpts.Option("limitup", "limitup from", self.limitup, False, "L")
         self.limitdown=GetOpts.Option("limitdown", "limitto to", self.limitdown, False, "l")
@@ -98,6 +100,9 @@ def formatColNames(row):
 
 colnames=None
 where=None
+select=None
+if config.select:
+    select=config.select.split(",")
 if len(config.sourcenames)>1 and config.search and (not config.searchstring or config.searchstring==""):
     config.searchstring=config.sourcenames[1]
 if config.searchstring:
@@ -119,9 +124,11 @@ if rs:
     row=rs.fetch_row(1,1)
     if not colnames:
         colnames=row[0].keys()
-    print formatColNames(colnames)
+    if not select:
+        select=colnames
+    print formatColNames(select)
     while row:
-        print formatRow(row[0], colnames)
+        print formatRow(row[0], select)
         row=rs.fetch_row(1,1)
 
 ##########
