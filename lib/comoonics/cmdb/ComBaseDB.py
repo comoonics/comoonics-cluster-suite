@@ -4,7 +4,7 @@ Class for the BaseDB
 FIXME: Should become a singleton based on table, dbname, user, pw
 """
 # here is some internal information
-# $Id: ComBaseDB.py,v 1.5 2007-04-02 11:12:37 marc Exp $
+# $Id: ComBaseDB.py,v 1.6 2007-04-12 07:52:56 marc Exp $
 #
 
 import MySQLdb
@@ -114,33 +114,36 @@ class BaseDB(DBConnection):
         #self.log.debug("selectquery: %s" % selectquery)
         _return=0
         rs=self.selectQuery(selectquery)
-        rows=rs.fetch_row(1, 2)
+        count=rs.num_rows()
         log_array=list()
 
-        if len(rows) == 0:
+        if count == 0:
             #self.log.debug("insert %s" % insertquery)
             self.db.query(insertquery)
             _return=1
         else:
+            rows=rs.fetch_row(1, 2)
             ret=False
-            row=rows[0]
-            prefix=self.tablename+"."
-            if keys and _rpm:
-                for key in keys:
-#                self.log.debug("mappingkey: "+key+", keymapping %s" %(keymapping))
-                    if keymapping and type(keymapping) == dict and keymapping.has_key(key) and keymapping[key] != None:
-                        mapping=keymapping[key]
-                    else:
-                        mapping=_rpm[key]
+            while rows and not ret:
+                row=rows[0]
+                prefix=self.tablename+"."
+                if keys and _rpm:
+                    for key in keys:
+#                        self.log.debug("mappingkey: "+key+", keymapping %s" %(keymapping))
+                        if keymapping and type(keymapping) == dict and keymapping.has_key(key) and keymapping[key] != None:
+                            mapping=keymapping[key]
+                        else:
+                            mapping=_rpm[key]
 
-                    ret=ret or row[prefix+key] != mapping
-#                self.log.debug("row[%s]:%s == %s: ret: %s" %(prefix+key, row[prefix+key], mapping, ret))
-            else:
-                ret=True
-            if ret:
-                #self.log.debug("update %s" % updatequery)
-                self.db.query(updatequery)
-                _return=2
+                        ret=ret or row[prefix+key] != mapping
+                        # self.log.debug("row[%s]:%s == %s: ret: %s" %(prefix+key, row[prefix+key], mapping, ret))
+                else:
+                    ret=True
+                if ret:
+                    #self.log.debug("update %s" % updatequery)
+                    self.db.query(updatequery)
+                    _return=2
+                rows=rs.fetch_row(1, 2)
         return _return
 
 def test():
@@ -153,7 +156,11 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComBaseDB.py,v $
-# Revision 1.5  2007-04-02 11:12:37  marc
+# Revision 1.6  2007-04-12 07:52:56  marc
+# Hilti RPM Control
+# - Bugfix in changing or adding multiple rpms with same name
+#
+# Revision 1.5  2007/04/02 11:12:37  marc
 # For Hilti RPM Control:
 # - added BaseClass DBConnection
 # - changed updateRPM when no select parameters were give to update then

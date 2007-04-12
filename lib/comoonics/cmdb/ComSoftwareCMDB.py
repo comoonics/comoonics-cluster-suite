@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.10 2007-04-11 11:48:40 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.11 2007-04-12 07:53:05 marc Exp $
 #
 
 import os
@@ -423,18 +423,51 @@ class SoftwareCMDB(BaseDB):
                     %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], name, _rpm["name"])
         unequal_list=["version", "release", "channelname", "channelversion"]
         if count > 1:
-            selectquery += " AND version=\"%s\"" %(_rpm["version"])
-            updatequery="UPDATE %s SET clustername=\"%s\", channel=\"%s\", channelversion=\"%s\", name=\"%s\", subversion=\"%s\", architecture=\"%s\" WHERE clustername=\"%s\" AND name=\"%s\" AND version=\"%s\";" \
-                        %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["release"], _rpm["arch"], name, _rpm["name"], _rpm["version"])
-            unequal_list=["release", "channelname", "channelversion"]
-        ComLog.getLogger().debug("select %s" % selectquery)
+            selectquery += " AND version=\"%s\" AND subversion=\"%s\"" %(_rpm["version"], _rpm["release"])
+            updatequery="UPDATE %s SET clustername=\"%s\", channel=\"%s\", channelversion=\"%s\", name=\"%s\", version=\"%s\", subversion=\"%s\", architecture=\"%s\" WHERE clustername=\"%s\" AND name=\"%s\" AND version=\"%s\";" \
+                        %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], name, _rpm["name"], _rpm["version"])
+            unequal_list=["channelname", "channelversion"]
+        # ComLog.getLogger().debug("select %s" % selectquery)
         ret=super(SoftwareCMDB, self).updateRPM(insertquery, updatequery, selectquery, _rpm,
                                                unequal_list,
                                                { "channelname": channelname, "channelversion": channelversion})
+        self.updateRPMinTMP(_rpm, name, channelname, channelversion)
         if ret==1:
             self.dblog.log(DBLogger.DB_LOG_LEVEL, "Added new software package %s-%s.%s.%s (table: %s)" %(_rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], self.tablename))
         elif ret>1:
             self.dblog.log(DBLogger.DB_LOG_LEVEL, "Updated existing software package %s-%s.%s.%s (table: %s)" %(_rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], self.tablename))
+
+    def cleanTMP(self, name):
+        query="DELETE FROM %s_tmp WHERE clustername=\"%s\";" %(self.tablename, name)
+        self.dblog.log(DBLogger.DB_LOG_LEVEL, "Cleaning %s_tmp for %s" %(self.tablename, name))
+        self.db.query(query)
+
+    def updateRPMinTMP(self, _rpm, name, channelname, channelversion):
+        query="INSERT INTO %s_tmp VALUES(\"rpm\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\");" \
+                    %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"])
+        self.db.query(query)
+
+    def deleteNotInTmp(self, name, names=""):
+        _names=""
+        if type(names)==list:
+            for _name in names:
+                _names+=" OR software_cmdb.name=\"%s\"" %(_name)
+            if len(names)>0:
+                _names=" AND ("+_names[3:]+")"
+        else:
+            _names="%s" %(names)
+
+        query="""DELETE FROM software_cmdb  WHERE clustername="%s" AND
+  (name, version, subversion, architecture)
+  NOT IN (SELECT name, version, subversion, architecture FROM software_cmdb_tmp WHERE clustername="%s")
+     %s;""" %(name, name, _names)
+
+        self.log.debug("deleteNotInTmp: query: "+query)
+        self.db.query(query)
+
+        if self.db.affected_rows() > 0:
+            self.dblog.log(DBLogger.DB_LOG_LEVEL, "Deleting old software %u." %(self.db.affected_rows()))
+
 
 def test():
     colnames=["name", "c1", "c2", "c3"]
@@ -454,7 +487,11 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.10  2007-04-11 11:48:40  marc
+# Revision 1.11  2007-04-12 07:53:05  marc
+# Hilti RPM Control
+# - Bugfix in changing or adding multiple rpms with same name
+#
+# Revision 1.10  2007/04/11 11:48:40  marc
 # Hilti RPM Control
 # - support for multiple RPMs with same name
 #

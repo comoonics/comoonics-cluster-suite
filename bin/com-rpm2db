@@ -93,9 +93,12 @@ rpmnames=list()
 for rpm_hdr in rpms:
     rpmnames.append(rpm_hdr["name"])
 
+software_cmdb.cleanTMP(config.name)
 for rpm_hdr in rpms:
     (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
     software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion, rpmnames.count(rpm_hdr["name"]))
+software_cmdb.deleteNotInTmp(config.name, config.rpmfiles)
+#software_cmdb.cleanTMP(config.name)
 
 software_cmdb.db.commit()
 

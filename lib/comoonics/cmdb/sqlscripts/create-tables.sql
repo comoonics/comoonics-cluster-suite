@@ -17,7 +17,19 @@ CREATE TABLE IF NOT EXISTS software_cmdb (
   version char(50) NOT NULL,
   subversion char(50) NOT NULL,
   architecture char(50) NOT NULL,
-  PRIMARY KEY  (sw_type, clustername, name, version, architecture)
+  PRIMARY KEY  (sw_type, clustername, name, version, subversion, architecture)
+) TYPE=InnoDB COMMENT='Installed Software on each cluster';
+
+CREATE TABLE IF NOT EXISTS software_cmdb_tmp (
+  sw_type ENUM('rpm', 'proprietary', 'deb', 'local') NOT NULL DEFAULT "rpm",
+  clustername char(50) NOT NULL,
+  channel char(50) NOT NULL,
+  channelversion char(50) NOT NULL,
+  name char(50) NOT NULL,
+  version char(50) NOT NULL,
+  subversion char(50) NOT NULL,
+  architecture char(50) NOT NULL,
+  PRIMARY KEY  (sw_type, clustername, name, version, subversion, architecture)
 ) TYPE=InnoDB COMMENT='Installed Software on each cluster';
 
 --
