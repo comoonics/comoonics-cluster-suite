@@ -11,7 +11,7 @@ Programm to update all installed rpms in the database
 
 # $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/rpm2db.py,v $
 import sys
-sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
+import logging
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
@@ -96,7 +96,10 @@ for rpm_hdr in rpms:
 software_cmdb.cleanTMP(config.name)
 for rpm_hdr in rpms:
     (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
-    software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion, rpmnames.count(rpm_hdr["name"]))
+    try:
+        software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion, rpmnames.count(rpm_hdr["name"]))
+    except:
+        software_cmdb.dblog.log(logging.WARN, "Exception occured during update of rpm %s-%s-%s-%s." %(rpm_hdr["name"], rpm_hdr["version"], rpm_hdr["release"], rpm_hdr["arch"]), exc_info=True)
 software_cmdb.deleteNotInTmp(config.name, config.rpmfiles)
 #software_cmdb.cleanTMP(config.name)
 
