@@ -18,6 +18,14 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cmdb-py:
+* Thu Apr 12 2007 MG <grimme@atix.de>, 0.1-20
+    - Added exception handling if update of an rpm goes wrong (com-rpm2db) and add it to dblog
+    - Added feature to compare also installed in n:m
+    - Added select for com-rpmdiffs
+* Thu Apr 12 2007 MG <grimme@atix.de>, 0.1-19
+    - Bugfix in adding multiple rpms with same name and different version/subversion combinations
+* Wed Apr 11 2007 MG <grimme@atix.de>, 0.1-18
+    - added Support for multiple rpms with same name
 * Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-17
     - added Master Compare
     - added DBLogging
@@ -38,6 +46,9 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Wed Apr 11 2007 MG <grimme@atix.de>, 0.1-31:
+    - SystemInformation.updateSoftware moved to the right place (minor)
+    - Journal support for modules (major)
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-30:
     - Fix for ComParted to detect the right partition size with special geometry
     - Fix for LVM to be able to resolve PVs via Devices
@@ -60,6 +71,8 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
+* Thu Apr 12 2007 MG <grimme@atix.de>, 0.1-5:
+   - added support for exception logging (exc_info param)
 * Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-4:
    initial revision
 
