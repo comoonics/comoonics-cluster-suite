@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# $Id: build_rpm-cmdb.sh,v 1.9 2007-04-02 11:55:31 marc Exp $
+# $Id: build_rpm-cmdb.sh,v 1.10 2007-04-12 13:23:50 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=17
+RELEASE=20
 REQUIRES="--requires=comoonics-cs-py,comoonics-db-py,MySQL-python"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cmdb-py"
@@ -25,7 +25,11 @@ setup
 
 ##############
 # $Log: build_rpm-cmdb.sh,v $
-# Revision 1.9  2007-04-02 11:55:31  marc
+# Revision 1.10  2007-04-12 13:23:50  marc
+# Hilti RPM Control
+# - new versions
+#
+# Revision 1.9  2007/04/02 11:55:31  marc
 # Hilti RPM Control
 #
 # Revision 1.8  2007/03/14 16:56:29  marc
