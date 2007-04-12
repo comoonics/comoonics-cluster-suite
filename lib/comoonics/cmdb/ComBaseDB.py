@@ -4,7 +4,7 @@ Class for the BaseDB
 FIXME: Should become a singleton based on table, dbname, user, pw
 """
 # here is some internal information
-# $Id: ComBaseDB.py,v 1.6 2007-04-12 07:52:56 marc Exp $
+# $Id: ComBaseDB.py,v 1.7 2007-04-12 12:20:38 marc Exp $
 #
 
 import MySQLdb
@@ -52,6 +52,12 @@ class BaseDB(DBConnection):
     resolveOrderBy=staticmethod(resolveOrderBy)
 
     def BinOperatorFromList(thelist, operator_str):
+        """
+        will return an list of strings with all possibilities for the given items of the list being compared
+        with each other
+        e.g BinOperatorFromList(["a", "b", "c", "d"], "!=") => ['a!=b', 'a!=c', 'a!=d', 'b!=c', 'b!=d', 'c!=d']
+        """
+
         ret_list=list()
         for i in range(len(thelist)):
             thelist2=list(thelist[i+1:])
@@ -156,7 +162,11 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComBaseDB.py,v $
-# Revision 1.6  2007-04-12 07:52:56  marc
+# Revision 1.7  2007-04-12 12:20:38  marc
+# Hilti RPM Control:
+# - added doc
+#
+# Revision 1.6  2007/04/12 07:52:56  marc
 # Hilti RPM Control
 # - Bugfix in changing or adding multiple rpms with same name
 #
