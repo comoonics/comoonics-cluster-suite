@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.12 2007-04-12 12:20:48 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.13 2007-04-12 13:07:15 marc Exp $
 #
 
 import os
@@ -260,16 +260,17 @@ class SoftwareCMDB(BaseDB):
         limit=BaseDB.getLimit(limitup, limitdown)
         self.log.debug("where: %s" %(where))
         self.log.debug("orderbyclause: %s, limit: %s, diffs: %s, notinstalled: %s" %(orderbyclause, limit, Diffs, NotInstalled))
+        self.log.debug("getting colnames")
+        _colnames=self.getColnamesForDiff(sourcenames)
         if not colnames:
-            self.log.debug("getting colnames")
-            colnames=self.getColnamesForDiff(sourcenames)
+            colnames=_colnames
         j=0
 #        ComLog.getLogger().debug("query %s" % query)
         queries=list()
         if Installed:
-            queries.append(self.selectQueryInstalled(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where))
+            queries.append(self.selectQueryInstalled(sourcenames, _colnames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where))
         if Diffs:
-            queries.append(self.selectQueryOnlyDiffs(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where))
+            queries.append(self.selectQueryOnlyDiffs(sourcenames, _colnames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where))
 
         if NotInstalled:
             queries+=self.selectQueriesNotInstalled(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where)
@@ -326,7 +327,7 @@ class SoftwareCMDB(BaseDB):
             whereequals=list()
             wherenot=list()
             o=0
-            for k in range(len(allcolnamesr[1:])):
+            for k in range(len(allcolnames[1:])):
                 selectcols.append(newcolnames[k]+" AS \""+allcolnamesr[k+1]+"\"")
                 if k%l==0 and newcolnames[k].find(SoftwareCMDB.NOT_INSTALLED_STRING)<0:
 #                    self.log.debug("add join and whereequals k mod m %u; %u, m:%u" %(k%m, len(notinstalled), m))
@@ -370,13 +371,13 @@ class SoftwareCMDB(BaseDB):
                            whererest)
         return queries
 
-    def selectQueryInstalled(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None, equals=["name", "architecture", "version", "subversion"], unequals=None):
+    def selectQueryInstalled(self, sourcenames, allcolnamesr, selectcols=None, colnames=COMPARE_2_SOFTWARE, where=None, equals=["name", "architecture", "version", "subversion"], unequals=None):
         """
         Returns all installed software on all sourcenames
         """
         return self.selectQueryOnlyDiffs(sourcenames, allcolnamesr, colnames, where, equals, unequals)
 
-    def selectQueryOnlyDiffs(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None, equals=["name", "architecture"], unequals=["version", "subversion"]):
+    def selectQueryOnlyDiffs(self, sourcenames, allcolnamesr, selectcols=None, colnames=COMPARE_2_SOFTWARE, where=None, equals=["name", "architecture"], unequals=["version", "subversion"]):
         """
         Returns the select query that only filters differences between installed Software.
         See selectNotInstalledQuery.
@@ -505,7 +506,11 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.12  2007-04-12 12:20:48  marc
+# Revision 1.13  2007-04-12 13:07:15  marc
+# Hilti RPM Control
+# - added also installed for diffs
+#
+# Revision 1.12  2007/04/12 12:20:48  marc
 # Hilti RPM Control
 # - new feature also installed for n:m compares
 #
