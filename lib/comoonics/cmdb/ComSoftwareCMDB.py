@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.11 2007-04-12 07:53:05 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.12 2007-04-12 12:20:48 marc Exp $
 #
 
 import os
@@ -234,7 +234,7 @@ class SoftwareCMDB(BaseDB):
         %(", ".join(_colnames), self.tablename, self.tablename, master, sourcename, whererest)
         return query
 
-    def getDiffsFromCategory(self, category, colnames=None, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True):
+    def getDiffsFromCategory(self, category, colnames=None, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True, Installed=False):
         """
         Returns a resultset of differences of the given categories.
         Parameter are the sourcesnames to compare
@@ -246,9 +246,9 @@ class SoftwareCMDB(BaseDB):
             return None
         else:
             snames=self.escapeSQL(snames)
-            return self.getDiffsFromSources(snames, colnames, limitup, limitdown, where, orderby, Diffs, NotInstalled)
+            return self.getDiffsFromSources(snames, colnames, limitup, limitdown, where, orderby, Diffs, NotInstalled, Installed)
 
-    def getDiffsFromSources(self, sourcenames, colnames=None, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True):
+    def getDiffsFromSources(self, sourcenames, colnames=None, limitup=0, limitdown=0, where=None, orderby=None, Diffs=True, NotInstalled=True, Installed=False):
         """
         Returns a resultset of differences of the given sourcenames.
         Parameter are the sourcesnames to compare
@@ -266,6 +266,8 @@ class SoftwareCMDB(BaseDB):
         j=0
 #        ComLog.getLogger().debug("query %s" % query)
         queries=list()
+        if Installed:
+            queries.append(self.selectQueryInstalled(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where))
         if Diffs:
             queries.append(self.selectQueryOnlyDiffs(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where))
 
@@ -368,11 +370,19 @@ class SoftwareCMDB(BaseDB):
                            whererest)
         return queries
 
-    def selectQueryOnlyDiffs(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None):
+    def selectQueryInstalled(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None, equals=["name", "architecture", "version", "subversion"], unequals=None):
+        """
+        Returns all installed software on all sourcenames
+        """
+        return self.selectQueryOnlyDiffs(sourcenames, allcolnamesr, colnames, where, equals, unequals)
+
+    def selectQueryOnlyDiffs(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None, equals=["name", "architecture"], unequals=["version", "subversion"]):
         """
         Returns the select query that only filters differences between installed Software.
         See selectNotInstalledQuery.
         """
+        if not unequals:
+            unequals=list()
         j=0
         version_unequalcols=list()
         subversion_unequalcols=list()
@@ -380,16 +390,21 @@ class SoftwareCMDB(BaseDB):
         columns=list()
         dbs=list()
         wherelst=list()
+        unequalsmap=dict()
+        for unequal in unequals:
+            unequalsmap[unequal]=list()
         for i in range(len(sourcenames)):
             formatedname=self.formatToSQLCompat(sourcenames[i])
             columns.append("rpms"+str(i)+"."+colnames[1]+" AS \""+allcolnamesr[j+1]+"\", rpms"+str(i)+"."+colnames[2]+" AS \""+\
                            allcolnamesr[j+2]+"\", rpms"+str(i)+"."+colnames[3]+" AS \""+allcolnamesr[j+3]+"\"")
             dbs.append(self.tablename+" AS rpms"+str(i))
             if i > 0:
-                joins.append("JOIN "+dbs[i]+" USING (name, architecture) ")
+                joins.append("JOIN "+dbs[i]+" USING (%s) " %(", ".join(equals)))
             wherelst.append("rpms"+str(i)+".clustername=\""+sourcenames[i]+"\"")
-            version_unequalcols.append("rpms"+str(i)+".version")
-            subversion_unequalcols.append("rpms"+str(i)+".subversion")
+            for unequal in unequals:
+                unequalsmap[unequal].append("rpms"+str(i)+"."+unequal)
+#            version_unequalcols.append("rpms"+str(i)+".version")
+#            subversion_unequalcols.append("rpms"+str(i)+".subversion")
 
             j+=3
 
@@ -400,12 +415,15 @@ class SoftwareCMDB(BaseDB):
         elif where and type(where)==list:
             whererest="\n   AND rpms0."+"\n   AND rpms0.".join(where)
 
+        unequalstr=""
+        for unequal in unequals:
+            unequalstr+="\n OR "+" OR ".join(BaseDB.BinOperatorFromList(unequalsmap[unequal], "!="))
+        if unequalstr != "":
+            unequalstr="AND (%s)\n" %(unequalstr[5:])
         query="SELECT rpms0."+colnames[0]+" AS \""+allcolnamesr[0]+"\", "+','.join(columns)+"\n FROM "+dbs[0]+"\n"+\
               "\n ".join(joins)+\
-              "\n WHERE "+" AND ".join(wherelst)+"\n   AND ("+\
-              " OR ".join(BaseDB.BinOperatorFromList(version_unequalcols, "!="))+"\n   OR "+\
-              " OR ".join(BaseDB.BinOperatorFromList(subversion_unequalcols, "!="))+")"+\
-              whererest
+              "\n WHERE "+" AND ".join(wherelst)+"\n"+\
+              unequalstr+whererest
         return query
 
     def updateRPM(self, _rpm, name, channelname, channelversion, count=1):
@@ -487,7 +505,11 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.11  2007-04-12 07:53:05  marc
+# Revision 1.12  2007-04-12 12:20:48  marc
+# Hilti RPM Control
+# - new feature also installed for n:m compares
+#
+# Revision 1.11  2007/04/12 07:53:05  marc
 # Hilti RPM Control
 # - Bugfix in changing or adding multiple rpms with same name
 #

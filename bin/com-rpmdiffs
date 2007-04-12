@@ -104,9 +104,9 @@ if config.searchstring:
     where=["name LIKE \"%"+config.searchstring+"%\""]
 if config.category and not config.search and not config.master:
    colnames=software_cmdb.getColnamesForDiffCategory(config.sourcenames[0])
-   rs=software_cmdb.getDiffsFromCategory(config.sourcenames[0], None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs)
+   rs=software_cmdb.getDiffsFromCategory(config.sourcenames[0], None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
 elif not config.search and not config.master and not config.category:
-   rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs)
+   rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
    colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
 elif not config.category and not config.search and config.master:
    rs=software_cmdb.getDiffsFromSourcesByMaster(config.sourcenames, config.master, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
