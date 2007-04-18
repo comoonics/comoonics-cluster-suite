@@ -18,6 +18,7 @@ from comoonics import ComSystem, ComLog, ComExceptions
 from comoonics import GetOpts
 from comoonics.cmdb.ComDSL import DSL
 from comoonics.cmdb.ComDSLStages import DSLStages
+import logging.handlers
 
 import os
 import logging
@@ -45,6 +46,7 @@ class Config(GetOpts.BaseConfig):
     password="atix"
     database="atix_cmdb"
     stage=0
+    syslog=None
 
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -54,6 +56,7 @@ class Config(GetOpts.BaseConfig):
         self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
         self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
         self.stage=GetOpts.Option("stage", "Sets the stage for these rpms", self.stage, False, "s")
+        self.syslog=GetOpts.Option("syslog", "Forward logmessages to given syslogserver", self.syslog, False, "y")
         self.values=dict()
         self.setAdditionalParams("channeldir channelname channelversion [tablename]")
     def do(self, args_proper):
@@ -95,6 +98,11 @@ elif ret > 0:
 
 dsl=DSL(hostname=config.hostname, user=config.user, password=config.password, database=config.database)
 dslstages=DSLStages(dbhandle=dsl.db)
+
+if config.syslog:
+    sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+    dsl.log.addHandler(sysloghandler)
+    dslstages.log.addHandler(sysloghandler)
 
 header=open(config.headerfile, "r")
 

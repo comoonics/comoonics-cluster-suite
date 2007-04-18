@@ -12,6 +12,7 @@ Programm to update all installed rpms in the database
 # $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/rpm2db.py,v $
 import sys
 import logging
+import logging.handlers
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
@@ -37,6 +38,7 @@ class Config(GetOpts.BaseConfig):
     category="unknown"
     table="dsl"
     rpmfiles=list()
+    syslog=None
 
     def __init__(self, systeminformation):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -45,6 +47,7 @@ class Config(GetOpts.BaseConfig):
         self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
         self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
         self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
+        self.syslog=GetOpts.Option("syslog", "Forward logmessages to given syslogserver", self.syslog, False, "y")
         self.values=dict()
         self.name=systeminformation.getName()
         self.setAdditionalParams("[category=%s] [rpmfiles=%s]" %(self.category, self.rpmfiles))
@@ -71,10 +74,15 @@ elif ret > 0:
     config.usage()
     sys.exit(ret)
 
-
 software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table, logsource=systeminformation.getName())
 dsl=DSL(dbhandle=software_cmdb.db, table="dsl", logsource=systeminformation.getName())
 source=Source(dbhandle=software_cmdb.db, logsource=systeminformation.getName())
+
+if config.syslog:
+    sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+    software_cmdb.log.addHandler(sysloghandler)
+    dsl.log.addHandler(sysloghandler)
+    source.log.addHandler(sysloghandler)
 
 line("Updating Systeminformation of "+systeminformation.getName())
 

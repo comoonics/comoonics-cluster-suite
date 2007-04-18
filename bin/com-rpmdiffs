@@ -17,6 +17,7 @@ from comoonics import GetOpts
 from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
 
 import logging
+import logging.handlers
 
 log=ComLog.getLogger(sys.argv[0])
 
@@ -44,6 +45,7 @@ class Config(GetOpts.BaseConfig):
     searchstring=""
     select=None
     dublicates=False
+    syslog=None
 
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -64,6 +66,7 @@ class Config(GetOpts.BaseConfig):
         self.onlydiffs=GetOpts.Option("onlydiffs", "Only display differences. But not uninstalled software", self.onlydiffs, False, "O")
         self.onlynotinstalled=GetOpts.Option("onlynotinstalled", "Only display differenceds", self.onlynotinstalled, False, "N")
         self.installed=GetOpts.Option("installed", "Also display equal packages", self.installed, False, "i")
+        self.syslog=GetOpts.Option("syslog", "Forward logmessages to given syslogserver", self.syslog, False, "y")
         self.values=dict()
         self.setAdditionalParams("sourcename sourcename|searchstring [[sourcename]..]")
     def do(self, args_proper):
@@ -91,6 +94,10 @@ elif ret > 0:
 
 software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
 
+if config.syslog:
+    sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+    software_cmdb.log.addHandler(sysloghandler)
+
 def formatRow(row, colnames):
     orderedrow=list()
     for colname in colnames:
@@ -103,6 +110,7 @@ def formatColNames(row):
 colnames=None
 where=None
 select=None
+
 if config.select:
     select=config.select.split(",")
 if len(config.sourcenames)>1 and config.search and (not config.searchstring or config.searchstring==""):

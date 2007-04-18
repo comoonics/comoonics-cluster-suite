@@ -20,6 +20,7 @@ from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
 from comoonics.cmdb.ComDSL import DSL
 from comoonics.cmdb.ComSource import Source
 from comoonics import GetOpts
+import logging.handlers
 
 import logging
 
@@ -36,6 +37,7 @@ class Config(GetOpts.BaseConfig):
     database="atix_cmdb"
     systemname=None
     table="software_cmdb"
+    syslog=None
 
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -44,6 +46,7 @@ class Config(GetOpts.BaseConfig):
         self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
         self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
         self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
+        self.syslog=GetOpts.Option("syslog", "Forward logmessages to given syslogserver", self.syslog, False, "y")
         self.values=dict()
         self.setAdditionalParams("[systemname] [table=%s]" %(self.table))
     def do(self, args_proper):
@@ -68,8 +71,11 @@ elif ret > 0:
     config.usage()
     sys.exit(ret)
 
-
 source=Source(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
+
+if config.syslog:
+    sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+    source.log.addHandler(sysloghandler)
 
 sysinfos=source.getSourcesAsSysteminformations(config.systemname)
 
