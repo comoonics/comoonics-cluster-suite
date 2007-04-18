@@ -43,6 +43,7 @@ class Config(GetOpts.BaseConfig):
     installed=False
     searchstring=""
     select=None
+    dublicates=False
 
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -54,6 +55,7 @@ class Config(GetOpts.BaseConfig):
         self.category=GetOpts.Option("category", "Set for search as categories", self.category, False, "c")
         self.master=GetOpts.Option("master", "Compare a master with others", self.master, False, "m")
         self.search=GetOpts.Option("search", "search for only one source", self.search, False, "1")
+        self.dublicates=GetOpts.Option("dublicates", "search for dublicates", self.dublicates, False, "b")
         self.select=GetOpts.Option("select", "select only given colunms", self.select, False, "S")
         self.searchstring=GetOpts.Option("searchstring", "search for string", self.searchstring, False, "s")
         self.limitup=GetOpts.Option("limitup", "limitup from", self.limitup, False, "L")
@@ -108,17 +110,20 @@ if len(config.sourcenames)>1 and config.search and (not config.searchstring or c
 if config.searchstring:
     where=["name LIKE \"%"+config.searchstring+"%\""]
 if config.category and not config.search and not config.master:
-   colnames=software_cmdb.getColnamesForDiffCategory(config.sourcenames[0])
+   colnames=software_cmdb.getColnamesForDiffCategory(config.sourcenames[0], (not config.onlynotinstalled or not config.onlydiffs) and config.installed)
    rs=software_cmdb.getDiffsFromCategory(config.sourcenames[0], None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
 elif not config.search and not config.master and not config.category:
    rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
-   colnames=software_cmdb.getColnamesForDiff(config.sourcenames)
+   colnames=software_cmdb.getColnamesForDiff(config.sourcenames, (not config.onlynotinstalled or not config.onlydiffs) and config.installed)
 elif not config.category and not config.search and config.master:
    rs=software_cmdb.getDiffsFromSourcesByMaster(config.sourcenames, config.master, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
    colnames=software_cmdb.getColnamesForMaster((not config.onlynotinstalled or not config.onlydiffs) and config.installed)
 elif config.search and not config.master:
     colnames=SoftwareCMDB.SELECT_FOR_SOFTWARE
-    rs=software_cmdb.getSoftware(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
+    if config.dublicates:
+        rs=software_cmdb.getSoftwareDublicates(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
+    else:
+        rs=software_cmdb.getSoftware(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
 if rs:
     ComLog.getLogger().debug("Got %u rows" % rs.num_rows())
     row=rs.fetch_row(1,1)
