@@ -80,9 +80,13 @@ source=Source(dbhandle=software_cmdb.db, logsource=systeminformation.getName())
 
 if config.syslog:
     sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+    sysloghandler.setLevel(logging.INFO)
     software_cmdb.log.addHandler(sysloghandler)
     dsl.log.addHandler(sysloghandler)
     source.log.addHandler(sysloghandler)
+    software_cmdb.dblog.addHandler(sysloghandler)
+    dsl.dblog.addHandler(sysloghandler)
+    source.dblog.addHandler(sysloghandler)
 
 line("Updating Systeminformation of "+systeminformation.getName())
 

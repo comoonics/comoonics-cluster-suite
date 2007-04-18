@@ -101,8 +101,10 @@ dslstages=DSLStages(dbhandle=dsl.db)
 
 if config.syslog:
     sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+    sysloghandler.setLevel(logging.INFO)
     dsl.log.addHandler(sysloghandler)
     dslstages.log.addHandler(sysloghandler)
+    dslstages.dblog.addHandler(sysloghandler)
 
 header=open(config.headerfile, "r")
 
