@@ -3,7 +3,7 @@ Class for logging to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBLogger.py,v 1.2 2007-04-12 11:19:17 marc Exp $
+# $Id: ComDBLogger.py,v 1.3 2007-04-18 07:56:48 marc Exp $
 #
 
 import logging
@@ -32,7 +32,13 @@ class DBLogger(logging.Handler):
 
     def getLogs(self, sourcenames, **kwds):
         if sourcenames:
-            query=self.dbconnection.SelectQuery(From=self.tablename, where={"logsource": sourcenames}, **kwds)
+            if kwds.has_key("where"):
+                _where=kwds["where"]
+            else:
+                _where=dict()
+                _where["logsource"]=sourcenames
+            kwds["where"]=_where
+            query=self.dbconnection.SelectQuery(From=self.tablename, **kwds)
         else:
             query=self.dbconnection.SelectQuery(From=self.tablename, **kwds)
         self.log.debug("getLogs(%s): %s" %(sourcenames, query))
@@ -105,7 +111,11 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBLogger.py,v $
-# Revision 1.2  2007-04-12 11:19:17  marc
+# Revision 1.3  2007-04-18 07:56:48  marc
+# Hilti RPM Control:
+# - added support for where in getLogs
+#
+# Revision 1.2  2007/04/12 11:19:17  marc
 # Hilti RPM Control
 # - added logging for Exceptions (exc_info)
 #
