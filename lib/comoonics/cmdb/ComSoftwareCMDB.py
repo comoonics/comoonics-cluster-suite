@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.14 2007-04-18 07:59:12 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.15 2007-04-18 10:17:07 marc Exp $
 #
 
 import os
@@ -80,7 +80,7 @@ class SoftwareCMDB(BaseDB):
             _where=list()
         limit=BaseDB.getLimit(_limitup, _limitdown)
         self.log.debug("where: %s" %(_where))
-        _where.append("clustername=\"%s\"" %(clustername))
+        _where.append("t1.clustername=\"%s\"" %(clustername))
 #        _where+=" AND ".join(_where)
         whereclause=BaseDB.resolveWhere(_where)
         orderbyclause=BaseDB.resolveOrderBy(_orderby)
@@ -89,9 +89,9 @@ class SoftwareCMDB(BaseDB):
     LEFT JOIN %s AS t2
        USING (clustername, name)
        %s
-        AND (t1.version != t2.version OR t1.subversion != t2.subversion OR t1.architecture != t2.architecture)
+        AND (t1.version != t2.version OR t1.subversion != t2.subversion)
         %s %s;""" \
-        %(", ".join(_select), self.tablename, self.tablename, whereclause, orderbyclause, limit)
+        %("t1."+", t1.".join(_select), self.tablename, self.tablename, whereclause, orderbyclause, limit)
         self.log.debug("query: %s" %(query))
         return self.selectQuery(query)
 
@@ -541,7 +541,12 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.14  2007-04-18 07:59:12  marc
+# Revision 1.15  2007-04-18 10:17:07  marc
+# Hilti RPM Control
+# - fixed ambigousness with mysql3 in getDublicateSoftware..
+# - removed architecture in in getDublicateSoftware..
+#
+# Revision 1.14  2007/04/18 07:59:12  marc
 # Hilti RPM Control
 # - added getSoftwareDublicates
 # - added Installed for Categories and Diffs
