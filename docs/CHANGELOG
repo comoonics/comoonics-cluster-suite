@@ -18,6 +18,10 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cmdb-py:
+* Tue Apr 18 2007 MG <grimme@atix.de>, 0.1-21
+    - Added syslogging
+    - Added getSoftwareDublicates for com-rpmdiffs
+    - Added AlsoInstalled for n:m diffs and category diffs
 * Thu Apr 12 2007 MG <grimme@atix.de>, 0.1-20
     - Added exception handling if update of an rpm goes wrong (com-rpm2db) and add it to dblog
     - Added feature to compare also installed in n:m
@@ -71,6 +75,8 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
+* Tue Apr 18 2007 MG <grimme@atix.de>, 0.1-6:
+   - added where to filter logmessages
 * Thu Apr 12 2007 MG <grimme@atix.de>, 0.1-5:
    - added support for exception logging (exc_info param)
 * Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-4:
