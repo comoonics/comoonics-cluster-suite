@@ -50,6 +50,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Wed Apr 23 2007 MH <hlawatschek@atix.de>, 0.1-32:
+    - bug fixes
 * Wed Apr 11 2007 MG <grimme@atix.de>, 0.1-31:
     - SystemInformation.updateSoftware moved to the right place (minor)
     - Journal support for modules (major)
