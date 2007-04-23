@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.4 2007-03-26 08:29:17 marc Exp $
+# $Id: ComFileSystem.py,v 1.5 2007-04-23 22:07:42 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComFileSystem.py,v $
 
 import os
@@ -32,10 +32,11 @@ log=ComLog.getLogger("ComFileSystem")
 CMD_MKFS="/sbin/mkfs"
 CMD_GFS_MKFS="/sbin/gfs_mkfs"
 CMD_GFS_TOOL="/sbin/gfs_tool"
+CMD_GFS_FSCK="/sbin/gfs_fsck"
 CMD_MOUNT="/bin/mount"
 CMD_UMOUNT="/bin/umount"
 CMD_E2LABEL="/sbin/e2label"
-
+CMD_E2FSCK="/sbin/e2fsck"
 
 def getFileSystem(element, doc):
     """factory method to ceate a FileSystem object
@@ -76,6 +77,7 @@ class FileSystem(DataObject):
         self.maxSizeMB = 8 * 1024 * 1024
         self.maxLabelChars = 16
         self.partedFileSystemType = None
+        self.cmd_fsck=None
 
 
     def mount(self, device, mountpoint):
@@ -84,7 +86,7 @@ class FileSystem(DataObject):
         mountpoint: ComMountPoint.MountPoint
         """
 
-        __exclusiv=self.getAttribute("exlock", "")
+        __exclusive=self.getAttribute("exlock", "")
         __mkdir=self.getAttributeBoolean("mkdir", True)
 
         __mp=mountpoint.getAttribute("name")
@@ -92,8 +94,8 @@ class FileSystem(DataObject):
             log.debug("Path %s does not exists. I'll create it." % __mp)
             os.makedirs(__mp)
 
-        if __exclusiv and __exclusive != "" and os.path.exists(__exclusiv):
-            raise ComException("lockfile " + __exclusiv + " exists!")
+        if __exclusive and __exclusive != "" and os.path.exists(__exclusive):
+            raise ComException("lockfile " + __exclusive + " exists!")
 
         __cmd = CMD_MOUNT + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
                 " " + device.getDevicePath() + " " + __mp
@@ -101,8 +103,8 @@ class FileSystem(DataObject):
         log.debug("mount:" + __cmd + ": " + __ret)
         if __rc != 0:
             raise ComException(__cmd + __ret)
-        if __exclusiv:
-            __fd=open(__exclusiv, 'w')
+        if __exclusive:
+            __fd=open(__exclusive, 'w')
             __fd.write(device.getDevicePath() + " is mounted ")
 
     def umountDev(self, device):
@@ -129,7 +131,7 @@ class FileSystem(DataObject):
 
     def getName(self):
         """ returns the filesystem name/type """
-        return self.type
+        return self.getAttribute("type")
 
     def formatDevice(self, device):
         """ format device with filesystem (virtual method)
@@ -148,7 +150,12 @@ class FileSystem(DataObject):
         """ check filesystem on device (virtual method)
         device: ComDevice.Device
         """
-        pass
+        if self.getFsckCmd():
+            (__cmd)=self.getFsckCmd()+" "+device.getDeviceName()
+            log.debug("checkFs: cmd: %s" %(__cmd))
+            ComSystem.execLocalOutput(__cmd)
+        else:
+            raise NotImplementedYetException("Method checkFs is not implemented by filesystem %s (class: %s)." %(self.getName(), self.__class__.__name__))
 
     def getLabel(self, device):
         """ return the label on device (virtual method)
@@ -172,6 +179,12 @@ class FileSystem(DataObject):
     def getMaxSizeMB(self):
         """ returns maximum size of the filesystem in MB """
         return self.maxSizeMB
+
+    def setFsckCmd(self, cmd):
+        self.cmd_fsck=cmd
+
+    def getFsckCmd(self):
+        return self.cmd_fsck
 
     def setMkfsCmd(self, cmd):
         self.cmd_mkfs=cmd
@@ -208,6 +221,7 @@ class extFileSystem(FileSystem):
         self.checked = 1
         self.linuxnativefs = 1
         self.maxSizeMB = 8 * 1024 * 1024
+        self.setFsckCmd(CMD_E2FSCK+" -y")
 
     def labelDevice(self, label, device):
         __devicePath = device.getDevicePath()
@@ -246,7 +260,6 @@ class extFileSystem(FileSystem):
             raise ComException("device with label " + label + "not found")
         return ComDevice.Device(__path[0])
 
-
 class ext2FileSystem(extFileSystem):
     """ The extended2 filesystem """
     def __init__(self,element, doc):
@@ -255,7 +268,6 @@ class ext2FileSystem(extFileSystem):
         self.setMkfsCmd(CMD_MKFS + " -t ext2 ")
         #self.partedFileSystemType = parted.file_system_type_get("ext2")
         #self.migratetofs = ['ext3']
-
 
 class ext3FileSystem(extFileSystem):
     """ The extended3 filesystem """
@@ -277,8 +289,7 @@ class gfsFileSystem(FileSystem):
         #self.packages = [ "e2fsprogs" ]
         self.name="gfs"
         self.setMkfsCmd(CMD_GFS_MKFS + " -O ")
-
-
+        self.setFsckCmd(CMD_GFS_FSCK + " -y")
 
     def formatDevice(self, device):
         __cmd = self.getMkfsCmd() + self.getOptionsString() + device.getDevicePath()
@@ -357,7 +368,10 @@ class gfsFileSystem(FileSystem):
 
 
 # $Log: ComFileSystem.py,v $
-# Revision 1.4  2007-03-26 08:29:17  marc
+# Revision 1.5  2007-04-23 22:07:42  marc
+# added fsck
+#
+# Revision 1.4  2007/03/26 08:29:17  marc
 # - fixed some never used bugs
 # - fixed bug with exclusive locking
 # - added support for skipped filesystemdetection

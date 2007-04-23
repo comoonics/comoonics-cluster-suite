@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.5 2007-04-04 12:51:30 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.6 2007-04-23 22:05:55 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -79,7 +79,11 @@ class FilesystemCopyObject(CopyObjectJournaled):
         #self.log.debug("prepareAsSource: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
         for journal_command in self.device.resolveDeviceName():
             self.journal(self.device, journal_command)
-        if self.device.getAttribute("options", "") != "skipmount" and not self.device.isMounted(self.mountpoint):
+        options=self.device.getAttribute("options", "")
+        options=options.split(",")
+        if options and "fsck" in options and not self.device.isMounted(self.mountpoint):
+            self.filesystem.checkFs(self.device)
+        if (options and not "skipmount" in options) or not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
             #self.umountfs=True
@@ -137,7 +141,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.5  2007-04-04 12:51:30  marc
+# Revision 1.6  2007-04-23 22:05:55  marc
+# added fsck
+#
+# Revision 1.5  2007/04/04 12:51:30  marc
 # MMG Backup Legato Integration:
 # - moved prepareAsDest and added resolving
 #
