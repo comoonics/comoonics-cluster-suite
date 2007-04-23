@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.7 2007-03-26 08:19:16 marc Exp $
+# $Id: ComDataObject.py,v 1.8 2007-04-23 22:07:14 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -26,6 +26,7 @@ import ComLog
 import XmlTools
 from ComExceptions import *
 
+class NotImplementedYetException(ComException): pass
 
 class DataObject(object):
     TAGNAME="DataObject"
@@ -192,7 +193,10 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.7  2007-03-26 08:19:16  marc
+# Revision 1.8  2007-04-23 22:07:14  marc
+# added global NIYException
+#
+# Revision 1.7  2007/03/26 08:19:16  marc
 # - added boolean attributes as true ones with attributes without values
 #
 # Revision 1.6  2007/02/28 10:12:25  mark
