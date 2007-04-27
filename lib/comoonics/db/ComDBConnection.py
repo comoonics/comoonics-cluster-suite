@@ -3,7 +3,7 @@ Class for connecting to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBConnection.py,v 1.1 2007-04-02 11:21:23 marc Exp $
+# $Id: ComDBConnection.py,v 1.2 2007-04-27 08:51:57 marc Exp $
 #
 
 import MySQLdb
@@ -126,6 +126,11 @@ class DBConnection(object):
         rs=self.db.store_result()
         return rs
 
+    def execQuery(self, query):
+        self.db.query(query)
+        rs=self.db.store_result()
+        return rs
+
     def close(self):
         self.db.close()
 
@@ -158,7 +163,11 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBConnection.py,v $
-# Revision 1.1  2007-04-02 11:21:23  marc
+# Revision 1.2  2007-04-27 08:51:57  marc
+# MMG Support:
+# - added execQuery
+#
+# Revision 1.1  2007/04/02 11:21:23  marc
 # For Hilti RPM Control:
 # - initial revision
 #
