@@ -77,6 +77,8 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
+* Thu Apr 27 2007 MG <grimme@atix.de>, 0.1-7:
+   - added execQuery to DBConnection
 * Tue Apr 18 2007 MG <grimme@atix.de>, 0.1-6:
    - added where to filter logmessages
 * Thu Apr 12 2007 MG <grimme@atix.de>, 0.1-5:
@@ -86,7 +88,7 @@ comoonics-db-py
 
 comoonics-ec-py
 * Mon Apr 23 2007 MH <hlawatschek@atix.de>, 0.1-16:
-    - Fix for PartitionCopyObject 
+    - Fix for PartitionCopyObject
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-15:
     - Fix for Filesystem-, Partition and LVMCopyobjects to being able to resolve Names in Sources and Dests
 * Tue Mar 06 2007 MG <grimme@atix.de>, 0.1-14:
