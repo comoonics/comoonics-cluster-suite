@@ -18,6 +18,10 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cmdb-py:
+* Wed May 10 2007 MG <grimme@atix.de>, 0.1-22
+    - BZ #46 Fixed (The only diffs functions getSoftwareDiffs returns also same rpms if multiple
+                    rpms are installed.)
+    - Fixed ambigousness in getSoftwareDublicates with mysql v3.
 * Tue Apr 18 2007 MG <grimme@atix.de>, 0.1-21
     - Added syslogging
     - Added getSoftwareDublicates for com-rpmdiffs
