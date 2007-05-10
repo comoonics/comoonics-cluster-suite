@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.16 2007-05-10 07:59:36 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.17 2007-05-10 08:22:47 marc Exp $
 #
 
 import os
@@ -79,6 +79,10 @@ class SoftwareCMDB(BaseDB):
     def getSoftwareDublicates(self, clustername, _select="*", _limitup=0, _limitdown=0, _where=None, _orderby=None):
         if _where==None:
             _where=list()
+        # Quickhack to support mysql3
+        if type(_where)==list:
+            for i in range(len(_where)):
+                _where[i]="t1."+_where[i]
         limit=BaseDB.getLimit(_limitup, _limitdown)
         self.log.debug("where: %s" %(_where))
         _where.append("t1.clustername=\"%s\"" %(clustername))
@@ -695,7 +699,11 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.16  2007-05-10 07:59:36  marc
+# Revision 1.17  2007-05-10 08:22:47  marc
+# Hilti RPM Control
+# - fixed ambigous query in getSoftwareDublicates for mysql v3.
+#
+# Revision 1.16  2007/05/10 07:59:36  marc
 # Hilti RPM Control:
 # - BZ #46 Fixed
 #
