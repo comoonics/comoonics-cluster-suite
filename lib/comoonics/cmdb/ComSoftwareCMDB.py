@@ -4,7 +4,7 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.17 2007-05-10 08:22:47 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.18 2007-05-10 12:14:01 marc Exp $
 #
 
 import os
@@ -584,7 +584,8 @@ class SoftwareCMDB(BaseDB):
         if where and type(where)==str and where!="":
             whererest="\n   AND "+tablealias+"0."+where
         elif where and type(where)==list:
-            whererest="\n   AND "+tablealias+"0."+"\n   AND "+tablealias+"0.".join(where)
+            _tmpname="\n   AND "+tablealias+"0."
+            whererest=_tmpname+_tmpname.join(where)
 
         unequalstr=""
         for unequal in unequals:
@@ -699,7 +700,11 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.17  2007-05-10 08:22:47  marc
+# Revision 1.18  2007-05-10 12:14:01  marc
+# Hilti RPM Control
+# - Bugfix for Where-Clause
+#
+# Revision 1.17  2007/05/10 08:22:47  marc
 # Hilti RPM Control
 # - fixed ambigous query in getSoftwareDublicates for mysql v3.
 #
