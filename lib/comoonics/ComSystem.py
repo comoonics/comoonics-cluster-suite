@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.10 2007-03-26 08:36:10 marc Exp $
+# $Id: ComSystem.py,v 1.11 2007-05-10 08:00:35 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -28,6 +28,12 @@ SKIPPED="skipped"
 CONTINUE="continue"
 
 class ExecLocalException(ComException):
+    """ Exception throw if command fails. Attributes are
+      cmd: the command executed
+      rc:  the status code (!=0)
+      out: the output to stdout
+      err: the output to stderr
+    """
     def __init__(self, cmd, rc, out, err):
         self.cmd=cmd
         self.rc=rc
@@ -81,7 +87,7 @@ def execLocalStatusOutput(__cmd):
 
 
 def execLocalOutput(__cmd):
-    """ executes the given command and returns stdout output. If status is not 0 an exeception is thrown
+    """ executes the given command and returns stdout output. If status is not 0 an ExecLocalExeception is thrown
         and errorcode, cmd, stdout and stderr are in that exception """
     (rc, out, err)=execLocalGetResult(__cmd, True)
     if rc==0:
@@ -162,7 +168,10 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.10  2007-03-26 08:36:10  marc
+# Revision 1.11  2007-05-10 08:00:35  marc
+# - better docu
+#
+# Revision 1.10  2007/03/26 08:36:10  marc
 # - added askExecModeCmd
 # - cosmetic issues and better readability
 #
