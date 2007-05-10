@@ -4,10 +4,11 @@ Class for the software_cmdb
 Methods for comparing systems and the like
 """
 # here is some internal information
-# $Id: ComSoftwareCMDB.py,v 1.15 2007-04-18 10:17:07 marc Exp $
+# $Id: ComSoftwareCMDB.py,v 1.16 2007-05-10 07:59:36 marc Exp $
 #
 
 import os
+import re
 from comoonics.cmdb.ComBaseDB import BaseDB
 from comoonics import ComLog
 from comoonics.db.ComDBLogger import DBLogger
@@ -207,16 +208,17 @@ class SoftwareCMDB(BaseDB):
          %(", ".join(_colnames), self.tablename, _colname, _colname, _master, _sourcename, whererest)
         return query
 
-    def selectQueryOnlyDiffsByMaster(self, sourcename, master, colnames, where=None, withInstalled=False, alladdcols=["version", "subversion", "architecture"], diffcols=["version", "subversion"]):
+    def selectQueryOnlyDiffsByMaster(self, sourcename, master, colnames, where=None, withInstalled=False, alladdcols=["version", "subversion", "architecture"]):
+        tablealias="odrpms"
         _colnames=list(colnames)
-        _colnames[0]="rpms.clustername AS "+_colnames[0]
-        _colnames[1]="rpms.name AS "+_colnames[1]
+        _colnames[0]=tablealias+"0.clustername AS "+_colnames[0]
+        _colnames[1]=tablealias+"0.name AS "+_colnames[1]
         newlen=len(_colnames[2:])
         for i in range(newlen):
             if int(i/len(alladdcols))==0:
-                _colnames[i+2]="master.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+                _colnames[i+2]=tablealias+"1.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
             else:
-                _colnames[i+2]="rpms.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
+                _colnames[i+2]=tablealias+"0.%s AS %s" %(alladdcols[i%len(alladdcols)], _colnames[i+2])
         if withInstalled:
             _colnames.append("1 AS "+SoftwareCMDB.DIFFS_COLNAME)
         whererest=""
@@ -225,12 +227,10 @@ class SoftwareCMDB(BaseDB):
         elif where and type(where)==list:
             thestr="\n   AND master."
             whererest=thestr+thestr.join(where)
-        query="""SELECT %s
-        FROM %s AS master
-        JOIN %s as rpms USING (name, architecture)
-        WHERE (master.version != rpms.version OR master.subversion!=rpms.subversion)
-           AND master.clustername="%s" AND rpms.clustername="%s" %s""" \
-        %(", ".join(_colnames), self.tablename, self.tablename, master, sourcename, whererest)
+        sourcenames=[sourcename, master]
+        query=self.selectQueryOnlyDiffs(sourcenames, self.getColnamesForDiff(sourcenames), self.COMPARE_2_SOFTWARE, where, withInstalled)
+        regexp=re.compile("SELECT DISTINCT .*$", re.IGNORECASE | re.MULTILINE)
+        query=regexp.sub("SELECT DISTINCT "+", ".join(_colnames), query)
         return query
 
     def selectQueryOnlyEqualInstalledByMaster(self, sourcename, master, colnames, where=None, withInstalled=False, alladdcols=["version", "subversion", "architecture"], diffcols=["version", "subversion"]):
@@ -294,13 +294,13 @@ class SoftwareCMDB(BaseDB):
         if Installed:
             if Diffs or NotInstalled:
                 installed=0
-            queries.append(self.selectQueryInstalled(sourcenames, colnames, None, SoftwareCMDB.COMPARE_2_SOFTWARE, where, installed))
+            queries.append(self.selectQueryInstalled(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where, installed))
         if Diffs:
             if Installed:
                 installed=1
-            queries.append(self.selectQueryOnlyDiffs(sourcenames, colnames, None, SoftwareCMDB.COMPARE_2_SOFTWARE, where, installed))
+            queries.append(self.selectQueryOnlyDiffs(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where, installed))
         if NotInstalled:
-            queries+=self.selectQueriesNotInstalled(sourcenames, colnames, None, SoftwareCMDB.COMPARE_2_SOFTWARE, where, Installed)
+            queries+=self.selectQueriesNotInstalled(sourcenames, colnames, SoftwareCMDB.COMPARE_2_SOFTWARE, where, Installed)
         union="\n UNION \n".join(queries)
         if orderbyclause and orderbyclause!="":
             union+="\n"+orderbyclause
@@ -309,10 +309,13 @@ class SoftwareCMDB(BaseDB):
         self.log.debug("union: "+union)
         return self.selectQuery(union)
 
-    def selectQueriesNotInstalled(self, sourcenames, allcolnamesr, selectcols=None, colnames=COMPARE_2_SOFTWARE, where=None, withInstalled=False):
+    def selectQueriesNotInstalled(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None, withInstalled=False):
         queries=list()
 #        querycolumns=SoftwareCMDB.getAllColnamesNotInstalled(colnames[1:], SoftwareCMDB.COMPARE_2_SOFTWARE[1:], sourcenames)
 #        self.log.debug("querycolumns: %s" %(querycolumns))
+
+        tablealias="nirpms"
+        tablealias_2nd="nirpms2nd"
         allcolnames=list()
         allcolnames.append(colnames[0])
         for i in range(len(sourcenames)):
@@ -323,7 +326,7 @@ class SoftwareCMDB(BaseDB):
         notinstalled=list()
         dbs=list()
         for i in range(len(sourcenames)):
-            dbs.append("rpms"+str(i))
+            dbs.append(tablealias+str(i))
         self.log.debug("dbs[%u]: %s" %(len(dbs), dbs))
         self.log.debug("allcolnamesr[%u]: %s" %(len(allcolnamesr), allcolnamesr))
         self.log.debug("allcolnames[%u]: %s" %(len(allcolnames), allcolnames))
@@ -333,15 +336,23 @@ class SoftwareCMDB(BaseDB):
         self.log.debug("sourcenames/m[%u]:%s" %(m, sourcenames))
         p=0
         for i in range(len(sourcenames)*(len(sourcenames)-1)):
+            newcolnames=list(allcolnames[1:])
+            # all tablealiases that are seen to have installed packages
+            newdbs=list(dbs)
+            # all tablealiases that are seen to have not installed packages
+            newdbs2=list()
+            selectcols=list()
+            joins=list()
+            joins2=list()
+            whereequals=list()
+            wherenot=list()
+            where2=list()
             qname="q%u" %(i)
             j=i%l
             n=i%m
             if n==0:
                 for k in range(l):
                     notinstalled.append("\""+SoftwareCMDB.NOT_INSTALLED_STRING+"\"")
-            newcolnames=list(allcolnames[1:])
-            newdbs=list(dbs)
-            newdbs2=list()
             for k in range(len(notinstalled)):
 #                self.log.debug("newcolnames[%u], j=%u, k=%u, len(notinstalled)=%u" %((n*len(notinstalled)+k)%len(allcolnames[1:]), j, k, len(notinstalled)))
                 newcolnames[(n*len(notinstalled)+k)%len(allcolnames[1:])]=notinstalled[k]
@@ -349,13 +360,16 @@ class SoftwareCMDB(BaseDB):
                     self.log.debug("[%u] dbs removing: k mod l: %u, k mod m: %u, n: %u, dbs[%u], %s/%s=removing" %(i, k%l, k%m, n, (n%m)%len(newdbs), newdbs[(n%m)%len(newdbs)], newdbs))
                     newdbs2.append(newdbs[(n%m)%len(newdbs)])
                     del newdbs[(n%m)%len(newdbs)]
-            selectcols=list()
-            joins=list()
-            whereequals=list()
-            wherenot=list()
             o=0
             for k in range(len(allcolnames[1:])):
                 selectcols.append(newcolnames[k]+" AS \""+allcolnamesr[k+1]+"\"")
+                if len(joins2)==0 and k%l==0:
+                    joins2.append("   FROM "+self.tablename+" AS "+tablealias+str(len(joins2)))
+                    where2.append("%s.clustername=\"%s\"" %(tablealias+str(len(joins2)-1), sourcenames[len(joins2)-1]))
+                elif k%l==0:
+                    joins2.append("   JOIN "+self.tablename+" AS "+tablealias+str(len(joins2))+" USING (name, architecture) ")
+                    where2.append("%s.clustername=\"%s\"" %(tablealias+str(len(joins2)-1), sourcenames[len(joins2)-1]))
+
                 if k%l==0 and newcolnames[k].find(SoftwareCMDB.NOT_INSTALLED_STRING)<0:
 #                    self.log.debug("add join and whereequals k mod m %u; %u, m:%u" %(k%m, len(notinstalled), m))
                     if len(joins)==0:
@@ -363,9 +377,11 @@ class SoftwareCMDB(BaseDB):
                     else:
                         joins.append("   JOIN "+self.tablename+" AS %s USING (name, architecture) ")
                     whereequals.append("%s.clustername=\""+sourcenames[o]+"\"")
+                    #where2_exist.append("       ")
                     o+=1
                 elif k%l==0:
                     wherenot.append(" AND (%s.name,%s.architecture) NOT IN (SELECT %s.name, %s.architecture FROM "+self.tablename+" AS %s WHERE %s.clustername=\""+sourcenames[o]+"\")")
+                    #where2_notexist.append("       NOT ")
                     o+=1
             o=0
             for k in range(len(selectcols)):
@@ -380,7 +396,10 @@ class SoftwareCMDB(BaseDB):
                 whereequals[k]=whereequals[k] %(newdbs[k])
 
             for k in range(len(wherenot)):
-                wherenot[k]=wherenot[k] %(newdbs[0], newdbs[0], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k])
+#                diffsquery=self.selectQueryOnlyDiffs(sourcenames, allcolnamesr[:4], selectcols, colnames, where)
+#                regexp=re.compile("SELECT (.*) FROM", re.M|re.S)
+#                diffsquery=regexp.sub("SELECT %s.name, %s.version, %s.subversion, %s.architecture FROM" %(newdbs[0], newdbs[0], newdbs[0], newdbs[0]), diffsquery)
+                wherenot[k]=wherenot[k] %(newdbs[0], newdbs[0], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k], qname+newdbs2[k])#, newdbs[0], newdbs[0], newdbs[0], newdbs[0], diffsquery)
 
             whererest=""
             if where and type(where)==str and where!="":
@@ -392,22 +411,98 @@ class SoftwareCMDB(BaseDB):
             if withInstalled:
                 selectcols.append("2 AS "+SoftwareCMDB.DIFFS_COLNAME)
 
-            queries.append("SELECT "+newdbs[0]+"."+allcolnames[0]+" AS \""+allcolnamesr[0]+"\", \n      "+", ".join(selectcols)+\
+
+            # First query matches all software packages not installed on system1 and installed on two without
+            # dublicates
+            queries.append("SELECT DISTINCT "+newdbs[0]+"."+allcolnames[0]+" AS \""+allcolnamesr[0]+"\", \n      "+", ".join(selectcols)+\
                            "\n"+"\n".join(joins)+\
                            "\n   WHERE "+\
                            " AND ".join(whereequals)+\
                            "\n   "+\
                            "\n   ".join(wherenot)+
                            whererest)
+            # Second query matches all software packages not installed on system1 and installed on two with
+            # taking dublicates into account. So that if n packages are installed on system1 and m on system2
+            # the differing m-n packages are displayed
+            _clusternames=list()
+            _equals=list()
+            _equals2=list()
+            for k in range(len(newdbs)):
+                _clusternames.append("%s.clustername=%s.clustername" %(tablealias_2nd, newdbs[k]))
+                _equals.append("%s.name=%s.name" %(tablealias_2nd, newdbs[k]))
+                _equals.append("%s.architecture=%s.architecture" %(tablealias_2nd, newdbs[k]))
+            for k in range(len(newdbs2)):
+                __equals3=list()
+                __equals3.append("%s.version=%s.version" %(tablealias_2nd, newdbs2[k]))
+                __equals3.append("%s.subversion=%s.subversion" %(tablealias_2nd, newdbs2[k]))
+                _equals2.append("("+(" AND ").join(__equals3)+")");
+
+            _where2_templ="EXISTS\n"+\
+                          "        (SELECT DISTINCT * FROM "+self.tablename+" AS "+tablealias_2nd+"\n"+\
+                          "           WHERE (%s) \n"+\
+                          "             AND %s \n"+\
+                          "             AND (%s)) \n"
+            where2_exist="     "+_where2_templ %(" OR ".join(_clusternames), " AND ".join(_equals), " OR ".join(_equals2))
+
+            _clusternames=list()
+            _equals=list()
+            _equals2=list()
+            for k in range(len(newdbs2)):
+                _clusternames.append("%s.clustername=%s.clustername" %(tablealias_2nd, newdbs2[k]))
+                _equals.append("%s.name=%s.name" %(tablealias_2nd, newdbs2[k]))
+                _equals.append("%s.architecture=%s.architecture" %(tablealias_2nd, newdbs2[k]))
+            for k in range(len(newdbs)):
+                __equals3=list()
+                __equals3.append("%s.version=%s.version" %(tablealias_2nd, newdbs[k]))
+                __equals3.append("%s.subversion=%s.subversion" %(tablealias_2nd, newdbs[k]))
+                _equals2.append("("+(" AND ").join(__equals3)+")");
+
+            where2_notexist="     NOT "+_where2_templ %(" OR ".join(_clusternames), " AND ".join(_equals), " OR ".join(_equals2))
+
+            _clusternames1=list()
+            _clusternames2=list()
+            for k in range(len(newdbs)):
+                _clusternames1.append("clustername=%s.clustername" %(newdbs[k]))
+            for k in range(len(newdbs2)):
+                _clusternames2.append("clustername=%s.clustername" %(newdbs2[k]))
+            where2_count="       (SELECT COUNT(name) FROM "+self.tablename+" WHERE (%s) AND name=%s0.name AND architecture=%s0.architecture GROUP BY name, architecture) >\n"+\
+                         "       (SELECT COUNT(name) FROM "+self.tablename+" WHERE (%s) AND name=%s0.name AND architecture=%s0.architecture GROUP BY name, architecture)"
+            where2_count=where2_count %(" OR ".join(_clusternames1), tablealias, tablealias, " OR ".join(_clusternames2), tablealias, tablealias)
+            queries.append("SELECT DISTINCT "+newdbs[0]+"."+allcolnames[0]+" AS \""+allcolnamesr[0]+"\", \n      "+", ".join(selectcols)+\
+                           "\n"+"\n".join(joins2)+\
+                           "\n   WHERE "+\
+                           "\n     AND ".join(where2)+"\n     AND \n"+\
+                           where2_exist+"\n     AND \n"+\
+                           where2_notexist+"\n     AND \n"+\
+                           where2_count+whererest)
         return queries
 
-    def selectQueryInstalled(self, sourcenames, allcolnamesr, selectcols=None, colnames=COMPARE_2_SOFTWARE, where=None, withInstalled=None, equals=["name", "architecture", "version", "subversion"], unequals=None):
+    def selectQueryInstalled(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None, withInstalled=None, equals=["name", "architecture", "version", "subversion"], unequals=None):
         """
         Returns all installed software on all sourcenames
         """
-        return self.selectQueryOnlyDiffs(sourcenames, allcolnamesr, selectcols, colnames, where, withInstalled, equals, unequals)
+        tablealias="irpms"
+        dbs=list()
+        columns=list()
+        where=list()
+        for i in range(len(sourcenames)):
+            _db=tablealias+str(i)
+            if i==0:
+                columns.append(_db+"."+colnames[0]+" AS \""+allcolnamesr[0]+"\"")
+            for j in range(len(colnames[1:])):
+                columns.append(_db+"."+colnames[j+1]+" AS \""+allcolnamesr[i*len(colnames[1:])+1+j]+"\"")
+            where.append(_db+".clustername= \""+sourcenames[i]+"\"")
+            if len(dbs)==0:
+                dbs.append(self.tablename+" AS "+_db)
+            else:
+                dbs.append(" LEFT JOIN "+self.tablename+" AS "+_db+" USING(name, architecture, version, subversion)")
+        columns.append("%u AS %s" %(withInstalled, SoftwareCMDB.DIFFS_COLNAME))
+        query="SELECT DISTINCT "+", ".join(columns)+" FROM "+"\n   ".join(dbs)+\
+               "\n   WHERE "+" AND ".join(where)
+        self.log.debug("selectQueryInstalled: %s" %query)
+        return query
 
-    def selectQueryOnlyDiffs(self, sourcenames, allcolnamesr, selectcols=None, colnames=COMPARE_2_SOFTWARE, where=None, withInstalled=None, equals=["name", "architecture"], unequals=["version", "subversion"]):
+    def selectQueryOnlyDiffs(self, sourcenames, allcolnamesr, colnames=COMPARE_2_SOFTWARE, where=None, withInstalled=None, equals=["name", "architecture"], unequals=["version", "subversion"]):
         """
         Returns the select query that only filters differences between installed Software.
         See selectNotInstalledQuery.
@@ -415,51 +510,110 @@ class SoftwareCMDB(BaseDB):
         if not unequals:
             unequals=list()
         j=0
+        tablealias="odrpms"
         version_unequalcols=list()
         subversion_unequalcols=list()
         joins=list()
         columns=list()
         dbs=list()
         wherelst=list()
+        dbs2=list()
+        wherelst2=list()
+        notexists=list()
+        joins2=list()
+        equals2=list(equals)
+        equals2+=unequals
         unequalsmap=dict()
+        count_clusternames=list()
         for unequal in unequals:
             unequalsmap[unequal]=list()
         for i in range(len(sourcenames)):
             formatedname=self.formatToSQLCompat(sourcenames[i])
-            columns.append("rpms"+str(i)+"."+colnames[1]+" AS \""+allcolnamesr[j+1]+"\", rpms"+str(i)+"."+colnames[2]+" AS \""+\
-                           allcolnamesr[j+2]+"\", rpms"+str(i)+"."+colnames[3]+" AS \""+allcolnamesr[j+3]+"\"")
-            dbs.append(self.tablename+" AS rpms"+str(i))
+            if j==0:
+                columns.append(tablealias+str(i)+"."+colnames[1]+" AS \""+allcolnamesr[j+1]+\
+                               "\", MAX("+tablealias+str(i)+"."+colnames[2]+") AS \""+allcolnamesr[j+2]+\
+                               "\", MAX("+tablealias+str(i)+"."+colnames[3]+") AS \""+allcolnamesr[j+3]+"\"")
+            elif j+3 < len(allcolnamesr):
+                columns.append(tablealias+str(i)+"."+colnames[1]+" AS \""+allcolnamesr[j+1]+"\", "+tablealias+str(i)+"."+colnames[2]+" AS \""+\
+                               allcolnamesr[j+2]+"\", "+tablealias+str(i)+"."+colnames[3]+" AS \""+allcolnamesr[j+3]+"\"")
+            _db=tablealias+str(i)
+            dbs.append(self.tablename+" AS "+_db)
             if i > 0:
-                joins.append("JOIN "+dbs[i]+" USING (%s) " %(", ".join(equals)))
-            wherelst.append("rpms"+str(i)+".clustername=\""+sourcenames[i]+"\"")
+                joins.append(" INNER JOIN "+dbs[i]+" USING (%s) " %(", ".join(equals)))
+            wherelst.append(tablealias+str(i)+".clustername=\""+sourcenames[i]+"\"")
             for unequal in unequals:
-                unequalsmap[unequal].append("rpms"+str(i)+"."+unequal)
-#            version_unequalcols.append("rpms"+str(i)+".version")
-#            subversion_unequalcols.append("rpms"+str(i)+".subversion")
+                unequalsmap[unequal].append(tablealias+str(i)+"."+unequal)
+
+            _db1=tablealias+str(len(sourcenames)+i)
+            dbs2.append(self.tablename+" AS "+_db1)
+            if i > 0:
+                joins2.append("      LEFT JOIN "+dbs2[i]+" USING (%s) " %(", ".join(equals2)))
+            wherelst2.append("\n         "+_db1+".clustername=\""+sourcenames[i]+"\"")
+            for col in unequals:
+                wherelst2.append("\n         "+_db1+"."+col+"="+_db+"."+col)
+
+            _db2=tablealias+str(len(sourcenames)*2+i)
+            _notexists="\n    SELECT * FROM "+self.tablename+" AS "+_db2+\
+                       " \n     WHERE \n        "+_db2+".clustername="+_db+".clustername"
+            # name and architecutre need to be equal
+            for col in equals:
+                _notexists+=" AND \n        "+_db2+"."+col+"="+_db+"."+col;
+            _ors=list()
+            for k in range(len(sourcenames)):
+                if k==i:
+                    continue
+                _ands=list()
+                for col in unequals:
+                    _ands.append("%s.%s=%s.%s" %(_db2, col, tablealias+str(k), col))
+                _ors.append("("+" AND ".join(_ands)+")")
+            if len(_ors)==1:
+                _notexists+=" AND \n        %s " %(_ors[0])
+            else:
+                _notexists+=" AND \n        (%s) " %(" OR \n         ".join(_ors))
+            notexists.append("NOT EXISTS (%s)" %(_notexists))
+            count_clusternames.append("%s.clustername="+_db+".clustername")
 
             j+=3
 
         # If special names are filter that where clause is generated here
         whererest=""
         if where and type(where)==str and where!="":
-            whererest="\n   AND rpms0."+where
+            whererest="\n   AND "+tablealias+"0."+where
         elif where and type(where)==list:
-            whererest="\n   AND rpms0."+"\n   AND rpms0.".join(where)
+            whererest="\n   AND "+tablealias+"0."+"\n   AND "+tablealias+"0.".join(where)
 
         unequalstr=""
         for unequal in unequals:
-            unequalstr+="\n OR "+" OR ".join(BaseDB.BinOperatorFromList(unequalsmap[unequal], "!="))
+            unequalstr+=" OR %s" %(" OR ".join(BaseDB.BinOperatorFromList(unequalsmap[unequal], "!=")))
         if unequalstr != "":
-            unequalstr="AND (%s)\n" %(unequalstr[5:])
+            unequalstr="  AND (%s)\n" %(unequalstr[4:])
 
         self.log.debug("selectQueryOnlyDiffs %s" %withInstalled)
         if withInstalled!=None:
             columns.append("%u AS %s" %(withInstalled, SoftwareCMDB.DIFFS_COLNAME))
 
-        query="SELECT rpms0."+colnames[0]+" AS \""+allcolnamesr[0]+"\", "+','.join(columns)+"\n FROM "+dbs[0]+"\n"+\
+        notexistsquery="NOT EXISTS ("+"\n    SELECT * FROM "+dbs2[0]+"\n"+\
+            "\n ".join(joins2)+\
+            "\n      WHERE "+" AND ".join(wherelst2)+")"
+        _countname=tablealias+str(len(joins)+len(notexists)+2)
+        for k in range(len(count_clusternames)):
+            count_clusternames[k]=count_clusternames[k] %(_countname)
+
+        countquery="SELECT COUNT("+_countname+".name) FROM "+self.tablename+" AS "+_countname+\
+              "\n    WHERE"+\
+              "\n      ("+" OR ".join(count_clusternames)+")"+\
+              "\n      AND "+_countname+".name="+tablealias+"0.name AND "+_countname+".architecture="+tablealias+"0.architecture GROUP BY "+_countname+".name"
+        if len(notexists)<=2:
+            _notexist_op="\n  AND "
+        else:
+            _notexist_op="\n  OR "
+        query="SELECT DISTINCT "+tablealias+"0."+colnames[0]+" AS \""+allcolnamesr[0]+"\", "+','.join(columns)+"\n FROM "+dbs[0]+"\n"+\
               "\n ".join(joins)+\
               "\n WHERE "+" AND ".join(wherelst)+"\n"+\
-              unequalstr+whererest
+              unequalstr+"  AND "+notexistsquery+"\n  AND ("+\
+              _notexist_op.join(notexists)+")"\
+              "\n  AND ("+countquery+") % "+str(len(sourcenames))+ "=0"\
+              " "+whererest+"\n GROUP BY "+tablealias+"0.version, "+tablealias+"0.subversion" # +" ORDER BY "+tablealias+"0.name"
         return query
 
     def updateRPM(self, _rpm, name, channelname, channelversion, count=1):
@@ -541,7 +695,11 @@ if __name__ == '__main__':
     test()
 
 # $Log: ComSoftwareCMDB.py,v $
-# Revision 1.15  2007-04-18 10:17:07  marc
+# Revision 1.16  2007-05-10 07:59:36  marc
+# Hilti RPM Control:
+# - BZ #46 Fixed
+#
+# Revision 1.15  2007/04/18 10:17:07  marc
 # Hilti RPM Control
 # - fixed ambigousness with mysql3 in getDublicateSoftware..
 # - removed architecture in in getDublicateSoftware..
