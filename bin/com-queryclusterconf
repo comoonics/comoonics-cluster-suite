@@ -1,0 +1,213 @@
+#!/usr/bin/python
+
+__version__ = "$revision$"
+__description__="""
+Binary to query clusterconfiguration
+"""
+
+import getopt
+import sys
+import logging
+
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
+from comoonics import GetOpts
+
+from comoonics.cluster.ComClusterInfo import *
+
+ComLog.setLevel(logging.INFO)
+
+class Config(GetOpts.BaseConfig):
+    def __init__(self):
+        helptext = """
+query_commands:
+    query_xml <xq>           print out the xml_document specified by an XQL query string
+    query_value <xql>        print out the value specified by an XQL query string
+    netdevs <hostname> <sep> print out the network device names for given host
+                             separated by <sep>
+    nodename <mac>           print out the nodename for given mac.
+    nodeid <mac>             print out the nodeid for given mac.
+    ip <nodename> <dev>      print out the IP address for given hostname and network device name
+    master <nodename> <dev>  print out the master if for given hostname and network device name
+    slave <nodename> <dev>   print out the slave for given hostname and network device name
+    mask <nodename <dev>     print out the netmask for given hostname and network device name
+    gateway <nodename <dev>  print out the gateway for given hostname and network device name
+    hosts                    print out the the hosts in hosts file type
+    ifconfig <mac>           print out the the ifconfig parameter for mac
+    rootvolume <nodename>    print out the device name for the root device
+    rootfs <nodename>        print out the filesystem name for the root device
+    mountopts <nodename>     print out the mountoptions for the nodename
+    syslog <nodename>        print out the syslog server
+    failoverdomainnodes <failoverdomain> [<sep>]
+                             print out all defined nodes in the given
+                             failoverdomain. Seperated by sep default is space.
+    failoverdomainprefnode <failoverdomain> [<sep>]
+                             print out the preferred node defined in
+                             the given failoverdomain.
+    nodeids [<sep>]            returns all defined nodeids seperated by <sep>.
+    scsifailover nodename    returns the scsifailovertype for the given nodename
+        """
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], helptext, __version__)
+        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
+        self.query=GetOpts.Option("query", "Query", False, False, "q")
+        self.filename=GetOpts.Option("filename", "Filename", None, False, "f")
+        self.setAdditionalParams("query [param]*")
+
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) > 1:
+            self.values = args_proper[1:]
+        else:
+            self.values = []
+        if len(args_proper) > 0:
+            self.query=args_proper[0]
+        else:
+            self.usage()
+            return 1
+        if not os.path.isfile(self.filename):
+            print >>self.__stderr__, "Could not find file %s" %(self.filename)
+            return 1
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+
+#Bei ungueltigen Argumenten abrechen
+Config=Config()
+ret=Config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    sys.exit(ret)
+    
+    
+          
+# parse the document and create comclusterinfo object
+reader = Sax2.Reader()
+file = os.fdopen(os.open(Config.filename,os.O_RDONLY))
+doc = reader.fromStream(file)
+file.close()
+#element = xpath.Evaluate('/cluster', doc)[0]
+
+#create needed cluster objects
+clusterMetainfo = ClusterMetainfo("","","")
+clusterRepository = ClusterRepository(doc.documentElement,doc,clusterMetainfo)
+clusterInfo = ClusterInfo(clusterRepository)
+
+
+
+#query given file with specified query, returns xml
+if Config.query == "query_xml":
+    print clusterInfo.queryXml(Config.values[0])
+    
+#query given file with specified query, returns value
+elif Config.query == "query_value":
+    print " ".join(clusterInfo.queryValue(Config.values[0]))
+
+#print clusters network devices by name, separated by value of Config.netdevs    
+elif Config.query == "netdevs":
+    if len(Config.values) < 2:
+        Config.values.append(" ")
+    _tmp = []
+    for Nic in clusterInfo.getNode(Config.values[0]).getNics():
+        _tmp.append(Nic.getName())
+    print Config.values[1].join(_tmp)
+
+#Query Nodename to given mac, raise exception if mac not found
+elif Config.query == "nodename":
+    print clusterInfo.getNodeName(Config.values[0])
+    
+#Query Nodeid to given mac, raise exception if mac not found
+elif Config.query == "nodeid":
+    print clusterInfo.getNodeId(Config.values[0])
+    
+#print ip of given node and given device
+elif Config.query == "ip":
+    _node = clusterInfo.getNode(Config.values[0])
+    _nic = _node.getNic(Config.values[1])
+    print _nic.getIP()
+
+#print ip of given node and given device
+elif Config.query == "master":
+    _node = clusterInfo.getNode(Config.values[0])
+    _nic = _node.getNic(Config.values[1])
+    print _nic.getMaster()
+
+#print ip of given node and given device
+elif Config.query == "slave":
+    _node = clusterInfo.getNode(Config.values[0])
+    _nic = _node.getNic(Config.values[1])
+    print _nic.getSlave()
+
+#print ip of given node and given device
+elif Config.query == "mask":
+    _node = clusterInfo.getNode(Config.values[0])
+    _nic = _node.getNic(Config.values[1])
+    print _nic.getNetmask()
+
+#print ip of given node and given device
+elif Config.query == "gateway":
+    _node = clusterInfo.getNode(Config.values[0])
+    _nic = _node.getNic(Config.values[1])
+    print _nic.getGateway()
+
+#print list of clusters host with if and name
+elif Config.query == "hosts":
+    for node in clusterInfo.getNodes():
+        for Nic in node.getNics():
+            print Nic.getIP() +  "\t" + node.getName()
+
+#print ifconfig for given mac, raise exception if mac not found
+elif Config.query == "ifconfig":
+    _macfound = False
+    for node in clusterInfo.getNodes():
+        if node.nicMac.has_key(Config.values[0]):
+            _nic = node.nicMac[Config.values[0]]
+            print _nic.getName() + " " + _nic.getIP() + " " + _nic.getNetmask()
+            _macfound = True
+    if _macfound == False:
+        raise ClusterMacNotFoundException("Cannot find mac " + Config.values[1])
+
+#print rootvolume of node with given name
+elif Config.query == "rootvolume":
+    print clusterInfo.getNode(Config.values[0]).getRootvolume()
+
+#print rootfs of node with given name
+elif Config.query == "rootfs":
+    print clusterInfo.getNode(Config.values[0]).getRootFs()
+    
+#print mount options of node with given name
+elif Config.query == "mountopts":
+    print clusterInfo.getNode(Config.values[0]).getMountopts()
+
+#print syslog of node with given name
+elif Config.query == "syslog":
+    print clusterInfo.getNode(Config.values[0]).getSyslog()
+
+#print failoverdomainnodes belonging to given failoverdomain, seperated by <sep>
+elif Config.query == "failoverdomainnodes":
+    if len(Config.values) < 2:
+        Config.values.append(" ")
+    print Config.values[1].join(clusterInfo.getFailoverdomainNodes(Config.values[0]))
+
+#prints prefered failover node belonging to given failoverdomain
+elif Config.query == "failoverdomainprefnode":
+    if len(Config.values) < 1:
+        Config.values.append(" ")
+    print clusterInfo.getFailoverdomainPrefNode(Config.values[0])
+
+#print list of nodeids, seperated by given value
+elif Config.query == "nodeids":
+    if len(Config.values) < 1:
+        Config.values.append(" ")
+    _tmp = []
+    for node in clusterInfo.getNodes():
+        _tmp.append(node.getId())
+    print Config.values[0].join(_tmp)
+
+#print scsifailover of node with given name
+elif Config.query == "scsifailover":
+        print clusterInfo.getNode(Config.values[0]).getScsifailover()
+        
+else:
+    raise NameError("Cannot find query named " + Config.query)
