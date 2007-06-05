@@ -155,7 +155,8 @@ elif Config.query == "gateway":
 elif Config.query == "hosts":
     for node in clusterInfo.getNodes():
         for Nic in node.getNics():
-            print Nic.getIP() +  "\t" + node.getName()
+            if Nic.getIP() != "":
+                print Nic.getIP() +  "\t" + node.getName()
 
 #print ifconfig for given mac, raise exception if mac not found
 elif Config.query == "ifconfig":
