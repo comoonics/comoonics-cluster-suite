@@ -8,11 +8,11 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.1 2007-06-05 13:11:21 andrea2 Exp $
+# $Id: ComClusterInfo.py,v 1.2 2007-06-05 13:32:57 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 from xml import xpath
@@ -154,8 +154,7 @@ class RedhatClusterInfo(ClusterInfo):
         """
         #no defaultvalue specified because every dailoverdomain needs to have one or more failoverdomainnodes
         try:
-            #_tmp1 = self.queryValue(self.failoverdomain_path + "[@name='" + failoverdomain + "']" + failoverdomainnode_attribute + "/@name")
-            _tmp1 = self.queryValue("/cluster/rm/failoverdomains/failoverdomain[@name='testdomain1']/failoverdomainnode/@name")
+            _tmp1 = self.queryValue(self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "/@name")
         except NameError:
             return ""
         return _tmp1
@@ -259,7 +258,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.1  2007-06-05 13:11:21  andrea2
+# Revision 1.2  2007-06-05 13:32:57  andrea2
+# *** empty log message ***
+#
+# Revision 1.1  2007/06/05 13:11:21  andrea2
 # *** empty log message ***
 ##
 # Revision 0.1  2007/03/29 10:59:56  andrea
