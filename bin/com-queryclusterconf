@@ -51,6 +51,7 @@ query_commands:
         self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
         self.query=GetOpts.Option("query", "Query", False, False, "q")
         self.filename=GetOpts.Option("filename", "Filename", None, False, "f")
+        self.novalidate=GetOpts.Option("novalidate", "Skips validation of clusterconfiguration file",False,False,"n")
         self.setAdditionalParams("query [param]*")
 
     def do(self, args_proper):
@@ -83,11 +84,13 @@ elif ret > 0:
     
           
 # parse the document and create comclusterinfo object
-reader = Sax2.Reader()
+if Config.novalidate:
+    reader = Sax2.Reader(validate=0)
+else:
+    reader = Sax2.Reader(validate=1)
 file = os.fdopen(os.open(Config.filename,os.O_RDONLY))
 doc = reader.fromStream(file)
 file.close()
-#element = xpath.Evaluate('/cluster', doc)[0]
 
 #create needed cluster objects
 clusterMetainfo = ClusterMetainfo("","","")
