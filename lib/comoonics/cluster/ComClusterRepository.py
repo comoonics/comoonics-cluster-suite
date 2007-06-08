@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.1 2007-06-05 13:11:21 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.2 2007-06-08 08:24:47 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -28,8 +28,8 @@ from xml.dom.ext.reader.Sax2 import implementation
 from ComClusterMetainfo import *
 from ComClusterNode import *
 
-from comoonics.ComLog import *
 from comoonics.ComDataObject import DataObject
+from comoonics import ComLog
 from comoonics.ComExceptions import *
 
 class ClusterMacNotFoundException(ComException):
@@ -44,7 +44,7 @@ class ClusterRepository(DataObject):
     Provides generall functionality for a clusterrepository instance
     """
 
-    log = ComLog.getLogger("ComCdslRepository")
+    log = ComLog.getLogger("comoonics.cluster.ComClusterRepository")
 
     def __new__(cls, *args, **kwds):
         """
@@ -76,6 +76,7 @@ class ClusterRepository(DataObject):
         @return: returns metainfo object
         @rtype: L{ClusterMetainfo}
         """
+        self.log.debug("get metainfo")
         return self.metainfo
     
 class RedhatClusterRepository(ClusterRepository):
@@ -110,10 +111,13 @@ class RedhatClusterRepository(ClusterRepository):
         """
         @return: Nodename
         @rtype: string
+        @raise ClusterMacNotFoundException: Raises Exception if search for node with given mac failed.
         """
         for node in self.nodeIdMap.values():
             try:
+                self.log.debug("get clusternodenic belonging to given mac: " + mac)
                 node.getNic(mac)
+                self.log.debug("get name belonging to searched clusternodenic: " + node.getName())
                 return node.getName()
             except KeyError:
                 pass
@@ -123,11 +127,14 @@ class RedhatClusterRepository(ClusterRepository):
         """
         @return: Nodeid
         @rtype: int
+        @raise ClusterMacNotFoundException: Raises Exception if search for node with given mac failed.
         """
         for node in self.nodeIdMap.values():
             #if node does not match given mac, test next node
             try:
+                self.log.debug("get clusternodenic belonging to given mac: " + mac)
                 node.getNic(mac)
+                self.log.debug("get id belonging to searched clusternodenic: " + node.getName())
                 return node.getId()
             except KeyError:
                 pass
@@ -211,7 +218,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.1  2007-06-05 13:11:21  andrea2
+# Revision 1.2  2007-06-08 08:24:47  andrea2
+# added Debugging
+#
+# Revision 1.1  2007/06/05 13:11:21  andrea2
 # *** empty log message ***
 ##
 # Revision 0.1  2007/05/02 13:30:56  andrea

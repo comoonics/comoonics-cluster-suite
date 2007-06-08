@@ -8,11 +8,11 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.1 2007-06-05 13:11:21 andrea2 Exp $
+# $Id: ComClusterNode.py,v 1.2 2007-06-08 08:24:47 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
@@ -23,12 +23,16 @@ from xml.dom.ext import PrettyPrint
 
 from ComClusterNodeNic import *
 
+from comoonics import ComLog
 from comoonics.ComDataObject import DataObject
 
 class ClusterNode(DataObject):
     """
     Provides generall functionality for a clusternode instance
     """
+    
+    log = ComLog.getLogger("comoonics.cluster.ComClusterNode")
+    
     def __new__(cls, *args, **kwds):
         """
         Decides by content of given element which 
@@ -73,6 +77,7 @@ class RedhatClusterNode(ClusterNode):
         @return: nodename
         @rtype: string
         """
+        self.log.debug("get name attribute: " + self.getAttribute("name"))
         #no try-except construct because name ist an obligatory object
         return self.getAttribute("name")
 
@@ -82,6 +87,7 @@ class RedhatClusterNode(ClusterNode):
         @rtype: int
         """
         try:
+            self.log.debug("get nodeid attribute: " + self.getAttribute("nodeid"))
             return self.getAttribute("nodeid")
         except NameError:
             #if attribute id is not set return empty string (because id is an optional attribute)
@@ -93,6 +99,7 @@ class RedhatClusterNode(ClusterNode):
         @rtype: int
         """
         try:
+            self.log.debug("get votes attribute: " + self.getAttribute("votes"))
             return self.getAttribute("votes")
         except NameError:
             #if attribute notes does not exist, use default value 1
@@ -144,8 +151,10 @@ class ComoonicsClusterNode(RedhatClusterNode):
         import re
         pattern = r"\b([0-9A-F][0-9A-F])\:([0-9A-F][0-9A-F])\:([0-9A-F][0-9A-F])\:([0-9A-F][0-9A-F])\:([0-9A-Z][0-9A-Z])\:([0-9A-Z][0-9A-Z])\b"
         if re.match(pattern, value):
+            self.log.debug("get clusternodenic corresponding to given mac: " + value)
             return self.nicMac[value]
         else:
+            self.log.debug("get clusternodenic corresponding to given devicename: " + value)
             return self.nicDev[value]
 
     def getRootvolume(self):
@@ -153,6 +162,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @return: device belonging to rootvolume
         @rtype: string
         """
+        self.log.debug("get rootvolume attribute: " + self.rootvolume_path + "@name")
         return xpath.Evaluate(self.rootvolume_path + "@name",self.getElement())[0].value          
 
     def getRootFs(self):
@@ -161,6 +171,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
+            self.log.debug("get rootfs attribute: " + self.rootvolume_path + "@fstype")
             return xpath.Evaluate(self.rootvolume_path + "@fstype",self.getElement())[0].value
         except IndexError:
             return self.defaultRootFs
@@ -171,6 +182,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
+            self.log.debug("get mountopts attribute: " + self.rootvolume_path + "@mountopts")
             return xpath.Evaluate(self.rootvolume_path + "@mountopts",self.getElement())[0].value
         except IndexError:
             return self.defaultMountopts
@@ -181,6 +193,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
+            self.log.debug("get syslog attribute: " + self.cominfo_path + "syslog/@name")
             return xpath.Evaluate(self.cominfo_path + "syslog/@name",self.getElement())[0].value
         except IndexError:
             return self.defaultSyslog
@@ -191,6 +204,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
+            self.log.debug("get scsifailover attribute: " + self.cominfo_path + "scsi/@failover")
             return xpath.Evaluate(self.cominfo_path + "scsi/@failover",self.getElement())[0].value
         except IndexError:
             return self.defaultScsiFailover
@@ -200,6 +214,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @return: instances of corresponding Network interfaces
         @rtype: list
         """
+        self.log.debug("get all clusternodenics")
         return self.nicMac.values()
         
 def main():
@@ -248,7 +263,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.1  2007-06-05 13:11:21  andrea2
+# Revision 1.2  2007-06-08 08:24:47  andrea2
+# added Debugging
+#
+# Revision 1.1  2007/06/05 13:11:21  andrea2
 # *** empty log message ***
 ##
 # Revision 0.1  2007/03/28 10:59:56  andrea

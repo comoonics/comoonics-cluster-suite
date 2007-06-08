@@ -155,11 +155,13 @@ elif Config.query == "gateway":
     print _nic.getGateway()
 
 #print list of clusters host with if and name
+#FIXME: Returns only first ip-address<->name pair of every clusternode to avoid duplicate entries for the same hostname
 elif Config.query == "hosts":
     for node in clusterInfo.getNodes():
         for Nic in node.getNics():
             if Nic.getIP() != "":
                 print Nic.getIP() +  "\t" + node.getName()
+                break
 
 #print ifconfig for given mac, raise exception if mac not found
 elif Config.query == "ifconfig":
