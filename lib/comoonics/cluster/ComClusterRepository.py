@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.2 2007-06-08 08:24:47 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.3 2007-06-08 08:58:21 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -87,9 +87,9 @@ class RedhatClusterRepository(ClusterRepository):
     type.
     """
     
-    cluster_path = "/cluster"
+    defaultcluster_path = "/cluster"
     """@type: string"""
-    clusternode_path = cluster_path + "/clusternodes/clusternode"
+    defaultclusternode_path = defaultcluster_path + "/clusternodes/clusternode"
     """@type: string"""
     
     def __init__(self,element,doc=None,clusterMetainfo=None):
@@ -99,7 +99,7 @@ class RedhatClusterRepository(ClusterRepository):
         super(RedhatClusterRepository,self).__init__(element,doc,clusterMetainfo)
         
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
-        _nodes = xpath.Evaluate(self.clusternode_path, self.getElement())
+        _nodes = xpath.Evaluate(self.defaultclusternode_path, self.getElement())
         for i in range(len(_nodes)):
             _node = ClusterNode(_nodes[i], self.getElement())
             _name = _node.getName()
@@ -159,7 +159,7 @@ class ComoonicsClusterRepository(RedhatClusterRepository):
         maxnodeidnum = clusterMetainfo.getAttribute("maxnodeidnum")
         
         #fill dictionaries with nodename:nodeobject and nodeid:nodeobject
-        _nodes = xpath.Evaluate(self.clusternode_path, self.getElement())
+        _nodes = xpath.Evaluate(self.defaultclusternode_path, self.getElement())
         for i in range(len(_nodes)):
             _node = ClusterNode(_nodes[i], self.getElement())          
             if ((use_nodeids == "True") and (maxnodeidnum == "0")): #maxnodidnum is not set but use_nodeid is set
@@ -218,8 +218,8 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.2  2007-06-08 08:24:47  andrea2
-# added Debugging
+# Revision 1.3  2007-06-08 08:58:21  andrea2
+# Renamed variables clusternode_path and cluster_path to defaultclusternode_path and defaulcluster_path
 #
 # Revision 1.1  2007/06/05 13:11:21  andrea2
 # *** empty log message ***
