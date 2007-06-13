@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# $Id: build_rpm-db.sh,v 1.4 2007-05-10 08:24:32 marc Exp $
+# $Id: build_rpm-db.sh,v 1.5 2007-06-13 09:04:42 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=7
+RELEASE=8
 REQUIRES="--requires=comoonics-cs-py,MySQL-python"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-db-py"
@@ -24,7 +24,11 @@ setup
 
 ##############
 # $Log: build_rpm-db.sh,v $
-# Revision 1.4  2007-05-10 08:24:32  marc
+# Revision 1.5  2007-06-13 09:04:42  marc
+# - using new ComLog api
+# - default importing of ComDBLogger and registering at ComLog
+#
+# Revision 1.4  2007/05/10 08:24:32  marc
 # MMG Support
 #
 # Hilti RPM Control

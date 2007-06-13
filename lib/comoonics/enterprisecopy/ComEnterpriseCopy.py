@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.4 2007-03-26 07:54:31 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.5 2007-06-13 09:05:45 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 from xml.dom import Node
@@ -18,6 +18,12 @@ from comoonics import ComDataObject
 from comoonics import ComLog
 import ComCopyset
 import ComModificationset
+
+# Just to import DBLogger if it exists to be able to use it
+try:
+    from comoonics.db.ComDBLogger import DBLogger
+except:
+    pass
 
 def getEnterpriseCopy(element, doc):
     """ Factory function to create the EnterpriseCopy Objects"""
@@ -28,7 +34,7 @@ class EnterpriseCopy(ComDataObject.DataObject):
     Class that does the enterprisecopy. Runs through every copyset and modificationset and executes them.
     """
     TAGNAME = "enterprisecopy"
-    __logStrLevel__ = "EnterpriseCopy"
+    __logStrLevel__ = "comoonics.enterprisecopy.ComEnterpriseCopy"
 
     def __init__(self, element, doc):
         ComDataObject.DataObject.__init__(self, element, doc)
@@ -37,6 +43,9 @@ class EnterpriseCopy(ComDataObject.DataObject):
         self.modificationsets=list()
         self.allsets=list()
         self.donesets=list()
+        elogging=self.getElement().getElementsByTagName("logging")
+        if len(elogging)>0:
+            ComLog.fileConfig(elogging[0])
         for child in self.getElement().childNodes:
             if child.nodeType == Node.ELEMENT_NODE and child.tagName ==  ComCopyset.Copyset.TAGNAME:
                 cs=ComCopyset.getCopyset(child, doc)
@@ -143,7 +152,11 @@ mylogger=ComLog.getLogger(EnterpriseCopy.__logStrLevel__)
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.4  2007-03-26 07:54:31  marc
+# Revision 1.5  2007-06-13 09:05:45  marc
+# - using new ComLog api
+# - default importing of ComDBLogger and registering at ComLog
+#
+# Revision 1.4  2007/03/26 07:54:31  marc
 # - bugfixes in outputting the right strings
 # - calling doPre and doPost for each Copyset and Modificationset (Requirements)
 #

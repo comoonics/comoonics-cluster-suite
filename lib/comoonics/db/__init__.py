@@ -4,11 +4,17 @@ Init this package
 
 """
 
-pass
+import comoonics.ComLog
+import ComDBLogger
+comoonics.ComLog.registerHandler("DBLogger", ComDBLogger.DBLogger)
 
 ########
 # $Log: __init__.py,v $
-# Revision 1.1  2007-04-02 11:21:23  marc
+# Revision 1.2  2007-06-13 09:03:52  marc
+# - using new ComLog api
+# - default importing of ComDBLogger and registering at ComLog
+#
+# Revision 1.1  2007/04/02 11:21:23  marc
 # For Hilti RPM Control:
 # - initial revision
 #

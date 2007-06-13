@@ -3,13 +3,11 @@ Class for connecting to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBConnection.py,v 1.2 2007-04-27 08:51:57 marc Exp $
+# $Id: ComDBConnection.py,v 1.3 2007-06-13 09:03:52 marc Exp $
 #
 
 import MySQLdb
 from exceptions import KeyError
-
-from comoonics import ComLog
 
 class DBConnection(object):
     """
@@ -163,7 +161,11 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBConnection.py,v $
-# Revision 1.2  2007-04-27 08:51:57  marc
+# Revision 1.3  2007-06-13 09:03:52  marc
+# - using new ComLog api
+# - default importing of ComDBLogger and registering at ComLog
+#
+# Revision 1.2  2007/04/27 08:51:57  marc
 # MMG Support:
 # - added execQuery
 #
