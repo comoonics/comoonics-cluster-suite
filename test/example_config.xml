@@ -61,7 +61,7 @@
     		</device>
   		</source>
   		<destination type="filesystem">
-    		<device name="/dev/VG_SHAREDROOT_new/LV_SHAREDROOT" id="rootfs">
+  			<device name="/dev/VG_SHAREDROOT_new/LV_SHAREDROOT" id="rootfs" options="">
       			<filesystem type="gfs" clustername="vmwareclusternew"/>
       			<mountpoint name="/mnt/tmp">
       				<option name="lockproto" value="lock_nolock"/>
