@@ -1,9 +1,9 @@
 #!/bin/bash
-# $Id: build_rpm-storage-hp.sh,v 1.2 2007-04-04 13:20:09 marc Exp $
+# $Id: build_rpm-storage-hp.sh,v 1.3 2007-06-13 09:09:12 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=2
+RELEASE=3
 REQUIRES="--requires=comoonics-cs-py,comoonics-ec-py,comoonics-storage-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-storage-hp-py"
@@ -22,7 +22,11 @@ setup
 
 ##############
 # $Log: build_rpm-storage-hp.sh,v $
-# Revision 1.2  2007-04-04 13:20:09  marc
+# Revision 1.3  2007-06-13 09:09:12  marc
+# - if management appliance gets locked while working we'll overwrite it
+# - added reconnect on timeout
+#
+# Revision 1.2  2007/04/04 13:20:09  marc
 # new revisions for:
 # comoonics-cs-py-0.1-30
 # comoonics-ec-py-0.1-15
