@@ -61,6 +61,8 @@ comoonics-cmdb-py:
 
 comoonics-cs-py:
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-33:
+    - XMLConfigParser: removed debugging
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-33:
     - GetOpts: fixed error newer occured (include sys)
     - XMLConfigParser: initial revision
     - ComLog: added fileConfig to support logging config via XML (see XMLConfigParser)
