@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.11 2007-03-26 08:40:33 marc Exp $
+# $Id: com-ec,v 1.12 2007-06-13 08:59:09 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -28,19 +28,22 @@ from xml.dom.ext.reader import Sax2
 import getopt
 import logging
 import warnings
-sys.path.append("../lib")
 from comoonics import GetOpts
-
-sys.path.append("../lib")
 
 from comoonics import ComLVM, ComSystem, ComLog
 from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset
 
 ComSystem.__EXEC_REALLY_DO=""
+__logStrLevel__="com-ec"
+logger=ComLog.getLogger(__logStrLevel__)
+console=logging.StreamHandler(sys.stdout)
+console.setLevel(logging.INFO)
+consoleformater=logging.Formatter('-------------------%(name)-7s: %(levelname)-4s %(message)s--------------------')
+console.setFormatter(consoleformater)
+logger.addHandler(console)
 
 def line(str=None):
-    print
-    print "--------------------"+str+"---------------------------------"
+    logger.info(str)
 
 class Config(GetOpts.BaseConfig):
     def __init__(self):
@@ -65,11 +68,11 @@ class Config(GetOpts.BaseConfig):
         if len(args_proper) > 0 and os.path.isfile(args_proper[0]):
             self.filename=args_proper[0]
         elif len(args_proper) == 0:
-            print >>self.__stderr__, "No file given to execute."
+            logger.critical("No file given to execute.")
             self.usage()
             return 1
         else:
-            print >>self.__stderr__, "Could not find file %s" %(args_proper[0])
+            logger.critical("Could not find file %s" %(args_proper[0]))
             return 1
         return 0
 
@@ -144,12 +147,13 @@ try:
         sys.exit(0)
 
     ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
+    logger=ComLog.getLogger(__logStrLevel__)
     if config.ask:
         ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
     if config.simulate:
         ComSystem.__EXEC_REALLY_DO=ComSystem.SIMULATE
 except KeyboardInterrupt:
-    ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).info("Leaving because of user signal")
+    logger.warn("Leaving because of user signal")
     sys.exit(1)
 
 if ecopy.hasAttribute("name"):
@@ -172,25 +176,26 @@ try:
 
     line("Successfully executed enterprisecopy.")
 except KeyboardInterrupt:
-    ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).info("Leaving because of user signal")
+    logger.warn("Leaving because of user signal")
     sys.exit(1)
 except Exception, e:
-    ComLog.getLogger(ComEnterpriseCopy.EnterpriseCopy.__logStrLevel__).warn("Exception %s caught during copy." % e)
-    import traceback
-    #print e.__str__()
-    traceback.print_exc()
+    logger.error("Exception %s caught during copy." % e)
+    ComLog.debugTraceLog(logger)
     if config.noundo:
         line("Skipping undo on request")
     else:
-            line("Undoing %u sets" % (len(ecopy.donesets)))
-            ecopy.undo()
+        line("Undoing %u sets" % (len(ecopy.donesets)))
+        ecopy.undo()
 
     line("Errors during execution of enterprisecopy.")
     sys.exit(2)
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.11  2007-03-26 08:40:33  marc
+# Revision 1.12  2007-06-13 08:59:09  marc
+# - changed logging to support new ComLog Design
+#
+# Revision 1.11  2007/03/26 08:40:33  marc
 # - clean up
 # - change long option for onlyxslt to onlydisplay to also work with non xslts to see how the resetting of attributes works
 # - added functionality to overwrite attributes in xml.
