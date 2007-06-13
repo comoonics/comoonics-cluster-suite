@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.3 2007-04-04 12:35:52 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.4 2007-06-13 09:07:53 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
@@ -47,6 +47,8 @@ class HP_EVA_SSSU(object):
     MATCH_COMMANDSTATUS="<sssucommandstatus>(\d+)</sssucommandstatus>"
     MATCH_XMLOBJECT=re.compile(".*(<object>.*</object>).*", re.MULTILINE|re.DOTALL)
 
+    MATCH_MANAGED_ERROR=re.compile("Error: Error storage cell is managed by another agent. ManagementAgentName: (.*) ManagementAgentIP: (.*)", re.MULTILINE)
+
     END_PROMPT=">"
     DELIM=" "
 
@@ -54,7 +56,7 @@ class HP_EVA_SSSU(object):
 
     SSSU_CMD="sssu"
 
-    def __init__(self, manager, username, password, system, auto_connect=True, command=None, logfile=None, cmdlog=None, timeout=60):
+    def __init__(self, manager, username, password, system, auto_connect=True, command=None, logfile=None, cmdlog=None, timeout=60, managed_overwrite=True):
         """
         Initializes the connection to the HP EVA. But not connects. This will be done implicitly or directly via
         the connect method.
@@ -65,6 +67,7 @@ class HP_EVA_SSSU(object):
         self.system=system
         self.logfile=logfile
         self.timeout=timeout
+        self.managed_overwrite=managed_overwrite
         if isinstance(self.logfile, basestring):
             self.logfile=file(self.logfile, "w")
         self.cmdlog=cmdlog
@@ -189,6 +192,10 @@ class HP_EVA_SSSU(object):
                     self.xml_output=self.LastOutput2XML()
                     return self.last_error_code
                 else:
+                    # Check for the special case when system is managed by another agent to get the right back
+                    _match=self.MATCH_MANAGED_ERROR.match(self.last_output)
+                    if _match and self.managed_overwrite:
+                        mylogger.warn("SSSU Warning: System is managed by another agent (%s, %s). Overwriting." %(_match.group(1), _match.group(2)))
                     raise CommandError(self.last_error_code, self.last_cmd, self.last_output)
 
     def toParams(self, params):
@@ -271,7 +278,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.3  2007-04-04 12:35:52  marc
+# Revision 1.4  2007-06-13 09:07:53  marc
+# - if management appliance gets locked while working we'll overwrite it
+#
+# Revision 1.3  2007/04/04 12:35:52  marc
 # MMG Backup Legato Integration:
 # - raised the default timeout for pexpect to 60secs
 #
