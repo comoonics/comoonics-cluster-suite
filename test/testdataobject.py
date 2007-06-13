@@ -75,3 +75,9 @@ except:
     import sys
     print "Exception %s caught: !!!!SHould not happen!!!" %sys.exc_value
 
+line("Testing boolean")
+path="//device[@id='rootfs']"
+element=xpath.Evaluate(path, doc)[0]
+obj=DataObject(element)
+print "%s.options: %s" %(path, obj.getAttribute("options"))
+print "%s.options: '%s'" %(path, obj.getElement().getAttribute("options"))
