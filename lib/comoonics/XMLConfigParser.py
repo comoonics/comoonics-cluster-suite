@@ -3,7 +3,7 @@ Class for logging to a generic database
 
 """
 # here is some internal information
-# $Id: XMLConfigParser.py,v 1.1 2007-06-13 09:12:05 marc Exp $
+# $Id: XMLConfigParser.py,v 1.2 2007-06-13 10:09:27 marc Exp $
 #
 import sys, logging.handlers, string, socket, struct, os, traceback, types
 
@@ -34,7 +34,7 @@ class IncompatibleConfigFileType(ComException):
         return "The file %s seems to be not compatible to XMLConfigParser." %self.value
 
 mylogger=ComLog.getLogger("comoonics.XMLConfigParser")
-mylogger.setLevel(logging.DEBUG)
+#mylogger.setLevel(logging.DEBUG)
 
 class ConfigParser(oldConfigParser):
     LOGGING_TAGNAME="logging"
@@ -240,6 +240,9 @@ if __name__=="__main__":
 
 ########################
 # $Log: XMLConfigParser.py,v $
-# Revision 1.1  2007-06-13 09:12:05  marc
+# Revision 1.2  2007-06-13 10:09:27  marc
+# - removed debugging
+#
+# Revision 1.1  2007/06/13 09:12:05  marc
 # initial revision
 #
