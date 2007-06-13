@@ -5,12 +5,13 @@ Implementation of properties as DataObject
 
 __version__= "$Revision $"
 
-# $Id: ComProperties.py,v 1.3 2007-03-26 08:35:13 marc Exp $
+# $Id: ComProperties.py,v 1.4 2007-06-13 09:13:08 marc Exp $
 
 import warnings
 from comoonics.ComDataObject import DataObject
 import ComLog
 from exceptions import KeyError
+from xml.dom import Node
 
 class Property(DataObject):
     TAGNAME="property"
@@ -40,8 +41,18 @@ class Property(DataObject):
         else:
             #mylogger.debug("%s, %s" %(type(args[0]), type(args[1])))
             super(Property, self).__init__(*args)
-        if self.hasAttribute("name") and not self.hasAttribute("value"):
+        if self.hasAttribute("name") and not self.hasAttribute("value") and len(self.getElement().childNodes)==0:
             self.setAttribute("value", True)
+
+    def getValue(self):
+        if len(self.getElement().childNodes)>0:
+            buf=""
+            for _child in self.getElement().childNodes:
+                if _child.nodeType == Node.TEXT_NODE:
+                    buf+=_child.nodeValue
+        else:
+            buf=self.getAttribute("value")
+        return buf
 
 class Properties(DataObject):
     TAGNAME="properties"
@@ -82,6 +93,8 @@ class Properties(DataObject):
     def iter(self):
         for property in self.properties:
             yield self.properties.get(property)
+    def items(self):
+        return self.properties.items()
     def keys(self):
         return self.properties.keys()
     def values(self):
@@ -99,7 +112,7 @@ def main():
     test_str="""
 <!DOCTYPE properties SYSTEM "file:/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
 <properties>
-  <property name="testname1" value="testvalue1"/>
+  <property name="testname1">testvalue1</property>
   <property name="testname2" value="testvalue2"/>
   <property name="testflag"/>
 </properties>
@@ -116,15 +129,15 @@ def main():
     print "OK"
     print properties
     property_name="testname2"
-    print "Getting property %s: %s" %(property_name, properties[property_name].getAttribute("value"))
+    print "Getting property %s: %s" %(property_name, properties[property_name].getValue())
     property_name="testflag"
     print "Getting property %s: %s" %(property_name, properties.getAttribute(property_name))
     print "Setting property %s: %s" %("test123", "test213")
     properties["test123"]="test213"
-    print "Getting property %s: %s" %("test123", properties["test123"].getAttribute("value"))
+    print "Getting property %s: %s" %("test123", properties["test123"].getValue())
     print "Setting property %s: %s" %("test1234", True)
     properties["test1234"]=True
-    print "Getting property %s: %s, %s" %("test1234", properties["test1234"].getAttribute("value"), type(properties["test1234"].getAttribute("value")))
+    print "Getting property %s: %s, %s" %("test1234", properties["test1234"].getValue(), type(properties["test1234"].getValue()))
 
     try:
         print "Getting nonproprty: %s" %(properties.getAttribute("test123"))
@@ -135,13 +148,18 @@ def main():
         print "%s" %(property)
 
     for propertyname in properties.keys():
-        print "%s->%s" %(propertyname, properties[propertyname].getAttribute("value"))
+        print "%s->%s" %(propertyname, properties[propertyname].getValue())
 
 
 if __name__ == '__main__':
     main()
 # $Log: ComProperties.py,v $
-# Revision 1.3  2007-03-26 08:35:13  marc
+# Revision 1.4  2007-06-13 09:13:08  marc
+# - added Properties.items()
+# - added Property.getValue()
+# - better Boolean handling
+#
+# Revision 1.3  2007/03/26 08:35:13  marc
 # - better testing
 # - added keys()
 # - added del
