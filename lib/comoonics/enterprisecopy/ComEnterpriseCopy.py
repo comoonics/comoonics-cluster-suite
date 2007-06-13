@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.5 2007-06-13 09:05:45 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.6 2007-06-13 13:21:30 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 from xml.dom import Node
@@ -18,12 +18,22 @@ from comoonics import ComDataObject
 from comoonics import ComLog
 import ComCopyset
 import ComModificationset
+from comoonics.ComExceptions import ComException
 
 # Just to import DBLogger if it exists to be able to use it
 try:
     from comoonics.db.ComDBLogger import DBLogger
 except:
     pass
+
+class CouldNotFindSet(ComException):
+    _set="Set"
+    def __str__(self):
+        return "Could not find %s with name %s." %(self._set, self.value)
+class CouldNotFindCopyset(CouldNotFindSet):
+    _set="Copyset"
+class CouldNotFindModset(CouldNotFindSet):
+    _set="Modificationset"
 
 def getEnterpriseCopy(element, doc):
     """ Factory function to create the EnterpriseCopy Objects"""
@@ -84,7 +94,8 @@ class EnterpriseCopy(ComDataObject.DataObject):
                 set.doPost()
 
     def undo(self, name=None):
-        self.undoDonesets(name)
+        if len(self.donesets)>0:
+            self.undoDonesets(name)
 
     def undoDonesets(self, name=None):
         ComLog.getLogger(self.__logStrLevel__).debug("name: %s, donesets: sets: %s " %(name, self.donesets))
@@ -113,13 +124,18 @@ class EnterpriseCopy(ComDataObject.DataObject):
                 set.undoModifications()
 
     def doCopysets(self, name=None):
+        _found=False
         for copyset in self.copysets:
             if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
+                _found=True
                 self.donesets.append(copyset)
                 copyset.doPre()
                 copyset.doCopy()
                 copyset.doPost()
+        if not _found:
+            raise CouldNotFindCopyset(name)
+
 
     def undoCopysets(self, name=None):
         ComLog.getLogger(self.__logStrLevel__).debug("name %s, copysets: %s " %(name, self.copysets))
@@ -131,13 +147,17 @@ class EnterpriseCopy(ComDataObject.DataObject):
                 copyset.undoCopy()
 
     def doModificationsets(self, name=None):
+        _found=False
         for modset in self.modificationsets:
             if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", "")):
                 ComLog.getLogger(self.__logStrLevel__).info("Executing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
+                _found=True
                 self.donesets.append(modset)
                 modset.doPre()
                 modset.doModifications()
                 modset.doPost()
+        if not _found:
+            raise CouldNotFindModset(name)
 
     def undoModificationsets(self, name=None):
         ComLog.getLogger(self.__logStrLevel__).debug("name %s, modificationsets: %s " %(name, self.modificationsets))
@@ -152,7 +172,10 @@ mylogger=ComLog.getLogger(EnterpriseCopy.__logStrLevel__)
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.5  2007-06-13 09:05:45  marc
+# Revision 1.6  2007-06-13 13:21:30  marc
+# - raising error if given modset/copyset could not be found
+#
+# Revision 1.5  2007/06/13 09:05:45  marc
 # - using new ComLog api
 # - default importing of ComDBLogger and registering at ComLog
 #
