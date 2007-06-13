@@ -10,15 +10,21 @@ WARNING:
 
 CHANGES:
 comoonics-backup-py:
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-2
+  - no change (silly me!)
 * Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
    initial revision
 
 comoonics-backup-legato-py:
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-2
+  - now backuping full path to support incremental backups
 * Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
    initial revision
 
 comoonics-cmdb-py:
-* Wed May 10 2007 MG <grimme@atix.de>, 0.1-22
+* Thu May 10 2007 MG <grimme@atix.de>, 0.1-23
+    - Fixed bug in whereclause of getDiffs
+* Thu May 10 2007 MG <grimme@atix.de>, 0.1-22
     - BZ #46 Fixed (The only diffs functions getSoftwareDiffs returns also same rpms if multiple
                     rpms are installed.)
     - Fixed ambigousness in getSoftwareDublicates with mysql v3.
@@ -54,6 +60,11 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-33:
+    - GetOpts: fixed error newer occured (include sys)
+    - XMLConfigParser: initial revision
+    - ComLog: added fileConfig to support logging config via XML (see XMLConfigParser)
+    - Properties:  added Properties.items(), added Property.getValue(), better Boolean handling
 * Wed Apr 23 2007 MH <hlawatschek@atix.de>, 0.1-32:
     - bug fixes
 * Wed Apr 11 2007 MG <grimme@atix.de>, 0.1-31:
@@ -81,6 +92,9 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-8:
+  - using new ComLog api
+  - default importing of ComDBLogger and registering at ComLog
 * Thu Apr 27 2007 MG <grimme@atix.de>, 0.1-7:
    - added execQuery to DBConnection
 * Tue Apr 18 2007 MG <grimme@atix.de>, 0.1-6:
@@ -91,6 +105,9 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-17:
+  - using new ComLog api
+  - default importing of ComDBLogger and registering at ComLog
 * Mon Apr 23 2007 MH <hlawatschek@atix.de>, 0.1-16:
     - Fix for PartitionCopyObject
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-15:
@@ -117,6 +134,9 @@ comoonics-storage-py
   initial release
 
 comoonics-storage-hp-py
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-3:
+  - if management appliance gets locked while working we'll overwrite it
+  - added reconnect on timeout
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2:
   - Added timeouts for EVA Commands (default 60secs)
   - Added timeout after mapping and unmapping of disks (default 1sec)
