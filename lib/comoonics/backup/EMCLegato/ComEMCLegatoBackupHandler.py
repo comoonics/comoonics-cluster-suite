@@ -2,7 +2,7 @@
 Class for the EMC-Legator BackupHandlerImplementation.
 """
 # here is some internal information
-# $Id: ComEMCLegatoBackupHandler.py,v 1.2 2007-04-04 12:46:30 marc Exp $
+# $Id: ComEMCLegatoBackupHandler.py,v 1.3 2007-06-13 09:00:00 marc Exp $
 #
 
 import os
@@ -113,7 +113,7 @@ class EMCLegatoBackupHandler(BackupHandler):
             self.log.debug("createArchive(changing to: %s)" %(cdir))
             os.chdir(cdir)
         self.log.debug("createArchive(%s, %s)" %(source, cdir))
-        self.networker.executeSaveFs(self.level, source)
+        self.networker.executeSaveFs(self.level, cdir)
         os.chdir(olddir)
 
     def extractArchive(self, dest):
@@ -152,7 +152,10 @@ class EMCLegatoBackupHandler(BackupHandler):
 
 ########################
 # $Log: ComEMCLegatoBackupHandler.py,v $
-# Revision 1.2  2007-04-04 12:46:30  marc
+# Revision 1.3  2007-06-13 09:00:00  marc
+# - now backuping full path to support incremental backups
+#
+# Revision 1.2  2007/04/04 12:46:30  marc
 # MMG Backup Legato Integration:
 # - added restoreMethods (extractArchive, getFileobj, extractFile)
 #
