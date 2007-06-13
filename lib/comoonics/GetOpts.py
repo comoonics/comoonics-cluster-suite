@@ -6,15 +6,16 @@ Class to make getopts very easy
 """
 
 # here is some internal information
-# $Id: GetOpts.py,v 1.4 2007-02-22 15:25:22 marc Exp $
+# $Id: GetOpts.py,v 1.5 2007-06-13 09:10:12 marc Exp $
 #
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/GetOpts.py,v $
 
 import getopt
 import ComExceptions, ComLog
 import logging
+import sys
 
 class NoErrorBreak(ComExceptions.ComException): pass
 
@@ -252,7 +253,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: GetOpts.py,v $
-# Revision 1.4  2007-02-22 15:25:22  marc
+# Revision 1.5  2007-06-13 09:10:12  marc
+# - fixed error newer occured (include sys)
+#
+# Revision 1.4  2007/02/22 15:25:22  marc
 # access to Option attributes returns now the value
 #
 # Revision 1.3  2006/12/13 20:16:52  marc
