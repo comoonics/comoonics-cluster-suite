@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.12 2007-06-13 08:59:09 marc Exp $
+# $Id: com-ec,v 1.13 2007-06-13 13:07:13 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -35,11 +35,12 @@ from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificat
 
 ComSystem.__EXEC_REALLY_DO=""
 __logStrLevel__="com-ec"
-logger=ComLog.getLogger(__logStrLevel__)
 console=logging.StreamHandler(sys.stdout)
-console.setLevel(logging.INFO)
 consoleformater=logging.Formatter('-------------------%(name)-7s: %(levelname)-4s %(message)s--------------------')
 console.setFormatter(consoleformater)
+logger=logging.getLogger(__logStrLevel__)
+logger.propagate=0
+logger.setLevel(logging.INFO)
 logger.addHandler(console)
 
 def line(str=None):
@@ -130,9 +131,9 @@ try:
            res.freeDoc()
            doc=reader.fromString(str_buff)
 
-        except:
-            line("Could not apply stylesheet to document. Quitting")
-            ComLog.errorTraceLog()
+        except Exception, e:
+            line("Could not apply stylesheet to document. Quitting. Error: %s" %e)
+            ComLog.debugTraceLog()
             sys.exit(1)
         libxslt.cleanup()
     else:
@@ -156,10 +157,13 @@ except KeyboardInterrupt:
     logger.warn("Leaving because of user signal")
     sys.exit(1)
 
+
 if ecopy.hasAttribute("name"):
-    line("Execution of enterprisecopy %s" % (ecopy.getAttribute("name")))
+    _name=ecopy.getAttribute("name")
 else:
-    line("Execution of enterprisecopy %s" % ("unknown"))
+    _name=config.filename
+
+line("Start of enterprisecopy %s" % (_name))
 
 try:
     if not config.copyset and not config.modificationset:
@@ -167,32 +171,35 @@ try:
         ecopy.doAllsets()
     else:
         if config.copyset:
-            line("Executing %s copysets %u" % (config.copyset, len(ecopy.copysets)))
+            line("Executing copyset %s" % (config.copyset))
             ecopy.doCopysets(config.copyset)
 
         if config.modificationset:
-            line("Executing %s modificationsets %u" % (config.modificationset, len(ecopy.modificationsets)))
+            line("Executing modificationset %s" % (config.modificationset))
             ecopy.doModificationsets(config.modificationset)
 
-    line("Successfully executed enterprisecopy.")
+    line("Finished execution of enterprisecopy %s successfully" % (_name))
 except KeyboardInterrupt:
-    logger.warn("Leaving because of user signal")
+    logger.warn("Leaving enterprisecopy %s because of user signal" %(_name))
     sys.exit(1)
 except Exception, e:
-    logger.error("Exception %s caught during copy." % e)
-    ComLog.debugTraceLog(logger)
+    logger.error("Error occured during execution of enterprisecopy %s. Errormessage: %s." %(_name, e))
+    ComLog.debugTraceLog()
     if config.noundo:
-        line("Skipping undo on request")
+        line("Finished execution of enterprisecopy with errors. Skipping undo on request")
     else:
         line("Undoing %u sets" % (len(ecopy.donesets)))
         ecopy.undo()
 
-    line("Errors during execution of enterprisecopy.")
+    line("Errors during execution of enterprisecopy %s." %(_name))
     sys.exit(2)
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.12  2007-06-13 08:59:09  marc
+# Revision 1.13  2007-06-13 13:07:13  marc
+# - made logging more readable
+#
+# Revision 1.12  2007/06/13 08:59:09  marc
 # - changed logging to support new ComLog Design
 #
 # Revision 1.11  2007/03/26 08:40:33  marc
