@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.8 2007-06-13 13:06:50 marc Exp $
+# $Id: ComLog.py,v 1.9 2007-06-13 15:24:31 marc Exp $
 #
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -45,7 +45,7 @@ def getLogger(name=None):
 #def setLogger(name, logger):
 #    __default_log=logger
 #
-def setLevel(debuglevel, name=""):
+def setLevel(debuglevel, name=None):
     logging.getLogger(name).setLevel(debuglevel)
 
 #def getLevel():
@@ -315,7 +315,10 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.8  2007-06-13 13:06:50  marc
+# Revision 1.9  2007-06-13 15:24:31  marc
+# - fixed minor bug in setLevel default should be None as logger not empty string.
+#
+# Revision 1.8  2007/06/13 13:06:50  marc
 # - bugfix in logTraceLog
 #
 # Revision 1.7  2007/06/13 09:11:46  marc
