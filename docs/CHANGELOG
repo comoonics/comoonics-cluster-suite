@@ -60,6 +60,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-34
+    - fixed Bug in ComLog.logTrace
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-33:
     - XMLConfigParser: removed debugging
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-33:
@@ -107,6 +109,9 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-34
+    - made logging more readable
+    - raising error if given modset/copyset could not be found
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-17:
   - using new ComLog api
   - default importing of ComDBLogger and registering at ComLog
