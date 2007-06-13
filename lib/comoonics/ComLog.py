@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.7 2007-06-13 09:11:46 marc Exp $
+# $Id: ComLog.py,v 1.8 2007-06-13 13:06:50 marc Exp $
 #
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -24,9 +24,6 @@ import os.path
 #global __default_log
 _classregistry={}
 
-logging.basicConfig()
-
-mylogger=logging.getLogger("comoonics.ComLog")
 #__default_log=logging.getLogger()
 #__default_log.setLevel(logging.DEBUG)
 
@@ -76,7 +73,7 @@ def logTrace(nameorlogger=None, level=logging.DEBUG):
         logger=nameorlogger
     else:
         logger=getLogger()
-    if logger.getEffectiveLevel() == level:
+    if logger.getEffectiveLevel() <= level:
 #        pass
         from StringIO import StringIO
         buf=StringIO()
@@ -142,7 +139,7 @@ def fileConfig(fname, defaults=None, _vars=None):
             logging._handlers.clear()
             #now set up the new ones...
             hlist = cp.get("handlers", "keys")
-            mylogger.debug("handlers: %s" %hlist)
+            _mylogger.debug("handlers: %s" %hlist)
             if len(hlist):
                 hlist = string.split(hlist, ",")
                 handlers = {}
@@ -165,8 +162,8 @@ def fileConfig(fname, defaults=None, _vars=None):
 
                         klass=eval(klass, _vars)
                         args = cp.get(sectname, "args")
-                        #mylogger.debug("comoonics.ComLog.fileConfig(_classregistry: %s)" %_classregistry)
-                        #mylogger.debug("comoonics.ComLog.fileConfig(_vars: %s)" %_vars.keys())
+                        #_mylogger.debug("comoonics.ComLog.fileConfig(_classregistry: %s)" %_classregistry)
+                        #_mylogger.debug("comoonics.ComLog.fileConfig(_vars: %s)" %_vars.keys())
                         args = eval(args, _vars)
                         h = apply(klass, args)
                         if "level" in opts:
@@ -182,10 +179,10 @@ def fileConfig(fname, defaults=None, _vars=None):
                                 target = ""
                             if len(target): #the target handler may not be loaded yet, so keep for later...
                                 fixups.append((h, target))
-                        mylogger.debug("handlers[%s]=%s" %(hand, h))
+                        _mylogger.debug("handlers[%s]=%s" %(hand, h))
                         handlers[hand] = h
                     except:     #if an error occurs when instantiating a handler, too bad
-                        mylogger.exception("Could not create handler: %s" %klass)
+                        _mylogger.exception("Could not create handler: %s" %klass)
                         #this could happen e.g. because of lack of privileges
                 #now all handlers are loaded, fixup inter-handler references...
                 for fixup in fixups:
@@ -285,7 +282,7 @@ def __line(text):
     print "-------------------------- %s --------------------------------------" %(text)
 
 def main():
-    mylogger.setLevel(logging.DEBUG)
+    _mylogger.setLevel(logging.DEBUG)
     import comoonics.db.ComDBLogger
     registerHandler("DBLogger", comoonics.db.ComDBLogger.DBLogger)
     _filenames=("../../test/loggingconfig.ini", "../../test/loggingconfig.xml")
@@ -312,11 +309,16 @@ def main():
         for _lname in rootlogger.manager.loggerDict.keys():
             __testLogger(_lname, logging.getLogger(_lname))
 
+_mylogger=logging.getLogger("comoonics.ComLog")
+logging.basicConfig()
 if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.7  2007-06-13 09:11:46  marc
+# Revision 1.8  2007-06-13 13:06:50  marc
+# - bugfix in logTraceLog
+#
+# Revision 1.7  2007/06/13 09:11:46  marc
 # - added fileConfig to support logging config via XML
 #
 # Revision 1.6  2007/03/26 08:31:13  marc
