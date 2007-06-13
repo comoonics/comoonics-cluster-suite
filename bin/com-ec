@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.13 2007-06-13 13:07:13 marc Exp $
+# $Id: com-ec,v 1.14 2007-06-13 13:22:05 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -187,7 +187,7 @@ except Exception, e:
     ComLog.debugTraceLog()
     if config.noundo:
         line("Finished execution of enterprisecopy with errors. Skipping undo on request")
-    else:
+    elif len(ecopy.donesets)>0:
         line("Undoing %u sets" % (len(ecopy.donesets)))
         ecopy.undo()
 
@@ -196,7 +196,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.13  2007-06-13 13:07:13  marc
+# Revision 1.14  2007-06-13 13:22:05  marc
+# - better logging and error handling
+#
+# Revision 1.13  2007/06/13 13:07:13  marc
 # - made logging more readable
 #
 # Revision 1.12  2007/06/13 08:59:09  marc
