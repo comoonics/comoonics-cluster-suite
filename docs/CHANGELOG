@@ -113,6 +113,10 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Thu Jun 14 2007 MG <grimme@atix.de>, 0.1-20
+ - new feature:
+      - if Config.xslt - which defaults to (/opt/atix/comoonics-cs/xsl/comoonics-enterprise-copy.xsl) - exists apply xslt to the given xml.
+      - Background: So we can do e.g. logging whichout specifying it.
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-19
     - logging.propagate=1 if debugging
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-18
