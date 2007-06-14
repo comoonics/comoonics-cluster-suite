@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.15 2007-06-13 15:23:45 marc Exp $
+# $Id: com-ec,v 1.16 2007-06-14 07:02:43 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -33,6 +33,10 @@ from comoonics import GetOpts
 from comoonics import ComLVM, ComSystem, ComLog
 from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset
 
+import os.path
+XSLT_PATH="/opt/atix/comoonics-cs/xsl"
+DEFAULT_XSLT="comoonics-enterprise-copy.xsl"
+
 ComSystem.__EXEC_REALLY_DO=""
 __logStrLevel__="com-ec"
 console=logging.StreamHandler(sys.stdout)
@@ -49,13 +53,16 @@ def line(str=None):
 class Config(GetOpts.BaseConfig):
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.xslt="%s/%s" %(XSLT_PATH, DEFAULT_XSLT)
+        if not os.path.exists(self.xslt):
+            self.xslt=None
         self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
         self.novalidate=GetOpts.Option("novalidate", "novalidate don't validate the xml. Handle with care!!!", False, False, "n")
         self.ask=GetOpts.Option("ask", "ask before any command is executed", False, False, "a")
         self.copyset=GetOpts.Option("copyset", "<name>|all only do all or the given modification set", None, False, "c")
         self.modificationset=GetOpts.Option("modificationset", "<name>|all only do all or the given modification set", None, False, "m")
         self.noundo=GetOpts.Option("noundo", "don't do the undoing if anything goes wrong", False, False, "U")
-        self.xslt=GetOpts.Option("xslt", "preconvert xmlfile with given xsltfile.", None, False, "x")
+        self.xslt=GetOpts.Option("xslt", "preconvert xmlfile with given xsltfile.", self.xslt, False, "x")
         self.onlydisplay=GetOpts.Option("onlydisplay", "only display the resulting dom as xml", False, False, "X")
         self.simulate=GetOpts.Option("simulate", "don't execute anything just simulate", False, False, "S")
         self.setAdditionalParams("file [valuepath=value]*")
@@ -199,7 +206,12 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.15  2007-06-13 15:23:45  marc
+# Revision 1.16  2007-06-14 07:02:43  marc
+# - new feature:
+#      - if Config.xslt - which defaults to (/opt/atix/comoonics-cs/xsl/comoonics-enterprise-copy.xsl) - exists apply xslt to the given xml.
+#      - Background: So we can do i.e. logging whichout specifying it
+#
+# Revision 1.15  2007/06/13 15:23:45  marc
 # - for -d logging.propagate=1 so that any logger will be debugging
 #
 # Revision 1.14  2007/06/13 13:22:05  marc
