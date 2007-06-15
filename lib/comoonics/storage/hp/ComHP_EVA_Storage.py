@@ -4,10 +4,10 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_Storage.py,v 1.3 2007-04-04 12:36:42 marc Exp $
+# $Id: ComHP_EVA_Storage.py,v 1.4 2007-06-15 19:05:51 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_Storage.py,v $
 
 from exceptions import TypeError
@@ -162,8 +162,10 @@ class HP_EVA_Storage(Storage):
                 if not properties:
                     properties=dict()
                 for def_parm in default_params[_type]:
-                    properties[def_parm]=True
-                    if type(properties) != dict:
+                    if type(properties) == dict:
+                        properties[def_parm]=True
+                    else:
+                        properties[def_parm]="true"
                         mylogger.debug("property[%s]=%s, type=%s" %(def_parm, properties[def_parm].getAttribute("name"), type(properties[def_parm].getAttribute("name"))))
 
             if self.sssu.cmd("ls %s \"%s\" xml" %(_type, name))==0 and self.sssu.xml_output:
@@ -215,6 +217,8 @@ class HP_EVA_Storage(Storage):
                                 mylogger.debug("_add: operationalstate is not good waiting(%u).." %(iterations))
                                 time.sleep(5)
                                 iterations+=1
+                    else:
+                        iterations=maxiterations
                 return vdisk
             else:
                 raise ErrorDuringExecution("Could not add %s %s to storage.\nExecution errorcode %u: \ncmd: %s, output: %s" %(type, name, self.sssu.last_error_code, self.sssu.last_cmd, self.sssu.last_output))
@@ -345,7 +349,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_Storage.py,v $
-# Revision 1.3  2007-04-04 12:36:42  marc
+# Revision 1.4  2007-06-15 19:05:51  marc
+# - fixed getAttribute bug to getAttributeBoolean
+#
+# Revision 1.3  2007/04/04 12:36:42  marc
 # MMG Backup Legato Integration:
 # - added wait method
 #

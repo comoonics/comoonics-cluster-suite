@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.4 2007-06-13 09:07:53 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.5 2007-06-15 19:05:51 marc Exp $
 #
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
@@ -218,10 +218,10 @@ class HP_EVA_SSSU(object):
         elif params and isinstance(params, Properties):
             for property in params.iter():
                 #mylogger.debug("Property: %s" %(property))
-                mylogger.debug("toParams(%s): %s, bool?:%s" %(property.getAttribute("name"),property.getAttribute("value"),type(property.getAttribute("value"))))
+                mylogger.debug("toParams(%s): %s, bool?:%s" %(property.getAttribute("name"),property.getAttribute("value"),type(property.getAttributeBoolean("value", None))))
                 if property.hasAttribute("name"):
                     buf+=property.getAttribute("name")
-                    if property.getAttribute("value") and type(property.getAttribute("value"))==bool:
+                    if property.getAttribute("value") and type(property.getAttributeBoolean("value", None))==bool:
                         pass
                     else:
                         buf+="=\""+property.getAttribute("value")+"\""
@@ -229,7 +229,7 @@ class HP_EVA_SSSU(object):
         elif params and isinstance(params, DataObject):
             for property in params.getProperties().iter():
                 buf+=property.getAttribute("name")
-                if property.getAttribute("value") and type(property.getAttribute("value"))==bool:
+                if property.getAttribute("value") and type(property.getAttributeBoolean("value"))==bool:
                     pass
                 else:
                     buf+="="+property.getAttribute("value")
@@ -278,7 +278,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.4  2007-06-13 09:07:53  marc
+# Revision 1.5  2007-06-15 19:05:51  marc
+# - fixed getAttribute bug to getAttributeBoolean
+#
+# Revision 1.4  2007/06/13 09:07:53  marc
 # - if management appliance gets locked while working we'll overwrite it
 #
 # Revision 1.3  2007/04/04 12:35:52  marc
