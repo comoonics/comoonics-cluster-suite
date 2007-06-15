@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.9 2007-06-13 15:24:31 marc Exp $
+# $Id: ComLog.py,v 1.10 2007-06-15 19:00:26 marc Exp $
 #
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -246,8 +246,10 @@ def fileConfig(fname, defaults=None, _vars=None):
             #Disable any old loggers. There's no point deleting
             #them as other threads may continue to hold references
             #and by disabling them, you stop them doing any logging.
-            for log in existing:
-                root.manager.loggerDict[log].disabled = 1
+            # MARC: I don't understand the following two lines why disabling the loggers if they might be used
+            #       or referenced again and are disabled then.
+            #for log in existing:
+            #    root.manager.loggerDict[log].disabled = 1
         except:
             ei = sys.exc_info()
             traceback.print_exception(ei[0], ei[1], ei[2], None, sys.stderr)
@@ -272,11 +274,11 @@ def __testLogger(name, logger):
         from exceptions import IOError
         raise IOError("testioerror")
     except:
-        debugTraceLog(name)
-        infoTraceLog(name)
-        warningTraceLog(name)
+#        debugTraceLog(name)
+#        infoTraceLog(name)
+#        warningTraceLog(name)
         errorTraceLog(name)
-        criticalTraceLog(name)
+#        criticalTraceLog(name)
 
 def __line(text):
     print "-------------------------- %s --------------------------------------" %(text)
@@ -285,7 +287,7 @@ def main():
     _mylogger.setLevel(logging.DEBUG)
     import comoonics.db.ComDBLogger
     registerHandler("DBLogger", comoonics.db.ComDBLogger.DBLogger)
-    _filenames=("../../test/loggingconfig.ini", "../../test/loggingconfig.xml")
+    _filenames=("../../test/loggingconfig.xml",)
     getLogger().info("Testing ComLog:")
     loggers={"test1": logging.DEBUG,
              "test2": logging.INFO,
@@ -306,8 +308,10 @@ def main():
         fileConfig(_filename, None, )
         rootlogger=getLogger()
         __testLogger("root", rootlogger)
-        for _lname in rootlogger.manager.loggerDict.keys():
+        __line("handlernames: %s" %rootlogger.manager.loggerDict.keys())
+        for _lname in [ "atix", "atix", "atix.atix1" ]:
             __testLogger(_lname, logging.getLogger(_lname))
+            __testLogger(_lname+".test", logging.getLogger(_lname+".test"))
 
 _mylogger=logging.getLogger("comoonics.ComLog")
 logging.basicConfig()
@@ -315,7 +319,11 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.9  2007-06-13 15:24:31  marc
+# Revision 1.10  2007-06-15 19:00:26  marc
+# - more testing
+# - uncommented disabling of old loggers.
+#
+# Revision 1.9  2007/06/13 15:24:31  marc
 # - fixed minor bug in setLevel default should be None as logger not empty string.
 #
 # Revision 1.8  2007/06/13 13:06:50  marc
