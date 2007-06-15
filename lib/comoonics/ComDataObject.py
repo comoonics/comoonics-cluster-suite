@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.8 2007-04-23 22:07:14 marc Exp $
+# $Id: ComDataObject.py,v 1.9 2007-06-15 18:59:13 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -73,8 +73,8 @@ class DataObject(object):
             return default
         elif not self.__dict__.has_key('element') or not self.element.hasAttribute(name):
             raise exceptions.NameError("No attribute name " + name)
-        elif self.element.hasAttribute(name) and self.element.getAttribute(name)=="":
-            return True
+#        elif self.element.hasAttribute(name) and self.element.getAttribute(name)=="":
+#            return ""
         return self.element.getAttribute(name)
 
     def hasAttribute(self, name):
@@ -104,12 +104,12 @@ class DataObject(object):
             self.setAttribute(nodemap.item(i).nodeName, nodemap.item(i).nodeValue)
 
 
-    def getAttributeBoolean(self, name, default=False):
+    def getAttributeBoolean(self, name, default=None):
         ''' returns the boolean value of an attribute
             True:  "yes"|"true" (case insensitive) | "1"
             False: "no"|"false" (case insensitive)  | "0"
         '''
-        if not self.hasAttribute(self):
+        if not self.hasAttribute(name):
             return default
         value=self.getAttribute(name).lower()
         if value == "yes" or value == "true" or value == "1":
@@ -192,8 +192,91 @@ class DataObject(object):
         """
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
+def line(str=None):
+    print
+    print "--------------------"+str+"---------------------------------"
+
+def __test():
+    import sys
+    import os
+    import copy
+    import xml.dom
+    from xml.dom import EMPTY_NAMESPACE
+    from xml.dom.ext import PrettyPrint
+    from xml.dom.ext.reader import Sax2
+    from xml import xpath
+
+    # create Reader object
+    reader = Sax2.Reader()
+
+    #parse the document
+    file=os.fdopen(os.open("../../test/example_config.xml",os.O_RDONLY))
+    doc = reader.fromStream(file)
+
+    print'search for id "rootfs"'
+    element=xpath.Evaluate('//*[@refid="bootfs"]', doc)[0]
+
+    obj=DataObject(element, doc)
+    PrettyPrint(obj.getElement())
+    print obj
+
+    attribute="xyz"
+    line("Testing hasAttribute(%s)" %attribute)
+    if obj.hasAttribute(attribute):
+        print "Found Attribute \"%s\"!! Should not happen!!!" %attribute
+    else:
+        print "No Attribute \"%s\" available. (OK)" % attribute
+
+    attribute="id"
+    line("Testing hasAttribute(%s)" %attribute)
+    if obj.hasAttribute(attribute):
+        print "Found Attribute \"%s\"!! (OK)" %attribute
+    else:
+        print "No Attribute \"%s\"!! Should not happen!!!" %attribute
+
+    attribute="xyz"
+    default=""
+    line("Testing getAttribute(%s, %s)" %(attribute, default))
+    result=obj.getAttribute(attribute, default)
+    print "Found value for Attribute \"%s\"=\"%s\"" %(attribute, result)
+
+    attribute="id"
+    default="12"
+    line("Testing getAttribute(%s, %s)" %(attribute, default))
+    result=obj.getAttribute(attribute, default)
+    print "Found value for Attribute \"%s\"=\"%s\"" %(attribute, result)
+
+    attribute="xyz"
+    line("Testing getAttribute(%s)" %(attribute))
+    try:
+        result=obj.getAttribute(attribute)
+        print "Found value for Attribute \"%s\": %s !!!Should not happen !!!" %(attribute, result)
+    except:
+        print "Exception %s caught (OK)" %sys.exc_value
+
+    attribute="id"
+    line("Testing getAttribute(%s)" %(attribute))
+    try:
+        result=obj.getAttribute(attribute)
+        print "Found value for Attribute \"%s\": %s (OK)" %(attribute, result)
+    except:
+        print "Exception %s caught: !!!!SHould not happen!!!" %sys.exc_value
+
+    line("Testing boolean")
+    path="//device[@id='rootfs']"
+    element=xpath.Evaluate(path, doc)[0]
+    obj=DataObject(element)
+    print "%s.options: %s" %(path, obj.getAttribute("options"))
+    print "%s.optionsAsBoolean: '%s'" %(path, obj.getAttributeBoolean("options"))
+
+if __name__ == "__main__":
+    __test()
+
 # $Log: ComDataObject.py,v $
-# Revision 1.8  2007-04-23 22:07:14  marc
+# Revision 1.9  2007-06-15 18:59:13  marc
+# fixed bug in ComDataObject for empty attributes. Use getAttributeBoolean.
+#
+# Revision 1.8  2007/04/23 22:07:14  marc
 # added global NIYException
 #
 # Revision 1.7  2007/03/26 08:19:16  marc
