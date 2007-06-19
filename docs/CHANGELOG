@@ -60,6 +60,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-39:
+    - removed importing of dblogger
 * Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-38:
     - testing in Properties
     - loglevel in LVM and minor bugs
@@ -106,6 +108,9 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
+* Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-9:
+   - changed way of importing
+   - loglevel
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-8:
   - using new ComLog api
   - default importing of ComDBLogger and registering at ComLog
