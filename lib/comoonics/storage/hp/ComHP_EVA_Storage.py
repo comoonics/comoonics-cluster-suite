@@ -4,13 +4,14 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_Storage.py,v 1.4 2007-06-15 19:05:51 marc Exp $
+# $Id: ComHP_EVA_Storage.py,v 1.5 2007-06-19 12:59:53 marc Exp $
 #
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_Storage.py,v $
 
 from exceptions import TypeError
+from comoonics.pexpect import TIMEOUT
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
 from comoonics.storage.hp.ComHP_EVA_SSSU import HP_EVA_SSSU, CommandError
@@ -18,7 +19,7 @@ from comoonics.storage.ComStorage import Storage, NotImplementedYet, ErrorDuring
 from comoonics.storage.hp.ComHP_EVA import HP_EVA_Object
 
 class HP_EVA_Storage(Storage):
-    __logStrLevel__ = "HP_EVA_Storage"
+    __logStrLevel__ = "comoonics.storage.hp.HP_EVA_Storage"
     """
     Baseclass for storagesystem implementations. All supported methods should be implemented. If not an exception is
     raised.
@@ -150,7 +151,10 @@ class HP_EVA_Storage(Storage):
             # this means we are called as undo in consequence as called like add so we have to make the name
             # and move other paramaters away
             if _type=="vdisk" and properties and properties.has_key("vdisk"):
-                name=properties["vdisk"].getAttribute("value")+"\\"+name
+                vdisk=properties["vdisk"].getAttribute("value")
+                if vdisk.find("\\ACTIVE")>0:
+                    vdisk=vdisk[:vdisk.rindex("\\ACTIVE")]
+                name=vdisk+"\\"+name
             # clear all other properties except those allowed for delete
             if properties:
                 for key in properties.keys():
@@ -165,8 +169,8 @@ class HP_EVA_Storage(Storage):
                     if type(properties) == dict:
                         properties[def_parm]=True
                     else:
-                        properties[def_parm]="true"
-                        mylogger.debug("property[%s]=%s, type=%s" %(def_parm, properties[def_parm].getAttribute("name"), type(properties[def_parm].getAttribute("name"))))
+                        properties[def_parm]=""
+                        mylogger.debug("property[%s]=%s, type=%s" %(def_parm, properties[def_parm].getValue(), type(properties[def_parm].getValue())))
 
             if self.sssu.cmd("ls %s \"%s\" xml" %(_type, name))==0 and self.sssu.xml_output:
                 vdisk=HP_EVA_Object.fromXML(self.sssu.xml_output)
@@ -190,7 +194,11 @@ class HP_EVA_Storage(Storage):
         #
         try:
             mylogger.debug("add %s \"%s\" %s" %(type, name, properties))
-            if self.sssu.cmd("add %s \"%s\"" %(type, name), properties)==0:
+            try:
+                _result=self.sssu.cmd("add %s \"%s\"" %(type, name), properties)
+            except TIMEOUT:
+                _result=0
+            if _result==0:
                 if type=="vdisk":
                     lscmd="ls %s \"%s\\ACTIVE\" xml" %(type, name)
                 elif type=="snapshot":
@@ -349,7 +357,12 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_Storage.py,v $
-# Revision 1.4  2007-06-15 19:05:51  marc
+# Revision 1.5  2007-06-19 12:59:53  marc
+# - fixed loglevel
+# - fixed bug with parameters that do not have values (true) i.e. in default  params for disks being erased (WAIT FOR COMLETITION)
+# - catching a command timeout when adding then continuing as normal. If this is an error it is checked later.
+#
+# Revision 1.4  2007/06/15 19:05:51  marc
 # - fixed getAttribute bug to getAttributeBoolean
 #
 # Revision 1.3  2007/04/04 12:36:42  marc
