@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComBootloaderCopyset.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComBootloaderCopyset.py,v 1.2 2007-06-19 12:51:15 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComBootloaderCopyset.py,v $
 
 import xml.dom
@@ -26,19 +26,23 @@ from comoonics import ComSystem
 class BootloaderCopyset(Copyset):
     def __init__(self, element, doc):
         Copyset.__init__(self, element, doc)
-        
+
         try:
             __dest=xpath.Evaluate('destination/disk', element)[0]
             self.destination=BootDisk(__dest, doc)
         except Exception:
             raise ComException("destination for copyset not defined")
-        
+
     def doCopy(self):
+        self.destination.resolveDeviceName()
         self.destination.installBootloader()
-    
+
 
 # $Log: ComBootloaderCopyset.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2007-06-19 12:51:15  marc
+# - Compatibility with resolvable Devicenames introduced.
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.1  2006/06/28 17:25:16  mark
