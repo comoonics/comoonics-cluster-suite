@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.7 2007-06-15 19:04:17 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.8 2007-06-19 12:50:25 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 import re
@@ -46,9 +46,9 @@ class EnterpriseCopy(ComDataObject.DataObject):
     Class that does the enterprisecopy. Runs through every copyset and modificationset and executes them.
     """
     TAGNAME = "enterprisecopy"
-    #__logStrLevel__ = "comoonics.enterprisecopy.ComEnterpriseCopy"
+    __logStrLevel__ = "comoonics.enterprisecopy.ComEnterpriseCopy"
     #__logStrLevel__ = "comoonics"
-    __logStrLevel__ = "comoonics.enterprisecopy"
+    #__logStrLevel__ = "comoonics.enterprisecopy"
     _logger=logging.getLogger(__logStrLevel__)
 
     def __init__(self, element, doc):
@@ -206,7 +206,10 @@ class EnterpriseCopy(ComDataObject.DataObject):
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.7  2007-06-15 19:04:17  marc
+# Revision 1.8  2007-06-19 12:50:25  marc
+# - fixed the loglevel
+#
+# Revision 1.7  2007/06/15 19:04:17  marc
 # - better logging
 # - doAllsets with set as parameter cool stuff
 #
