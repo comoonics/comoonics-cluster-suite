@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.5 2007-06-15 19:05:51 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.6 2007-06-19 12:58:30 marc Exp $
 #
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
@@ -38,7 +38,7 @@ CMD_LOG_LEVEL=15
 CMD_LOG_LEVEL_NAME="SSSU_CMD"
 
 class HP_EVA_SSSU(object):
-    __logStrLevel__="HP_EVA_SSSU"
+    __logStrLevel__="comoonics.storage.hp.HP_EVA_SSSU"
     MATCH_MANAGER=re.compile("Manager:", re.IGNORECASE)
     MATCH_USERNAME=re.compile("username:", re.IGNORECASE)
     MATCH_PASSWORD=re.compile("password:", re.IGNORECASE)
@@ -56,7 +56,7 @@ class HP_EVA_SSSU(object):
 
     SSSU_CMD="sssu"
 
-    def __init__(self, manager, username, password, system, auto_connect=True, command=None, logfile=None, cmdlog=None, timeout=60, managed_overwrite=True):
+    def __init__(self, manager, username, password, system, auto_connect=True, command=None, logfile=None, cmdlog=None, timeout=240, managed_overwrite=True):
         """
         Initializes the connection to the HP EVA. But not connects. This will be done implicitly or directly via
         the connect method.
@@ -218,18 +218,18 @@ class HP_EVA_SSSU(object):
         elif params and isinstance(params, Properties):
             for property in params.iter():
                 #mylogger.debug("Property: %s" %(property))
-                mylogger.debug("toParams(%s): %s, bool?:%s" %(property.getAttribute("name"),property.getAttribute("value"),type(property.getAttributeBoolean("value", None))))
+                mylogger.debug("toParams(%s): %s, bool?:%s" %(property.getAttribute("name"),property.getValue(),type(property.getAttributeBoolean("value", None))))
                 if property.hasAttribute("name"):
                     buf+=property.getAttribute("name")
-                    if property.getAttribute("value") and type(property.getAttributeBoolean("value", None))==bool:
+                    if not property.getValue() or property.getValue()=="":
                         pass
                     else:
-                        buf+="=\""+property.getAttribute("value")+"\""
+                        buf+="=\""+property.getValue()+"\""
                     buf+=HP_EVA_SSSU.DELIM
         elif params and isinstance(params, DataObject):
             for property in params.getProperties().iter():
                 buf+=property.getAttribute("name")
-                if property.getAttribute("value") and type(property.getAttributeBoolean("value"))==bool:
+                if not property.getValue() or property.getValue()=="":
                     pass
                 else:
                     buf+="="+property.getAttribute("value")
@@ -278,7 +278,12 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.5  2007-06-15 19:05:51  marc
+# Revision 1.6  2007-06-19 12:58:30  marc
+# - fixed loglevel
+# - increased timeout to 4 minutes
+# - fixed bug with parameters that do not have values (true) i.e. in default  params for disks being erased (WAIT FOR COMLETITION)
+#
+# Revision 1.5  2007/06/15 19:05:51  marc
 # - fixed getAttribute bug to getAttributeBoolean
 #
 # Revision 1.4  2007/06/13 09:07:53  marc
