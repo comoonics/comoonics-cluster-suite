@@ -1,9 +1,9 @@
 #!/bin/bash
-# $Id: build_rpm-storage-hp.sh,v 1.4 2007-06-15 19:10:28 marc Exp $
+# $Id: build_rpm-storage-hp.sh,v 1.5 2007-06-19 13:34:42 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=4
+RELEASE=5
 REQUIRES="--requires=comoonics-cs-py,comoonics-ec-py,comoonics-storage-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-storage-hp-py"
@@ -22,7 +22,10 @@ setup
 
 ##############
 # $Log: build_rpm-storage-hp.sh,v $
-# Revision 1.4  2007-06-15 19:10:28  marc
+# Revision 1.5  2007-06-19 13:34:42  marc
+# new versions
+#
+# Revision 1.4  2007/06/15 19:10:28  marc
 # new version
 #
 # Revision 1.3  2007/06/13 09:09:12  marc
