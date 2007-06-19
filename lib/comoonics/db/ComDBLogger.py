@@ -3,21 +3,21 @@ Class for logging to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBLogger.py,v 1.4 2007-06-13 09:03:52 marc Exp $
+# $Id: ComDBLogger.py,v 1.5 2007-06-19 15:09:55 marc Exp $
 #
 
 import logging
 import socket
 from ComDBConnection import DBConnection
-import comoonics.ComLog
+from comoonics import ComLog
 
 class DBLogger(logging.Handler):
     """
     This class is a logging.Handler that stores LogRecords produced by loggers in a table of a relational database.
     The defaults tablename is "log".
     """
-    __logLevelStr__="DBLogger"
-    log=comoonics.ComLog.getLogger(__logLevelStr__)
+    __logLevelStr__="comoonics.db.DBLogger"
+    log=ComLog.getLogger(__logLevelStr__)
     DB_LOG_LEVEL=logging.DEBUG+5
     DB_LOG_LEVEL_NAME="DBLOG"
     logging.addLevelName(DB_LOG_LEVEL, DB_LOG_LEVEL_NAME)
@@ -142,7 +142,10 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBLogger.py,v $
-# Revision 1.4  2007-06-13 09:03:52  marc
+# Revision 1.5  2007-06-19 15:09:55  marc
+# fixed logging
+#
+# Revision 1.4  2007/06/13 09:03:52  marc
 # - using new ComLog api
 # - default importing of ComDBLogger and registering at ComLog
 #
