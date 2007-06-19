@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# $Id: build_rpm-db.sh,v 1.5 2007-06-13 09:04:42 marc Exp $
+# $Id: build_rpm-db.sh,v 1.6 2007-06-19 15:21:06 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=8
+RELEASE=9
 REQUIRES="--requires=comoonics-cs-py,MySQL-python"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-db-py"
@@ -24,7 +24,10 @@ setup
 
 ##############
 # $Log: build_rpm-db.sh,v $
-# Revision 1.5  2007-06-13 09:04:42  marc
+# Revision 1.6  2007-06-19 15:21:06  marc
+# new version 0.1-9
+#
+# Revision 1.5  2007/06/13 09:04:42  marc
 # - using new ComLog api
 # - default importing of ComDBLogger and registering at ComLog
 #
