@@ -5,7 +5,7 @@ Implementation of properties as DataObject
 
 __version__= "$Revision $"
 
-# $Id: ComProperties.py,v 1.4 2007-06-13 09:13:08 marc Exp $
+# $Id: ComProperties.py,v 1.5 2007-06-19 13:10:54 marc Exp $
 
 import warnings
 from comoonics.ComDataObject import DataObject
@@ -39,7 +39,7 @@ class Property(DataObject):
             self.setAttribute("name", args[0])
             self.setAttribute("value", args[1])
         else:
-            #mylogger.debug("%s, %s" %(type(args[0]), type(args[1])))
+#            mylogger.debug("%s, %s" %(type(args[0]), type(args[1])))
             super(Property, self).__init__(*args)
         if self.hasAttribute("name") and not self.hasAttribute("value") and len(self.getElement().childNodes)==0:
             self.setAttribute("value", True)
@@ -137,7 +137,10 @@ def main():
     print "Getting property %s: %s" %("test123", properties["test123"].getValue())
     print "Setting property %s: %s" %("test1234", True)
     properties["test1234"]=True
+    print "Setting property %s: %s" %("test1235", "")
+    properties["test1235"]=""
     print "Getting property %s: %s, %s" %("test1234", properties["test1234"].getValue(), type(properties["test1234"].getValue()))
+    print "Getting property %s: %s, %s" %("test1235", properties["test1235"].getValue(), type(properties["test1235"].getValue()))
 
     try:
         print "Getting nonproprty: %s" %(properties.getAttribute("test123"))
@@ -148,13 +151,16 @@ def main():
         print "%s" %(property)
 
     for propertyname in properties.keys():
-        print "%s->%s" %(propertyname, properties[propertyname].getValue())
+        print "%s->%s(%s)" %(propertyname, properties[propertyname].getValue(), type(properties[propertyname].getValue()))
 
 
 if __name__ == '__main__':
     main()
 # $Log: ComProperties.py,v $
-# Revision 1.4  2007-06-13 09:13:08  marc
+# Revision 1.5  2007-06-19 13:10:54  marc
+# - changed some tests
+#
+# Revision 1.4  2007/06/13 09:13:08  marc
 # - added Properties.items()
 # - added Property.getValue()
 # - better Boolean handling
