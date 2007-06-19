@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.10 2007-06-15 19:00:26 marc Exp $
+# $Id: ComLog.py,v 1.11 2007-06-19 15:11:20 marc Exp $
 #
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -258,10 +258,10 @@ def fileConfig(fname, defaults=None, _vars=None):
         logging._releaseLock()
 
 # Implicitly try to import DBLogger and let it register
-try:
-    import comoonics.db.ComDBLogger
-except:
-    pass
+#try:
+#    from comoonics.db.ComDBLogger import DBLogger
+#except:
+#    pass
 
 def __testLogger(name, logger):
     logger.debug("debug")
@@ -285,8 +285,8 @@ def __line(text):
 
 def main():
     _mylogger.setLevel(logging.DEBUG)
-    import comoonics.db.ComDBLogger
-    registerHandler("DBLogger", comoonics.db.ComDBLogger.DBLogger)
+    from comoonics.db.ComDBLogger import DBLogger
+    registerHandler("DBLogger", DBLogger)
     _filenames=("../../test/loggingconfig.xml",)
     getLogger().info("Testing ComLog:")
     loggers={"test1": logging.DEBUG,
@@ -319,7 +319,10 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.10  2007-06-15 19:00:26  marc
+# Revision 1.11  2007-06-19 15:11:20  marc
+# removed importing of DBLogger
+#
+# Revision 1.10  2007/06/15 19:00:26  marc
 # - more testing
 # - uncommented disabling of old loggers.
 #
