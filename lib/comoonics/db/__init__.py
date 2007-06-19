@@ -4,13 +4,16 @@ Init this package
 
 """
 
-import comoonics.ComLog
-import ComDBLogger
-comoonics.ComLog.registerHandler("DBLogger", ComDBLogger.DBLogger)
+from comoonics import ComLog
+from ComDBLogger import DBLogger
+ComLog.registerHandler("DBLogger", DBLogger)
 
 ########
 # $Log: __init__.py,v $
-# Revision 1.2  2007-06-13 09:03:52  marc
+# Revision 1.3  2007-06-19 15:10:07  marc
+# fixed importing
+#
+# Revision 1.2  2007/06/13 09:03:52  marc
 # - using new ComLog api
 # - default importing of ComDBLogger and registering at ComLog
 #
