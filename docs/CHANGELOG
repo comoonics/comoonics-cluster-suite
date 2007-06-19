@@ -60,6 +60,9 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-38:
+    - testing in Properties
+    - loglevel in LVM and minor bugs
 * Fri Jun 15 2007 MG <grimme@atix.de>, 0.1-37
     - fixed bug in logging (disabled loggers with fileconfig)
     - fixed bug in ComDataObject (getAttribute) will return string not boolean when empty.
@@ -116,6 +119,9 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Mon Jun 19 2007 MG <grimme@atix.de>, 0.1-22
+  - ComoonicsEnterpriseCopy, fixed Loglevel
+  - ComoonicsBootloaderCopyset, fixed resolvable devicenames
 * Fri Jun 15 2007 MG <grimme@atix.de>, 0.1-21
   - cool feature for com-ec --set
   - better logging
@@ -157,6 +163,11 @@ comoonics-storage-py
   initial release
 
 comoonics-storage-hp-py
+* Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-5:
+ - ComHP_EVA_SSSU/ComHP_EVA_Storage: fixed loglevel
+ - ComHP_EVA_SSSU: increased timeout to 4 minutes
+ - ComHP_EVA_SSSU/ComHP_EVA_Storage: fixed bug with parameters that do not have values (true) i.e. in default  params for disks being erased (WAIT FOR COMLETITION)
+ - ComHP_EVA_Storage: catching a command timeout when adding then continuing as normal. If this is an error it is checked later.
 * Fri Jun 15 2007 MG <grimme@atix.de>, 0.1-4:
   - Fixed getAttribute to getAttributeBoolean so empty params will work
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-3:
