@@ -168,6 +168,8 @@ comoonics-storage-py
   initial release
 
 comoonics-storage-hp-py
+* Tue Jun 26 2007 MG <grimme@atix.de>, 0.1-6:
+ - New feature: If system management is overtaken during operation we'll take it back
 * Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-5:
  - ComHP_EVA_SSSU/ComHP_EVA_Storage: fixed loglevel
  - ComHP_EVA_SSSU: increased timeout to 4 minutes
