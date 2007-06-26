@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.6 2007-06-19 12:58:30 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.7 2007-06-26 07:31:14 marc Exp $
 #
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
@@ -193,9 +193,11 @@ class HP_EVA_SSSU(object):
                     return self.last_error_code
                 else:
                     # Check for the special case when system is managed by another agent to get the right back
-                    _match=self.MATCH_MANAGED_ERROR.match(self.last_output)
+                    _match=self.MATCH_MANAGED_ERROR.search(self.last_output)
                     if _match and self.managed_overwrite:
                         mylogger.warn("SSSU Warning: System is managed by another agent (%s, %s). Overwriting." %(_match.group(1), _match.group(2)))
+                        self.setSystem(self.system, "manage")
+                        return 0
                     raise CommandError(self.last_error_code, self.last_cmd, self.last_output)
 
     def toParams(self, params):
@@ -278,7 +280,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.6  2007-06-19 12:58:30  marc
+# Revision 1.7  2007-06-26 07:31:14  marc
+# when system management is overtake we'll take it back if in operation.
+#
+# Revision 1.6  2007/06/19 12:58:30  marc
 # - fixed loglevel
 # - increased timeout to 4 minutes
 # - fixed bug with parameters that do not have values (true) i.e. in default  params for disks being erased (WAIT FOR COMLETITION)
