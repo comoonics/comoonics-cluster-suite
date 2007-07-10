@@ -4,10 +4,10 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_Storage.py,v 1.5 2007-06-19 12:59:53 marc Exp $
+# $Id: ComHP_EVA_Storage.py,v 1.6 2007-07-10 11:35:43 marc Exp $
 #
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_Storage.py,v $
 
 from exceptions import TypeError
@@ -98,7 +98,9 @@ class HP_EVA_Storage(Storage):
             for host in disk.getHostNames(lun):
                 try:
                     self.sssu.cmd("add lun %s vdisk=\"%s\" host=\"%s\"" %(lun, disk.getAttribute("name"), host))
-                    if host.count("\\")>0:
+                    if lun.count("\\")==0:
+                        if host.count("\\")==0:
+                            host="\Hosts\\%s" %(host)
                         self.sssu.cmd("ls lun \"%s\\%s\" xml" %(host,lun))
                     else:
                         self.sssu.cmd("ls lun \"%s\" xml" %(lun))
@@ -357,7 +359,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_Storage.py,v $
-# Revision 1.5  2007-06-19 12:59:53  marc
+# Revision 1.6  2007-07-10 11:35:43  marc
+# - fixed a bug in mapping luns. It could happen that the validation would fail if new lun was created.
+#
+# Revision 1.5  2007/06/19 12:59:53  marc
 # - fixed loglevel
 # - fixed bug with parameters that do not have values (true) i.e. in default  params for disks being erased (WAIT FOR COMLETITION)
 # - catching a command timeout when adding then continuing as normal. If this is an error it is checked later.
