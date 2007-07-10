@@ -2,7 +2,7 @@
 Class for the EMC-Legator BackupHandlerImplementation.
 """
 # here is some internal information
-# $Id: ComEMCLegatoBackupHandler.py,v 1.3 2007-06-13 09:00:00 marc Exp $
+# $Id: ComEMCLegatoBackupHandler.py,v 1.4 2007-07-10 11:31:54 marc Exp $
 #
 
 import os
@@ -49,7 +49,7 @@ class EMCLegatoBackupHandler(BackupHandler):
     """
     Class for the handling of backup applications
     """
-    log=ComLog.getLogger("EMCLegatoBackupHandler")
+    log=ComLog.getLogger("comoonics.backup.EMCLegato.EMCLegatoBackupHandler")
     FORMAT="legato"
 
     def __init__(self, name, properties):
@@ -74,30 +74,31 @@ class EMCLegatoBackupHandler(BackupHandler):
     def addFile(self, name, arcname=None,recursive=True):
         '''
         adds a file or directory to archiv
+        If @arcname has no pathpart a metadata basedir is added.
         @name:       the name of the sourcefile
         @arcname:    the name of the file to archive this one
         @recursive:  should we archive this one recursively (not working!!!)
         '''
-        import os
-        import os.path
         import shutil
         olddir=os.getcwd()
         self.log.debug("addFile(%s, %s)" %(name, arcname))
         dir=os.path.dirname(name)
         self.log.debug("addFile changing to directory: %s" %(dir))
         os.chdir(dir)
-        newfile="metadata"
+        (_path, _name)=os.path.split(arcname)
+        if not _path or _path == "":
+            _path="metadata"
         created=False
-        if not os.path.exists(newfile):
+        if not os.path.exists(_path):
             created=True
-            os.mkdir(newfile)
-        newfile+="/"+arcname
-        self.log.debug("addFile: copy %s => %s" %(name, newfile))
-        shutil.copy(name, newfile)
-        self.networker.executeSaveFs(self.level, newfile)
-#        os.unlink(newfile)
+            os.makedirs(_path)
+        _file=os.path.join(_path, _name)
+        self.log.debug("addFile: copy %s => %s" %(name, _file))
+        shutil.copy(name, _file)
+        self.networker.executeSaveFs(self.level, _file)
+#        os.unlink(_file)
 #        if created:
-#            os.unlink(os.path.dirname(newfile))
+#            os.unlink(os.path.dirname(_file))
         os.chdir(olddir)
 
     def createArchive(self, source, cdir=None):
@@ -120,17 +121,17 @@ class EMCLegatoBackupHandler(BackupHandler):
         """ extracts the whole archive to dest.
         @dest: destinationdirectory given as path
         """
-        # for legato we need to cut the last part.
-        _dest=os.path.dirname(os.path.normpath(dest))
-        self.extractFile(self.name, _dest)
+        # for legato we need to cut the last part. no we don't we do it different. See LegateNetworker
+        #_dest=os.path.dirname(os.path.normpath(dest))
+        self.extractFile(self.name, dest, True)
 
-    def extractFile(self, name, dest):
+    def extractFile(self, name, dest, dir=False):
         """ extracts a single file from the archive to dest.
         @name: the name of the file to be restored. If None the whole archive will be restored
         @dest: destinationdirectory given as path
         """
-        self.log.debug("extracting Archive: %s => %s" %(self.name, dest))
-        self.networker.executeRecover(name, dest)
+        self.log.debug("extractFile: extracting Archive: %s => %s" %(self.name, dest))
+        self.networker.executeRecover(name, dest, dir)
 
     def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
@@ -138,7 +139,7 @@ class EMCLegatoBackupHandler(BackupHandler):
         path=os.path.normpath("%s/%s" %(self.name, name))
         self.log.debug("getFileObj(%s)=>%s" %(path, self.tmppath))
         self.extractFile(path, self.tmppath)
-        filename=os.path.normpath("%s/%s" %(self.tmppath, name))
+        filename=os.path.normpath("%s/%s" %(self.tmppath, os.path.basename(name)))
         filep=open(filename)
         self.openfiles.append(filename)
         return filep
@@ -152,7 +153,12 @@ class EMCLegatoBackupHandler(BackupHandler):
 
 ########################
 # $Log: ComEMCLegatoBackupHandler.py,v $
-# Revision 1.3  2007-06-13 09:00:00  marc
+# Revision 1.4  2007-07-10 11:31:54  marc
+# MMG Support
+#
+# MMG Backup Legato Integration
+#
+# Revision 1.3  2007/06/13 09:00:00  marc
 # - now backuping full path to support incremental backups
 #
 # Revision 1.2  2007/04/04 12:46:30  marc
