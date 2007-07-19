@@ -1,0 +1,87 @@
+#!/usr/bin/python
+
+# here is some internal information
+# $Id: rpm2db.py,v 1.1 2006/08/08 08:32:38 marc Exp $
+#
+
+__version__ = "$revision$"
+__description__="""
+Programm to map gfs_tool calls in python. Commands are
+counters         [mountpoint] default method to output counters (as gfs_tool counters does).
+countersFormater [mountpoint] outputs the counters by the given writer or defaultwriter (see --counterswriter)
+lockdump         [mountpoint] default method to output lockdumps (as gfs_tool lockdump does).
+lockdumpFormater [mountpoint] outputs the lockdump by the given writer or defaultwriter (see --lockswriter)
+"""
+
+# $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/rpm2db.py,v $
+import sys
+import logging
+import logging.handlers
+
+from comoonics import ComLog, ComSystem
+from comoonics.ComExceptions import ComException
+import comoonics.ComGFS
+from comoonics import GetOpts
+
+import logging
+
+ComLog.setLevel(logging.INFO)
+ComSystem.__EXEC_REALLY_DO=ComSystem.CONTINUE
+
+def line(str=None):
+    print
+    print "--------------------"+str+"---------------------------------"
+
+class Config(GetOpts.BaseConfig):
+    counters_writer=None
+    locks_writer=None
+    method=None
+    params=None
+    lockdump_writer=None
+    counters_writer=None
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
+        self.counters_writer=GetOpts.Option("counterswriter", "Sets outputmethod for outputting counters", self.counters_writer, False, "c")
+        self.locks_writer=GetOpts.Option("lockswriter", "Sets outputmethod for outputting locks", self.locks_writer, False, "l")
+        self.list_counters_writer=GetOpts.Option("listcounterswriter", "Lists the names of all registered counterswriters", False, False, "C")
+        self.list_locks_writer=GetOpts.Option("listlockswriter", "Lists the names of all registered lockdumpwriters", False, False, "L")
+        self.setAdditionalParams("method [method_params]")
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) < 1 and not self.list_counters_writer and not self.list_locks_writer:
+            return 1
+        if len(args_proper) >= 1:
+            self.method=str(args_proper[0])
+        if len(args_proper) >= 2:
+            self.params=str(args_proper[1])
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+
+config=Config()
+
+ret=config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    config.usage()
+    sys.exit(ret)
+
+if config.list_counters_writer:
+    print ",".join(comoonics.ComGFS.getCountersWriterRegistry().keys())
+elif config.list_locks_writer:
+    print ",".join(comoonics.ComGFS.getLockdumpWriterRegistry().keys())
+else:
+    _gfs=comoonics.ComGFS.GFS(config.params)
+    if config.counters_writer and comoonics.ComGFS.getCountersWriter(config.counters_writer):
+        _gfs.counterswriter=comoonics.ComGFS.getCountersWriter(config.counters_writer)
+    if config.lockdump_writer and comoonics.ComGFS.getLockdumpWriter(config.lockdump_writer):
+        _gfs.glockwriter=comoonics.ComGFS.getLockdumpWriter(config.lockdump_writer)
+    print getattr(_gfs, config.method)()
+
+# $Log: rpm2db.py,v $
+# Revision 1.1  2006/08/08 08:32:38  marc
+# initial revision
+#
