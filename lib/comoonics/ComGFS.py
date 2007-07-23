@@ -10,7 +10,7 @@ provides analysis functions and the like for gfs
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComGFS.py,v $
 
 import os
@@ -33,6 +33,7 @@ class GFSError(OSError):
         return "%s: %s" %(self.value, os.strerror(os.error))
 
 class DictWriter(object):
+    logger=logging.getLogger("comoonics.ComGFS.DictWriter")
     NAME=None
     def __init__(self, _out=sys.stdout):
         self.out=_out
@@ -40,16 +41,29 @@ class DictWriter(object):
         self.prefix=None
         self.prefix_delim="."
         self.writehead=True
+        self.writetail=False
         self.only_values=False
+        self.filteredKeys=None
 
-    def write(self, _dict, _tabs=0):
-        if self.writehead:
+    def write(self, _dict, _tabs=0, _head=True, _tail=True, _actkey=None):
+        if self.writehead and _head:
             self.writeHead(_dict, _tabs)
         else:
             _tabs=_tabs-1
-        _keys=_dict.keys()
-        _keys.sort()
+        _keys=None
+        if self.filteredKeys:
+            if not _actkey:
+                _actkey="default"
+            if self.filteredKeys.has_key(_actkey):
+                self.logger.debug("Setting filteredKeys %s" %_actkey)
+                _keys=self.filteredKeys[_actkey]
+        if not _keys:
+            _keys=_dict.keys()
+            _keys.sort()
         for key in _keys:
+            if not _dict.has_key(key):
+                self.filterDictValue(key)
+                continue
             value=_dict[key]
             if key.startswith("__") and key.endswith("__"):
                 continue
@@ -65,6 +79,8 @@ class DictWriter(object):
                 if not self.only_values:
                     self._write(self.formatPrefix(_dict))
                 self.writeTupleValue(key, value, _tabs+1)
+        if self.writetail and _tail:
+            self.writeTail(_dict, _tabs)
 
     def formatPrefix(self, _dict):
         buf=""
@@ -73,6 +89,9 @@ class DictWriter(object):
         return buf
 
     # Methods to be overwritten defaults to just output
+
+    def filterDictValue(self, key):
+        pass
 
     def getPrefix(self, _dict):
         if _dict.has_key(self.prefix):
@@ -99,6 +118,9 @@ class DictWriter(object):
 
     def writeTupleValue(self, _key, _tuple, _tabs=0):
         self.writeKeyValue(_key, ",".join(_tuple), _tabs)
+
+    def writeTail(self, _dict, _tabs=0):
+        pass
 
     def _write(self, _str, _tabs=0):
         self.out.write("\t"*_tabs+_str.expandtabs())
@@ -139,9 +161,9 @@ class GLockWriter(DictWriter):
     def __init__(self, _out=sys.stdout):
         DictWriter.__init__(self, _out)
 
-    def write(self, _dict, _tabs=0):
+    def write(self, _dict, _tabs=0, _head=True, _tail=True, _actKey=None):
         self.decipherGlock(_dict)
-        DictWriter.write(self, _dict, _tabs)
+        DictWriter.write(self, _dict, _tabs, _head, _tail, _actKey)
 
     def writePids(self, pids):
         pass
@@ -155,11 +177,43 @@ class GLockWriter(DictWriter):
 class DefaultCountersWriter(DictWriter):
     NAME="__default__"
     logger=logging.getLogger("comoonics.ComGFS.DefaultCountersWriter")
+    FILTERED_COLS={ "default": ["locks",
+                       "locks held",
+                       "incore inodes",
+                       "metadata buffers",
+                       "unlinked inodes",
+                       "quota IDs",
+                       "incore log buffers",
+                       "log space used",
+                       "meta header cache entries",
+                       "glock dependencies",
+                       "glocks on reclaim list",
+                       "log wraps",
+                       "outstanding LM calls",
+                       "outstanding BIO calls",
+                       "fh2dentry misses",
+                       "glocks reclaimed",
+                       "glock nq calls",
+                       "glock dq calls",
+                       "glock prefetch calls",
+                       "lm_lock calls",
+                       "lm_unlock calls",
+                       "lm callbacks"
+                       "address operations",
+                       "dentry operations",
+                       "export operations",
+                       "file operations",
+                       "inode operations",
+                       "super operations",
+                       "vm operations",
+                       "block I/O reads",
+                       "block I/O writes"]}
 
     def __init__(self, _out=sys.stdout):
         DictWriter.__init__(self, _out)
         self.print_only_value=False
         self.writehead=False
+        self.filteredKeys=self.FILTERED_COLS
 addCountersWriter(DefaultCountersWriter())
 
 class CountersValueWriter(DefaultCountersWriter):
@@ -236,10 +290,107 @@ class DefaultGLockWriter(GLockWriter):
                 _ret=_array[int(_dict[_key])]
             return _ret
         except IndexError:
-            self.logger.warn("Unkown %s type %u" %(_key, _dict[_key]))
+            self.logger.warn("Unkown %s type %s" %(_key, _dict[_key]))
         except ValueError:
             self.logger.debug("Cannot convert \"%s\" to int" %(_dict[_key]))
 addLockdumpWriter(DefaultGLockWriter())
+
+class CSVGlockWriter(GLockWriter):
+    NAME="csv"
+
+    VALID_COLS={ "default": ["glockid", "glock", "ail_bufs", "aspace", "gl_count", "gl_state", "gl_flags",
+                             "incore_le", "lvb_count", "new_le", "object", "reclaim", "req_bh", "req_gh",
+                             "Inode", "Holder"],
+                 "Inode": ["i_count", "num", "type", "vnode", "i_flags" ],
+                 "Holder": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
+                 "Request": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
+                 "Waiter1": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
+                 "Waiter2": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
+                 "Waiter3": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ]
+                 }
+
+    VALID_COLNAMES= [ "glockid", "glock", "ail_bufs", "aspace", "gl_count", "gl_flags", "gl_state", "incore_le",
+                     "lvb_count", "new_le", "object", "reclaim", "req_bh", "req_gh",
+                      "Inode.i_count", "Inode.num", "Inode.type", "Inode.vnode", "Inode.i_flags",
+                      "Request.error", "Request.gh_flags", "Request.gh_iflags", "Request.gh_state", "Request.owner",
+                      "Holder.error", "Holder.gh_flags", "Holder.gh_iflags", "Holder.gh_state", "Holder.owner",
+                      "Waiter1.error", "Waiter1.gh_flags", "Waiter1.gh_iflags", "Waiter1.gh_state", "Waiter1.owner",
+                      "Waiter2.error", "Waiter2.gh_flags", "Waiter2.gh_iflags", "Waiter2.gh_state", "Waiter2.owner",
+                      "Waiter3.error", "Waiter3.gh_flags", "Waiter3.gh_iflags", "Waiter3.gh_state", "Waiter3.owner",
+                       ]
+
+    def __init__(self, _out=sys.stdout, _delimiter=";", _dictdelimiter="\n", _head=True):
+        GLockWriter.__init__(self, _out)
+        self.writehead=_head
+        self.delimiter=_delimiter
+        self.dictdelimiter=_dictdelimiter
+        self.writetail=True
+        self._firstLine=False
+        self.filteredKeys=self.VALID_COLS
+
+    def writeHead(self, _dict, _tabs=0):
+        _buf=""
+        if self.writehead and not self._firstLine:
+            _buf=self.delimiter.join(self.VALID_COLNAMES)
+            _buf+=self.dictdelimiter
+            self._write(_buf)
+            self._firstLine=True
+        return _buf
+
+    def filterDictValue(self, key):
+        if self.filteredKeys.has_key(key):
+            self._write(self.delimiter * len(self.filteredKeys[key]))
+        else:
+            self._write(self.delimiter)
+
+    def writeTail(self, _dict, _tabs=0):
+        self._write(self.dictdelimiter)
+
+    def writeKeyValue(self, _key, _value, _tabs=0):
+        self._write(_value+self.delimiter, 0)
+
+    def writeDictValue(self, _key, _dict, _tabs=0):
+        #self._write("dict<%s>\n" %_key, _tabs)
+        self.logger.debug("writeDictValue %s, %s, %s" %(_key, _dict, self.filteredKeys))
+        if self.filteredKeys.has_key(_key):
+            self.write(_dict, _tabs, False, False, _key)
+
+    def writeTupleValue(self, _key, _tuple, _tabs=0):
+        self.writeKeyValue(_key, " ".join(_tuple), _tabs)
+addLockdumpWriter(CSVGlockWriter())
+
+class SQLGlockWriter(CSVGlockWriter):
+    CREATE_TABLES_STATEMENT="""
+    CREATE TABLE IF NOT EXISTS Glocks%s (
+       glockid int(64) NOT NULL,
+       glock int(8) NOT NULL,
+       ail_bufs ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       aspace int(64) DEFAULT NULL,
+       gl_count int(64),
+       gl_state int(8) NOT NULL,
+       gl_flags int(64)
+       lvb_count int(64),
+       incore_le  ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       new_le ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       object ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       reclaim ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       req_bh ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       req_gh ENUM ('yes', 'no') NOT NULL DEFAULT "no")
+    ) TYPE=InnoDB COMMENT="Table to hold all locks.";
+    CREATE TABLE IF NOT EXISTS Holders (
+       type ENUM ("Request", "Holder", "Waiters1", "Waiters2", "Waiters3"),
+       glockid int(64) NOT NULL,
+       owner int(64) NOT NULL,
+       gh_state int(64),
+       gh_flags int(64),
+       gh_iflags int(64),
+       error int(64),
+    ) TYPE=InnoDB COMMENT="Table holding all holders, waiters and requests";
+    """
+
+    def __init__(self, _glocks_table="Glocks", _holders_table="Holders", _inodes_table="Inodes", _out=sys.stdout):
+        CSVGlockWriter.__init__(self, _out)
+addLockdumpWriter(SQLGlockWriter)
 
 class GFS(object):
     """
@@ -311,7 +462,8 @@ class GFS(object):
 
         if _mountpoint and not self.getDevCookie(_mountpoint):
             raise GFSError, "Cannot find cookie for mountpoint %s" %_mountpoint
-        self.counterswriter.prefix=self.mountpoint
+        if hasattr(self, "mountpoint"):
+            self.counterswriter.prefix=self.mountpoint
 
     def getDevCookie(self, mountpoint):
         if not self.getDeviceFromMountpoint(mountpoint):
@@ -451,7 +603,10 @@ class GFS(object):
                         _buf=_line
                         GFS.logger.debug("Saving buffer: \"%s\"" %_buf)
                     else:
-                        _line=_line[:-1]
+                        _line=_line.strip()
+                        #_line=_line[:-1]
+                        if not _line or _line=="":
+                            continue
                         GFS.logger.debug("Read line: %s" %_line)
                         _matched=False
                         _re=GFS.GLOCK_MATCH.match(_line)
@@ -490,6 +645,10 @@ class GFS(object):
             pass
 
         os.close(_fd)
+        # Last one
+        if _glock:
+            self.locks+=1
+            self.glockwriter.write(_glock)
 
         self.glockwriter.writePids(self.pids)
         self.glockwriter.writeLocks(self.locks)
@@ -498,7 +657,7 @@ class GFS(object):
 def main():
    import sys
    logging.basicConfig()
-   logging.getLogger().setLevel(logging.INFO)
+   #logging.getLogger().setLevel(logging.INFO)
    #GFS.logger.setLevel(logging.DEBUG)
    ComSystem.__EXEC_REALLY_DO=None
    _gfs=GFS(sys.argv[2])
