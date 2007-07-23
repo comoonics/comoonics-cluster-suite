@@ -62,6 +62,9 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Mon Jul 23 2007 MG <grimme@atix.de>, 0.1-41:
+   - made stable order for com-gfs_tool counters so that the output is always the same independent from version of
+     gfs_tools
 * Thu Jul 19 2007 MG <grimme@atix.de>, 0.1-40:
    - added com-gfs_tool and ComGFS for better usage of gfs_tool
 * Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-39:
