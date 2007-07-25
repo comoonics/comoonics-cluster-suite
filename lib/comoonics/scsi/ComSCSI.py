@@ -6,11 +6,11 @@ API for working with scsi and linux
 
 
 # here is some internal information
-# $Id: ComSCSI.py,v 1.2 2007-04-04 12:32:44 marc Exp $
+# $Id: ComSCSI.py,v 1.3 2007-07-25 11:35:26 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/scsi/ComSCSI.py,v $
 
 from comoonics import ComLog
@@ -21,7 +21,7 @@ import os.path
 import re
 from comoonics import ComSystem
 
-log=ComLog.getLogger("ComSCSI")
+log=ComLog.getLogger("comoonics.scsi.ComSCSI")
 
 class SCSIException(ComException):
     def __str__(self):
@@ -374,7 +374,10 @@ if __name__=="__main__":
 
 ###########################
 # $Log: ComSCSI.py,v $
-# Revision 1.2  2007-04-04 12:32:44  marc
+# Revision 1.3  2007-07-25 11:35:26  marc
+# -loglevel
+#
+# Revision 1.2  2007/04/04 12:32:44  marc
 # MMG Backup Legato Integration :
 # - added timeout after rescan
 #
