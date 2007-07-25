@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.3 2007-04-10 15:36:24 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.4 2007-07-25 11:10:23 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -28,7 +28,7 @@ from comoonics.ComFileSystem import FileSystem
 from comoonics.ComMountpoint import MountPoint
 from comoonics import ComLog
 
-log=ComLog.getLogger("Modificationset")
+log=ComLog.getLogger("comoonics.enterprisecopy.ComFilesystemModificationset.FilesystemModificationset")
 
 class FilesystemModificationset(ModificationsetJournaled):
     """ Base Class for all source and destination objects"""
@@ -38,17 +38,17 @@ class FilesystemModificationset(ModificationsetJournaled):
             __device=xpath.Evaluate('device', element)[0]
             self.device=Device(__device, doc)
         except Exception:
-            raise ComException("device for copyset not defined")
+            raise ComException("Device for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
         try:
             __fs=xpath.Evaluate('device/filesystem', element)[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
         except Exception:
-            raise ComException("filesystem for copyset not defined")
+            raise ComException("filesystem for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
         try:
             __mp=xpath.Evaluate('device/mountpoint', element)[0]
             self.mountpoint=MountPoint(__mp, doc)
         except Exception:
-            raise ComException("mountpoint for copyset not defined")
+            raise ComException("Mountpoint for modificationset %s not defined" %self.getAttribute("name", "unknown"))
         self.umountfs=False
         self.createModificationsList(xpath.Evaluate('device/modification', element), doc)
         self.cwd = os.getcwd()
@@ -85,7 +85,11 @@ class FilesystemModificationset(ModificationsetJournaled):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.3  2007-04-10 15:36:24  marc
+# Revision 1.4  2007-07-25 11:10:23  marc
+# - better errormessages
+# - loglevel
+#
+# Revision 1.3  2007/04/10 15:36:24  marc
 # changed order for executing the requirements after mounting
 #
 # Revision 1.2  2007/03/26 07:58:49  marc

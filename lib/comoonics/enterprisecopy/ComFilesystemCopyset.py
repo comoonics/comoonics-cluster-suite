@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.3 2007-03-26 07:57:30 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.4 2007-07-25 11:10:09 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -30,7 +30,7 @@ from ComArchiveCopyObject import ArchiveCopyObject
 
 CMD_RSYNC="/usr/bin/rsync"
 
-__logStrLevel__ = "FilesystemCopyset"
+__logStrLevel__ = "comoonics.enterprisecopy.ComFilesystemCopyset.FilesystemCopyset"
 class FilesystemCopyset(Copyset):
     def __init__(self, element, doc):
         Copyset.__init__(self, element, doc)
@@ -39,7 +39,7 @@ class FilesystemCopyset(Copyset):
             self.source=CopyObject(__source, doc)
         except Exception, e:
             ComLog.getLogger(__logStrLevel__).warning(e)
-            raise ComException("source for copyset not defined")
+            raise ComException("Source for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
         try:
             __dest=xpath.Evaluate('destination', element)[0]
             self.dest=CopyObject(__dest, doc)
@@ -47,7 +47,7 @@ class FilesystemCopyset(Copyset):
         #except None:
             #print ("EXCEPTION: %s\n" %e)
             ComLog.getLogger(__logStrLevel__).warning(e)
-            raise ComException("destination for copyset not defined")
+            raise ComException("Destination for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
 
     def doCopy(self):
         # do everything
@@ -153,7 +153,11 @@ class FilesystemCopyset(Copyset):
                            % self.source.__name__, self.dest.__name__)
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.3  2007-03-26 07:57:30  marc
+# Revision 1.4  2007-07-25 11:10:09  marc
+# - better errormessages
+# - loglevel
+#
+# Revision 1.3  2007/03/26 07:57:30  marc
 # kicked out a nasty print (Mr. Hlawatschek!)
 #
 # Revision 1.2  2006/12/08 09:39:51  mark
