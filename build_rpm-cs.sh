@@ -23,5 +23,5 @@ SCRIPTS='"bin/com-dsh", "bin/cl_checknodes", "bin/com-gfs_tool"'
 setup
 
 ##############
-# $Log: $
+# $Log:$
 #
