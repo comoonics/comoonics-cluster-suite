@@ -1,0 +1,39 @@
+Glock (2, 62041)
+  gl_flags =
+  gl_count = 2
+  gl_state = 0
+  req_gh = no
+  req_bh = no
+  lvb_count = 0
+  object = yes
+  new_le = no
+  incore_le = no
+  reclaim = no
+  aspace = 0
+  ail_bufs = no
+  Inode:
+    num = 62041/62041
+    type = 1
+    i_count = 1
+    i_flags =
+    vnode = yes
+Glock (5, 63847)
+  gl_flags =
+  gl_count = 2
+  gl_state = 3
+  req_gh = no
+  req_bh = no
+  lvb_count = 0
+  object = yes
+  new_le = no
+  incore_le = no
+  reclaim = no
+  aspace = no
+  ail_bufs = no
+  Holder
+    owner = -1
+    gh_state = 3
+    gh_flags = 5 7
+    error = 0
+    gh_iflags = 1 6 7
+
