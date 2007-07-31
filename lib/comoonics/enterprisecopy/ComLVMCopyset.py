@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.5 2007-04-02 11:49:57 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.6 2007-07-31 10:00:30 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -71,11 +71,11 @@ class LVMCopyset(CopysetJournaled):
         try:
             __source=self.getElement().getElementsByTagName('source')[0]
         except IndexError, ie:
-            raise IndexError("Source for copyset %s not defined: %s" % (element.tagName, ie))
+            raise IndexError("Source for lvm copyset %s not defined: %s" % (self.getAttribute("name", "unknown"), ie))
         try:
             __dest=self.getElement().getElementsByTagName('destination')[0]
         except IndexError, ie:
-            raise IndexError("Destination for copyset %s not defined: %s" % (element.tagName, ie))
+            raise IndexError("Destination for lvm copyset %s not defined: %s" % (self.getAttribute("name", "unknown"), ie))
         # Factory constructs the right copyobject
         self.source=CopyObject(__source, doc)
         self.addToUndoMap(VolumeGroup.__name__, "create", "remove")
@@ -144,7 +144,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.5  2007-04-02 11:49:57  marc
+# Revision 1.6  2007-07-31 10:00:30  marc
+# better error handling
+#
+# Revision 1.5  2007/04/02 11:49:57  marc
 # MMG Backup Legato Integration:
 # - moved prepareDest where it belongs to
 #

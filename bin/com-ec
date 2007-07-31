@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.17 2007-06-15 19:05:16 marc Exp $
+# $Id: com-ec,v 1.18 2007-07-31 10:04:05 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -144,7 +144,7 @@ try:
         except Exception, e:
             line("Could not apply stylesheet to document. Quitting. Error: %s" %e)
             ComLog.debugTraceLog()
-            sys.exit(1)
+            raise e
         libxslt.cleanup()
     else:
         file=open(config.filename,"r")
@@ -168,7 +168,12 @@ try:
 except KeyboardInterrupt:
     logger.warn("Leaving because of user signal")
     sys.exit(1)
-
+except SystemExit, se:
+    sys.exit(se)
+except Exception, e:
+    logger.error("Error occured during initialisation of enterprisecopy. Errormessage: %s." %(e))
+    ComLog.debugTraceLog()
+    sys.exit(2)
 
 if ecopy.hasAttribute("name"):
     _name=ecopy.getAttribute("name")
@@ -216,7 +221,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.17  2007-06-15 19:05:16  marc
+# Revision 1.18  2007-07-31 10:04:05  marc
+# better error handling
+#
+# Revision 1.17  2007/06/15 19:05:16  marc
 # - better logging
 # - doAllsets with set as parameter cool stuff
 #
