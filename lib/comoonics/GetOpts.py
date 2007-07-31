@@ -6,10 +6,10 @@ Class to make getopts very easy
 """
 
 # here is some internal information
-# $Id: GetOpts.py,v 1.5 2007-06-13 09:10:12 marc Exp $
+# $Id: GetOpts.py,v 1.6 2007-07-31 15:14:01 marc Exp $
 #
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/GetOpts.py,v $
 
 import getopt
@@ -197,7 +197,7 @@ class BaseConfig(object):
                 else:
                     option=self.__dict__[opt.replace("-", "_")]
                 ret=option.func(value)
-                if ret > 0:
+                if ret != None and ret > 0:
                     return ret
 
             return self.do(__args_proper__)
@@ -253,7 +253,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: GetOpts.py,v $
-# Revision 1.5  2007-06-13 09:10:12  marc
+# Revision 1.6  2007-07-31 15:14:01  marc
+# small bugfix to set the right value or an option when called with function.
+#
+# Revision 1.5  2007/06/13 09:10:12  marc
 # - fixed error newer occured (include sys)
 #
 # Revision 1.4  2007/02/22 15:25:22  marc
