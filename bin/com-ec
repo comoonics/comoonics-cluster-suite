@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.18 2007-07-31 10:04:05 marc Exp $
+# $Id: com-ec,v 1.19 2007-07-31 15:16:57 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -89,9 +89,11 @@ class Config(GetOpts.BaseConfig):
     def setDebug(self, value):
         ComLog.getLogger().propagate=1
         ComLog.setLevel(logging.DEBUG)
+        self.debug=value
 
 def setWarnings():
-    warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning, module='Com*')
+    warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning)
+    warnings.filterwarnings(action = 'ignore', message='.*SCSIWWIDResolver.*', category=UserWarning)
 
 def applyValues(element, values):
     from comoonics import XmlTools
@@ -107,7 +109,8 @@ elif ret > 0:
 
 
 # filter warnings
-setWarnings()
+if not config.debug:
+    setWarnings()
 
 # create Reader object
 # FIXME: validation with xslt transformation does not work
@@ -159,7 +162,7 @@ try:
 
     ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
     if config.debug:
-        config.setDebug()
+        config.setDebug(True)
     logger=ComLog.getLogger(__logStrLevel__)
     if config.ask:
         ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
@@ -221,7 +224,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.18  2007-07-31 10:04:05  marc
+# Revision 1.19  2007-07-31 15:16:57  marc
+# - logging (#BZ 69)
+#
+# Revision 1.18  2007/07/31 10:04:05  marc
 # better error handling
 #
 # Revision 1.17  2007/06/15 19:05:16  marc
