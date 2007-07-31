@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.7 2007-06-26 07:31:14 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.8 2007-07-31 10:02:04 marc Exp $
 #
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
@@ -197,6 +197,7 @@ class HP_EVA_SSSU(object):
                     if _match and self.managed_overwrite:
                         mylogger.warn("SSSU Warning: System is managed by another agent (%s, %s). Overwriting." %(_match.group(1), _match.group(2)))
                         self.setSystem(self.system, "manage")
+                        self.cmd(cmd, params, match)
                         return 0
                     raise CommandError(self.last_error_code, self.last_cmd, self.last_output)
 
@@ -280,7 +281,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.7  2007-06-26 07:31:14  marc
+# Revision 1.8  2007-07-31 10:02:04  marc
+# reissue cmd if swma is already managed.
+#
+# Revision 1.7  2007/06/26 07:31:14  marc
 # when system management is overtake we'll take it back if in operation.
 #
 # Revision 1.6  2007/06/19 12:58:30  marc
