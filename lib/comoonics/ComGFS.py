@@ -10,7 +10,7 @@ provides analysis functions and the like for gfs
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComGFS.py,v $
 
 import os
@@ -21,7 +21,7 @@ import logging
 import fcntl
 import struct
 import array
-from exceptions import OSError, IndexError
+from exceptions import OSError, IndexError, ValueError
 
 from comoonics import ComSystem
 
@@ -301,6 +301,8 @@ class CSVGlockWriter(GLockWriter):
     VALID_COLS={ "default": ["glockid", "glock", "ail_bufs", "aspace", "gl_count", "gl_state", "gl_flags",
                              "incore_le", "lvb_count", "new_le", "object", "reclaim", "req_bh", "req_gh",
                              "Inode", "Holder"],
+                 "Glock": ["glockid", "glock", "ail_bufs", "aspace", "gl_count", "gl_state", "gl_flags",
+                             "incore_le", "lvb_count", "new_le", "object", "reclaim", "req_bh", "req_gh"],
                  "Inode": ["i_count", "num", "type", "vnode", "i_flags" ],
                  "Holder": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
                  "Request": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
@@ -360,37 +362,124 @@ class CSVGlockWriter(GLockWriter):
 addLockdumpWriter(CSVGlockWriter())
 
 class SQLGlockWriter(CSVGlockWriter):
+    NAME="sql"
+    TABLES={ "Glock": "Glocks%s",
+             "default": "Glocks%s",
+             "Inode": "Inodes%s",
+             "Holder": "Holders%s",
+             "Request": "Holders%s",
+             "Waiter1": "Holders%s",
+             "Waiter2": "Holders%s",
+             "Waiter3": "Holders%s" }
+    BITLISTS=["gh_flags", "gh_iflags", "i_flags", "gl_flags"]
     CREATE_TABLES_STATEMENT="""
-    CREATE TABLE IF NOT EXISTS Glocks%s (
+    CREATE TABLE IF NOT EXISTS %s (
        glockid int(64) NOT NULL,
        glock int(8) NOT NULL,
        ail_bufs ENUM ('yes', 'no') NOT NULL DEFAULT "no",
        aspace int(64) DEFAULT NULL,
        gl_count int(64),
        gl_state int(8) NOT NULL,
-       gl_flags int(64)
+       gl_flags int(64),
        lvb_count int(64),
        incore_le  ENUM ('yes', 'no') NOT NULL DEFAULT "no",
        new_le ENUM ('yes', 'no') NOT NULL DEFAULT "no",
        object ENUM ('yes', 'no') NOT NULL DEFAULT "no",
        reclaim ENUM ('yes', 'no') NOT NULL DEFAULT "no",
        req_bh ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       req_gh ENUM ('yes', 'no') NOT NULL DEFAULT "no")
+       req_gh ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       PRIMARY KEY (glockid)
     ) TYPE=InnoDB COMMENT="Table to hold all locks.";
-    CREATE TABLE IF NOT EXISTS Holders (
-       type ENUM ("Request", "Holder", "Waiters1", "Waiters2", "Waiters3"),
+    CREATE TABLE IF NOT EXISTS %s (
        glockid int(64) NOT NULL,
+       type ENUM ("Request", "Holder", "Waiters1", "Waiters2", "Waiters3"),
        owner int(64) NOT NULL,
        gh_state int(64),
        gh_flags int(64),
        gh_iflags int(64),
        error int(64),
+       PRIMARY KEY (glockid, owner)
     ) TYPE=InnoDB COMMENT="Table holding all holders, waiters and requests";
+    CREATE TABLE IF NOT EXISTS %s (
+       glockid int(64) NOT NULL,
+       i_count int(64) NOT NULL,
+       num int(64) NOT NULL,
+       type int(32) NOT NULL,
+       vnode ENUM ('yes', 'no') NOT NULL DEFAULT "no",
+       i_flags int(64),
+       PRIMARY KEY (glockid)
+    ) TYPE=InnoDB COMMENT="Table holding all inodes referenced by glocks";
     """
 
-    def __init__(self, _glocks_table="Glocks", _holders_table="Holders", _inodes_table="Inodes", _out=sys.stdout):
+    def __init__(self, _glocks_table="Glocks", _name=None, _out=sys.stdout):
         CSVGlockWriter.__init__(self, _out)
-addLockdumpWriter(SQLGlockWriter)
+        self.writehead=False
+        self.writetail=True
+        if not _name:
+            _name="analysis"
+        self._name=_name
+
+    def decipherGlock(self, _glock):
+        self.logger.debug("decipherGlock %s" %_glock["__name__"])
+        if _glock.has_key("glockid"):
+            self._baseglockid=_glock["glockid"]
+        for _bitlist in self.BITLISTS:
+            if _glock.has_key(_bitlist) and _glock[_bitlist] != "":
+                self.logger.debug("decipherGlock bitlist<%s>: %s" %(_bitlist, _glock[_bitlist]))
+                _glock[_bitlist]=int(self._resolvebitlist(_glock[_bitlist]))
+                self.logger.debug("decipherGlock bitlist<%s>: %u" %(_bitlist, _glock[_bitlist]))
+        if _glock.has_key("num"):
+            _glock["num"]=int(_glock["num"].split("/")[0])
+
+    def _resolvebitlist(self, _bitlist):
+        _res=0
+        for _bit in _bitlist.split(" "):
+            _res|=1<<int(_bit)
+        return _res
+
+
+    def filterDictValue(self, key):
+        pass
+
+    def createTables(self):
+         self.logger.debug("createTables")
+         return self.CREATE_TABLES_STATEMENT %(self.TABLES["Glock"] %self._name, self.TABLES["Holder"] %self._name,
+                                               self.TABLES["Inode"] %self._name)
+
+    def writeKeyValue(self, _key, _value, _tabs=0):
+        pass
+
+    def writeTupleValue(self, _key, _tuple, _tabs=0):
+        pass
+
+    def writeDictValue(self, _key, _dict, _tabs=0):
+        self.decipherGlock(_dict)
+        _tableskey=_key
+        _values=list()
+        for _key in self.VALID_COLS[_tableskey]:
+            _val=_dict[_key]
+            _resval=None
+            try:
+                if type(_val) == int or int(_val):
+                    _resval=str(_val)
+            except ValueError:
+                pass
+            if isinstance(_val, basestring) and not _resval:
+                _resval="\"%s\"" %(_val)
+            _values.append(_resval)
+
+        if _dict.has_key("__name__") and _dict["__name__"]=="Glock":
+            _sqlquery="INSERT INTO %s (%s) VALUES (%s);\n" %(self.TABLES[_tableskey] %self._name, ",".join(self.VALID_COLS[_tableskey]),
+                                                                          ",".join(_values))
+        else:
+            _sqlquery="INSERT INTO %s (glockid, %s) VALUES (%s, %s);\n" %(self.TABLES[_tableskey] %str(self._name), ",".join(self.VALID_COLS[_tableskey]),
+                                                                          str(self._baseglockid), ",".join(_values))
+        self._write(_sqlquery)
+
+    def writeTail(self, _dict, _tabs=0):
+        self.writeDictValue(_dict["__name__"], _dict, _tabs)
+
+addLockdumpWriter(SQLGlockWriter())
 
 class GFS(object):
     """

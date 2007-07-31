@@ -37,7 +37,7 @@ class Config(GetOpts.BaseConfig):
     locks_writer=None
     method=None
     params=None
-    lockdump_writer=None
+    locks_writer=None
     counters_writer=None
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
@@ -74,13 +74,27 @@ if config.list_counters_writer:
 elif config.list_locks_writer:
     print ",".join(comoonics.ComGFS.getLockdumpWriterRegistry().keys())
 else:
-    _gfs=comoonics.ComGFS.GFS(config.params)
+    _cwriter=None
+    _lwriter=None
     if config.counters_writer and comoonics.ComGFS.getCountersWriter(config.counters_writer):
-        _gfs.counterswriter=comoonics.ComGFS.getCountersWriter(config.counters_writer)
-    if config.lockdump_writer and comoonics.ComGFS.getLockdumpWriter(config.lockdump_writer):
-        _gfs.glockwriter=comoonics.ComGFS.getLockdumpWriter(config.lockdump_writer)
-    print getattr(_gfs, config.method)()
+        _cwriter=comoonics.ComGFS.getCountersWriter(config.counters_writer)
+    if config.locks_writer and comoonics.ComGFS.getLockdumpWriter(config.locks_writer):
+        _lwriter=comoonics.ComGFS.getLockdumpWriter(config.locks_writer)
+    if hasattr(comoonics.ComGFS.GFS, config.method):
+        _gfs=comoonics.ComGFS.GFS(config.params)
+        if _cwriter:
+            _gfs.counterswriter=_cwriter
+        if _lwriter:
+            _gfs.glockwriter=_lwriter
+        print getattr(_gfs, config.method)()
+    elif hasattr(_cwriter, config.method):
+        print getattr(_cwriter, config.method)()
+    elif hasattr(_lwriter, config.method):
+        print getattr(_lwriter, config.method)()
+    else:
+        print "Could not find method %s" %config.method
 
+#######################
 # $Log: rpm2db.py,v $
 # Revision 1.1  2006/08/08 08:32:38  marc
 # initial revision
