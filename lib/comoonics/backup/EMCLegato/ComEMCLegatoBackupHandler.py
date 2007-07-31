@@ -2,7 +2,7 @@
 Class for the EMC-Legator BackupHandlerImplementation.
 """
 # here is some internal information
-# $Id: ComEMCLegatoBackupHandler.py,v 1.4 2007-07-10 11:31:54 marc Exp $
+# $Id: ComEMCLegatoBackupHandler.py,v 1.5 2007-07-31 10:02:54 marc Exp $
 #
 
 import os
@@ -130,7 +130,7 @@ class EMCLegatoBackupHandler(BackupHandler):
         @name: the name of the file to be restored. If None the whole archive will be restored
         @dest: destinationdirectory given as path
         """
-        self.log.debug("extractFile: extracting Archive: %s => %s" %(self.name, dest))
+        self.log.debug("extractFile: extracting Archive: %s => %s" %(name, dest))
         self.networker.executeRecover(name, dest, dir)
 
     def getFileObj(self, name):
@@ -153,7 +153,10 @@ class EMCLegatoBackupHandler(BackupHandler):
 
 ########################
 # $Log: ComEMCLegatoBackupHandler.py,v $
-# Revision 1.4  2007-07-10 11:31:54  marc
+# Revision 1.5  2007-07-31 10:02:54  marc
+# small fix in outputting
+#
+# Revision 1.4  2007/07/10 11:31:54  marc
 # MMG Support
 #
 # MMG Backup Legato Integration
