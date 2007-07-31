@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.11 2007-06-19 15:11:20 marc Exp $
+# $Id: ComLog.py,v 1.12 2007-07-31 15:14:20 marc Exp $
 #
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -48,8 +48,8 @@ def getLogger(name=None):
 def setLevel(debuglevel, name=None):
     logging.getLogger(name).setLevel(debuglevel)
 
-#def getLevel():
-#    __default_log.getEffectiveLevel()
+def getLevel(name=None):
+    logging.getLogger(name).getEffectiveLevel()
 
 def debugTraceLog(nameorlogger=None):
     logTrace(nameorlogger, logging.DEBUG)
@@ -319,7 +319,10 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.11  2007-06-19 15:11:20  marc
+# Revision 1.12  2007-07-31 15:14:20  marc
+# - added getLevel
+#
+# Revision 1.11  2007/06/19 15:11:20  marc
 # removed importing of DBLogger
 #
 # Revision 1.10  2007/06/15 19:00:26  marc
