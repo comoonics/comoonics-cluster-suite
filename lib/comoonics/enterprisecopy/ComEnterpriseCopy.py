@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.8 2007-06-19 12:50:25 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.9 2007-07-31 15:15:29 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 import re
@@ -60,7 +60,7 @@ class EnterpriseCopy(ComDataObject.DataObject):
         self.donesets=list()
         self.currentset=None
         elogging=self.getElement().getElementsByTagName("logging")
-        ComLog.getLogger().info("logger.effectivelevel: %s/%u" %(logging.getLevelName(self._logger.getEffectiveLevel()),self._logger.getEffectiveLevel()))
+        #ComLog.getLogger().info("logger.effectivelevel: %s/%u" %(logging.getLevelName(self._logger.getEffectiveLevel()),self._logger.getEffectiveLevel()))
         if len(elogging)>0:
             ComLog.fileConfig(elogging[0])
         self._logger.disabled=0
@@ -206,7 +206,10 @@ class EnterpriseCopy(ComDataObject.DataObject):
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.8  2007-06-19 12:50:25  marc
+# Revision 1.9  2007-07-31 15:15:29  marc
+# - removed unneeded logging
+#
+# Revision 1.8  2007/06/19 12:50:25  marc
 # - fixed the loglevel
 #
 # Revision 1.7  2007/06/15 19:04:17  marc
