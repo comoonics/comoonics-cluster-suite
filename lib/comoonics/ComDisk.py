@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.14 2007-04-11 14:45:22 mark Exp $
+# $Id: ComDisk.py,v 1.15 2007-07-31 15:16:22 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -266,7 +266,7 @@ class HostDisk(Disk):
     def isDMMultipath(self):
         if not os.path.exists(CMD_DMSETUP):
             return False
-        __cmd="%s table %s --target=multipath | grep multipath"  % (CMD_DMSETUP, self.getDeviceName())
+        __cmd="%s table %s --target=multipath | grep multipath &>/dev/null"  % (CMD_DMSETUP, self.getDeviceName())
         if ComSystem.execLocal(__cmd):
             return False
         return True
@@ -402,7 +402,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.14  2007-04-11 14:45:22  mark
+# Revision 1.15  2007-07-31 15:16:22  marc
+# - redirected output of dm_setup (#BZ 69)
+#
+# Revision 1.14  2007/04/11 14:45:22  mark
 # added FIXME
 #
 # Revision 1.13  2007/04/04 12:48:44  marc
