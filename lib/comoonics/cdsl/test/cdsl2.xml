@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<cdsls config_version='1'>
+  <defaults maxnodeidnum='0' cdsltree='cluster/cdsl' cdsl_link='/cdsl.local' cdsltree_shared='cluster/shared' use_nodeids='False' mountpoint='/home/andrea/test'/>
+</cdsls>

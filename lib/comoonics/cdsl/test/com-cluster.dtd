@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT cluster (cman?, fence_daemon?, clusternodes, fencedevices, rm?)>
+<!ATTLIST cluster
+  name CDATA #REQUIRED
+  config_version CDATA #REQUIRED
+  votes CDATA #IMPLIED>
+
+<!ELEMENT cman (multicast?)>
+<!ATTLIST cman
+  expected_votes CDATA #IMPLIED
+  port CDATA #IMPLIED
+  two_node CDATA #IMPLIED>
+
+<!ELEMENT multicast EMPTY>
+<!ATTLIST multicast
+  addr CDATA #REQUIRED
+  interface CDATA #IMPLIED>
+
+<!ELEMENT fence_daemon EMPTY>
+<!ATTLIST fence_daemon
+  post_join_delay CDATA #IMPLIED
+  post_fail_delay CDATA #IMPLIED
+  clean_start CDATA #IMPLIED>
+
+<!ELEMENT clusternodes (clusternode+)>
+
+<!ELEMENT clusternode (com_info | multicast | fence)+>
+<!ATTLIST clusternode
+  name CDATA #REQUIRED
+  votes CDATA #IMPLIED
+  nodeid CDATA #IMPLIED>
+
+<!ELEMENT com_info (syslog | rootvolume | hostname | scsi | eth | fenceackserver)* >
+
+<!ELEMENT syslog EMPTY>
+<!ATTLIST syslog
+  name CDATA #REQUIRED>
+
+<!ELEMENT rootvolume EMPTY>
+<!ATTLIST rootvolume
+  name CDATA #REQUIRED>
+
+<!ELEMENT eth EMPTY>
+<!ATTLIST eth
+  name CDATA #REQUIRED
+  mac CDATA #IMPLIED
+  master CDATA #IMPLIED
+  slave CDATA #IMPLIED
+  ip CDATA #IMPLIED
+  mask CDATA #IMPLIED
+  gateway CDATA #IMPLIED>
+
+<!ELEMENT fenceackserver (ssl?)>
+<!ATTLIST fenceackserver
+  port CDATA #IMPLIED
+  user CDATA #IMPLIED
+  passwd CDATA #IMPLIED>
+
+<!ELEMENT ssl EMPTY>
+<!ATTLIST ssl
+  certfile CDATA #IMPLIED
+  keyfile CDATA #IMPLIED
+  verifyfile CDATA #IMPLIED>
+
+<!ELEMENT hostname EMPTY>
+<!ATTLIST hostname
+  name CDATA #REQUIRED>
+
+<!ELEMENT scsi EMPTY>
+<!ATTLIST scsi
+  failover CDATA #REQUIRED>
+
+<!ELEMENT fence (method+)>
+
+<!ELEMENT method (device+)>
+<!ATTLIST method
+  name CDATA #REQUIRED>
+
+<!ELEMENT device EMPTY>
+<!ATTLIST device
+  name CDATA #REQUIRED
+  agent CDATA #IMPLIED
+  hostname CDATA #IMPLIED
+  nodename CDATA #IMPLIED
+  port CDATA #IMPLIED
+  ipaddr CDATA #IMPLIED
+  login CDATA #IMPLIED
+  passwd CDATA #IMPLIED
+  cfgfile CDATA #IMPLIED
+  option CDATA #IMPLIED>
+
+<!ELEMENT fencedevices (fencedevice+)>
+
+<!ELEMENT fencedevice EMPTY>
+<!ATTLIST fencedevice
+  name CDATA #REQUIRED
+  agent CDATA #REQUIRED
+  hostname CDATA #IMPLIED
+  nodename CDATA #IMPLIED
+  port CDATA #IMPLIED
+  ipaddr CDATA #IMPLIED
+  login CDATA #IMPLIED
+  passwd CDATA #IMPLIED
+  cfgfile CDATA #IMPLIED
+  fence_vmware_master_cmd CDATA #IMPLIED
+  identityfile CDATA #IMPLIED
+  password CDATA #IMPLIED
+  username CDATA #IMPLIED
+  verbose CDATA #IMPLIED
+  option CDATA #IMPLIED>
+
+<!ELEMENT rm (failoverdomains, resources, service*)>
+<!ATTLIST rm
+ log_level CDATA #IMPLIED
+ log_facility CDATA #IMPLIED>
+
+<!ELEMENT failoverdomains (failoverdomain*)>
+
+<!ELEMENT failoverdomain (failoverdomainnode+)>
+<!ATTLIST failoverdomain
+  name CDATA #REQUIRED
+  ordered CDATA #IMPLIED
+  restricted CDATA #IMPLIED>
+
+<!ELEMENT failoverdomainnode EMPTY>
+<!ATTLIST failoverdomainnode
+  name CDATA #REQUIRED
+  priority CDATA #REQUIRED>
+
+<!ELEMENT resources (ip | cvip | apache | mysql | script | smb | clusterfs | nfsexport | nfsclient | fs)*>
+
+<!ELEMENT service (ip | cvip | apache | mysql | script | smb | clusterfs | nfsexport | nfsclient | fs)*>
+<!ATTLIST service
+  autostart CDATA #IMPLIED
+  domain CDATA #REQUIRED
+  name CDATA #REQUIRED
+  recovery CDATA #IMPLIED>
+
+<!ELEMENT ip (ip | cvip | apache | mysql | script | smb | clusterfs | nfsexport | nfsclient)*>
+<!ATTLIST ip
+  ref CDATA #IMPLIED
+  address CDATA #IMPLIED
+  monitor_link CDATA #IMPLIED
+  name CDATA #IMPLIED>
+
+<!ELEMENT cvip (ip | cvip | apache | mysql | script | smb | clusterfs | nfsexport | nfsclient)*>
+<!ATTLIST cvip
+  ref CDATA #IMPLIED
+  address CDATA #IMPLIED
+  monitor_link CDATA #IMPLIED
+  lvs CDATA #IMPLIED
+  lvs_ports CDATA #IMPLIED
+  dev CDATA #IMPLIED
+  broadcast CDATA #IMPLIED
+  gateway CDATA #IMPLIED
+  name CDATA #IMPLIED>
+
+<!ELEMENT script (ip | cvip | apache | mysql | script | smb | clusterfs | nfsexport | nfsclient)*>
+<!ATTLIST script
+  name CDATA #IMPLIED
+  file CDATA #IMPLIED
+  ref CDATA #IMPLIED>
+
+<!ELEMENT smb (ip | cvip | apache | mysql | script | smb | clusterfs | nfsexport | nfsclient)*>
+<!ATTLIST smb
+  name CDATA #IMPLIED
+  ref CDATA #IMPLIED
+  service_name CDATA #IMPLIED>
+
+<!ELEMENT clusterfs (ip | cvip | apache | mysql | script | smb | clusterfs | nfsexport | nfsclient)*>
+<!ATTLIST clusterfs
+  name CDATA #IMPLIED
+  ref CDATA #IMPLIED
+  device CDATA #IMPLIED
+  force_unmount CDATA #IMPLIED
+  fstype CDATA #IMPLIED
+  mountpoint CDATA #IMPLIED
+  options CDATA #IMPLIED>
+
+<!ELEMENT fs (apache | mysql | ip | cvip | script | smb | clusterfs | nfsexport | nfsclient | fs)*>
+<!ATTLIST fs
+  name CDATA #IMPLIED
+  ref CDATA #IMPLIED
+  device CDATA #IMPLIED
+  force_unmount CDATA #IMPLIED
+  fstype CDATA #IMPLIED
+  mountpoint CDATA #IMPLIED
+  options CDATA #IMPLIED>
+
+
+<!ELEMENT nfsexport (ip | cvip | script | smb | clusterfs | nfsclient)*>
+<!ATTLIST nfsexport
+  name CDATA #IMPLIED
+  ref CDATA #IMPLIED>
+
+<!ELEMENT nfsclient (ip | cvip | script | smb | clusterfs | nfsexport)*>
+<!ATTLIST nfsclient
+  name CDATA #IMPLIED
+  ref CDATA #IMPLIED
+  options CDATA #IMPLIED
+  target CDATA #IMPLIED>
+
+<!ELEMENT apache (ip | cvip | mysql | script | smb | clusterfs | nfsexport | nfsclient)* >
+<!ATTLIST apache
+  name CDATA #IMPLIED
+  ref CDATA #IMPLIED
+  genconfig CDATA #IMPLIED
+  serverRoot CDATA #IMPLIED
+  serverConfigFile CDATA #IMPLIED>
+
+<!ELEMENT mysql (ip | cvip | apache | script | smb | clusterfs | nfsexport | nfsclient)* >
+<!ATTLIST mysql
+  name CDATA #IMPLIED
+  ref CDATA #IMPLIED
+  configFile CDATA #IMPLIED
+  ipAddress CDATA #IMPLIED>
