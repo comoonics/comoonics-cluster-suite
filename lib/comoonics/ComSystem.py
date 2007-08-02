@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.11 2007-05-10 08:00:35 marc Exp $
+# $Id: ComSystem.py,v 1.12 2007-08-02 08:27:04 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -54,7 +54,7 @@ log=ComLog.getLogger("ComSystem")
 def setExecMode(__mode):
     """ set the mode for system execution """
     __EXEC_REALLY_DO = __mode
-
+    
 def askExecModeCmd(__cmd):
     global __EXEC_REALLY_DO
     if __EXEC_REALLY_DO == ASK:
@@ -140,6 +140,30 @@ def execLocal(__cmd):
 
     return os.system(__cmd)
 
+def execMethod(cmd, *params):
+    """
+    Executes the given cmd by considering variable L{__EXEC_REALLY_DO} 
+    (decide if command should be simulated, executed, ignored or ask 
+    for behaviour)
+    @param cmd: function to execute
+    @type cmd: function
+    @param params: params of function as tuple
+    @type params: tuple
+    @return: return value of function, if no function is called return 0
+    @rtype: depends on return type of called function, if no function is called L{int}
+    """
+    _tmpList = []
+    for i in params:
+        if type(i).__name__ == "str" or type(i).__name__ == "unicode":
+            _tmpList.append(i)
+        else:
+            _tmpList.append(type(i).__name__)
+        
+    if not askExecModeCmd("%s(%s)" %(cmd.__name__, ", ".join(_tmpList))):
+        return 0
+    else:
+        return cmd(*params)
+
 def test(level):
     global __EXEC_REALLY_DO
     __EXEC_REALLY_DO=level
@@ -152,6 +176,7 @@ def test(level):
     print execLocalOutput(cmd2)
     print execLocalStatusOutput(cmd2)
     print execLocalGetResult(cmd2, True)
+    print execMethod(execLocalGetResult,cmd2,True)
 
     print execLocalStatusOutput("/bin/false")
     print execLocal("/bin/false")
@@ -168,7 +193,10 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.11  2007-05-10 08:00:35  marc
+# Revision 1.12  2007-08-02 08:27:04  andrea2
+# Added execMethod()
+#
+# Revision 1.11  2007/05/10 08:00:35  marc
 # - better docu
 #
 # Revision 1.10  2007/03/26 08:36:10  marc
