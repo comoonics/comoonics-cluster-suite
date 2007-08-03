@@ -1,0 +1,86 @@
+#!/usr/bin/python
+
+__version__ = "$revision$"
+__description__="""
+Binary to manage cdsls
+"""
+
+import getopt
+import sys
+import logging
+
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
+from comoonics import GetOpts
+
+from comoonics.cdsl.ComCdslRepository import *
+
+class Config(GetOpts.BaseConfig):
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.quiet=GetOpts.Option("quiet", "Quiet, does not show any output",False,False,"q", self.setQuiet)
+        self.verbose=GetOpts.Option("verbose", "Verbose, add debugging output",False,False,"d", self.setDebug)
+        
+        self.cdsltree=GetOpts.Option("cdsltree", "path for hostdependent","cluster/cdsl",False,"t")
+        self.cdsltreeShared=GetOpts.Option("cdsltreeShared", "path for shared cdsltree","cluster/shared",False,"s")
+        self.cdslLink=GetOpts.Option("cdslLink", "path for cdsl link","/cdsl.local",False,"L")
+        self.maxnodeidnum=GetOpts.Option("maxnodeidnum", "maxnodeidnum","0",False,"m")
+        self.useNodeids=GetOpts.Option("useNodeids", "set use nodeids to True or False",False,False,"i")
+        
+        self.root=GetOpts.Option("root", "set chroot-path",None,False,"r")
+        self.mountpoint=GetOpts.Option("mountpoint", "set mountpoint",None,False,"t")
+        self.defaultDir=GetOpts.Option("defaultDir", "set default directory",None,False,"d")
+        self.nodePrefix=GetOpts.Option("nodePrefix", "set nodeprefix",None,False,"p")
+        
+        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
+        self.clusterconf=GetOpts.Option("clusterconf", "path to used cluster.conf","/etc/cluster/cluster.conf",False,"c")
+        self.inventorydtd="/opt/atix/comoonics-cs/xml/cdsl_inventory.dtd"
+        
+        self.noexecute=GetOpts.Option("noexecute", "display what would be done, but not really change filesystem",False,False,"n")
+        
+        self.createInventory=GetOpts.Option("createInventory", "only create inventoryfile, don't build infrastructure",False,False,"C")
+
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) > 0:
+            self.usage()
+            return 1
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+        
+    def setQuiet(self, value):
+        ComLog.setLevel(logging.CRITICAL)
+
+ComLog.setLevel(logging.INFO)
+#Bei ungueltigen Argumenten abrechen
+Config=Config()
+ret=Config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    sys.exit(ret)
+
+if Config.noexecute:
+    ComSystem.__EXEC_REALLY_DO="simulate"
+
+if not Config.useNodeids:
+    Config.useNodeids = "False"
+else:
+    Config.useNodeids = "True"
+    
+cdslRepository = CdslRepository(Config.inventoryfile,Config.inventorydtd,False,Config.cdsltree,Config.cdsltreeShared,Config.cdslLink,Config.maxnodeidnum,Config.useNodeids,Config.root,Config.mountpoint,Config.defaultDir,Config.nodePrefix)
+
+# parse the document and create comclusterinfo object
+reader = Sax2.Reader(validate=False)
+file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
+doc = reader.fromStream(file)
+file.close()
+
+#create needed cluster objects
+clusterRepository = ClusterRepository(doc.documentElement,doc)
+clusterInfo = ClusterInfo(clusterRepository)
+
+if not Config.createInventory:
+    cdslRepository.buildInfrastructure(clusterInfo)

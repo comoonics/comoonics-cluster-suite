@@ -1,0 +1,57 @@
+#!/usr/bin/python
+
+__version__ = "$revision$"
+__description__="""
+Binary to check if cdsls which are defined in inventoryfile really exists in filesystem
+"""
+
+import getopt
+import sys
+import logging
+
+from comoonics import ComLog
+from comoonics import GetOpts
+
+from comoonics.cdsl.ComCdslValidate import *
+
+ComLog.setLevel(logging.INFO)
+
+class Config(GetOpts.BaseConfig):
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.help=GetOpts.Option("help", "this help", False, False, "h")
+        self.verbose=GetOpts.Option("debug", "add debugging output",False,False,"d", self.setDebug)
+        self.logfile=GetOpts.Option("logfile", "path to used logfile", None, False, "l")
+        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile", None, False, "i")
+        
+    def do(self, args_proper):
+        if len(args_proper) > 0:
+            self.usage()
+            sys.exit()
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+        
+    def setQuiet(self, value):
+        ComLog.setLevel(logging.CRITICAL)
+        
+#Bei ungueltigen Argumenten abrechen
+Config=Config()
+ret=Config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    sys.exit(ret)
+
+if not Config.help:
+    if Config.inventoryfile != None and Config.logfile != None:
+        cdslValidate(Config.inventoryfile,Config.logfile)
+    elif Config.inventoryfile != None:
+        cdslValidate(Config.inventoryfile)
+    elif Config.logfile != None:
+        cdslValidate(logfile=Config.logfile)
+    else:
+        cdslValidate()
+else:
+    Config.usage()

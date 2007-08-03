@@ -1,0 +1,65 @@
+#!/usr/bin/python
+
+__version__ = "$revision$"
+__description__="""
+Binary to search for cdsls in filesystem and add them to given inventoryfile
+"""
+
+import getopt
+import sys
+import logging
+
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
+from comoonics import GetOpts
+
+from comoonics.cdsl.ComCdslRepository import *
+from comoonics.cdsl.ComCdslSearch import *
+
+class Config(GetOpts.BaseConfig):
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.quiet=GetOpts.Option("quiet", "Quiet, does not show any output",False,False,"q", self.setQuiet)
+        self.verbose=GetOpts.Option("verbose", "Verbose, add debugging output",False,False,"d", self.setDebug)
+                       
+        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
+        self.clusterconf=GetOpts.Option("clusterconf", "path to used cluster.conf","/etc/cluster/cluster.conf",False,"c")
+        
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) > 0:
+            self.usage()
+            return 1
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+        
+    def setQuiet(self, value):
+        ComLog.setLevel(logging.CRITICAL)
+
+ComLog.setLevel(logging.INFO)
+#Bei ungueltigen Argumenten abrechen
+Config=Config()
+ret=Config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    sys.exit(ret)
+
+cdslRepository = CdslRepository(Config.inventoryfile,None,False)
+
+# parse the document and create comclusterinfo object
+reader = Sax2.Reader(validate=False)
+file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
+doc = reader.fromStream(file)
+file.close()
+
+#create needed cluster objects
+clusterRepository = ClusterRepository(doc.documentElement,doc)
+clusterInfo = ClusterInfo(clusterRepository)
+    
+##create cdsl objects
+#cdslRepository = CdslRepository(Config.inventoryfile,None,False)
+
+cdslSearch(cdslRepository,clusterInfo)

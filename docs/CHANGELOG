@@ -22,6 +22,14 @@ comoonics-backup-legato-py:
   - now backuping full path to support incremental backups
 * Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
    initial revision
+   
+comoonics-cdsl-py:
+* Fri Aug 03 2007 AO <offermann@atix.de>, 0.1-1
+   initial revision
+   
+comoonics-cluster-py:
+* Fri Aug 03 2007 AO <offermann@atix.de>, 0.1-1
+   initial revision
 
 comoonics-cmdb-py:
 * Thu May 10 2007 MG <grimme@atix.de>, 0.1-23

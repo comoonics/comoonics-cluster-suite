@@ -1,0 +1,103 @@
+#!/usr/bin/python
+
+__version__ = "$revision$"
+__description__="""
+Binary to manage cdsls
+"""
+
+import getopt
+import sys
+import logging
+
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
+from comoonics import GetOpts
+
+from comoonics.cdsl.ComCdsl import *
+from comoonics.cdsl.ComCdslRepository import *
+
+class Config(GetOpts.BaseConfig):
+    def __init__(self):
+        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
+        self.hostdependent_all=GetOpts.Option("hostdependent", "Creates hostdependent cdsl and copy src to all nodes", False, False, "a")
+        #self.hostdependent_node=GetOpts.Option("hostdependent-node", "Creates hostdependent cdsl and copy src only to this node", False, False, "c")
+        self.shared_all=GetOpts.Option("shared", "Creates shared cdsl and copy src to shared tree", False, False, "s")
+        #self.shared_node=GetOpts.Option("shared_all", "Creates a shared cdsl for a specific node and copy src to shared tree", False, False, "s")
+        self.force=GetOpts.Option("force", "forces overwriting of existing links, files and directories, skip backup", False, False, "f")
+        self.inventory=GetOpts.Option("inventory", "updates inventoryfile:\n\t\tif cdsl with given target does not exist in inventoryfile, add entry\n\t\tif it does not exist on filesystem but in inventoryfile, delete entry\n\t\tif it exists in inventoryfile but verifies from filesystem, update entry",False,False,"i")
+        self.noexecute=GetOpts.Option("noexecute", "display what would be done, but not really change filesystem",False,False,"n")
+        self.quiet=GetOpts.Option("quiet", "Quiet, does not show any output",False,False,"q", self.setQuiet)
+        self.verbose=GetOpts.Option("verbose", "Verbose, add debugging output",False,False,"d", self.setDebug)
+        
+        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
+        self.clusterconf=GetOpts.Option("clusterconf", "path to used cluster.conf","/etc/cluster/cluster.conf",False,"c")
+        
+        self.setAdditionalParams("[sourcename]")
+
+    def do(self, args_proper):
+        import os.path
+        if len(args_proper) > 0:
+            self.src=args_proper[0]
+        else:
+            self.usage()
+            return 1
+        return 0
+
+    def setDebug(self, value):
+        ComLog.setLevel(logging.DEBUG)
+        
+    def setQuiet(self, value):
+        ComLog.setLevel(logging.CRITICAL)
+
+ComLog.setLevel(logging.INFO)
+#Bei ungueltigen Argumenten abrechen
+Config=Config()
+ret=Config.getopt(sys.argv[1:])
+if ret < 0:
+    sys.exit(0)
+elif ret > 0:
+    sys.exit(ret)
+    
+if Config.noexecute:
+    ComSystem.__EXEC_REALLY_DO="simulate"
+          
+# parse the document and create comclusterinfo object
+reader = Sax2.Reader(validate=False)
+file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
+doc = reader.fromStream(file)
+file.close()
+
+#create needed cluster objects
+clusterRepository = ClusterRepository(doc.documentElement,doc)
+clusterInfo = ClusterInfo(clusterRepository)
+    
+#create cdsl objects
+cdslRepository = CdslRepository(Config.inventoryfile,None,False)
+
+_root = cdslRepository.getDefaultRoot()
+_mountpoint = cdslRepository.getDefaultMountpoint()
+if not os.path.normpath(os.path.join(_root,re.sub('^/','', _mountpoint))) == "/":
+    src = os.path.abspath(Config.src).replace(os.path.normpath(os.path.join(_root,re.sub('^/','', _mountpoint))),'',1)
+else:
+    src = os.path.normpath(Config.src)
+
+if Config.hostdependent_all:
+    #Creates a hostdependent cdsl and copies content to all nodes defined 
+    #in clusterrepository or specified by maxnodeidnum in cdslrepository
+    obj = Cdsl(src, "hostdependent", cdslRepository, clusterInfo, None)
+    if Config.force:
+        obj.commit(force=True)
+    else:
+        obj.commit()
+        
+elif Config.shared_all:
+    #Creates a shared cdsl and copies content to sharedtree defined 
+    #in clusterrepository
+    obj = Cdsl(src, "shared", cdslRepository, clusterInfo, None)
+    if Config.force:
+        obj.commit(force=True)
+    else:
+        obj.commit()
+        
+if Config.inventory:
+    cdslRepository.update(src,clusterInfo)
