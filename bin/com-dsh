@@ -1282,16 +1282,25 @@ def getHostsFromCluster(filename, verbose):
     """
     RH_CLUSTER_CONF=filename
     hostlist=[]
-    if os.path.exists(RH_CLUSTER_CONF):
-        if os.path.isfile(RH_CLUSTER_CONF):
-            if verbose >= 2:
-                print "  Adding hosts from %s to hostlist.." % (RH_CLUSTER_CONF)
-            filein=fileinput.input(filename)
-            for line in filein:
-                if not fileinput.isfirstline():
-                    import re
-                    hostlist.append(re.split("\s+", line)[5])
-
+    if os.path.isfile(RH_CLUSTER_CONF):
+        if verbose >= 2:
+            print "  Adding hosts from %s to hostlist.." % (RH_CLUSTER_CONF)
+        from comoonics import ComSystem
+        from comoonics.ComSystem import ExecLocalException
+        ComSystem.__EXEC_REALLY_DO=""
+        try:
+            _output=ComSystem.execLocalOutput("/sbin/cman_tool nodes")
+            import re
+            _regexp=re.compile("\s+(?P<node>\d+)\s+(?P<votes>\d+)\s+(?P<exp>\d+)\s+(?P<state>M)\s+(?P<name>\S+)$")
+            for _line in _output[1:]:
+                _match=_regexp.match(_line)
+                if _match:
+                    _hostname=_match.group("name")
+                    # no quorum disk
+                    if not os.path.exists(_hostname):
+                        hostlist.append(_hostname)
+        except ExecLocalException:
+            pass
 
     return hostlist
 
