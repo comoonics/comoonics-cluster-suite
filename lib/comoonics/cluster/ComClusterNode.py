@@ -8,11 +8,11 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.2 2007-06-08 08:24:47 andrea2 Exp $
+# $Id: ComClusterNode.py,v 1.3 2007-08-06 12:09:27 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
@@ -218,6 +218,10 @@ class ComoonicsClusterNode(RedhatClusterNode):
         return self.nicMac.values()
         
 def main():
+    """
+    Method to test module. Creates a ClusterNode object and test all defined methods 
+    on an cluster.conf example (use a loop to proceed every node).
+    """
     clusternode_path = "/cluster/clusternodes/clusternode"
     cluster_conf = "test/cluster2.conf"
     
@@ -263,8 +267,8 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.2  2007-06-08 08:24:47  andrea2
-# added Debugging
+# Revision 1.3  2007-08-06 12:09:27  andrea2
+# Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.1  2007/06/05 13:11:21  andrea2
 # *** empty log message ***

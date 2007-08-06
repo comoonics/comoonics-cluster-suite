@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.3 2007-06-08 08:58:21 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.4 2007-08-06 12:09:27 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -25,19 +25,13 @@ from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
 from xml.dom.ext.reader.Sax2 import implementation
 
-from ComClusterMetainfo import *
 from ComClusterNode import *
 
 from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
 from comoonics.ComExceptions import *
 
-class ClusterMacNotFoundException(ComException):
-    """
-    Defines Exeption which is raised if a querie
-    cannot find an element with given mac-address.
-    """
-    pass
+class ClusterMacNotFoundException(ComException): pass
 
 class ClusterRepository(DataObject):
     """
@@ -52,32 +46,19 @@ class ClusterRepository(DataObject):
         instance of clusterrepository (general, redhat 
         or comoonics) has to be created.
         """
-        if isinstance(args[2], ComoonicsClusterMetainfo):
+        if xpath.Evaluate("/cluster/clusternodes/clusternode/com_info",args[0]):
             cls = ComoonicsClusterRepository
-        elif isinstance(args[2], RedhatClusterMetainfo):
+        elif xpath.Evaluate("/cluster/clusternodes/clusternode",args[0]):
             cls = RedhatClusterRepository
         return object.__new__(cls, *args, **kwds)
     
-    def __init__(self,element,doc=None,clusterMetainfo=None):
+    def __init__(self,element,doc=None):
         #node dictionaries depend on clustertype, setting later!
         self.nodeNameMap = {}
         self.nodeIdMap = {}
         self.nodeIdentMap = {}
         
-        if clusterMetainfo==None:
-            clusterMetainfo = ClusterMetainfo()
-        else:
-            self.metainfo = clusterMetainfo
-        
         super(ClusterRepository,self).__init__(element,doc)
-        
-    def getMetainfo(self):
-        """
-        @return: returns metainfo object
-        @rtype: L{ClusterMetainfo}
-        """
-        self.log.debug("get metainfo")
-        return self.metainfo
     
 class RedhatClusterRepository(ClusterRepository):
     """
@@ -92,11 +73,8 @@ class RedhatClusterRepository(ClusterRepository):
     defaultclusternode_path = defaultcluster_path + "/clusternodes/clusternode"
     """@type: string"""
     
-    def __init__(self,element,doc=None,clusterMetainfo=None):
-        if clusterMetainfo==None:
-            clusterMetainfo = ClusterMetainfo()
-            
-        super(RedhatClusterRepository,self).__init__(element,doc,clusterMetainfo)
+    def __init__(self,element,doc=None):    
+        super(RedhatClusterRepository,self).__init__(element,doc)
         
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
         _nodes = xpath.Evaluate(self.defaultclusternode_path, self.getElement())
@@ -147,39 +125,14 @@ class ComoonicsClusterRepository(RedhatClusterRepository):
     the redhat clusterrepository by adding an 
     extra comoonics specific Hashmap.
     """
-    def __init__(self,element,doc=None,clusterMetainfo=None):
-        if clusterMetainfo==None:
-            clusterMetainfo = ClusterMetainfo()
-        
-        super(ComoonicsClusterRepository,self).__init__(element,doc,clusterMetainfo)
-        
-        #get nodeidentifier using parameters fro clustermetainfo
-        node_prefix = clusterMetainfo.getAttribute("node_prefix")
-        use_nodeids = clusterMetainfo.getAttribute("use_nodeids")
-        maxnodeidnum = clusterMetainfo.getAttribute("maxnodeidnum")
-        
-        #fill dictionaries with nodename:nodeobject and nodeid:nodeobject
-        _nodes = xpath.Evaluate(self.defaultclusternode_path, self.getElement())
-        for i in range(len(_nodes)):
-            _node = ClusterNode(_nodes[i], self.getElement())          
-            if ((use_nodeids == "True") and (maxnodeidnum == "0")): #maxnodidnum is not set but use_nodeid is set
-                _ident = _node.getId()
-            elif (maxnodeidnum == "0"): #maxnodidnum is set but use_nodeid is not set
-                _ident = _node.getName()
-                
-            else: #use_nodeids and maxnodeidnum are set
-                _ident = i
-            
-            #value of node_prefix matters if use_nodeids is set
-            #if node_prefix in clustermetainfo object is "", then getAttr gets "True" instead
-            if ((node_prefix != True) and (use_nodeids == "True")):
-                _ident = str(node_prefix) + str(_ident)
-            elif (node_prefix != True) and not (use_nodeids == "True"):
-                self.log.info("Prefix could only be used together with use_nodeids")
-            
-            self.nodeIdentMap[_ident] = _node
+    def __init__(self,element,doc=None):
+        super(ComoonicsClusterRepository,self).__init__(element,doc)
             
 def main():
+    """
+    Method to test module. Creates a ClusterRepository object, prints defined hashmaps 
+    and test getting of nodename and nodeid of nodes defined in a example cluster.conf.
+    """
     # create Reader object
     reader = Sax2.Reader()
 
@@ -189,11 +142,8 @@ def main():
     file.close()
     element = xpath.Evaluate("/cluster", doc)[0]
 
-    #create clusterMetainfo Object
-    clusterMetainfo = ClusterMetainfo("node_","True")
-
     #create clusterRepository Object
-    clusterRepository = ClusterRepository(element,doc,clusterMetainfo)
+    clusterRepository = ClusterRepository(element,doc)
     
     print "Dictionary Nodeid:Nodeobject"
     print clusterRepository.nodeIdMap
@@ -203,6 +153,7 @@ def main():
     print clusterRepository.nodeIdentMap
     
     print "\nclusterRepository\n" + str(clusterRepository)
+    print "Repositorytype Comoonics?: " + str(isinstance(clusterRepository, ComoonicsClusterRepository))
     
     for node in clusterRepository.nodeNameMap.values():
         print "Node " + str(node.getName())
@@ -212,14 +163,12 @@ def main():
             print "\tgetNodeName(mac): " + clusterRepository.getNodeName(mac)
             print "\tgetNodeId(mac): " + clusterRepository.getNodeId(mac) + "\n"
 
-    print "\tgetMetainfo(): " + str(clusterRepository.getMetainfo())
-    
 if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.3  2007-06-08 08:58:21  andrea2
-# Renamed variables clusternode_path and cluster_path to defaultclusternode_path and defaulcluster_path
+# Revision 1.4  2007-08-06 12:09:27  andrea2
+# Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.1  2007/06/05 13:11:21  andrea2
 # *** empty log message ***

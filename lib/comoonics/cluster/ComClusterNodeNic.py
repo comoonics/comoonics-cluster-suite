@@ -1,4 +1,4 @@
-"""Comoonics clusterMetainfo object module
+"""Comoonics clusterNodeNic object module
 
 
 Represents network interfaces (e.g. of comoonics 
@@ -8,11 +8,11 @@ clusternode instances) as an L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterNodeNic.py,v 1.2 2007-06-08 08:24:47 andrea2 Exp $
+# $Id: ComClusterNodeNic.py,v 1.3 2007-08-06 12:09:27 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
 import os
@@ -75,7 +75,7 @@ class ComoonicsClusterNodeNic(DataObject):
         """
         #optional attribute, return empty string if not set
         try:
-            self.log.debug("get gateway attribute: " + self.getAttribute("gateway"))
+            self.log.debug("get gateway attribute: " + str(self.getAttribute("gateway")))
             return self.getAttribute("gateway")
         except NameError:
             return ""
@@ -110,7 +110,12 @@ class ComoonicsClusterNodeNic(DataObject):
         except NameError:
             return ""
 
-def main(): 
+def main():
+    """
+    Method to test module. Creates a ClusterNodeNic object and test all defined 
+    methods on an cluster.conf example (use a loop to proceed every nic of every 
+    node).
+    """
     # create Reader object
     reader = Sax2.Reader()
 
@@ -146,8 +151,8 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNodeNic.py,v $
-# Revision 1.2  2007-06-08 08:24:47  andrea2
-# added Debugging
+# Revision 1.3  2007-08-06 12:09:27  andrea2
+# Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.1  2007/06/05 13:11:21  andrea2
 # *** empty log message ***

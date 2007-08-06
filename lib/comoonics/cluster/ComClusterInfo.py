@@ -8,11 +8,11 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.3 2007-06-08 08:24:47 andrea2 Exp $
+# $Id: ComClusterInfo.py,v 1.4 2007-08-06 12:09:27 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 from xml import xpath
@@ -48,6 +48,11 @@ class ClusterInfo(object):
         return object.__new__(cls, *args, **kwds)
     
     def __init__(self, clusterRepository):
+        """
+        Set used clusterRepository
+        @param clusterRepository: clusterRepository to use
+        @type clusterRepository: L{clusterRepository}
+        """
         #Clusterrepository holds list of nodes and items like node_prefix etc.
         self.clusterRepository = clusterRepository
     
@@ -87,6 +92,11 @@ class RedhatClusterInfo(ClusterInfo):
     failoverdomainnode_attribute = "/failoverdomainnode"
     
     def __init__(self, clusterRepository):
+        """
+        Set used clusterRepository
+        @param clusterRepository: clusterRepository to use
+        @type clusterRepository: L{RedhatClusterRepository}
+        """
         super(RedhatClusterInfo,self).__init__(clusterRepository)
 
     def queryValue(self,query):
@@ -209,6 +219,11 @@ class ComoonicsClusterInfo(RedhatClusterInfo):
     about the used comoonics clusterconfiguration.
     """
     def __init__(self, clusterRepository):
+        """
+        Set used clusterRepository
+        @param clusterRepository: clusterRepository to use
+        @type clusterRepository: L{ComoonicsClusterRepository}
+        """
         super(ComoonicsClusterInfo,self).__init__(clusterRepository)
     
     def getNic(self,mac):
@@ -227,7 +242,11 @@ class ComoonicsClusterInfo(RedhatClusterInfo):
                 pass
         raise ClusterMacNotFoundException("Cannot find device with given mac: " + mac)
     
-def main():    
+def main():
+    """
+    Method to test module. Creates a ClusterInfo object and test all defined methods 
+    on an cluster.conf example (use a loop to proceed every node).
+    """
     # create Reader object
     reader = Sax2.Reader()
 
@@ -237,11 +256,8 @@ def main():
     file.close()
     element = xpath.Evaluate('/cluster', doc)[0]
 
-    #create clusterMetainfo Object
-    clusterMetainfo = ClusterMetainfo("node_","True")
-
     #create clusterRepository Object
-    clusterRepository = ClusterRepository(element,doc,clusterMetainfo)
+    clusterRepository = ClusterRepository(element,doc)
 
     #create comclusterinfo object
     clusterInfo = ClusterInfo(clusterRepository)
@@ -274,8 +290,8 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.3  2007-06-08 08:24:47  andrea2
-# added Debugging
+# Revision 1.4  2007-08-06 12:09:27  andrea2
+# Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.2  2007/06/05 13:32:57  andrea2
 # *** empty log message ***
