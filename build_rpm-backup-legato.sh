@@ -1,9 +1,9 @@
 #!/bin/bash
-# $Id: build_rpm-backup-legato.sh,v 1.3 2007-07-10 11:38:25 marc Exp $
+# $Id: build_rpm-backup-legato.sh,v 1.4 2007-08-06 13:06:04 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=3
+RELEASE=4
 REQUIRES="--requires=comoonics-cs-py,comoonics-backup-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-backup-legato-py"
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-backup-legato.sh,v $
-# Revision 1.3  2007-07-10 11:38:25  marc
+# Revision 1.4  2007-08-06 13:06:04  marc
+# new version
+#
+# Revision 1.3  2007/07/10 11:38:25  marc
 # new version 3
 #
 # Revision 1.2  2007/06/13 09:02:08  marc
