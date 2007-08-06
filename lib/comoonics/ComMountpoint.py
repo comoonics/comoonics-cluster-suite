@@ -6,18 +6,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComMountpoint.py,v 1.1 2006-07-19 14:29:15 marc Exp $
+# $Id: ComMountpoint.py,v 1.2 2007-08-06 07:31:29 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComMountpoint.py,v $
 
 
 import xml.dom
-from ComDevice import Device
 from ComDataObject import  DataObject
-
 
 class MountPoint(DataObject):
     TAGNAME="mountpoint"
@@ -29,7 +27,7 @@ class MountPoint(DataObject):
         __attr=self.getElement().getElementsByTagName("option")
         if not (__attr.length):
             return __opts + "defaults"
-        for i in range(__attr.length): 
+        for i in range(__attr.length):
             __opts+=__attr.item(i).getAttribute("name")
             if __attr.item(i).hasAttribute("value"):
                 __opts+="="
@@ -37,9 +35,12 @@ class MountPoint(DataObject):
             if i+1 < __attr.length:
                 __opts+=","
         return __opts
-        
+
 # $Log: ComMountpoint.py,v $
-# Revision 1.1  2006-07-19 14:29:15  marc
+# Revision 1.2  2007-08-06 07:31:29  marc
+# removed Device import which is not used.
+#
+# Revision 1.1  2006/07/19 14:29:15  marc
 # removed the filehierarchie
 #
 # Revision 1.2  2006/06/30 08:05:00  mark
