@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -329,6 +329,10 @@ class LogicalVolume(LinuxVolumeManager):
             lv.init_from_disk()
             return True
         except LinuxVolumeManager.LVMException:
+            ComLog.debugTraceLog(LogicalVolume.log)
+            return False
+        except RuntimeError:
+            # If any command fails BZ #72
             ComLog.debugTraceLog(LogicalVolume.log)
             return False
     isValidLVPath=staticmethod(isValidLVPath)
@@ -896,7 +900,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.6  2007-06-19 13:10:08  marc
+# Revision 1.7  2007-08-06 07:39:12  marc
+# - fixed BZ#72; also catching RunTimeExceptions when isValidLVPath.
+#
+# Revision 1.6  2007/06/19 13:10:08  marc
 # - fixed loglevel
 # - fixed minor bugs with string formating
 #
