@@ -16,17 +16,19 @@ comoonics-backup-py:
    initial revision
 
 comoonics-backup-legato-py:
+* Thu Aug 02 2007 MG <grimme@atix.de>, 0.1-4
+  - Changed error output
 * Tue Jul 10 2007 MG <grimme@atix.de>, 0.1-3
   - changed way to restore. All files were restored in a base dir but should be in current dir.
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-2
   - now backuping full path to support incremental backups
 * Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
    initial revision
-   
+
 comoonics-cdsl-py:
 * Fri Aug 03 2007 AO <offermann@atix.de>, 0.1-1
    initial revision
-   
+
 comoonics-cluster-py:
 * Fri Aug 03 2007 AO <offermann@atix.de>, 0.1-1
    initial revision
@@ -70,6 +72,9 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Mon Aug 06 2007 MG <grimme@atix.de>, 0.1-42:
+   - added method to simulate a command in ComSystem
+   - fixed BZ #72
 * Mon Jul 23 2007 MG <grimme@atix.de>, 0.1-41:
    - made stable order for com-gfs_tool counters so that the output is always the same independent from version of
      gfs_tools
@@ -139,6 +144,9 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Thu Aug 02 2007 MG <grimme@atix.de>, 0.1-23
+  - Bugfix for output (#BZ 69)
+  - Better erroroutput and handling in com-ec
 * Mon Jun 19 2007 MG <grimme@atix.de>, 0.1-22
   - ComoonicsEnterpriseCopy, fixed Loglevel
   - ComoonicsBootloaderCopyset, fixed resolvable devicenames
@@ -183,6 +191,9 @@ comoonics-storage-py
   initial release
 
 comoonics-storage-hp-py
+* Thu Aug 02 2007 MG <grimme@atix.de>, 0.1-8
+ - Fixed bug when command was not executed when management of swma was lost
+ - Better erroroutput
 * Tue Jul 10 2007 MG <grimme@atix.de>, 0.1-7
  - Fixed bug where validation of mapped luns could fail.
 * Tue Jun 26 2007 MG <grimme@atix.de>, 0.1-6:
