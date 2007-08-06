@@ -50,8 +50,8 @@ query_commands:
         GetOpts.BaseConfig.__init__(self, sys.argv[0], helptext, __version__)
         self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
         self.query=GetOpts.Option("query", "Query", False, False, "q")
-        self.filename=GetOpts.Option("filename", "Filename", None, False, "f")
-        self.novalidate=GetOpts.Option("novalidate", "Skips validation of clusterconfiguration file",False,False,"n")
+        self.filename=GetOpts.Option("filename", "Filename", "/etc/cluster/cluster.conf", False, "f")
+        self.validate=GetOpts.Option("validate", "Validate clusterconfiguration file",False,False,"n")
         self.setAdditionalParams("query [param]*")
 
     def do(self, args_proper):
@@ -84,17 +84,16 @@ elif ret > 0:
     
           
 # parse the document and create comclusterinfo object
-if Config.novalidate:
-    reader = Sax2.Reader(validate=0)
-else:
+if Config.validate:
     reader = Sax2.Reader(validate=1)
+else:
+    reader = Sax2.Reader(validate=0)
 file = os.fdopen(os.open(Config.filename,os.O_RDONLY))
 doc = reader.fromStream(file)
 file.close()
 
 #create needed cluster objects
-clusterMetainfo = ClusterMetainfo("","","")
-clusterRepository = ClusterRepository(doc.documentElement,doc,clusterMetainfo)
+clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
 
 
