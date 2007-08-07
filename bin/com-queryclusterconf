@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-__version__ = "$revision$"
+__version__ = "$Revision: 1.6 $"
 __description__="""
 Binary to query clusterconfiguration
 """
