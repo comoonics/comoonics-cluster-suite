@@ -1,9 +1,9 @@
 #!/bin/bash
-# $Id: build_rpm-backup-legato.sh,v 1.4 2007-08-06 13:06:04 marc Exp $
+# $Id: build_rpm-backup-legato.sh,v 1.5 2007-08-07 11:22:01 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=4
+RELEASE=5
 REQUIRES="--requires=comoonics-cs-py,comoonics-backup-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-backup-legato-py"
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-backup-legato.sh,v $
-# Revision 1.4  2007-08-06 13:06:04  marc
+# Revision 1.5  2007-08-07 11:22:01  marc
+# - Fix Bug BZ #77 that the restore command is likely to timeout. This is ignored now.
+#
+# Revision 1.4  2007/08/06 13:06:04  marc
 # new version
 #
 # Revision 1.3  2007/07/10 11:38:25  marc

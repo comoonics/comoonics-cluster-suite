@@ -2,7 +2,7 @@
 Class for the EMC-Legator BackupHandlerImplementation.
 """
 # here is some internal information
-# $Id: ComEMCLegatoNetworker.py,v 1.3 2007-07-10 11:33:24 marc Exp $
+# $Id: ComEMCLegatoNetworker.py,v 1.4 2007-08-07 11:18:35 marc Exp $
 #
 
 import os.path
@@ -81,7 +81,8 @@ class LegatoNetworker(object):
         _cmd="%s %s -c %s -s %s -d %s %s" %(LegatoNetworker.LEGATO_CMD_RECOVER, " ".join(self.recover_options),
                                             self.client, self.server, destdir, _dir)
         if ComSystem.askExecModeCmd(_cmd):
-            _shell=pexpect.spawn(_cmd)
+            # Ignore timeouts
+            _shell=pexpect.spawn(_cmd, None, None)
             if self.log.getEffectiveLevel() == DEBUG:
                 _shell.logfile=file(str("/tmp/%s.log" %(os.path.basename(LegatoNetworker.LEGATO_CMD_RECOVER))), "w")
                 _shell.cmdlogfile=file(str("/tmp/%s-cmd.log" %(os.path.basename(LegatoNetworker.LEGATO_CMD_RECOVER))), "w")
@@ -94,7 +95,10 @@ class LegatoNetworker(object):
 
 #######################
 # $Log: ComEMCLegatoNetworker.py,v $
-# Revision 1.3  2007-07-10 11:33:24  marc
+# Revision 1.4  2007-08-07 11:18:35  marc
+# - Fix Bug BZ #77 that the restore command is likely to timeout. This is ignored now.
+#
+# Revision 1.3  2007/07/10 11:33:24  marc
 # changed way to restore as all files would be restored in the basedir of all files which is not what we want.
 #
 # Revision 1.2  2007/04/04 12:47:08  marc
