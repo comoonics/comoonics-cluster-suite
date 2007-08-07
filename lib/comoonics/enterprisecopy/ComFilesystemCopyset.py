@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.4 2007-07-25 11:10:09 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.5 2007-08-07 11:18:01 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -127,33 +127,36 @@ class FilesystemCopyset(Copyset):
                     #raise ComException(__cmd + __ret)
                     ComLog.getLogger("Copyset").warning("doCopy: " + __ret)
                 return __rc
-        # 2. copy fs to archive
+            # 2. copy fs to archive
             if isinstance(self.dest, ArchiveCopyObject):
-                try:
-                    archive=self.dest.getDataArchive()
-                    mountpoint=self.source.getMountpoint().getAttribute("name")
-                    archive.createArchive("./", mountpoint)
-                    return True
+#                try:
+                archive=self.dest.getDataArchive()
+                mountpoint=self.source.getMountpoint().getAttribute("name")
+                archive.createArchive("./", mountpoint)
+                return True
                 #except Exception, e:
-                except None, e:
-                    ComLog.getLogger("Copyset").error(e)
-                return False
+#                except None, e:
+#                    ComLog.getLogger("Copyset").error(e)
+#                return False
         # 3. copy archive to fs
         if isinstance(self.source, ArchiveCopyObject):
             if isinstance(self.dest, FilesystemCopyObject):
-                try:
-                    archive=self.source.getDataArchive()
-                    mountpoint=self.dest.getMountpoint().getAttribute("name")
-                    archive.extractArchive(mountpoint)
-                    return True
-                except Exception, e:
-                    ComLog.getLogger("Copyset").error(e)
-                return False
+#                try:
+                archive=self.source.getDataArchive()
+                mountpoint=self.dest.getMountpoint().getAttribute("name")
+                archive.extractArchive(mountpoint)
+                return True
+#                except Exception, e:
+#                    ComLog.getLogger("Copyset").error(e)
+#                return False
         raise ComException("data copy % to % is not supported" \
                            % self.source.__name__, self.dest.__name__)
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.4  2007-07-25 11:10:09  marc
+# Revision 1.5  2007-08-07 11:18:01  marc
+# - Fix Bug BZ #77 that exceptions from commands being executed are ignored. They should not!
+#
+# Revision 1.4  2007/07/25 11:10:09  marc
 # - better errormessages
 # - loglevel
 #
