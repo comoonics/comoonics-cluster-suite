@@ -8,11 +8,11 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.3 2007-08-06 12:09:27 andrea2 Exp $
+# $Id: ComClusterNode.py,v 1.4 2007-08-08 08:38:44 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
@@ -129,14 +129,14 @@ class ComoonicsClusterNode(RedhatClusterNode):
         super(ComoonicsClusterNode,self).__init__(element, doc)
         
         # dictionaries device:nicobject and mac:nicobject
-        self.nicDev = {}
         self.nicMac = {}
+        self.nicDev = {}
 
         _nics = xpath.Evaluate(self.cominfo_path + '/eth', self.getElement())
         for i in range(len(_nics)):
             _nic = ComoonicsClusterNodeNic(_nics[i], self.getElement())
-            _dev = _nic.getName()
             _mac = _nic.getMac()
+            _dev = _nic.getName()
 
             self.nicDev[_dev] = _nic
             self.nicMac[_mac] = _nic
@@ -215,7 +215,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: list
         """
         self.log.debug("get all clusternodenics")
-        return self.nicMac.values()
+        return self.nicDev.values()
         
 def main():
     """
@@ -223,6 +223,8 @@ def main():
     on an cluster.conf example (use a loop to proceed every node).
     """
     clusternode_path = "/cluster/clusternodes/clusternode"
+    # can use only cluster2.conf for test, cluster.conf MUST cause an not 
+    # handled exception (because lack of a device name)
     cluster_conf = "test/cluster2.conf"
     
     # create Reader object
@@ -267,7 +269,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.3  2007-08-06 12:09:27  andrea2
+# Revision 1.4  2007-08-08 08:38:44  andrea2
+# Changed getNics() to get also more than one nic without mac-address
+#
+# Revision 1.3  2007/08/06 12:09:27  andrea2
 # Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.1  2007/06/05 13:11:21  andrea2
