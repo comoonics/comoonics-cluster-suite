@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -23,8 +23,8 @@ class Config(GetOpts.BaseConfig):
 query_commands:
     query_xml <xq>           print out the xml_document specified by an XQL query string
     query_value <xql>        print out the value specified by an XQL query string
-    netdevs <hostname> <sep> print out the network device names for given host
-                             separated by <sep>
+    netdevs <hostname> [<sep>]
+                             print out the network device names for given host. Separated by <sep>
     nodename <mac>           print out the nodename for given mac.
     nodeid <mac>             print out the nodeid for given mac.
     ip <nodename> <dev>      print out the IP address for given hostname and network device name
@@ -41,10 +41,10 @@ query_commands:
     failoverdomainnodes <failoverdomain> [<sep>]
                              print out all defined nodes in the given
                              failoverdomain. Seperated by sep default is space.
-    failoverdomainprefnode <failoverdomain> [<sep>]
+    failoverdomainprefnode <failoverdomain>
                              print out the preferred node defined in
                              the given failoverdomain.
-    nodeids [<sep>]            returns all defined nodeids seperated by <sep>.
+    nodeids [<sep>]          returns all defined nodeids seperated by <sep>.
     scsifailover nodename    returns the scsifailovertype for the given nodename
         """
         GetOpts.BaseConfig.__init__(self, sys.argv[0], helptext, __version__)
