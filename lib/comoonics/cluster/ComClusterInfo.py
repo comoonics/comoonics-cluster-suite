@@ -8,11 +8,11 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.4 2007-08-06 12:09:27 andrea2 Exp $
+# $Id: ComClusterInfo.py,v 1.5 2007-08-14 08:37:01 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 from xml import xpath
@@ -250,7 +250,9 @@ def main():
     # create Reader object
     reader = Sax2.Reader()
 
-    #parse the document and create clusterrepository object
+    # parse the document and create clusterrepository object
+    # can use only cluster2.conf for test, cluster.conf MUST cause an not 
+    # handled exception (because lack of a device name)
     file = os.fdopen(os.open("test/cluster2.conf",os.O_RDONLY))
     doc = reader.fromStream(file)
     file.close()
@@ -265,10 +267,11 @@ def main():
     #test functions
     print "clusterInfo.getNodeIdentifiers('name'): " + str(clusterInfo.getNodeIdentifiers("name"))
     print "clusterInfo.getNodeIds(): " + str(clusterInfo.getNodeIds())
+    
     _nodes = clusterInfo.getNodes()
     print "clusterInfo.getNodes(): " + str(_nodes)
-    print "clusterInfo.queryValue(): " + str(clusterInfo.queryValue("/cluster/clusternodes/clusternode/@name"))
-    print "clusterInfo.queryXml(): " + str(clusterInfo.queryXml("/cluster/clusternodes/clusternode/@name"))
+    print "clusterInfo.queryValue('/cluster/clusternodes/clusternode/@name'): " + str(clusterInfo.queryValue("/cluster/clusternodes/clusternode/@name"))
+    print "clusterInfo.queryXml('/cluster/clusternodes/clusternode/@name'): " + str(clusterInfo.queryXml("/cluster/clusternodes/clusternode/@name"))
     
     for node in _nodes:
         print "\nName: " + node.getName() + " - ID: " + node.getId()
@@ -283,6 +286,9 @@ def main():
         
     print "\nclusterInfo.getFailoverdomainNodes(testdomain1): " + str(clusterInfo.getFailoverdomainNodes("testdomain1"))
     print "clusterInfo.getFailoverdomainPrefNode(testdomain1): " + str(clusterInfo.getFailoverdomainPrefNode("testdomain1"))
+    print "\nclusterInfo.getFailoverdomainNodes(testdomain2): " + str(clusterInfo.getFailoverdomainNodes("testdomain2"))
+    print "clusterInfo.getFailoverdomainPrefNode(testdomain2): " + str(clusterInfo.getFailoverdomainPrefNode("testdomain2"))
+    
     print "\nclusterInfo: " + str(clusterInfo)
         
 
@@ -290,7 +296,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.4  2007-08-06 12:09:27  andrea2
+# Revision 1.5  2007-08-14 08:37:01  andrea2
+# extended docu and test
+#
+# Revision 1.4  2007/08/06 12:09:27  andrea2
 # Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.2  2007/06/05 13:32:57  andrea2
