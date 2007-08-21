@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 
 import fcntl # needed for filelocking
 import time  # needed for creation of timestamp
@@ -95,7 +95,11 @@ class inventoryfileProcessing:
         self.conf = file(self.filename,"r+")
         fcntl.lockf(self.conf ,fcntl.LOCK_EX)
         
-        doc = reader.fromStream(self.conf)
+        try:
+            doc = reader.fromStream(self.conf)
+        except xml.sax._exceptions.SAXParseException, arg:
+            log.critical("Problem while reading XML: " + str(arg))
+            raise
         
         return doc
 
@@ -148,8 +152,11 @@ class CdslRepository(DataObject):
         if len(args) >= 1 and len(args) <= 3 and os.path.exists(args[0]):
             reader = Sax2.Reader(validate=False)
             file = os.fdopen(os.open(args[0],os.O_RDONLY))
-            _tmp = reader.fromStream(file)
-            file.close()
+            try:
+                _tmp = reader.fromStream(file)
+            except xml.sax._exceptions.SAXParseException, arg:
+                log.critical("Problem while reading XML: " + str(arg))
+                raise
             if xpath.Evaluate("%s[@%s]" %(cdslDefaults_path,cdsltree), _tmp):
                 cls = ComoonicsCdslRepository
         #if options are used it must be a comoonics cdsl
@@ -174,10 +181,14 @@ class CdslRepository(DataObject):
         self.configfile = configfile
         self.cdsls = []
         self.validate = validate
-        
+        import xml
         reader = Sax2.Reader(self.validate)
         file = os.fdopen(os.open(self.configfile,os.O_RDONLY))
-        doc = reader.fromStream(file)
+        try:
+            doc = reader.fromStream(file)
+        except xml.sax._exceptions.SAXParseException, arg:
+            log.critical("Problem while reading XML: " + str(arg))
+            raise
         element = xpath.Evaluate(self.cdsls_path, doc)[0]
         file.close()
         
@@ -216,7 +227,7 @@ class ComoonicsCdslRepository(CdslRepository):
     defaults_cdslLink_attribute = "cdsl_link"
     defaults_maxnodeidnum_attribute = "maxnodeidnum"
     defaults_useNodeids_attribute = "use_nodeids"
-    defaults_root_attribute = "root"
+    #defaults_root_attribute = "root"
     defaults_mountpoint_attribute = "mountpoint"
     defaults_defaultDir_attribute = "default_dir"
     defaults_nodePrefix_attribute = "node_prefix"
@@ -258,12 +269,17 @@ class ComoonicsCdslRepository(CdslRepository):
         If you want to use options you MUST set the first fifth, if you do not want to use all other options, set the one you don't want to "None"
         @type options: list
         """
-        _tmp = ComSystem.execMethod((lambda n: n),True)
-        if _tmp == True:
-            self.configfile = configfile
+        if len(options) > 4 and options[5] != None:
+            self.root = options[5]
+            self.configfile = os.path.join(self.root,re.sub('^/','', os.path.abspath(configfile)))
         else:
+            self.root = "/"
+            self.configfile = os.path.abspath(configfile)
+        
+        #if noexecute mode is set, store inventoryfile at /tmp
+        if ComSystem.execMethod((lambda n: n),True) != True and not os.path.exists(configfile):
             self.configfile = os.path.join("/tmp",os.path.basename(configfile))
-            
+                   
         self.cdsls = []
         self.validate = validate
         from ComCdsl import Cdsl
@@ -289,8 +305,8 @@ class ComoonicsCdslRepository(CdslRepository):
                     defaults.setAttribute(self.defaults_cdslLink_attribute,options[2])
                     defaults.setAttribute(self.defaults_maxnodeidnum_attribute,options[3])
                     defaults.setAttribute(self.defaults_useNodeids_attribute,options[4])
-                if len(options) >= 6 and not (options[5] == "" or options[5] == None):
-                    defaults.setAttribute(self.defaults_root_attribute,options[5])
+                #if len(options) >= 6 and not (options[5] == "" or options[5] == None):
+                #    defaults.setAttribute(self.defaults_root_attribute,options[5])
                 if len(options) >= 7 and not (options[6] == "" or options[6] == None):
                     defaults.setAttribute(self.defaults_mountpoint_attribute,options[6])
                 if len(options) >= 8 and not (options[7] == "" or options[7] == None):
@@ -386,10 +402,10 @@ class ComoonicsCdslRepository(CdslRepository):
         else:
             """create new cdsl-entry in inventory-file"""
             log.debug("cdsl does not exists")
-	    #Open and lock XML-file and return DOM
+            #Open and lock XML-file and return DOM
             Lockfile = inventoryfileProcessing(self.configfile)
             doc = Lockfile.openLock(self.validate)
-	    log.debug("file sucessfully opened and locked")
+            log.debug("file sucessfully opened and locked")
             
             #locate defaults element
             default = xpath.Evaluate(self.defaults_path,doc)[0]
@@ -471,7 +487,7 @@ class ComoonicsCdslRepository(CdslRepository):
             elif ((node_prefix != "True") and (node_prefix != "")) and not (use_nodeids == "True"):
                 log.info("Prefix could only be used together with use_nodeids")
                 
-        root = self.getDefaultRoot()
+        root = self.root
         mountpoint = self.getDefaultMountpoint()
         default_dir = self.getDefaultDefaultDir()
         cdsltree_shared = self.getDefaultCdsltreeShared()
@@ -507,37 +523,8 @@ class ComoonicsCdslRepository(CdslRepository):
                 #shutil.copytree(os.path.join(cdslDefaultdir,os.path.basename(default_dir)),os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir)),True)
                 ComSystem.execLocalStatusOutput("cp -a " + os.path.join(cdslDefaultdir,os.path.basename(default_dir)) + " " + os.path.basename(default_dir)),os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir))
         
-        #if mountpoint set (i.e. its not set to the default value "/")
-        # * set variable pool to device of first mountpoint (e.g. /dev/sda1)
-        # * set variable relpath to cdsl_link_variable/pool/pool_variable
-        # * create directory revered to variable relpath
-        if not _rootMountpoint == "/":
-            #get Device of self.mountpoint
-            _tmp = ComSystem.execLocalStatusOutput("mount")[1].split("\n")
-            r = re.compile(_rootMountpoint)
-            for s in _tmp:
-                if r.search(s):
-                    _tmp = s.split()[0]
-                    _notFound = False
-                    break
-                else:
-                    _notFound = True
-                    
-            if _notFound == False:
-                pool = os.path.basename(os.path.normpath(_tmp))
-            else:
-                pool = ""
-
-            relpath = os.path.join(cdsl_link,"pool",re.sub('^/','', pool))
-            if not os.path.isdir(os.path.join(_rootMountpoint,re.sub('^/','', cdsl_link),re.sub('^/','', relpath))):
-                log.debug("Creating pool directory " + os.path.dirname(os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','', relpath)))))
-                #os.makedirs(os.path.dirname(os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','', relpath)))))
-                ComSystem.execMethod(os.makedirs,os.path.dirname(os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','', relpath)))))
-                                
-        #if mountpoint is not set (i.e. its set to the default value "/")
-        # * relpath is set to the value of cdsl_link
-        else:
-            relpath = cdsl_link
+        #set relpath
+        relpath = cdsl_link
                     
         # Create directories root_variable/relpath_variable if not already existing
         if not os.path.exists(os.path.join(_rootMountpoint,re.sub('^/','', relpath))):
@@ -563,15 +550,15 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdslLink_attribute),self.getElement())[0].value
  
-    def getDefaultRoot(self):
-        """
-        @rtype: string
-        """
-        _tmp = xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_root_attribute),self.getElement())
-        try:
-            return _tmp[0].value
-        except (NameError, IndexError):
-            return "/"
+    #def getDefaultRoot(self):
+    #    """
+    #    @rtype: string
+    #    """
+    #    _tmp = xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_root_attribute),self.getElement())
+    #    try:
+    #        return _tmp[0].value
+    #    except (NameError, IndexError):
+    #        return "/"
 
     def getDefaultMountpoint(self):
         """
@@ -668,9 +655,10 @@ class ComoonicsCdslRepository(CdslRepository):
         @param validate: Use validation of inventoryfile if set to True, default False, because often this method 
         is used to "repair" a inventoryfile which would not pass a validation.
         """
-        _isDigit=re.match('^[0-9]*$',node)
+        log.debug("Add node " + str(node) + " to defaultnodes")
+        _isDigit=re.match('^[0-9]*$',str(node))
         if _isDigit != None:
-            node = "id_" + node
+            node = "id_" + str(node)
         
         #Open and lock XML-file and return DOM
         Lockfile = inventoryfileProcessing(self.configfile)
@@ -693,7 +681,7 @@ class ComoonicsCdslRepository(CdslRepository):
         Lockfile.prettyprintUnlockClose(doc)
 
         
-    def update(self,src,clusterInfo):
+    def update(self,src,clusterInfo,chroot="/"):
         """
         Updates inventoryfile for given source. Add entry for associated cdsl to inventoryfile 
         if src is a cdsl on filesystem, but not already listed in inventoryfile. Deletes entry 
@@ -706,7 +694,7 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         from ComCdsl import Cdsl
         
-        _rootMountpoint = os.path.normpath(os.path.join(self.getDefaultRoot(),re.sub('^/','', self.getDefaultMountpoint())))
+        _rootMountpoint = os.path.normpath(os.path.join(chroot,re.sub('^/','', self.getDefaultMountpoint())))
         _rootMountpointCdsllink = os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','',self.getDefaultCdslLink())))
         _rootMountpointCdslShared =  os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','',self.getDefaultCdsltreeShared())))
         
@@ -725,7 +713,7 @@ class ComoonicsCdslRepository(CdslRepository):
         #check if cdsl exists in cdslrepository
         if not type(_cdsl).__name__ == "NoneType":
             #check if cdsl exists also in filesystem
-            if not _cdsl.exists():
+            if not _cdsl.exists(root=chroot):
                 self.delete(_cdsl)
                 log.debug("Deleted entry of not existing cdsl with source " + _src + " from inventoryfile")
             else:
@@ -733,8 +721,8 @@ class ComoonicsCdslRepository(CdslRepository):
      
         else:
             #create hostdependent and shared cdsl-object and test if one of these is existing
-            _cdslHostdependent = Cdsl(_src, "hostdependent", self, clusterInfo)
-            _cdslShared = Cdsl(_src, "shared", self, clusterInfo)
+            _cdslHostdependent = Cdsl(_src, "hostdependent", self, clusterInfo, root=chroot)
+            _cdslShared = Cdsl(_src, "shared", self, clusterInfo, root=chroot)
                        
             if _cdslShared.exists():
                 self.commit(_cdslShared)
@@ -758,7 +746,11 @@ def main():
 
     #parse the document and create clusterrepository object
     file = os.fdopen(os.open("test/cluster.conf",os.O_RDONLY))
-    doc = reader.fromStream(file)
+    try:
+        doc = reader.fromStream(file)
+    except xml.sax._exceptions.SAXParseException, arg:
+        log.critical("Problem while reading XML: " + str(arg))
+        raise
     file.close()
     element = xpath.Evaluate('/cluster', doc)[0]
     file.close()

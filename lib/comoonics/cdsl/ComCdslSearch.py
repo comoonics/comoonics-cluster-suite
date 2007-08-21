@@ -7,7 +7,7 @@ version of os.walk() (see L{os} for details), which skips submounts but follows 
 """
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 
 import os.path
 
@@ -77,7 +77,7 @@ def walk(top, topdown=True, onerror=None):
     if not topdown:
         yield top, dirs, nondirs
                           
-def cdslSearch(cdslRepository,clusterInfo):
+def cdslSearch(cdslRepository,clusterInfo,chroot="/"):
     """
     Method to search filesystem at cdsl link, which is defined in given cdslRepository, for cdsls.
     Adds found cdsls to cdslRepository.
@@ -87,18 +87,18 @@ def cdslSearch(cdslRepository,clusterInfo):
     @type clusterInfo: L{ClusterInfo}
     """
     _cdslLink = re.sub('/$','', cdslRepository.getDefaultCdslLink())
-    _rootMountpoint = re.sub('/$','', os.path.join(cdslRepository.getDefaultRoot(),re.sub('^/','', cdslRepository.getDefaultMountpoint())))
-    _path = os.path.join(cdslRepository.getDefaultRoot(),re.sub('^/','', cdslRepository.getDefaultMountpoint()),re.sub('^/','', _cdslLink))
+    _rootMountpoint = re.sub('/$','', os.path.join(chroot,re.sub('^/','', cdslRepository.getDefaultMountpoint())))
+    _path = os.path.join(chroot,re.sub('^/','', cdslRepository.getDefaultMountpoint()),re.sub('^/','', _cdslLink))
     
     for root,dirs,files in walk(_path):
             for name in files:
                 _tmp = os.path.join(root,name).replace(_cdslLink,"",1)
                 _tmp2 = (os.path.join(root,name).replace(_rootMountpoint,"",1)).replace(_cdslLink,"",1)
-                cdslRepository.update(_tmp2,clusterInfo)
+                cdslRepository.update(_tmp2,clusterInfo,chroot)
             for name in dirs:
                 _tmp = os.path.join(root,name).replace(_cdslLink,"",1)
                 _tmp2 = (os.path.join(root,name).replace(_rootMountpoint,"",1)).replace(_cdslLink,"",1)
-                cdslRepository.update(_tmp2,clusterInfo)
+                cdslRepository.update(_tmp2,clusterInfo,chroot)
 
 def main():
     """
@@ -110,7 +110,11 @@ def main():
 
     #parse the document and create clusterrepository object
     file = os.fdopen(os.open("../lib/comoonics/cdsl/test/cluster.conf",os.O_RDONLY))
-    doc = reader.fromStream(file)
+    try:
+        doc = reader.fromStream(file)
+    except xml.sax._exceptions.SAXParseException, arg:
+        log.critical("Problem while reading XML: " + str(arg))
+        raise
     file.close()
     element = xpath.Evaluate('/cluster', doc)[0]
     file.close()
