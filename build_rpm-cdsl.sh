@@ -15,7 +15,14 @@ AUTHOR="Andrea Offermann"
 AUTHOR_EMAIL="offermann@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.cdsl" : "lib/comoonics/cdsl"'
+PACKAGE_DATA='"comoonics.cdsl": ["man/*.gz"]'
 PACKAGES='"comoonics.cdsl"'
 SCRIPTS='"bin/com-mkcdsl", "bin/com-mkcdslinfrastructure", "bin/com-cdslinvchk", "bin/com-searchcdsls"'
+DATA_FILES='("share/man/man1",[
+             "man/com-mkcdslinfrastructure.1.gz",
+             "man/com-mkcdsl.1.gz",
+             "man/com-searchcdsls.1.gz",
+             "man/com-cdslinvchk.1.gz"
+            ])'
 
 setup
