@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.6 2007-04-10 16:51:24 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.7 2007-08-22 16:25:46 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -80,6 +80,12 @@ class ArchiveRequirement(Requirement):
         if self.check():
             if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
                 raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
+
+        __cmd="rm -rf %s/*" % destfile
+        (rc, rv) = ComSystem.execLocalGetResult(__cmd)
+        if rc >> 8 != 0:
+            raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
+
         self.olddir=os.curdir
         os.chdir(destfile)
         __cmd="gzip -cd %s | cpio -i" % srcfile
@@ -125,7 +131,10 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.6  2007-04-10 16:51:24  marc
+# Revision 1.7  2007-08-22 16:25:46  marc
+# Fixed Bug BZ#86 (cpio does not work if tmp dir has files)
+#
+# Revision 1.6  2007/04/10 16:51:24  marc
 # changed to order.BOTH
 #
 # Revision 1.5  2007/02/28 10:11:42  mark
