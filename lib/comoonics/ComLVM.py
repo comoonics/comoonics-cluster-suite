@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -840,6 +840,8 @@ class VolumeGroup(LinuxVolumeManager):
             raise RuntimeError("running vgcreate on %s failed: %u,%s" % (str(self.getAttribute("name")),rc >> 8, rv))
         if self.isClustered():
             self.clustered()
+        else:
+            self.notclustered()
         self.init_from_disk()
 
     def remove(self):
@@ -900,7 +902,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.7  2007-08-06 07:39:12  marc
+# Revision 1.8  2007-08-22 14:13:40  marc
+# Fixed Bug BZ#88 (clustered flad is created when there is none)
+#
+# Revision 1.7  2007/08/06 07:39:12  marc
 # - fixed BZ#72; also catching RunTimeExceptions when isValidLVPath.
 #
 # Revision 1.6  2007/06/19 13:10:08  marc
