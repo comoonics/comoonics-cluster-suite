@@ -151,7 +151,7 @@ def command_options (appname, usage):
 
     # Options
     cmd_options = [make_option("--timeout", action="store", type="int",
-                               dest="timeout", default=5, metavar="<SEC>",
+                               dest="timeout", default=60, metavar="<SEC>",
                                help="Set timeout."),
                    make_option("-v", "--verbose", action="count",
                                dest="verbose", help="Verbose (may be " + \
@@ -256,6 +256,7 @@ def command_options (appname, usage):
                             dest="user", default=os.environ['USER'],
                             metavar="<USER>", help="User to connect as.")
     cmd_parser.add_option_group(user_options)
+    cmd_parser.disable_interspersed_args()
     return cmd_parser
 
 def display_output (list_good, host_output, list_connfail, list_sessfail,
