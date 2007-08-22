@@ -74,6 +74,9 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Wed Aug 22 2007 MG <grimme@atix.de>, 0.1-43:
+   - fixed BZ #89 (com-dsh timeout, options)
+   - fixed BZ #88 (ComLVM cluster flag)
 * Mon Aug 06 2007 MG <grimme@atix.de>, 0.1-42:
    - added method to simulate a command in ComSystem
    - fixed BZ #72
