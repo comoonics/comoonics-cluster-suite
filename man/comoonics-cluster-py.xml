@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding='utf-8'?>
+<!DOCTYPE refentry
+  PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id="com-queryclusterconf">
+	<indexterm><primary>query clusterconfiguration</primary></indexterm>
+	<indexterm><primary>com-queryclusterconf</primary></indexterm>
+
+	<refmeta>
+		<refentrytitle>com-queryclusterconf</refentrytitle>
+		<manvolnum>1</manvolnum>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>com-queryclusterconf</refname>
+		<refpurpose>Queries a default or given Clusterconfiguration</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>com-queryclusterconf</command>
+			<arg>-f|--filename <replaceable>value</replaceable></arg>
+			<arg>-v|--version</arg>
+			<arg>-n|--validate</arg>
+			<arg>-d|--debug</arg>
+			<arg>-q|--query</arg>
+			<arg>-h|--help</arg>
+			<arg choice='plain'>query</arg>
+			<arg><replaceable>param</replaceable></arg>
+			<arg choice='plain'>*</arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsect1>
+		<title>Description</title>		
+		<para>
+			com-queryclusterconf queries a given or default clusterconfiguration. You can use the predefined queries and also query for any valid XQL-Query-String. Validation could be used if wanted.
+		</para>
+	</refsect1>
+	
+	<refsect1>
+		<title>Options</title>		
+		<para>
+			The available options are equal to these of the old ccs_xml_query script.
+		</para>	
+		<variablelist>
+			<varlistentry>
+				<term><option>-f/--filename</option></term>
+				<listitem>
+					<para>
+						Specify the path to clusterconfiguration, if not specified use /etc/cluster/cluster.conf
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-v|--version</option></term>
+				<listitem>
+					<para>
+						Outputs version
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-d|--debug</option></term>
+				<listitem>
+					<para>
+						Adds debugging messages when perform a query
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-q|--query</option></term>
+				<listitem>
+					<para>
+						See query parameters for details, only for to be downwardly compatible
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-n|--validate</option></term>
+				<listitem>
+					<para>
+						Validates clusterconfiguration before performing a query
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-h|--help</option></term>
+				<listitem>
+					<para>
+						Shows a short help
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+		<refsect2>
+			<title>Query parameters</title>
+			<indexterm><primary>query parameters</primary></indexterm>
+			<para>
+				An overview about which queries could be used. To proceed a query call the tool with the needed parameters and append the wanted query. Usage of parameter -q/--query is optional and will have no bearing on the output.
+			</para>
+			<variablelist>
+				<varlistentry>
+					<term><option>query_xml <replaceable>xql</replaceable></option></term>
+					<listitem>
+						<para>
+							Query file with given XQL, returns first suitable xml-objekt
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>query_value <replaceable>xql</replaceable></option></term>
+					<listitem>
+						<para>
+							Query file with given XQL, return all suitable values separated by a space.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>netdevs  <replaceable>nodename</replaceable><replaceable> <optional>sep</optional></replaceable></option></term>
+					<listitem>
+						<para>
+							Lists network device names for given host               separated by sep, if sep is not spezified separate by space
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>nodename  <replaceable>mac</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows nodename which belongs to given mac-address
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>nodeid  <replaceable>mac</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows nodeid which belongs to given mac-address
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>ip  <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows ip-address for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>master  <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows master-device for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>slave  <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows slave-status for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>mask  <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows netmask for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>gateway  <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows gateway for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>hosts</option></term>
+					<listitem>
+						<para>
+							Shows hosts in hosts file type
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>ifconfig <replaceable>mac</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows ifconfig parameter for mac
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>rootvolume <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows device name for the root device of given node
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>rootfs <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows filesystem name for root device of given node
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>mountopts <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows mount options for root device of given node
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>syslog <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows syslog server of given node
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>failoverdomainnodes <replaceable>failoverdomain</replaceable> <replaceable><optional>sep</optional></replaceable></option></term>
+					<listitem>
+						<para>
+							Shows all defined nodes in the given failoverdomain. Seperated by sep (default: blank)
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>failoverdomainprefnode <replaceable>failoverdomain</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows preferred node defined in the given failoverdomain.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>nodeids <replaceable><optional>sep</optional></replaceable></option></term>
+					<listitem>
+						<para>
+							Shows all nodes which are definde in clusterconfiguration. Seperated by sep (default: blank)
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>scsifailover <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows scsifailovertype for the given node
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsect2>
+		
+	</refsect1>
+	
+	<refsect1>
+		<title>Examples</title>
+		<indexterm><primary>example usage</primary></indexterm>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-queryclusterconf -d -q netdevs gfs-node1 -</userinput></screen>
+			<para>Shows network device names for host gfs-node1 and associated debugging messages. Uses blank to separate entries, because no special parameter is passed.</para>
+		</informalexample>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-queryclusterconf hosts</userinput></screen>
+			<para>Shows the hosts in hosts file type (e.g. 192.168.1.1 gfs-node1). Uses a new line for every host.</para>
+		</informalexample>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-queryclusterconf -f /my_conf.xml query_value /cluster/clusternodes/clusternode/@name</userinput></screen>
+			<para>Shows name of nodes which are defined in clusterconfiguration at /my_conf.xml. Items are seperated by a blank.</para>
+		</informalexample>
+	</refsect1>
+	
+	<refsect1 role="man-page">
+		<title>Files</title>
+		<simplelist type="vert">
+			<member><filename><?install-datadir?>bin/com-queryclusterconf</filename></member>
+			<member><filename><?install-datadir?>lib/comoonics/cluster/*</filename></member>
+		</simplelist>
+		<para>
+			The above files are distributed and installed by the com-cluster-py package.
+		</para>
+	</refsect1>
+	
+	<refsect1 role='author'>
+		<title>Author</title>
+		<para>This manual page was written by Andrea Offermann <email>andrea2@atix.de</email>. Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts.</para>
+	</refsect1>
+	
+	<!--<refsect1 role="man-page">
+		<title>See Also</title>		
+		<simplelist type="inline">
+			<member>db2x_xsltproc_ref</member>
+			<member>db2x_manxml_ref</member>
+			<member>utf8trans_ref</member>
+		</simplelist>
+	</refsect1>-->
+	
+</refentry>
