@@ -78,6 +78,7 @@ comoonics-cs-py:
    - fixed BZ #89 (com-dsh timeout, options)
    - fixed BZ #88 (ComLVM cluster flag)
    - fixed BZ #86 (ArchiveRequirement and cpio don't work if tmpdir has files)
+   - fixed BZ #70 (com-dsh would not work if node is away or quorum available)
 * Mon Aug 06 2007 MG <grimme@atix.de>, 0.1-42:
    - added method to simulate a command in ComSystem
    - fixed BZ #72
