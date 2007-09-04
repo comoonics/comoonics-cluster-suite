@@ -8,6 +8,7 @@ Binary to check if cdsls which are defined in inventoryfile really exists in fil
 import getopt
 import sys
 import logging
+import re
 
 from comoonics import ComLog
 from comoonics import GetOpts
@@ -22,7 +23,11 @@ class Config(GetOpts.BaseConfig):
         self.help=GetOpts.Option("help", "this help", False, False, "h")
         self.verbose=GetOpts.Option("debug", "add debugging output",False,False,"d", self.setDebug)
         self.logfile=GetOpts.Option("logfile", "path to used logfile", None, False, "l")
-        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile", None, False, "i")
+        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile", "/var/lib/cdsl/cdsl_inventory.xml", False, "i")
+        
+        self.root=GetOpts.Option("root", "set chroot-path","/",False,"r")
+        
+        self.defaultvalues=GetOpts.Option("defaultvalues", "use defaultvalues to perform inventorycheck, only needed when no other parameter is given",False,False,"V")
         
     def do(self, args_proper):
         if len(args_proper) > 0:
@@ -35,23 +40,29 @@ class Config(GetOpts.BaseConfig):
         
     def setQuiet(self, value):
         ComLog.setLevel(logging.CRITICAL)
-        
-#Bei ungueltigen Argumenten abrechen
+
+#break if some wrong arguments exist
 Config=Config()
 ret=Config.getopt(sys.argv[1:])
 if ret < 0:
     sys.exit(0)
 elif ret > 0:
     sys.exit(ret)
+#show help if no parameter is given
+elif len(sys.argv) == 1:
+    Config.usage()
+    sys.exit(0)
+    
+inventoryfile = os.path.join(Config.root,re.sub('^/','', Config.inventoryfile))
 
 if not Config.help:
     if Config.inventoryfile != None and Config.logfile != None:
-        cdslValidate(Config.inventoryfile,Config.logfile)
+        cdslValidate(inventoryfile,Config.logfile,Config.root)
     elif Config.inventoryfile != None:
-        cdslValidate(Config.inventoryfile)
+        cdslValidate(inventoryfile,root=Config.root)
     elif Config.logfile != None:
-        cdslValidate(logfile=Config.logfile)
+        cdslValidate(logfile=Config.logfile,root=Config.root)
     else:
-        cdslValidate()
+        cdslValidate(root=Config.root)
 else:
     Config.usage()
