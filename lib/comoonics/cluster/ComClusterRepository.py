@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.4 2007-08-06 12:09:27 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.5 2007-09-04 07:52:25 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -56,7 +56,6 @@ class ClusterRepository(DataObject):
         #node dictionaries depend on clustertype, setting later!
         self.nodeNameMap = {}
         self.nodeIdMap = {}
-        self.nodeIdentMap = {}
         
         super(ClusterRepository,self).__init__(element,doc)
     
@@ -121,9 +120,7 @@ class RedhatClusterRepository(ClusterRepository):
 class ComoonicsClusterRepository(RedhatClusterRepository):
     """
     Represents the clusterconfiguration file of an 
-    comoonics cluster as an L{DataObject}. Extends 
-    the redhat clusterrepository by adding an 
-    extra comoonics specific Hashmap.
+    comoonics cluster as an L{DataObject}.
     """
     def __init__(self,element,doc=None):
         super(ComoonicsClusterRepository,self).__init__(element,doc)
@@ -149,8 +146,6 @@ def main():
     print clusterRepository.nodeIdMap
     print "\nDictionary Nodename:Nodeobject"
     print clusterRepository.nodeNameMap
-    print "\nDictionary Nodeident:Nodeobject"
-    print clusterRepository.nodeIdentMap
     
     print "\nclusterRepository\n" + str(clusterRepository)
     print "Repositorytype Comoonics?: " + str(isinstance(clusterRepository, ComoonicsClusterRepository))
@@ -167,7 +162,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.4  2007-08-06 12:09:27  andrea2
+# Revision 1.5  2007-09-04 07:52:25  andrea2
+# Removed unused variable
+#
+# Revision 1.4  2007/08/06 12:09:27  andrea2
 # Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.1  2007/06/05 13:11:21  andrea2
