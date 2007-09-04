@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 
 import fcntl # needed for filelocking
 import time  # needed for creation of timestamp
@@ -349,6 +349,7 @@ class ComoonicsCdslRepository(CdslRepository):
         @return: cdsl-object belonging to given path
         @rtype: L{ComoonicsCdsl}
         """
+        src = os.path.normpath(src)
         for i in range(len(self.cdsls)):
             if (self.cdsls[i].src == src):
                 return self.cdsls[i]
@@ -359,7 +360,7 @@ class ComoonicsCdslRepository(CdslRepository):
     def exists(self,cdsl):
         """
         Looks if a given cdsl already exists in inventoryfile
-        @param cdsl: Cdsl to test existenzlater 
+        @param cdsl: Cdsl to test existenz later 
         @type cdsl: L{ComoonicsCdsl}
         @rtype: Boolean
         """
@@ -532,6 +533,12 @@ class ComoonicsCdslRepository(CdslRepository):
             #os.makedirs(os.path.join(_rootMountpoint,re.sub('^/','', relpath)))
             ComSystem.execMethod(os.makedirs,os.path.join(_rootMountpoint,re.sub('^/','', relpath)))
 
+    def getCdsls(self):
+        """
+        @rtype: ComoonicsCdsl
+        """
+        return self.cdsls
+    
     def getDefaultCdsltree(self):
         """
         @rtype: string
@@ -549,16 +556,6 @@ class ComoonicsCdslRepository(CdslRepository):
         @rtype: string
         """
         return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdslLink_attribute),self.getElement())[0].value
- 
-    #def getDefaultRoot(self):
-    #    """
-    #    @rtype: string
-    #    """
-    #    _tmp = xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_root_attribute),self.getElement())
-    #    try:
-    #        return _tmp[0].value
-    #    except (NameError, IndexError):
-    #        return "/"
 
     def getDefaultMountpoint(self):
         """
@@ -739,7 +736,7 @@ def main():
     infrastructure.
     """
     #set behaviour of comsystem, could be ask, simulate or continue
-    ComSystem.__EXEC_REALLY_DO="ask"
+    ComSystem.__EXEC_REALLY_DO="continue"
     
     # create Reader object
     reader = Sax2.Reader(validate=True)
@@ -766,5 +763,5 @@ def main():
     cdslrepository.buildInfrastructure(clusterinfo)
 
 if __name__ == '__main__':
-    #ComLog.setLevel(logging.INFO)
+    ComLog.setLevel(logging.INFO)
     main()

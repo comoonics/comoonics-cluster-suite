@@ -7,12 +7,12 @@ Wrotes overview about failed cdsls to logfile and prints result of validation
 """
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 
 from ComCdslRepository import *
 import os.path
 
-def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/cdsl_check_list"):
+def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/cdsl_check_list",root="/"):
     """
     Validates cdsls in given inventoryfile against filesystem and writes informations 
     about not existing/damaged cdsls to logfile. Returns if validation was sucessfull 
@@ -26,16 +26,17 @@ def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/c
     """
     cdslRepository = CdslRepository(filename,None,False)
     failed_cdsls = []
-    failure = True
+    failure = False
     
     if not cdslRepository.cdsls:
         print "No CDSL in inventoryfile found"
         return False
         
     for cdsl in cdslRepository.cdsls:
-        if cdsl.exists():
-            failure = False
-        else:
+        if root != "/":
+            cdsl.setRoot(root)
+        if not cdsl.exists():
+            failure = True
             failed_cdsls.append([cdsl.src,cdsl.type])
     
     if failure == True:
@@ -50,6 +51,8 @@ def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/c
         logfailed.close()
         return False
     else:
+        if os.path.exists(logfile):
+            os.remove(logfile)
         print "Sucessful CDSL inventory check"
         return True
 
