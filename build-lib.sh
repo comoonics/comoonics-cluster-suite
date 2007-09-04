@@ -1,4 +1,4 @@
-# $Id: build-lib.sh,v 1.5 2007-08-22 12:40:13 andrea2 Exp $
+# $Id: build-lib.sh,v 1.6 2007-09-04 13:28:52 mark Exp $
 
 function setup {
   CHANGELOG=$(awk '
@@ -17,10 +17,19 @@ BEGIN { changelogfound=0; }
 [ -e setup.py ] && rm -f setup.py
 
 echo '#!/usr/bin/python
-from comoonics import ComSystem
+import sys
 import re
 import os
 import gzip
+
+sys.path.append("./lib")
+from comoonics import ComSystem
+
+if not os.path.exists("/usr/bin/db2x_docbook2man"):
+	print "ERROR: /usr/bin/db2x_docbook2man not installed !"
+	print "  TIP: use \"yum install docbook2X\" to install the software"
+	sys.exit(1)
+	 
 
 ComSystem.__EXEC_REALLY_DO="continue"
 manpages = "'${NAME}'.xml"
@@ -43,7 +52,10 @@ if os.path.exists(manpages):
 os.chdir(olddir)
 
 ' > doc2man.py
-  python doc2man.py
+if ! python doc2man.py; then
+	exit 1
+fi
+  	
 
 echo '#!/usr/bin/python
 from distutils.core import setup
@@ -65,7 +77,10 @@ setup(name="'${NAME}'",
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.5  2007-08-22 12:40:13  andrea2
+# Revision 1.6  2007-09-04 13:28:52  mark
+# added verification for db2x tools
+#
+# Revision 1.5  2007/08/22 12:40:13  andrea2
 # *** empty log message ***
 #
 # Revision 1.3  2007/04/02 12:09:38  marc
