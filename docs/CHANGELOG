@@ -28,6 +28,10 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-4
+    - Added possibility to delete cdsls
+    - Added manpages, automatically generated from docbook
+    - Fixed behaviour when working with chroot
 * Fri Aug 06 2007 AO <offermann@atix.de>, 0.1-3
    fixes #78
 * Fri Aug 06 2007 AO <offermann@atix.de>, 0.1-2
