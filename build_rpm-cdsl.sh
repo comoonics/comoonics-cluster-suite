@@ -2,11 +2,11 @@
 
 source ./build-lib.sh
 
-RELEASE=4
+RELEASE=1
 REQUIRES="--requires=comoonics-cs-py,PyXML,docbook2X"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cdsl-py"
-VERSION="0.1"
+VERSION="0.2"
 DESCRIPTION="Comoonics cdsl utilities and library written in Python"
 LONG_DESCRIPTION="
 Comoonics cdsl utilities and library written in Python
