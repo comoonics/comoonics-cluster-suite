@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.6 2007-04-23 22:05:55 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.7 2007-09-04 20:42:59 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -83,7 +83,9 @@ class FilesystemCopyObject(CopyObjectJournaled):
         options=options.split(",")
         if options and "fsck" in options and not self.device.isMounted(self.mountpoint):
             self.filesystem.checkFs(self.device)
-        if (options and not "skipmount" in options) or not self.device.isMounted(self.mountpoint):
+        if options and not "skipmount" in options:
+            pass
+        elif not self.device.isMounted(self.mountpoint):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
             #self.umountfs=True
@@ -141,7 +143,13 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.6  2007-04-23 22:05:55  marc
+# Revision 1.7  2007-09-04 20:42:59  marc
+# Fixed one part of BZ#101
+#
+# Revision 1.6.2.1  2007/09/04 20:41:19  marc
+# Fixed one part of BZ#101
+#
+# Revision 1.6  2007/04/23 22:05:55  marc
 # added fsck
 #
 # Revision 1.5  2007/04/04 12:51:30  marc
