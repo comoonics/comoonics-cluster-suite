@@ -8,6 +8,7 @@ Binary to manage cdsls
 import getopt
 import sys
 import logging
+import xml
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
@@ -27,9 +28,9 @@ class Config(GetOpts.BaseConfig):
         self.maxnodeidnum=GetOpts.Option("maxnodeidnum", "maxnodeidnum","0",False,"m")
         self.useNodeids=GetOpts.Option("useNodeids", "set use nodeids to True or False",False,False,"i")
         
-        self.root=GetOpts.Option("root", "set chroot-path",None,False,"r")
-        self.mountpoint=GetOpts.Option("mountpoint", "set mountpoint",None,False,"t")
-        self.defaultDir=GetOpts.Option("defaultDir", "set default directory",None,False,"d")
+        self.root=GetOpts.Option("root", "set chroot-path","/",False,"r")
+        self.mountpoint=GetOpts.Option("mountpoint", "set mountpoint",None,False,"M")
+        self.defaultDir=GetOpts.Option("defaultDir", "set default directory",None,False,"D")
         self.nodePrefix=GetOpts.Option("nodePrefix", "set nodeprefix",None,False,"p")
         
         self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
@@ -37,6 +38,7 @@ class Config(GetOpts.BaseConfig):
         self.inventorydtd="/opt/atix/comoonics-cs/xml/cdsl_inventory.dtd"
         
         self.noexecute=GetOpts.Option("noexecute", "display what would be done, but not really change filesystem",False,False,"n")
+        self.defaultvalues=GetOpts.Option("defaultvalues", "use defaultvalues to create infrastructure/inventoryfile, only needed when no other parameter is given",False,False,"V")
         
         self.createInventory=GetOpts.Option("createInventory", "only create inventoryfile, don't build infrastructure",False,False,"C")
 
@@ -54,13 +56,17 @@ class Config(GetOpts.BaseConfig):
         ComLog.setLevel(logging.CRITICAL)
 
 ComLog.setLevel(logging.INFO)
-#Bei ungueltigen Argumenten abrechen
+#break if some wrong arguments exist
 Config=Config()
 ret=Config.getopt(sys.argv[1:])
 if ret < 0:
     sys.exit(0)
 elif ret > 0:
     sys.exit(ret)
+#show help if no parameter is given
+elif len(sys.argv) == 1:
+    Config.usage()
+    sys.exit(0)
 
 if Config.noexecute:
     ComSystem.__EXEC_REALLY_DO="simulate"
@@ -75,12 +81,16 @@ cdslRepository = CdslRepository(Config.inventoryfile,Config.inventorydtd,False,C
 # parse the document and create comclusterinfo object
 reader = Sax2.Reader(validate=False)
 file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
-doc = reader.fromStream(file)
+try:
+    doc = reader.fromStream(file)
+except xml.sax._exceptions.SAXParseException, arg:
+    log.critical("Problem while reading XML: " + str(arg))
+    raise
 file.close()
 
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
-clusterInfo = ClusterInfo(clusterRepository)
 
 if not Config.createInventory:
+    clusterInfo = ClusterInfo(clusterRepository)
     cdslRepository.buildInfrastructure(clusterInfo)

@@ -8,6 +8,7 @@ Binary to manage cdsls
 import getopt
 import sys
 import logging
+import xml
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
@@ -31,6 +32,8 @@ class Config(GetOpts.BaseConfig):
         
         self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
         self.clusterconf=GetOpts.Option("clusterconf", "path to used cluster.conf","/etc/cluster/cluster.conf",False,"c")
+        
+        self.root=GetOpts.Option("root", "set chroot-path","/",False,"r")
         
         self.setAdditionalParams("[sourcename]")
 
@@ -64,7 +67,11 @@ if Config.noexecute:
 # parse the document and create comclusterinfo object
 reader = Sax2.Reader(validate=False)
 file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
-doc = reader.fromStream(file)
+try:
+    doc = reader.fromStream(file)
+except xml.sax._exceptions.SAXParseException, arg:
+    log.critical("Problem while reading XML: " + str(arg))
+    raise
 file.close()
 
 #create needed cluster objects
@@ -72,19 +79,16 @@ clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
     
 #create cdsl objects
-cdslRepository = CdslRepository(Config.inventoryfile,None,False)
+cdslRepository = CdslRepository(Config.inventoryfile,None,False,None,None,None,None,None,Config.root)
 
-_root = cdslRepository.getDefaultRoot()
+_root = Config.root
 _mountpoint = cdslRepository.getDefaultMountpoint()
-if not os.path.normpath(os.path.join(_root,re.sub('^/','', _mountpoint))) == "/":
-    src = os.path.abspath(Config.src).replace(os.path.normpath(os.path.join(_root,re.sub('^/','', _mountpoint))),'',1)
-else:
-    src = os.path.normpath(Config.src)
+src = os.path.normpath(Config.src)
 
 if Config.hostdependent_all:
     #Creates a hostdependent cdsl and copies content to all nodes defined 
     #in clusterrepository or specified by maxnodeidnum in cdslrepository
-    obj = Cdsl(src, "hostdependent", cdslRepository, clusterInfo, None)
+    obj = Cdsl(src, "hostdependent", cdslRepository, clusterInfo, None, root=Config.root)
     if Config.force:
         obj.commit(force=True)
     else:
@@ -93,11 +97,11 @@ if Config.hostdependent_all:
 elif Config.shared_all:
     #Creates a shared cdsl and copies content to sharedtree defined 
     #in clusterrepository
-    obj = Cdsl(src, "shared", cdslRepository, clusterInfo, None)
+    obj = Cdsl(src, "shared", cdslRepository, clusterInfo, None, root=Config.root)
     if Config.force:
         obj.commit(force=True)
     else:
         obj.commit()
         
 if Config.inventory:
-    cdslRepository.update(src,clusterInfo)
+    cdslRepository.update(src,clusterInfo, chroot=Config.root)
