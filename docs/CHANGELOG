@@ -28,6 +28,11 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Thu Sep 04 2007 MH <hlawatschek@atix.de>, 0.2-1
+    - new version
+    - added rmcdsls
+* Thu Sep 04 2007 MH <hlawatschek@atix.de>, 0.1-5
+    - removed rmcdsls for this release
 * Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-4
     - Added possibility to delete cdsls
     - Added manpages, automatically generated from docbook
@@ -40,6 +45,9 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Tue Sep 04 2007 MH <hlawatschek@atix.de>, 0.1-4
+   - bug fixes
+   - added man pages
 * Fri Aug 03 2007 AO <offermann@atix.de>, 0.1-1
    initial revision
 
