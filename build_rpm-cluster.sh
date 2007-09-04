@@ -3,7 +3,7 @@
 source ./build-lib.sh
 
 RELEASE=3
-REQUIRES="--requires=comoonics-cs-py,PyXML"
+REQUIRES="--requires=comoonics-cs-py,PyXML,docbook2X"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cluster-py"
 VERSION="0.1"
@@ -15,7 +15,11 @@ AUTHOR="Andrea Offermann"
 AUTHOR_EMAIL="offermann@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.cluster" : "lib/comoonics/cluster"'
+PACKAGE_DATA='"comoonics.cdsl": ["man/*.gz"]'
 PACKAGES='"comoonics.cluster"'
 SCRIPTS='"bin/com-queryclusterconf"'
+DATA_FILES='("share/man/man1",[
+             "man/com-queryclusterconf.1.gz"
+            ])'
 
 setup
