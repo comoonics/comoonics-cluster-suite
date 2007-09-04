@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding='utf-8'?>
-<!--<!DOCTYPE article
+<!DOCTYPE article
   PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 
-<article id="com-cdsl-py manpages" lang="en">-->
+<article id="com-cdsl-py manpages" lang="en">
 	
 <refentry id="com-mkcdslinfrastructure">
 	<indexterm><primary>build needed infrastructure to create cdsls</primary></indexterm>
@@ -876,4 +876,4 @@
 	</refsect1>
 </refentry>
 
-<!--</article>-->
+</article>
