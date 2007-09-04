@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding='utf-8'?>
-<!DOCTYPE article
+<!--<!DOCTYPE article
   PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 
-<article id="com-cdsl-py manpages" lang="en">
+<article id="com-cdsl-py manpages" lang="en">-->
 	
 <refentry id="com-mkcdslinfrastructure">
 	<indexterm><primary>build needed infrastructure to create cdsls</primary></indexterm>
@@ -243,6 +243,7 @@
 		<title>See Also</title>		
 		<simplelist type="inline">
 			<member>com-mkcdsl</member>
+			<member>com-rmcdsl</member>
 			<member>com-cdslinvchk</member>
 			<member>com-searchcdsls</member>
 		</simplelist>
@@ -276,6 +277,7 @@
 			<arg>-v|--version</arg>
 			<arg>-i|--inventory</arg>
 			<arg>-d|--verbose</arg>
+			<arg>-r|--root <replaceable>value</replaceable></arg>
 			<arg>-h|--help</arg>
 			<arg choice='plain'><replaceable>sourcename</replaceable></arg>
 		</cmdsynopsis>
@@ -373,6 +375,14 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>-r|--root <replaceable>value</replaceable></option></term>
+				<listitem>
+					<para>
+						Sets chroot to create a Cdsl which should be used in a chroot-Environment
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-h|--help</option></term>
 				<listitem>
 					<para>
@@ -420,6 +430,7 @@
 		<title>See Also</title>		
 		<simplelist type="inline">
 			<member>com-mkcdslinfrastructure</member>
+			<member>com-rmcdsl</member>
 			<member>com-cdslinvchk</member>
 			<member>com-searchcdsls</member>
 		</simplelist>
@@ -448,6 +459,7 @@
 			<arg>-V|--defaultvalues</arg>
 			<arg>-v|--version</arg>
 			<arg>-i|--inventoryfile <replaceable>value</replaceable></arg>
+			<arg>-r|--root <replaceable>value</replaceable></arg>
 			<arg>-h|--help</arg>
 		</cmdsynopsis>
 	</refsynopsisdiv>
@@ -503,6 +515,14 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>-r|--root <replaceable>value</replaceable></option></term>
+				<listitem>
+					<para>
+						Sets chroot to check cdsls which where created to be used in a chroot-Environment
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-h|--help</option></term>
 				<listitem>
 					<para>
@@ -547,6 +567,7 @@
 		<simplelist type="inline">
 			<member>com-mkcdslinfrastructure</member>
 			<member>com-mkcdsl</member>
+			<member>com-rmcdsl</member>
 			<member>com-searchcdsls</member>
 		</simplelist>
 	</refsect1>
@@ -575,6 +596,7 @@
 			<arg>-q|--quiet</arg>
 			<arg>-c|--clusterconf <replaceable>value</replaceable></arg>
 			<arg>-v|--version</arg>
+			<arg>-r|--root <replaceable>value</replaceable></arg>
 			<arg>-h|--help</arg>
 		</cmdsynopsis>
 	</refsynopsisdiv>
@@ -638,6 +660,14 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>-r|--root <replaceable>value</replaceable></option></term>
+				<listitem>
+					<para>
+						Sets chroot to search cdsls which where created to be used in a chroot-Environment
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-h|--help</option></term>
 				<listitem>
 					<para>
@@ -682,10 +712,168 @@
 		<simplelist type="inline">
 			<member>com-mkcdslinfrastructure</member>
 			<member>com-mkcdsl</member>
+			<member>com-rmcdsl</member>
 			<member>com-cdslinvchk</member>
 		</simplelist>
 	</refsect1>
 </refentry>
 
-</article>
+<refentry id="com-rmcdsl">
+	<indexterm><primary>Delete cdsl</primary></indexterm>
+	<indexterm><primary>com-rmcdsl</primary></indexterm>
+	
+	<refmeta>
+		<refentrytitle>com-rmcdsl</refentrytitle>
+		<manvolnum>1</manvolnum>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>com-rmcdsl</refname>
+		<refpurpose>Delete cdsl</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>com-rmcdsl</command>
+			<arg>-l|--inventoryfile <replaceable>value</replaceable></arg>
+			<arg>-n|--noexecute</arg>
+			<arg>-q|--quiet</arg>
+			<arg>-c|--clusterconf <replaceable>value</replaceable></arg>
+			<arg>-v|--version</arg>
+			<arg>-d|--verbose</arg>
+			<arg>-r|--root <replaceable>value</replaceable></arg>
+			<arg>-s|--syboliconly</arg>
+			<arg>-h|--help</arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsect1>
+		<title>Description</title>
+		<para>
+			Deletes existing cdsl from filesystem and inventoryfile. Contains deleting of symbolic links and content of cdsl.
+		</para>
+	</refsect1>
+	
+	<refsect1>
+		<title>Options</title>
+		<variablelist>
+			<varlistentry>
+				<term><option>-l|--inventoryfile <replaceable>value</replaceable></option></term>
+				<listitem>
+					<para>
+						Specify the path to used inventoryfile (default: /var/lib/cdsl/cdsl_inventory.xml)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-n|--noexecute</option></term>
+				<listitem>
+					<para>
+						Simulates deletion by showing only the debug-messages of what would be done if noexecute is not set.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-q|--quiet</option></term>
+				<listitem>
+					<para>
+						Minimizes output to critical messages
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-c|--clusterconf <replaceable>value</replaceable></option></term>
+				<listitem>
+					<para>
+						Specify the path to used clusterconfiguration (default: /etc/cluster/cluster.conf)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-v|--version</option></term>
+				<listitem>
+					<para>
+						Outputs version
+					</para>
+				</listitem>
+			</varlistentry>			
+			<varlistentry>
+				<term><option>-d|--verbose</option></term>
+				<listitem>
+					<para>
+						Extends output by adding debugging messages
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-r|--root</option></term>
+				<listitem>
+					<para>
+						Set root if you work in an environment where chroot is planed but not already performed. Set path to the value you plan to use for your chroot-environment.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-s|--syboliconly</option></term>
+				<listitem>
+					<para>
+						Set to avoid deletion of cdsls content. If set only the symbolic links which where created with the cdsl are removed.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-h|--help</option></term>
+				<listitem>
+					<para>
+						Shows a short help
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+	
+	<refsect1>
+		<title>Examples</title>
+		<indexterm><primary>example usage</primary></indexterm>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-rmcdsl /hostdependent_dir/shared_file</userinput></screen>
+			<para>If only the path to the cdsl to delete is specified, delete symbolic links and content.</para>
+		</informalexample>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-rmcdsl -n -d /hostdependent_dir/shared_file</userinput></screen>
+			<para>Use to show what changes would apply when perform <emphasis>com-rmcdsl</emphasis>, but only simulate its behaviour. Does not change any part of the cdsl-infrastructure.</para>
+		</informalexample>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-rmcdsl -s /hostdependent_dir/shared_file</userinput></screen>
+			<para>Same as above, but delete only symbolic links. Helpfull if you want to delete a cdsl but need its content afterwards.</para>
+		</informalexample>
+	</refsect1>
+	
+	<refsect1 role="man-page">
+		<title>Files</title>
+		<simplelist type="vert">
+			<member><filename><?install-datadir?>bin/com-rmcdsl</filename></member>
+			<member><filename><?install-datadir?>lib/comoonics/cdsl/*</filename></member>
+		</simplelist>
+		<para>
+			The above files are distributed and installed by the com-cdsl-py package.
+		</para>
+	</refsect1>
+	
+	<refsect1 role='author'>
+		<title>Author</title>
+		<para>This manual page was written by Andrea Offermann <email>andrea2@atix.de</email>. Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts.</para>
+	</refsect1>
+	
+	<refsect1 role="man-page">
+		<title>See Also</title>		
+		<simplelist type="inline">
+			<member>com-mkcdslinfrastructure</member>
+			<member>com-mkcdsl</member>
+			<member>com-searchcdsls</member>
+			<member>com-cdslinvchk</member>
+		</simplelist>
+	</refsect1>
+</refentry>
 
+<!--</article>-->

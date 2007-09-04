@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding='utf-8'?>
-<!DOCTYPE refentry
+<!--<!DOCTYPE article
   PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<article id="com-cluster-py manpages" lang="en">-->
 
 <refentry id="com-queryclusterconf">
 	<indexterm><primary>query clusterconfiguration</primary></indexterm>
@@ -309,3 +311,6 @@
 	</refsect1>-->
 	
 </refentry>
+
+<!--</article>-->
+
