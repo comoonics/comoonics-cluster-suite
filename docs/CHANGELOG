@@ -204,6 +204,10 @@ comoonics-ec-py
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
   changed that modset and copysets can be mixed not for copysets then modsets.
 
+comoonics-pythonosfix-py
+* Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-1:
+  initial revision
+
 comoonics-scsi-py
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
