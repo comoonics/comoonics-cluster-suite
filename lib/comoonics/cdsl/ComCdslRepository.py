@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 
 import fcntl # needed for filelocking
 import time  # needed for creation of timestamp
@@ -29,6 +29,8 @@ from comoonics import ComSystem
 from comoonics.cluster.ComClusterInfo import *
 from comoonics.cluster.ComClusterNode import *
 from comoonics.cluster.ComClusterRepository import *
+
+import comoonics.pythonosfix as os
 
 log = ComLog.getLogger("comoonics.cdsl.ComCdslRepository")
 

@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 
 import re
 import sys
@@ -28,6 +28,8 @@ from comoonics.ComDataObject import DataObject
 from comoonics.cluster.ComClusterInfo import *
 from comoonics.cluster.ComClusterRepository import *
 
+import comoonics.pythonosfix as os
+
 ComSystem.__EXEC_REALLY_DO = ""
 log = ComLog.getLogger("comoonics.cdsl.ComCdsl")
 
@@ -35,6 +37,7 @@ class CdslInitException(ComException):pass
 class CdslUnsupportedTypeException(ComException):pass
 class CdslFileHandlingException(ComException):pass
 class CdslPrefixWithoutNodeidsException(ComException):pass
+class CdslDoesNotExistException(ComException):pass
 
 class Cdsl(DataObject):
     """
@@ -325,6 +328,8 @@ class ComoonicsCdsl(Cdsl):
              
             if os.path.exists(_rootMountpointCdsltreeNodeSrc) and force == True:
                 log.debug("Move Files to shared tree: " + _rootMountpointSrc + " => " + os.path.dirname(_rootMountpointCdsltreesharedSrc))
+                if os.path.exists(_rootMountpointCdsltreesharedSrc):
+                    self._removePath(_rootMountpointCdsltreesharedSrc,True)
                 ComSystem.execMethod(shutil.move,_rootMountpointSrc,_rootMountpointCdsltreesharedSrc)      
             elif os.path.exists(_rootMountpointCdsltreeNodeSrc) and force == False:
                 log.debug("Copy Files to shared tree: " + _rootMountpointSrc + " => " + os.path.dirname(_rootMountpointCdsltreesharedSrc))
@@ -489,7 +494,7 @@ class ComoonicsCdsl(Cdsl):
             self.setRoot(root)
             
         if not self.exists():
-            raise Exception
+            raise CdslDoesNotExistException("Cdsl with source " + self.src + " does not exist, cannot delete.")
         
         #when using nodeids in cdslrepository, these have got a suffix "id_" to 
         #get valid xml. Remove that "id_" here, because its not used to build 
@@ -509,7 +514,10 @@ class ComoonicsCdsl(Cdsl):
             for cdsl in _tmp:
                 subcdsls.append([self._pathdepth(cdsl.src),cdsl])
             #sort cdsls by pathdeepth (ascending) and delete cdsls whith deepest path first
-            subcdsls = sorted(subcdsls)[::-1]
+            #sorted was first intruduced with python 2.4
+            #subcdsls = sorted(subcdsls)[::-1]
+            subcdsls.sort()
+            subcdsls.reverse()
             for cdsl in subcdsls:
                 cdsl[1].delete(False)
         
@@ -594,8 +602,12 @@ class ComoonicsCdsl(Cdsl):
         #if some cdsls where found, sort them after pathdeepth and return the one with the longest 
         #equivalent path compared to this cdsl
         if len(_tmpcdsls) > 0:
-            _tmp2 = sorted(_tmpcdsls)[::-1]
-            return _tmp2[0][1]
+            #sorted was first intruduced with python 2.4
+            #_tmp2 = sorted(_tmpcdsls)[::-1]
+            _tmpcdsls.sort()
+            _tmpcdsls.reverse()
+            
+            return _tmpcdsls[0][1]
         
     def getChilds(self):
         """

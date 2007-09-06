@@ -7,10 +7,11 @@ Wrotes overview about failed cdsls to logfile and prints result of validation
 """
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 
 from ComCdslRepository import *
-import os.path
+
+import comoonics.pythonosfix as os
 
 def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/cdsl_check_list",root="/"):
     """
