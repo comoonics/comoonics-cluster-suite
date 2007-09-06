@@ -46,17 +46,17 @@
 	<refsect1>
 		<title>Description</title>
 		<para>
-			Builds needed infrastructure to create cdsls, this contains creating directories and symbolic links. Does not include mounting of needed bindmounts. Uses a inventoryfile to get needed values. If inventoryfile does not exist, create it by using predefined defaultvalues and/or values which are specified via parameters. When using a existing inventoryfile, it does take no more effect to pass parameters which could be content of a inventoryfile. These values would be ignored.
+			Builds needed infrastructure to create cdsls, this contains creating directories and symbolic links. Does not include mounting of needed bindmounts. Uses a inventoryfile to get needed values. If inventoryfile does not exist, create it by using predefined defaultvalues and/or values which are specified via parameters. When using a existing inventoryfile, passing parameters which could be content of a inventoryfile will have no effect. These values would be ignored.
 		</para>
 		<para>
-			If a cdsl-inventoryfile is created, it does only contain a defaultsection which does contain important values for later cdsl-operations. This tools does not add informations about maybe existing cdsls.
+			If a cdsl-inventoryfile is created, it does only contain a default section which contains important values for later cdsl-operations. These tools do not add information about preexisting cdsls.
 		</para>
 	</refsect1>
 	
 	<refsect1>
 		<title>Options</title>		
 		<para>
-			The available options are equal to these of the old com_create_cdsl script.
+			The available options are compatible to the obsolete com_create_cdsl script.
 		</para>	
 		<variablelist>
 			<varlistentry>
@@ -111,7 +111,7 @@
 				<term><option>-V|--defaultvalues</option></term>
 				<listitem>
 					<para>
-						Use defaultvalues to create infrastructure/inventoryfile. Only needed when no other parameter is used for avoiding that only help is showed.
+						Use defaultvalues to create infrastructure/inventoryfile. (This option prevents that only help is displayed.)
 					</para>
 				</listitem>
 			</varlistentry>
@@ -127,7 +127,7 @@
 				<term><option>-v|--version</option></term>
 				<listitem>
 					<para>
-						Outputs version
+						Show version
 					</para>
 				</listitem>
 			</varlistentry>
@@ -159,7 +159,7 @@
 				<term><option>-t|--cdsltree <replaceable>value</replaceable></option></term>
 				<listitem>
 					<para>
-						Path for hostdependent (default: cluster/cdsl)
+						Path for hostdependent tree (default: cluster/cdsl)
 					</para>
 				</listitem>
 			</varlistentry>
@@ -175,7 +175,7 @@
 				<term><option>-c|--clusterconf <replaceable>value</replaceable></option></term>
 				<listitem>
 					<para>
-						Specify the path to clusterconfiguration (default: /etc/cluster/cluster.conf)
+						Specify the path to cluster configuration file (default: /etc/cluster/cluster.conf)
 					</para>
 				</listitem>
 			</varlistentry>
@@ -211,15 +211,15 @@
 		<indexterm><primary>example usage</primary></indexterm>
 		<informalexample>
 			<screen><prompt>$ </prompt><userinput>com-mkcdslinfrastructure</userinput></screen>
-			<para>Creates a inventoryfile and build the infrastructure needed for creating cdsls. Needs <emphasis>/etc/cluster/cluster.conf</emphasis>. Uses parameters from <emphasis>/var/lib/cdsl/cdsl_inventory.xml</emphasis>, if file is not already existing create it and use defaultvalues.</para>
+			<para>Creates a inventoryfile and builds the infrastructure needed for creating cdsls. Depends on <emphasis>/etc/cluster/cluster.conf</emphasis>. Uses parameters from <emphasis>/var/lib/cdsl/cdsl_inventory.xml</emphasis>, if file does not exist it will be created with defaultvalues.</para>
 		</informalexample>
 		<informalexample>
 			<screen><prompt>$ </prompt><userinput>com-mkcdslinfrastructure -C</userinput></screen>
-			<para>Same as example above, but skips creating of infrastructure. Does nothing if inventoryfile at <emphasis>/var/lib/cdsl/cdsl_inventory.xml</emphasis> already exists.</para>
+			<para>Same as above example, but skips creating of infrastructure. Does nothing if inventoryfile at <emphasis>/var/lib/cdsl/cdsl_inventory.xml</emphasis> already exists.</para>
 		</informalexample>
 		<informalexample>
 			<screen><prompt>$ </prompt><userinput>com-mkcdslinfrastructure -d -i -p node_ -l /my_inventory.xml</userinput></screen>
-			<para>Creates a inventoryfile and build the infrastructure needed for creating cdsls. Needs <emphasis>/etc/cluster/cluster.conf</emphasis>. Only use this if <emphasis>/my_inventory.xml</emphasis> does not already exists! Creates inventoryfile by considering given values (use_nodeids, nodePrefix: node_, inventoryfile: /my_inventory.xml), consider values when building infrastructure. Show debugging output because -d is set.</para>
+			<para>Creates a inventoryfile and build the infrastructure needed for creating cdsls. Needs <emphasis>/etc/cluster/cluster.conf</emphasis>. Only use this if <emphasis>/my_inventory.xml</emphasis> does not already exists! Creates inventoryfile with given values (use_nodeids, nodePrefix: node_, inventoryfile: /my_inventory.xml). Consider values when building infrastructure. Show debugging output because -d is set.</para>
 		</informalexample>
 	</refsect1>
 	
