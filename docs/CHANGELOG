@@ -28,6 +28,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Thu Sep 06 2007 MH <offermann@atix.de>, 0.2-2
+    - Fixed Bugs BZ #102 and #103
 * Thu Sep 04 2007 MH <hlawatschek@atix.de>, 0.2-1
     - new version
     - added rmcdsls
