@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComRegexpModification.py,v 1.3 2006-09-18 13:58:10 marc Exp $
+# $Id: ComRegexpModification.py,v 1.4 2007-09-07 14:41:24 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRegexpModification.py,v $
 
 import exceptions
@@ -30,6 +30,8 @@ CMD_CP="/bin/cp"
 class RegexpModification(FileModification):
     SAVESTRING=".regexp"
     DEFAULT_OPTIONS=0
+    __logStrName__="comoonics.enterprisecopy.ComRegexpModification.RegexpModification"
+    logger=ComLog.getLogger(__logStrName__)
     """ Regular Expression Modification"""
     def __init__(self, element, doc):
         FileModification.__init__(self, element, doc)
@@ -55,27 +57,31 @@ class RegexpModification(FileModification):
             __cmd.append(file.getAttribute("name")+self.SAVESTRING)
             __rc, __ret = ComSystem.execLocalStatusOutput(" ".join(__cmd))
             if __rc:
-                ComLog.getLogger("RegexpModification").error(" ".join(__cmd) + " " + __ret)
+                RegexpModification.logger.error(" ".join(__cmd) + " " + __ret)
             else:
-                ComLog.getLogger("RegexpModification").debug(" ".join(__cmd) + " " + __ret)
-        if file.hasAttribute("sourcefile"):
-            __source=open(file.getAttribute("sourcefile"))
-        else:
-            __source=open(file.getAttribute("name"))
-        __lines=__source.readlines()
-        __source.close()
-        if not dest:
-            __dest=open(file.getAttribute("name"), 'w')
-        else:
-            __dest=dest
-        if __options | re.MULTILINE:
-            __dest.write(re.compile(__search, __options).sub(__replace, "".join(__lines)))
-        else:
-            for line in __lines:
-                __dest.write(re.compile(__search, __options).sub(__replace, line))
+                RegexpModification.logger.debug(" ".join(__cmd) + " " + __ret)
+        try:
+            if file.hasAttribute("sourcefile"):
+                __source=open(file.getAttribute("sourcefile"))
+            else:
+                __source=open(file.getAttribute("name"))
+            __lines=__source.readlines()
+            __source.close()
+            if not dest:
+                __dest=open(file.getAttribute("name"), 'w')
+            else:
+                __dest=dest
+            if __options | re.MULTILINE:
+                __dest.write(re.compile(__search, __options).sub(__replace, "".join(__lines)))
+            else:
+                for line in __lines:
+                    __dest.write(re.compile(__search, __options).sub(__replace, line))
 
-        if not dest:
-            __dest.close()
+            if not dest:
+                __dest.close()
+        except IOError, ioe:
+            RegexpModification.logger.error(ioe)
+
 
     def getREOptions(self, options):
         __options=self.DEFAULT_OPTIONS
@@ -102,7 +108,11 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComRegexpModification.py,v $
-# Revision 1.3  2006-09-18 13:58:10  marc
+# Revision 1.4  2007-09-07 14:41:24  marc
+# - added catching of IOExceptino
+# - logging
+#
+# Revision 1.3  2006/09/18 13:58:10  marc
 # added options for Regularexpressions
 #
 # Revision 1.2  2006/07/21 08:59:09  mark
