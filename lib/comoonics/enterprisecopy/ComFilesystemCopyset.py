@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.5 2007-08-07 11:18:01 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.6 2007-09-07 14:37:37 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -26,6 +26,7 @@ from comoonics import ComSystem
 from comoonics import ComLog
 
 from ComFilesystemCopyObject import FilesystemCopyObject
+from ComPathCopyObject import PathCopyObject
 from ComArchiveCopyObject import ArchiveCopyObject
 
 CMD_RSYNC="/usr/bin/rsync"
@@ -114,46 +115,54 @@ class FilesystemCopyset(Copyset):
         return __cmd
 
     def _copyData(self):
-
-        # 1. copy fs to fs
-        if isinstance(self.source, FilesystemCopyObject):
+        # FIXME: this implementation is VERY POOR!! This should be fixed without any instance casting of classes on
+        #        the end of the child tree. There should be a abstract class FilesystemCopyObject and PathCopyObject
+        #        derive from!!!!
+        # 1. copy fs/path to fs/path
+        ComLog.getLogger(__logStrLevel__).debug("doCopy: instance(self.source: %s), instance(self.dest: %s)" %(self.source.__class__, self.dest.__class__))
+        ComLog.getLogger(__logStrLevel__).debug("doCopy: isinstance(%s, PathCopyObject): %s" %(self.source.__class__, isinstance(self.source, PathCopyObject)))
+        if isinstance(self.source, FilesystemCopyObject) or isinstance(self.source, PathCopyObject):
+            mountpoint=self.source.getMountpoint().getAttribute("name")
             if isinstance(self.dest, FilesystemCopyObject):
                 __cmd = self._getFSCopyCommand()
                 __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-                ComLog.getLogger("Copyset").debug("doCopy: "  + __cmd +" "+ __ret)
+                ComLog.getLogger(__logStrLevel__).debug("doCopy: "  + __cmd +" "+ __ret)
                 if __rc:
                     # TODO
                     # check for specific error codes
                     #raise ComException(__cmd + __ret)
-                    ComLog.getLogger("Copyset").warning("doCopy: " + __ret)
+                    ComLog.getLogger(__logStrLevel__).warning("doCopy: " + __ret)
                 return __rc
+
             # 2. copy fs to archive
-            if isinstance(self.dest, ArchiveCopyObject):
+            elif isinstance(self.dest, ArchiveCopyObject):
 #                try:
                 archive=self.dest.getDataArchive()
-                mountpoint=self.source.getMountpoint().getAttribute("name")
                 archive.createArchive("./", mountpoint)
                 return True
                 #except Exception, e:
 #                except None, e:
-#                    ComLog.getLogger("Copyset").error(e)
+#                    ComLog.getLogger(__logStrLevel__).error(e)
 #                return False
         # 3. copy archive to fs
-        if isinstance(self.source, ArchiveCopyObject):
-            if isinstance(self.dest, FilesystemCopyObject):
+        elif isinstance(self.source, ArchiveCopyObject):
+            if isinstance(self.dest, FilesystemCopyObject) or isinstance(self.dest, PathCopyObject):
 #                try:
                 archive=self.source.getDataArchive()
                 mountpoint=self.dest.getMountpoint().getAttribute("name")
                 archive.extractArchive(mountpoint)
                 return True
 #                except Exception, e:
-#                    ComLog.getLogger("Copyset").error(e)
+#                    ComLog.getLogger(__logStrLevel__).error(e)
 #                return False
-        raise ComException("data copy % to % is not supported" \
-                           % self.source.__name__, self.dest.__name__)
+        raise ComException("data copy %s to %s is not supported" \
+                           %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.5  2007-08-07 11:18:01  marc
+# Revision 1.6  2007-09-07 14:37:37  marc
+# - added support for PathCopyObject
+#
+# Revision 1.5  2007/08/07 11:18:01  marc
 # - Fix Bug BZ #77 that exceptions from commands being executed are ignored. They should not!
 #
 # Revision 1.4  2007/07/25 11:10:09  marc
