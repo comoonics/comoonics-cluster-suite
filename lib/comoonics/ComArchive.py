@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -38,7 +38,7 @@ class NotImplementedError(ComException): pass
 class ArchiveException(ComException):pass
 
 class Archive(DataObject):
-    log=ComLog.getLogger("Archive")
+    log=ComLog.getLogger("comoonics.ComArchive.Archive")
     '''
     Internal Exception classes
     '''
@@ -60,7 +60,7 @@ class Archive(DataObject):
 
     def __init__(self, element, doc):
         super(Archive, self).__init__(element, doc)
-        self.log.debug("getArchiveHandler(%s, %s, %s, %s, %s)" %(self.getAttribute("name"), self.getAttribute("format"), \
+        Archive.log.debug("getArchiveHandler(%s, %s, %s, %s, %s)" %(self.getAttribute("name"), self.getAttribute("format"), \
              self.getAttribute("type"), self.getAttribute("compression", default="none"), self.getProperties()))
         self.ahandler=ArchiveHandlerFactory.getArchiveHandler \
             (self.getAttribute("name"), self.getAttribute("format"), \
@@ -111,7 +111,7 @@ class Archive(DataObject):
             os.unlink(path)
         except Exception, e:
             os.unlink(path)
-            ComLog.debugTraceLog(self.log)
+            ComLog.debugTraceLog(Archive.log)
             raise e
 
     def getFileObj(self, name):
@@ -156,7 +156,7 @@ class Archive(DataObject):
 
     def createArchive(self, source, cdir=None):
         ''' creates an archive from the whole source tree '''
-        ComLog.getLogger("Copyset").debug("createArchive(%s, %s)" % (source, cdir))
+        Archive.log.debug("createArchive(%s, %s)" % (source, cdir))
         self.ahandler.createArchive(source, cdir)
 
     def extractArchive(self, dest):
@@ -283,7 +283,7 @@ class TarArchiveHandler(ArchiveHandler):
          '''
         if not cdir:
             cdir=os.getcwd()
-        __cmd = TarArchiveHandler.TAR +" -cl " + self.compression + " -f " \
+        __cmd = TarArchiveHandler.TAR +" -c --one-file-system " + self.compression + " -f " \
                 + self.tarfile + " -C " + cdir + " " + source
         __rc, __rv = ComSystem.execLocalGetResult(__cmd)
         if __rc >> 8 != 0:
@@ -348,7 +348,7 @@ class SimpleArchiveHandler(ArchiveHandler):
     def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
         try:
-            ComLog.getLogger(Archive.__logStrLevel__).debug("open(%s)" %(self.path+"/"+name))
+            Archive.log.debug("open(%s)" %(self.path+"/"+name))
             file = open(self.path+"/"+name, "r")
         except:
             raise ArchiveException("Cannot open %s." %(self.path+"/"+name))
@@ -371,9 +371,9 @@ class SimpleArchiveHandler(ArchiveHandler):
 #            os.mkdir(self.path+"/"+os.path.dirname(cdir))
 #        except: pass
         if cdir !=None:
-            ComLog.getLogger(Archive.__logStrLevel__).debug("changing to directory "+cdir)
+            Archive.log.debug("changing to directory "+cdir)
             os.chdir(cdir)
-        ComLog.getLogger(Archive.__logStrLevel__).debug("Copy from "+source+" to "+self.path+"/")
+        Archive.log.debug("Copy from "+source+" to "+self.path+"/")
         shutil.copytree(source, self.path+"/")
 
 
@@ -392,7 +392,7 @@ class ArchiveHandlerFactoryClass:
     '''
 
     __logStrLevel__ = "ArchiveHandlerFactory"
-    log=ComLog.getLogger("ArchiveHandlerFactory")
+    log=ComLog.getLogger("comoonics.ComArchive.ArchiveHandlerFactory")
 
     """ The static registry for all registered handlers """
     _registry=dict()
@@ -505,7 +505,11 @@ if __name__ == '__main__':
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.9  2007-03-26 08:18:09  marc
+# Revision 1.10  2007-09-07 14:44:16  marc
+# - logging
+# - replaced taroption -l with --one-filesystem which is upword compatible
+#
+# Revision 1.9  2007/03/26 08:18:09  marc
 # - added some autotests
 # - added 3 tier hierarchy for ArchiveHandlers (format, type, compression)
 # - added more generic handling of ArchiveHandlers (register to a static registry)
