@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.6 2007-04-11 14:34:29 mark Exp $
+# $Id: ComPartitionCopyObject.py,v 1.7 2007-09-07 14:39:41 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -26,7 +26,8 @@ from comoonics.ComExceptions import *
 
 
 class PartitionCopyObject(CopyObjectJournaled):
-    __logStrLevel__="PartitionCopyObject"
+    __logStrLevel__="comoonics.enterprisecopy.PartitionCopyObject"
+    logger=ComLog.getLogger(__logStrLevel__)
 
     def __init__(self, element, doc):
         CopyObjectJournaled.__init__(self, element, doc)
@@ -48,7 +49,7 @@ class PartitionCopyObject(CopyObjectJournaled):
     def prepareAsDest(self):
         for journal_command in self.disk.resolveDeviceName():
             self.journal(self.disk, journal_command)
-        
+
     def cleanupSource(self):
         self.commitJournal()
 
@@ -72,7 +73,10 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.6  2007-04-11 14:34:29  mark
+# Revision 1.7  2007-09-07 14:39:41  marc
+# -logging
+#
+# Revision 1.6  2007/04/11 14:34:29  mark
 # resolves bz#44
 #
 # Revision 1.5  2007/04/04 12:52:56  marc
