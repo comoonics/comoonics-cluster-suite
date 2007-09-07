@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.6 2007-03-26 07:52:25 marc Exp $
+# $Id: ComCopyObject.py,v 1.7 2007-09-07 14:35:33 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -41,10 +41,18 @@ class UnsupportedMetadataException(ComException): pass
 #    else:
 #        raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, element.tagName))
 
+_copyobject_registry=dict()
+
+def registerCopyObject(_type, _class):
+    _copyobject_registry[_type]=_class
+
+def getCopyObject(element, doc):
+    """ Factory function to create Copyset Objects"""
+    return CopyObject(element, doc)
 
 class CopyObject(DataObject, Requirements):
     """ Base Class for all source and destination objects"""
-    __logStrLevel__ = "CopyObject"
+    __logStrLevel__ = "comoonics.enterprisecopy.ComCopyObject.CopyObject"
 
     def __new__(cls, *args, **kwds):
         if len (args) > 0 and isinstance(args[0], Node):
@@ -62,6 +70,10 @@ class CopyObject(DataObject, Requirements):
             elif __type == "backup":
                 from ComArchiveCopyObject import ArchiveCopyObject
                 cls=ArchiveCopyObject
+            elif _copyobject_registry.has_key(__type):
+                cls=_copyobject_registry[__type]
+                #from ComPathCopyObject import PathCopyObject
+                #cls=PathCopyObject
             else:
                 raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, args[0].tagName))
             ComLog.getLogger(CopyObject.__logStrLevel__).debug("Returning new object %s" %(cls))
@@ -119,7 +131,10 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.6  2007-03-26 07:52:25  marc
+# Revision 1.7  2007-09-07 14:35:33  marc
+# added registry implementation for all sets.
+#
+# Revision 1.6  2007/03/26 07:52:25  marc
 # added Requirements for CopyObjects
 #
 # Revision 1.5  2006/12/08 09:38:36  mark
