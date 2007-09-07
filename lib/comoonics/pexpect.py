@@ -59,8 +59,8 @@ SOFTWARE.
 Pexpect Copyright (c) 2006 Noah Spurrier
 http://pexpect.sourceforge.net/
 
-$Revision: 1.1 $
-$Date: 2007-02-09 11:35:10 $
+$Revision: 1.2 $
+$Date: 2007-09-07 14:48:08 $
 """
 try:
     import os, sys, time
@@ -77,15 +77,18 @@ try:
     import errno
     import traceback
     import signal
+    import ComLog
 except ImportError, e:
     raise ImportError (str(e) + """
 A critical module was not found. Probably this operating system does not support it.
 Pexpect is intended for UNIX-like operating systems.""")
 
 __version__ = '2.1'
-__revision__ = '$Revision: 1.1 $'
+__revision__ = '$Revision: 1.2 $'
 __all__ = ['ExceptionPexpect', 'EOF', 'TIMEOUT', 'spawn', 'run', 'which', 'split_command_line',
     '__version__', '__revision__']
+
+logger=ComLog.getLogger("comoonics.pexpect")
 
 # Exception classes used by this module.
 class ExceptionPexpect(Exception):
@@ -1253,6 +1256,7 @@ class spawn (object):
         """
         while self.isalive():
             r,w,e = self.__select([self.child_fd, self.STDIN_FILENO], [], [])
+            #logger.debug("after select [%s, %s, %s]" %(r,w,e))
             if self.child_fd in r:
                 data = self.__interact_read(self.child_fd)
                 if output_filter: data = output_filter(data)
@@ -1262,8 +1266,9 @@ class spawn (object):
                 if self.cmdlogfile is not None:
                     self.cmdlogfile.write (data)
                     self.cmdlogfile.flush()
+                #logger.debug("writing %s to %u, r: %s" %(data, self.STDOUT_FILENO, r))
                 os.write(self.STDOUT_FILENO, data)
-            if self.STDIN_FILENO in r:
+            elif self.STDIN_FILENO in r:
                 data = self.__interact_read(self.STDIN_FILENO)
                 if input_filter: data = input_filter(data)
                 i = data.rfind(escape_character)
