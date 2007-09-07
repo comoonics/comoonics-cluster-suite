@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.12 2007-08-02 08:27:04 andrea2 Exp $
+# $Id: ComSystem.py,v 1.13 2007-09-07 14:46:10 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -29,10 +29,10 @@ CONTINUE="continue"
 
 class ExecLocalException(ComException):
     """ Exception throw if command fails. Attributes are
-      cmd: the command executed
-      rc:  the status code (!=0)
-      out: the output to stdout
-      err: the output to stderr
+      @cmd: the command executed
+      @rc:  the status code (!=0)
+      @out: the output to stdout
+      @err: the output to stderr
     """
     def __init__(self, cmd, rc, out, err):
         self.cmd=cmd
@@ -47,14 +47,17 @@ error:
 %s
 """ %(self.cmd, self.rc, self.out, self.err)
 
-global __EXEC_REALLY_DO
 __EXEC_REALLY_DO = ASK
 log=ComLog.getLogger("ComSystem")
 
-def setExecMode(__mode):
+def setExecMode(mode):
     """ set the mode for system execution """
-    __EXEC_REALLY_DO = __mode
-    
+    global __EXEC_REALLY_DO
+    __EXEC_REALLY_DO=mode
+def getExecMode():
+    """ returns the mode for system execution """
+    return __EXEC_REALLY_DO
+
 def askExecModeCmd(__cmd):
     global __EXEC_REALLY_DO
     if __EXEC_REALLY_DO == ASK:
@@ -86,10 +89,15 @@ def execLocalStatusOutput(__cmd):
     return commands.getstatusoutput(__cmd)
 
 
-def execLocalOutput(__cmd):
+def execLocalOutput(__cmd, asstr=False):
     """ executes the given command and returns stdout output. If status is not 0 an ExecLocalExeception is thrown
-        and errorcode, cmd, stdout and stderr are in that exception """
+        and errorcode, cmd, stdout and stderr are in that exception
+        @asstr returns out and error as string not as array of lines.
+    """
     (rc, out, err)=execLocalGetResult(__cmd, True)
+    if asstr:
+        out="".join(out)
+        err="".join(err)
     if rc==0:
         return out
     else:
@@ -142,8 +150,8 @@ def execLocal(__cmd):
 
 def execMethod(cmd, *params):
     """
-    Executes the given cmd by considering variable L{__EXEC_REALLY_DO} 
-    (decide if command should be simulated, executed, ignored or ask 
+    Executes the given cmd by considering variable L{__EXEC_REALLY_DO}
+    (decide if command should be simulated, executed, ignored or ask
     for behaviour)
     @param cmd: function to execute
     @type cmd: function
@@ -158,7 +166,7 @@ def execMethod(cmd, *params):
             _tmpList.append(i)
         else:
             _tmpList.append(type(i).__name__)
-        
+
     if not askExecModeCmd("%s(%s)" %(cmd.__name__, ", ".join(_tmpList))):
         return 0
     else:
@@ -193,7 +201,11 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.12  2007-08-02 08:27:04  andrea2
+# Revision 1.13  2007-09-07 14:46:10  marc
+# - introduced set/getExecMode
+# - execLocalOutput can return string
+#
+# Revision 1.12  2007/08/02 08:27:04  andrea2
 # Added execMethod()
 #
 # Revision 1.11  2007/05/10 08:00:35  marc
