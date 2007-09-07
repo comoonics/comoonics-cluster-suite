@@ -6,7 +6,7 @@ Classes to automatically collect informations of this system.
 
 
 # here is some internal information
-# $Id: ComSystemInformation.py,v 1.6 2007-04-11 11:49:13 marc Exp $
+# $Id: ComSystemInformation.py,v 1.7 2007-09-07 14:47:42 marc Exp $
 #
 import re
 import os
@@ -16,12 +16,11 @@ from xml.xpath          import Evaluate
 from comoonics import ComLog
 from comoonics import ComSystem
 from comoonics.ComExceptions import ComException
-ComSystem.__EXEC_REALLY_DO=""
 
 class SystemInformationNotFound(ComException):
     pass
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComSystemInformation.py,v $
 
 class SystemType(object):
@@ -74,6 +73,13 @@ class SystemInformation(object):
         self.type=SystemTypes.UNKNOWN
         self.uptime="unknown"
         self.installedsoftware=list()
+        self.features=list()
+
+    def getFeatures(self):
+        """
+        Returns a list of features enabled in this system
+        """
+        return self.features
 
     def getArchitecture(self):
         """
@@ -121,6 +127,12 @@ class SystemInformation(object):
         """
         protected method that updates the installedsoftwarelist
         Does nothing here
+        """
+        pass
+
+    def report(self, actions=None, destination=None):
+        """
+        executes a system report for this implementation
         """
         pass
 
@@ -178,6 +190,7 @@ class LinuxSystemInformation(SystemInformation):
 
     def __init__(self, *args, **kwds):
         super(LinuxSystemInformation, self).__init__(*args, **kwds)
+        self.features.append("linux")
         if not kwds and not args:
             (self.operatingsystem, self.name, self.kernelversion, self.kerneltime, self.architecture)=os.uname()
             fs=open("/proc/uptime", "r")
@@ -210,13 +223,14 @@ class RPMLinuxSystemInformation(LinuxSystemInformation):
         """
         The factory calling the apropriate constructor
         """
-        if RedhatSystemInformation.check():
+        if RedhatSystemInformation.check(*args, **kwds):
             return RedhatSystemInformation.__new__(RedhatSystemInformation, *args, **kwds)
         else:
             return object.__new__(RPMLinuxSystemInformation, *args, **kwds)
 
     def __init__(self, *args, **kwds):
         super(RPMLinuxSystemInformation, self).__init__(*args, **kwds)
+        self.features.append("rpm")
         if kwds:
             self.__dict__.update(dict(kwds))
             self.type=SystemTypes.SINGLE
@@ -249,11 +263,14 @@ class RedhatSystemInformation(RPMLinuxSystemInformation):
     def __new__(cls, *args, **kwds):
         if RedhatClusterSystemInformation.check(*args, **kwds):
             return RedhatClusterSystemInformation.__new__(RedhatClusterSystemInformation, *args, **kwds)
+        elif RHOpensharedrootSystemInformation.check(*args, **kwds):
+            return RHOpensharedrootSystemInformation.__new__(RHOpensharedrootSystemInformation, *args, **kwds)
         else:
             return object.__new__(RedhatSystemInformation, *args, **kwds)
 
     def __init__(self, *args, **kwds):
         super(RedhatSystemInformation, self).__init__(*args, **kwds)
+        self.features.append("redhat")
         if not kwds and not args:
             f=file(self.REDHAT_RELEASE_FILE, "r")
             self.operatingsystem=f.readline().splitlines(False)[0]
@@ -282,9 +299,13 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
         finally:
             return ret
     def __new__(cls, *args, **kwds):
-        return object.__new__(RedhatClusterSystemInformation, *args, **kwds)
+        if RHOpensharedrootSystemInformation.check(*args, **kwds):
+            return RHOpensharedrootSystemInformation.__new__(RHOpensharedrootSystemInformation, *args, **kwds)
+        else:
+            return object.__new__(RedhatClusterSystemInformation, *args, **kwds)
     def __init__(self, *args, **kwds):
         super(RedhatClusterSystemInformation, self).__init__(*args, **kwds)
+        self.features.append("redhatcluster")
         if not kwds and not args:
             reader=Sax2.Reader(validate=0)
             f_cluster_conf=file(self.REDHAT_CLUSTER_CONF)
@@ -306,13 +327,51 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
 
     check=staticmethod(check)
 
-def main():
-    systeminformation=SystemInformation()
-    print "Systeminformation: "
+
+class RHOpensharedrootSystemInformation(RedhatClusterSystemInformation):
+    OSR_RELEASE="/etc/comoonics-release"
+
+    def check(*args, **kwds):
+        ret=False
+        try:
+            if not kwds and not args:
+#                SystemInformation.log.debug("Checking for cluster availability")
+                if os.path.exists(RHOpensharedrootSystemInformation.OSR_RELEASE):
+#                    SystemInformation.log.debug("OK")
+                    ret=True
+#                else:
+#                    SystemInformation.log.debug("FAILED")
+            else:
+                if kwds.has_key("type") and kwds["type"]=="osrrhcluster":
+                    ret=True
+        finally:
+            return ret
+    def __new__(cls, *args, **kwds):
+        return object.__new__(RHOpensharedrootSystemInformation, *args, **kwds)
+    def __init__(self, *args, **kwds):
+        super(RHOpensharedrootSystemInformation, self).__init__(*args, **kwds)
+        self.features.append("opensharedroot")
+        if not kwds and not args:
+            pass
+        else:
+            self.__dict__.update(dict(kwds))
+            self.type=SystemTypes.CLUSTER
+
+    check=staticmethod(check)
+
+def __test_sysinfo(systeminformation):
     print systeminformation.__class__
     print systeminformation
+    print "Features: %s" %systeminformation.getFeatures()
+
+def __test():
+    systeminformation=SystemInformation()
+    print "Systeminformation: "
+    __test_sysinfo(systeminformation)
+
     print "Intializing from kwds:"
-    systems=[ { "type":      "single",
+    systems=[
+              { "type":      "single",
                 "name":             "gfs-node1",
                 "category":         "development",
                 "architecture":     "i686",
@@ -323,21 +382,32 @@ def main():
                 "category":         "production",
                 "architecture":     "i686",
                 "operatingsystem": "CentOS release 4.4 (Final)",
-                "kernelversion":   "2.6.9-34.0.1.ELsmp"}]
+                "kernelversion":   "2.6.9-34.0.1.ELsmp"},
+              { "type":             "osrrhcluster",
+                "name":             "osr_cluster",
+                "category":         "production",
+                "architecture":     "i686",
+                "operatingsystem": "CentOS release 4.4 (Final)",
+                "kernelversion":   "2.6.9-34.0.1.ELsmp"}
+              ]
     for system in systems:
         print "system: %s" %(system)
         systeminformation=SystemInformation(**system)
-        print systeminformation.__class__
-        print systeminformation
+        __test_sysinfo(systeminformation)
 
 #    for hdr in systeminformation.getInstalledSoftware():
 #        print hdr["name"]
 
 if __name__ == '__main__':
-    main()
+    ComSystem.__EXEC_REALLY_DO=""
+    __test()
 
 # $Log: ComSystemInformation.py,v $
-# Revision 1.6  2007-04-11 11:49:13  marc
+# Revision 1.7  2007-09-07 14:47:42  marc
+# -added report method for sysreport
+# - added features
+#
+# Revision 1.6  2007/04/11 11:49:13  marc
 # Hilti RPM Control
 # - moved the updateSoftware to right place
 #
