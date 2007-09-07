@@ -1,0 +1,82 @@
+#!/usr/bin/python
+__description__="""
+Com.oonics sysreport
+
+This program is one way to start the sysreport on every linuxbased system. It automatically collects the task to be
+done on that system and generates a tar file as output.
+
+"""
+
+
+# here is some internal information
+# $Id: com-sysreport.py,v 1.1 2007-09-07 14:32:30 marc Exp $
+#
+
+
+__version__ = "$Revision: 1.1 $"
+# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/Attic/com-sysreport.py,v $
+
+
+from optparse import OptionParser
+from comoonics.ComSysreport import Sysreport, SYSREPORT_TEMPLATEBASE
+from comoonics.ComSystemInformation import SystemInformation
+from comoonics import ComLog, ComSystem
+from comoonics.ComPath import Path
+
+import tempfile
+import logging
+
+ComSystem.__EXEC_REALLY_DO=""
+ComLog.setLevel(logging.INFO)
+
+tmpdir=Path(tempfile.mkdtemp())
+sysreport_templatesbase=SYSREPORT_TEMPLATEBASE
+DELIMITER=","
+parser = OptionParser(description=__description__)
+parser.disable_interspersed_args()
+parser.add_option("-p", "--part", dest="part",
+                  help="select one or more parts to be executed (delimiter is %s). Select with --validparts" %(DELIMITER), default=None)
+parser.add_option("-t", "--tmpdir", dest="tmpdir", help="Where to write the report to (tmpdir)", default=tmpdir.getPath())
+parser.add_option("", "--templatebase", dest="templatebase", default=sysreport_templatesbase)
+parser.add_option("-D", "--destination", dest="tarfile", help="Tarfile to use for this sysreport")
+parser.add_option("-d", "--debug", dest="debug", action="store_true", help="Toggle debugging")
+parser.add_option("-a", "--ask", dest="ask", action="store_true", help="Toggle ASK-mode")
+parser.add_option("", "--valid-parts", dest="validparts", action="store_true", help="displays all possible parts to be executed")
+parser.add_option("-X", "--xml", dest="xml", action="store_true", help="displays the xml to be executed.")
+parser.add_option("-H", "--no-head", dest="headset", action="store_false", default=True, help="Does not exectue the head set")
+parser.add_option("-S", "--no-saveset", dest="saveset", action="store_false", default=True, help="Does not exectue the save set and therefore does not create the result tar and leafs everything in the tmpdir.")
+(options, args) = parser.parse_args()
+if options.debug:
+    ComLog.setLevel(logging.DEBUG)
+if options.ask:
+    ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
+
+systeminformation=SystemInformation()
+sysreport=Sysreport(systeminformation, tmpdir.getPath(), options.tarfile, options.templatebase)
+sysreport.destination=options.tmpdir
+if options.validparts:
+    names=sysreport.getSetNames()
+    names.sort()
+    print (DELIMITER+" ").join(names)
+elif options.xml:
+    from xml.dom.ext import PrettyPrint
+    element=sysreport.enterprisecopy
+    element=sysreport.overwriteDestination()
+    PrettyPrint(element)
+else:
+    sysreport.doSets(options.part, options.headset, options.saveset)
+    if options.saveset:
+        result=options.tarfile
+    else:
+        result=options.tmpdir
+    print "You will find the sysreport with all information that could be gathered in %s" %result
+
+if tmpdir.exists():
+    #print "Cleaning up in %s" %tmpdir
+    tmpdir.remove(None, True)
+
+###############################
+# $Log: com-sysreport.py,v $
+# Revision 1.1  2007-09-07 14:32:30  marc
+# initial revision
+#
