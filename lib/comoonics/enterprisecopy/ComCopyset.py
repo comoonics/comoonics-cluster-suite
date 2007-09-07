@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyset.py,v 1.3 2007-03-26 07:53:09 marc Exp $
+# $Id: ComCopyset.py,v 1.4 2007-09-07 14:36:07 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyset.py,v $
 
 import exceptions
@@ -21,12 +21,17 @@ from comoonics import ComLog
 from comoonics.ComJournaled import JournaledObject
 from comoonics.enterprisecopy.ComRequirement import Requirements
 
+_copyset_registry=dict()
+
+def registerCopyset(_type, _class):
+    _copyset_registry[_type]=_class
+
 def getCopyset(element, doc):
     """ Factory function to create Copyset Objects"""
     return Copyset(element, doc)
 
 class Copyset(DataObject, Requirements):
-    __logStrLevel__ = "Copyset"
+    __logStrLevel__ = "comoonics.enterprisecopy.ComCopyset.Copyset"
     TAGNAME = "copyset"
     def __new__(cls, *args, **kwds):
         element=args[0]
@@ -46,6 +51,8 @@ class Copyset(DataObject, Requirements):
         elif __type=="storage":
             from comoonics.storage.ComStorageCopyset import StorageCopyset
             cls=StorageCopyset
+        elif _copyset_registry.has_key(__type):
+            cls=_copyset_registry[__type]
         else:
             raise exceptions.NotImplementedError()
         return object.__new__(cls)
@@ -86,7 +93,7 @@ class CopysetJournaled(Copyset, JournaledObject):
     Internally CopysetJournaled has a map of undomethods and references to objects that methods should be executed upon.
     If undo is called the journal stack is executed from top to buttom (LIFO) order.
     """
-    __logStrLevel__ = "CopysetJournaled"
+    __logStrLevel__ = "comoonics.enterprisecopy.ComCopyset.CopysetJournaled"
 
     def __init__(self, element, doc):
         Copyset.__init__(self, element, doc)
@@ -101,7 +108,11 @@ class CopysetJournaled(Copyset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComCopyset.py,v $
-# Revision 1.3  2007-03-26 07:53:09  marc
+# Revision 1.4  2007-09-07 14:36:07  marc
+# -added registry implementation.
+# -logging
+#
+# Revision 1.3  2007/03/26 07:53:09  marc
 # added Requirements
 #
 # Revision 1.2  2007/02/09 12:24:13  marc

@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.5 2007-04-10 16:53:09 marc Exp $
+# $Id: ComModificationset.py,v 1.6 2007-09-07 14:38:56 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModificationset.py,v $
 
 import exceptions
@@ -23,7 +23,12 @@ from comoonics import ComLog
 from comoonics.enterprisecopy import ComModification
 from comoonics.enterprisecopy.ComRequirement import Requirements
 
-log=ComLog.getLogger("ModificationSet")
+log=ComLog.getLogger("comoonics.enterprisecopy.ComModificationSet")
+
+_modificationset_registry=dict()
+
+def registerModificationset(_type, _class):
+    _modificationset_registry[_type]=_class
 
 def getModificationset(element, doc):
     """ Factory function to create Modificationset Objects"""
@@ -37,11 +42,13 @@ def getModificationset(element, doc):
     elif __type == "storage":
         from comoonics.storage.ComStorageModificationset import StorageModificationset
         return StorageModificationset(element, doc)
+    elif _modificationset_registry.has_key(__type):
+        return _modificationset_registry[__type](element, doc)
     raise exceptions.NotImplementedError("Modifcicationset for type " + __type + " is not implemented")
 
 class Modificationset(DataObject, Requirements):
     TAGNAME = "modificationset"
-    __logStrLevel__="Modificationset"
+    __logStrLevel__="comoonics.enterprisecopy.ComModificationset.Modificationset"
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
         Requirements.__init__(self, element, doc)
@@ -54,7 +61,7 @@ class Modificationset(DataObject, Requirements):
 
     def undoModifications(self):
         """undos all modifications """
-        ComLog.getLogger(self.__logStrLevel__).debug("Modifications: %s" % self.modifications)
+        ComLog.getLogger(Modificationset.__logStrLevel__).debug("Modifications: %s" % self.modifications)
         self.modifications.reverse()
         for mod in self.modifications:
             try:
@@ -81,6 +88,7 @@ class Modificationset(DataObject, Requirements):
     def createModificationsList(self, emods, doc, *args, **kwds):
         for i in range(len(emods)):
             self.modifications.append(ComModification.getModification(emods[i], doc, *args, **kwds))
+        #ComLog.getLogger(Modificationset.__logStrLevel__).debug("Modifications: %s" % self.modifications)
         return self.modifications
 
 
@@ -90,7 +98,7 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
     Internally ModificationsetJournaled has a map of undomethods and references to objects that methods should be executed upon.
     If undo is called the journal stack is executed from top to buttom (LIFO) order.
     """
-    __logStrLevel__ = "CopysetJournaled"
+    __logStrLevel__ = "comoonics.enterprisecopy.ComModificationSet.ModificationsetJournaled"
 
     def __init__(self, element, doc):
         Modificationset.__init__(self, element, doc)
@@ -106,7 +114,11 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComModificationset.py,v $
-# Revision 1.5  2007-04-10 16:53:09  marc
+# Revision 1.6  2007-09-07 14:38:56  marc
+# -added registry implementation.
+# -logging
+#
+# Revision 1.5  2007/04/10 16:53:09  marc
 # mod.doPre and mod.doPost is called by mod.doModification.
 # Could be changed back later not clear of dependencies.
 #

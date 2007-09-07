@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComRequirement.py,v 1.3 2007-04-10 16:54:04 marc Exp $
+# $Id: ComRequirement.py,v 1.4 2007-09-07 14:41:55 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRequirement.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -20,17 +20,24 @@ from comoonics import ComLog
 
 class UnsupportedRequirementException(ComException): pass
 
+_requirement_registry=dict()
+
+def registerRequirement(_type, _class):
+    _requirement_registry[_type]=_class
+
 def getRequirement(element, doc):
     """ Factory function to create Requirement"""
     __type=element.getAttribute("type")
     if __type == "archive":
         from ComArchiveRequirement import ArchiveRequirement
         return ArchiveRequirement(element, doc)
-    if __type == "scsi":
+    elif __type == "scsi":
         from ComSCSIRequirement import SCSIRequirement
         return SCSIRequirement(element, doc)
+    elif _requirement_registry.has_key(__type):
+        return _requirement_registry[__type](element, doc)
     else:
-        raise UnsupportedRequirementException("Unsupported Requirement type %s in element " % (__type, element.tagName))
+        raise UnsupportedRequirementException("Unsupported Requirement type %s in element %s" % (__type, element.tagName))
 
 class Requirement(DataObject):
     """
@@ -120,7 +127,7 @@ class RequirementJournaled(Requirement, JournaledObject):
         self.replayJournal()
 
 class Requirements(object):
-    __logStrLevel__ = "Requirements"
+    __logStrLevel__ = "comoonics.enterprisecopy.ComRequirements.Requirements"
     log=ComLog.getLogger(__logStrLevel__)
     def __init__(self, element, doc):
         __reqs=list()
@@ -129,13 +136,13 @@ class Requirements(object):
             if __elements[i].parentNode == element:
                 __reqs.append(getRequirement(__elements[i], doc))
         self.requirements=__reqs
-        self.log.debug("__init__: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
+        #Requirements.log.debug("__init__: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
     def getRequirements(self):
         return self.requirements
     def doPre(self):
         """ do preprocessing
         """
-        self.log.debug("doPre: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
+        #Requirements.log.debug("doPre: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
         for i in range(len(self.requirements)):
             if self.requirements[i].isPre():
                 self.requirements[i].doPre()
@@ -144,7 +151,7 @@ class Requirements(object):
     def doPost(self):
         """ do postprocessing
         """
-        self.log.debug("doPost: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
+        #Requirements.log.debug("doPost: requirements: %s, baseclass: %s" %(self.requirements, self.__class__))
         for i in range(len(self.requirements)):
             if self.requirements[i].isPost():
                 self.requirements[i].doPost()
@@ -159,7 +166,11 @@ class Requirements(object):
 
 ###################################
 # $Log: ComRequirement.py,v $
-# Revision 1.3  2007-04-10 16:54:04  marc
+# Revision 1.4  2007-09-07 14:41:55  marc
+# -added registry implementation.
+# -logging
+#
+# Revision 1.3  2007/04/10 16:54:04  marc
 # added attribute order for allowing requirements with doPre and doPost being called not only one method. (see ArchiveRequirement)
 #
 # Revision 1.2  2007/03/26 08:04:29  marc

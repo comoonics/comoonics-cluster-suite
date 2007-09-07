@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModification.py,v 1.5 2007-04-10 16:52:17 marc Exp $
+# $Id: ComModification.py,v 1.6 2007-09-07 14:38:31 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModification.py,v $
 import exceptions
 import xml.dom
@@ -21,6 +21,11 @@ from comoonics.ComDataObject import DataObject
 from comoonics.ComJournaled import JournaledObject
 from comoonics.enterprisecopy.ComRequirement import Requirements
 
+_modification_registry=dict()
+
+def registerModification(_type, _class):
+    _modification_registry[_type]=_class
+
 def getModification(element, doc, *args, **kwds):
     """ Factory function to create Modification Objects"""
     __type=element.getAttribute("type")
@@ -29,6 +34,12 @@ def getModification(element, doc, *args, **kwds):
     if __type == "copy":
         from ComCopyModification import CopyModification
         return CopyModification(element, doc, *args, **kwds)
+    elif __type == "catiffile":
+        from ComCatifModification import CatiffileModification
+        return CatiffileModification(element, doc, *args, **kwds)
+    elif __type == "catifexec":
+        from ComCatifModification import CatifexecModification
+        return CatifexecModification(element, doc, *args, **kwds)
     elif __type == "move":
         from ComMoveModification import MoveModification
         return MoveModification(element, doc, *args, **kwds)
@@ -41,6 +52,8 @@ def getModification(element, doc, *args, **kwds):
     elif __type == "storage":
         from comoonics.storage.ComStorageModification import StorageModification
         return StorageModification(element, doc, *args, **kwds)
+    elif _modification_registry.has_key(__type):
+        return _modification_registry[__type](element, doc, *args, **kwds)
     raise exceptions.NotImplementedError("Modifcation for type: "+ __type + " is not implemented")
 
 
@@ -88,7 +101,11 @@ class ModificationJournaled(Modification, JournaledObject):
 
 
 # $Log: ComModification.py,v $
-# Revision 1.5  2007-04-10 16:52:17  marc
+# Revision 1.6  2007-09-07 14:38:31  marc
+# -added registry implementation.
+# -logging
+#
+# Revision 1.5  2007/04/10 16:52:17  marc
 # removed an unnecessary pass
 #
 # Revision 1.4  2007/03/26 08:00:08  marc
