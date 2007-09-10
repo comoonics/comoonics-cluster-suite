@@ -35,7 +35,7 @@ comoonics-cdsl-py:
 * Mon Sep 10 2007 AO <offermann@atix.de>, 0.2-3
     - Fixed Bug BZ #104 by adding requirement comoonics-cluster-py to build-script
     - Added documention for ComoonicsCdsl._pathdepth()
-    - Replaced some code which removes content before recreation in cdsl_link when force is set (line 339/354 in ComCdsl.py)  
+    - Replaced some code which removes content before recreation in cdsl_link when force is set (line 339/354 in ComCdsl.py)
 * Thu Sep 06 2007 AO <offermann@atix.de>, 0.2-2
     - Fixed Bugs BZ #102 and #103
 * Thu Sep 04 2007 MH <hlawatschek@atix.de>, 0.2-1
@@ -100,11 +100,15 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-44:
+   - mainainance release aas 43 might have been installed (was in preview)
 * Wed Aug 22 2007 MG <grimme@atix.de>, 0.1-43:
    - fixed BZ #89 (com-dsh timeout, options)
    - fixed BZ #88 (ComLVM cluster flag)
    - fixed BZ #86 (ArchiveRequirement and cpio don't work if tmpdir has files)
    - fixed BZ #70 (com-dsh would not work if node is away or quorum available)
+   - fixed BZ #72 (/dev/mapper problems with autodetection)
+   - logging
 * Mon Aug 06 2007 MG <grimme@atix.de>, 0.1-42:
    - added method to simulate a command in ComSystem
    - fixed BZ #72
@@ -177,6 +181,11 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-25:
+  - added ComPathModificationObject/ComPathCopyObject
+  - added Catif*Modifications for sysreport
+  - added SysrqModification for sysreport
+  - logging fixes
 * Tue Aug 06 2007 MG <grimme@atix.de>, 0.1-24
   - Bugfix for FilesystemCopyset that exceptions raised by commands are ignored! (BZ #77)
 * Thu Aug 02 2007 MG <grimme@atix.de>, 0.1-23
@@ -213,6 +222,14 @@ comoonics-ec-py
     some bugfixes
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
   changed that modset and copysets can be mixed not for copysets then modsets.
+
+comoonics-fenceacksv-py
+* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
+  initial revision
+
+comoonics-fenceacksv-plugins-py
+* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
+  initial revision
 
 comoonics-pythonosfix-py
 * Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-1:
