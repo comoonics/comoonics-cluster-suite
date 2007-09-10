@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 
 import re
 import sys
@@ -213,6 +213,13 @@ class ComoonicsCdsl(Cdsl):
         self.nodesWithDefaultdir.append(self.default_node)
 
     def _pathdepth(self,path):
+        """
+        Method to calculate the depth of a given path.
+        @param path: Path
+        @type path: string
+        @return: Depth of given path
+        @rtype: int
+        """
         deepth = 0
         while path != "/":
             deepth = deepth + 1
@@ -328,8 +335,8 @@ class ComoonicsCdsl(Cdsl):
              
             if os.path.exists(_rootMountpointCdsltreeNodeSrc) and force == True:
                 log.debug("Move Files to shared tree: " + _rootMountpointSrc + " => " + os.path.dirname(_rootMountpointCdsltreesharedSrc))
-                if os.path.exists(_rootMountpointCdsltreesharedSrc):
-                    self._removePath(_rootMountpointCdsltreesharedSrc,True)
+                #remove file if it is already existing (and force is set)
+                ComSystem.execMethod(self._removePath,_rootMountpointCdsltreesharedSrc,force)
                 ComSystem.execMethod(shutil.move,_rootMountpointSrc,_rootMountpointCdsltreesharedSrc)      
             elif os.path.exists(_rootMountpointCdsltreeNodeSrc) and force == False:
                 log.debug("Copy Files to shared tree: " + _rootMountpointSrc + " => " + os.path.dirname(_rootMountpointCdsltreesharedSrc))
@@ -343,6 +350,8 @@ class ComoonicsCdsl(Cdsl):
                     ComSystem.execMethod(shutil.copy2,_rootMountpointSrc, _rootMountpointCdsltreesharedSrc)
                         
             else:
+                #if force is set and file is already existing, remove it
+                ComSystem.execMethod(self._removePath,_rootMountpointCdsltreesharedSrc,force)
                 #if given src is not a existing file/directory, create empty file with given path
                 ComSystem.execMethod(self._createEmptyFile,_rootMountpointCdsltreesharedSrc,force)
             
