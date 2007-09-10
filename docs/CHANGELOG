@@ -28,6 +28,10 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+n Sep 10 2007 AO <offermann@atix.de>, 0.1-7
+    - Fixed Bug BZ #104 by adding requirement comoonics-cluster-py to build-script
+    - Added documention for ComoonicsCdsl._pathdepth()
+    - Replaced some code which removes content before recreation in cdsl_link when force is set (line 339/354 in ComCdsl.py)
 * Mon Sep 10 2007 AO <offermann@atix.de>, 0.2-3
     - Fixed Bug BZ #104 by adding requirement comoonics-cluster-py to build-script
     - Added documention for ComoonicsCdsl._pathdepth()
