@@ -140,12 +140,17 @@ class Odict(dict):
             raise KeyError, key
 
     def __str__(self):
-        pairs = ("%r: %r" % (k, v) for k, v in self.iteritems())
+        pairs=list()
+        for k, v in self.iteritems():
+            pairs.append("%r: %r" % (k, v))
         return "{%s}" % ", ".join(pairs)
 
     def __repr__(self):
         if self:
-            pairs = ("(%r, %r)" % (k, v) for k, v in self.iteritems())
+            pairs=list()
+            for k, v in self.iteritems():
+                pairs.append("%r: %r" % (k, v))
+            #pairs = ("(%r, %r)" % (k, v) for k, v in self.iteritems())
             return "Odict([%s])" % ", ".join(pairs)
         else:
             return "Odict()"
@@ -205,7 +210,7 @@ class Odict(dict):
             for key, val in data:
                 self[key] = val
 
-    @classmethod
+    # @classmethod
     def fromkeys(cls, seq, value=None):
         new = cls()
         for key in seq:
@@ -314,6 +319,9 @@ if __name__ == "__main__":
 
 ######################
 # $Log: odict.py,v $
-# Revision 1.1  2007-09-07 14:44:41  marc
+# Revision 1.2  2007-09-10 10:20:55  marc
+# - works with rhel4 python2.3
+#
+# Revision 1.1  2007/09/07 14:44:41  marc
 # initial revision
 #
