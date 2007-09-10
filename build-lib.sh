@@ -1,4 +1,4 @@
-# $Id: build-lib.sh,v 1.6 2007-09-04 13:28:52 mark Exp $
+# $Id: build-lib.sh,v 1.7 2007-09-10 15:15:57 marc Exp $
 
 function setup {
   CHANGELOG=$(awk '
@@ -29,7 +29,7 @@ if not os.path.exists("/usr/bin/db2x_docbook2man"):
 	print "ERROR: /usr/bin/db2x_docbook2man not installed !"
 	print "  TIP: use \"yum install docbook2X\" to install the software"
 	sys.exit(1)
-	 
+
 
 ComSystem.__EXEC_REALLY_DO="continue"
 manpages = "'${NAME}'.xml"
@@ -42,20 +42,20 @@ if os.path.exists(manpages):
 		inF = file("../"+i.replace(".gz","",1),"rb")
 		s = inF.read()
 		inF.close()
-		
+
 		outF = gzip.GzipFile("../"+i,"wb")
 		outF.write(s)
 		outF.close()
 
 		os.remove("../"+i.replace(".gz","",1))
-		
+
 os.chdir(olddir)
 
 ' > doc2man.py
 if ! python doc2man.py; then
 	exit 1
 fi
-  	
+
 
 echo '#!/usr/bin/python
 from distutils.core import setup
@@ -73,11 +73,20 @@ setup(name="'${NAME}'",
       data_files=    [ '${DATA_FILES}' ],
      )
 ' > setup.py
+
+echo ${REQUIRES} | grep "^--requires" 2>&1 > /dev/null
+if [ $? -eq 0 ]; then
   python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
+else
+  python setup.py -v bdist_rpm --release=${RELEASE} --requires="${REQUIRES}" ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
+fi
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.6  2007-09-04 13:28:52  mark
+# Revision 1.7  2007-09-10 15:15:57  marc
+# better support for requires
+#
+# Revision 1.6  2007/09/04 13:28:52  mark
 # added verification for db2x tools
 #
 # Revision 1.5  2007/08/22 12:40:13  andrea2
