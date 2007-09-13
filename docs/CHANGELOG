@@ -100,6 +100,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Tue Sep 13 2007 MG <grimme@atix.de>, 0.1-45:
+   - fixed Bug BZ#111, where partitions where not created when devicemapper in use
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-44:
    - mainainance release aas 43 might have been installed (was in preview)
 * Wed Aug 22 2007 MG <grimme@atix.de>, 0.1-43:
