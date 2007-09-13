@@ -181,6 +181,8 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Thu Sep 13 2007 MG <grimme@atix.de>, 0.1-26
+   - Fixed BUG#110, wrong skipmount query would not mount source filesystems.
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-25:
   - added ComPathModificationObject/ComPathCopyObject
   - added Catif*Modifications for sysreport
