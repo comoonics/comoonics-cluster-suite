@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.17 2007-09-13 09:30:48 marc Exp $
+# $Id: ComDisk.py,v 1.18 2007-09-13 14:16:21 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -266,7 +266,7 @@ class HostDisk(Disk):
     def isDMMultipath(self):
         if not os.path.exists(CMD_DMSETUP):
             return False
-        __cmd="%s table %s --target=multipath &>/dev/null | grep multipath &>/dev/null"  % (CMD_DMSETUP, self.getDeviceName())
+        __cmd="%s table %s --target=multipath 2>/dev/null | grep multipath &>/dev/null"  % (CMD_DMSETUP, self.getDeviceName())
         if ComSystem.execLocal(__cmd):
             return False
         return True
@@ -402,7 +402,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.17  2007-09-13 09:30:48  marc
+# Revision 1.18  2007-09-13 14:16:21  marc
+# - fixed Bug BZ#111, where partitions where not created when devicemapper in use
+#
+# Revision 1.17  2007/09/13 09:30:48  marc
 # - logging
 #
 # Revision 1.16  2007/08/23 07:58:16  marc
