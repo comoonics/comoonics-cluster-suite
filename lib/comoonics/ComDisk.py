@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.16 2007-08-23 07:58:16 marc Exp $
+# $Id: ComDisk.py,v 1.17 2007-09-13 09:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComDisk.py,v $
 
 import os
@@ -197,7 +197,7 @@ class HostDisk(Disk):
         """ reads partition informatbbion from the disk and fills up DOM
         with new information
         """
-        self.log.debug("initFromDisk()")
+        HostDisk.log.debug("initFromDisk()")
 
         phelper=ComParted.PartedHelper()
         #FIXME: create LabelResolver
@@ -213,7 +213,7 @@ class HostDisk(Disk):
             for part in partlist:
                 self.appendChild(Partition(part, self.getDocument()))
         except parted.error:
-            self.log.debug("no partitions found")
+            HostDisk.log.debug("no partitions found")
 
     def restore(self):
         if hasattr(self, "lvm_activated") and self.lvm_activated:
@@ -402,7 +402,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.16  2007-08-23 07:58:16  marc
+# Revision 1.17  2007-09-13 09:30:48  marc
+# - logging
+#
+# Revision 1.16  2007/08/23 07:58:16  marc
 #  - redirected output of dm_setup (#BZ 69) 2nd
 #
 # Revision 1.15  2007/07/31 15:16:22  marc
