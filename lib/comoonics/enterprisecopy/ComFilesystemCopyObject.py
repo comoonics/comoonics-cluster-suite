@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.7 2007-09-04 20:42:59 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.8 2007-09-13 09:35:55 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -47,6 +47,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
             self.mountpoint=MountPoint(__mp, doc)
         except Exception:
             raise ComException("mountpoint for copyset not defined")
+        FilesystemCopyObject.log.debug("__init__: fs: %s, device: %s" %(__device, __fs))
         self.umountfs=False
         self.addToUndoMap(self.filesystem.__class__.__name__, "mount", "umountDir")
         self.addToUndoMap(self.device.__class__.__name__, "lvm_vg_activate", "lvm_vg_deactivate")
@@ -76,18 +77,20 @@ class FilesystemCopyObject(CopyObjectJournaled):
 
     def prepareAsSource(self):
         # Check for mounted
-        #self.log.debug("prepareAsSource: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        FilesystemCopyObject.log.debug("prepareAsSource: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
         for journal_command in self.device.resolveDeviceName():
             self.journal(self.device, journal_command)
         options=self.device.getAttribute("options", "")
         options=options.split(",")
         if options and "fsck" in options and not self.device.isMounted(self.mountpoint):
             self.filesystem.checkFs(self.device)
-        if options and not "skipmount" in options:
+        if options and "skipmount" in options:
             pass
-        elif not self.device.isMounted(self.mountpoint):
-            self.filesystem.mount(self.device, self.mountpoint)
-            self.journal(self.filesystem, "mount", [self.mountpoint])
+        else:
+            if not self.device.isMounted(self.mountpoint):
+#                FilesystemCopyObject.log.debug("prepareAsSource: mounting %s, %s" %(self.device, self.mountpoint))
+                self.filesystem.mount(self.device, self.mountpoint)
+                self.journal(self.filesystem, "mount", [self.mountpoint])
             #self.umountfs=True
         # scan filesystem options
         self.filesystem.scanOptions(self.device, self.mountpoint)
@@ -95,7 +98,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
     def prepareAsDest(self):
         # - mkfs
         # TODO add some intelligent checks
-        #self.log.debug("prepareAsDest: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        FilesystemCopyObject.log.debug("prepareAsDest: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
         for journal_command in self.device.resolveDeviceName():
             self.journal(self.device, journal_command)
 #        if self.device.getAttribute("options", "") != "skipactivate" and not self.device.is_lvm_activated():
@@ -143,7 +146,11 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.7  2007-09-04 20:42:59  marc
+# Revision 1.8  2007-09-13 09:35:55  marc
+# - fixed Bug BZ#110
+#   skipmount was wrongly checked
+#
+# Revision 1.7  2007/09/04 20:42:59  marc
 # Fixed one part of BZ#101
 #
 # Revision 1.6.2.1  2007/09/04 20:41:19  marc
