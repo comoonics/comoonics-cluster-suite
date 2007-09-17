@@ -4,3 +4,4 @@ MANIFEST
 build
 dist
 epydoc
+doc2man.py
