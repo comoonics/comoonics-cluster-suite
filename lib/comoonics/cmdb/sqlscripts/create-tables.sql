@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS software_cmdb (
   version char(50) NOT NULL,
   subversion char(50) NOT NULL,
   architecture char(50) NOT NULL,
-  PRIMARY KEY  (sw_type, clustername, name, version, subversion, architecture)
+  INDEX(name, version, subversion, architecture),
+  INDEX(clustername),
+  INDEX(sw_type)
 ) TYPE=InnoDB COMMENT='Installed Software on each cluster';
 
 CREATE TABLE IF NOT EXISTS software_cmdb_tmp (
