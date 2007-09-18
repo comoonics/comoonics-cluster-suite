@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.13 2007-09-07 14:46:10 marc Exp $
+# $Id: ComSystem.py,v 1.14 2007-09-18 09:23:00 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -47,7 +47,7 @@ error:
 %s
 """ %(self.cmd, self.rc, self.out, self.err)
 
-__EXEC_REALLY_DO = ASK
+__EXEC_REALLY_DO = None
 log=ComLog.getLogger("ComSystem")
 
 def setExecMode(mode):
@@ -201,7 +201,10 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.13  2007-09-07 14:46:10  marc
+# Revision 1.14  2007-09-18 09:23:00  marc
+# changed default auf exec_really_do to unset. If not cronjobs and all automatically called jobs will fail.
+#
+# Revision 1.13  2007/09/07 14:46:10  marc
 # - introduced set/getExecMode
 # - execLocalOutput can return string
 #
