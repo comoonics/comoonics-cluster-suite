@@ -8,38 +8,38 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.5 2007-08-14 08:37:01 andrea2 Exp $
+# $Id: ComClusterInfo.py,v 1.6 2007-09-19 06:40:53 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 from xml import xpath
 from xml.dom.ext.reader import Sax2
 from xml.dom.ext import PrettyPrint
 
-from ComClusterNode import *
-from ComClusterRepository import *
+#from ComClusterNode import *
+from comoonics.cluster.ComClusterRepository import ComoonicsClusterRepository, RedhatClusterRepository, ClusterRepository, ClusterMacNotFoundException
+import os
 
 from comoonics import ComLog
-from comoonics.ComExceptions import *
+#from comoonics.ComExceptions import *
 
-class ClusterMacNotFoundException(ComException):pass
+#class ClusterMacNotFoundException(ComException):pass
 
 class ClusterInfo(object):
     """
-    Provides a set of queries to use with a L{ClusterRepository} 
-    to get information about the used clusterconfiguration.
+    Provides a set of queries to use with a L{ClusterRepository} to get 
+    information about the used clusterconfiguration.
     """
     
     log = ComLog.getLogger("comoonics.cluster.ComClusterInfo")
     
     def __new__(cls, *args, **kwds):
         """
-        Decides by type of given clusterrepository 
-        which instance of clusterinfo (general, redhat 
-        or comoonics) has to be created.
+        Decides by type of given clusterrepository which instance of 
+        clusterinfo (general, redhat or comoonics) has to be created.
         """
         if isinstance(args[0], ComoonicsClusterRepository):
             cls = ComoonicsClusterInfo
@@ -64,21 +64,19 @@ class ClusterInfo(object):
         self.log.debug("get clusternodes from clusterrepository")
         return self.clusterRepository.nodeNameMap.values()
     
-    def getNodeIdentifiers(self,type="name"):
+    def getNodeIdentifiers(self, idType="name"):
         """
         @param type: specifies type of returned identifier (could be name or id)
         @type type: string
         @return: list of all node identifiers (e.g. nodenames or nodeids)
         @rtype: list
         """
-        identifiers = []
-        if type == "id":
+        if idType == "id":
             self.log.debug("get nodeids from clusterrepositories")
             return self.clusterRepository.nodeIdMap.keys()
-        elif type == "name":
+        elif idType == "name":
             self.log.debug("get nodenames from clusterrepository")
             return self.clusterRepository.nodeNameMap.keys()
-        return identifiers
     
 class RedhatClusterInfo(ClusterInfo):
     """
@@ -97,9 +95,9 @@ class RedhatClusterInfo(ClusterInfo):
         @param clusterRepository: clusterRepository to use
         @type clusterRepository: L{RedhatClusterRepository}
         """
-        super(RedhatClusterInfo,self).__init__(clusterRepository)
+        super(RedhatClusterInfo, self).__init__(clusterRepository)
 
-    def queryValue(self,query):
+    def queryValue(self, query):
         """
         Provides the possibility to get specific values by 
         execute queries which are not yet implemented as a 
@@ -111,13 +109,13 @@ class RedhatClusterInfo(ClusterInfo):
         @rtype: list
         """
         self.log.debug("queryValue: " + query)
-        _tmp1 = xpath.Evaluate(query,self.clusterRepository.getElement())
+        _tmp1 = xpath.Evaluate(query, self.clusterRepository.getElement())
         _tmp2 = []
         for i in range(len(_tmp1)):
             _tmp2.append(_tmp1[i].value)
         return _tmp2
     
-    def queryXml(self,query):
+    def queryXml(self, query):
         """
         Provides the possibility to execute queries 
         which are not yet implemented as a direct function 
@@ -130,12 +128,12 @@ class RedhatClusterInfo(ClusterInfo):
         """
         import StringIO
         self.log.debug("queryXml: " + query)
-        _tmp1 = xpath.Evaluate(query,self.clusterRepository.getElement())
+        _tmp1 = xpath.Evaluate(query, self.clusterRepository.getElement())
         _tmp2 = StringIO.StringIO()
-        PrettyPrint(_tmp1[0],stream=_tmp2)
+        PrettyPrint(_tmp1[0], stream=_tmp2)
         return _tmp2.getvalue()
         
-    def getNode(self,name):
+    def getNode(self, name):
         """
         @param name: name of clusternode
         @type name: string
@@ -145,17 +143,17 @@ class RedhatClusterInfo(ClusterInfo):
         self.log.debug("get node with given name from clusterrepository: " + name)
         return self.clusterRepository.nodeNameMap[name]
             
-    def getNodeName(self,mac):
+    def getNodeName(self, mac):
         """
         @param mac: mac-address
         @type mac: string
         @return: Clusternodename belonging to given mac-address
         @rtype: string
         """
-        self.log.debug("get name of node with given mac from clusterrepository: " + mac)
+        self.log.debug("get name of node with given mac from clusterrepository:" + str(mac))
         return self.clusterRepository.getNodeName(mac)
             
-    def getNodeId(self,mac):
+    def getNodeId(self, mac):
         """
         @param mac: mac-address
         @type mac: string
@@ -165,7 +163,7 @@ class RedhatClusterInfo(ClusterInfo):
         self.log.debug("get id of node with given mac from clusterrepository: " + mac)
         return self.clusterRepository.getNodeId(mac)
     
-    def getFailoverdomainNodes(self,failoverdomain):
+    def getFailoverdomainNodes(self, failoverdomain):
         """
         @param failoverdomain: failoverdomain
         @type failoverdomain: string
@@ -173,14 +171,11 @@ class RedhatClusterInfo(ClusterInfo):
         @rtype: string
         """
         #no defaultvalue specified because every dailoverdomain needs to have one or more failoverdomainnodes
-        try:
-            self.log.debug("get failoverdomainnodes from failoverdomain " + failoverdomain + ": " + self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "/@name")
-            _tmp1 = self.queryValue(self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "/@name")
-        except NameError:
-            return ""
+        self.log.debug("get failoverdomainnodes from failoverdomain " + failoverdomain + ": " + self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "/@name")
+        _tmp1 = self.queryValue(self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "/@name")
         return _tmp1
     
-    def getFailoverdomainPrefNode(self,failoverdomain):
+    def getFailoverdomainPrefNode(self, failoverdomain):
         """
         @param failoverdomain: failoverdomain
         @type failoverdomain: string
@@ -201,8 +196,8 @@ class RedhatClusterInfo(ClusterInfo):
         try:
             self.log.debug("get failoverprefdomainnode from failoverdomain " + failoverdomain + ": " + self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "[@priority='" + str(minprio) + "']/@name")
             return self.queryValue(self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "[@priority='" + str(minprio) + "']/@name")[0]
-        except NameError:
-            return ""
+        except IndexError:
+            raise NameError("Cannot find prefered failoverdomainnode at xpath " + self.failoverdomain_path + "[@name='" + failoverdomain + "']" + self.failoverdomainnode_attribute + "[@priority='" + str(minprio) + "']/@name")
     
     def getNodeIds(self):
         """
@@ -224,9 +219,9 @@ class ComoonicsClusterInfo(RedhatClusterInfo):
         @param clusterRepository: clusterRepository to use
         @type clusterRepository: L{ComoonicsClusterRepository}
         """
-        super(ComoonicsClusterInfo,self).__init__(clusterRepository)
+        super(ComoonicsClusterInfo, self).__init__(clusterRepository)
     
-    def getNic(self,mac):
+    def getNic(self, mac):
         """
         @param mac: mac-address
         @type mac: string
@@ -236,10 +231,10 @@ class ComoonicsClusterInfo(RedhatClusterInfo):
         """
         for node in self.getNodes():
             try:
-                self.log.debug("get clusternodenic with given mac: " + mac)
+                self.log.debug("get clusternodenic with given mac: " + str(mac))
                 return node.getNic(mac).getName()
             except KeyError:
-                pass
+                continue
         raise ClusterMacNotFoundException("Cannot find device with given mac: " + mac)
     
 def main():
@@ -253,13 +248,13 @@ def main():
     # parse the document and create clusterrepository object
     # can use only cluster2.conf for test, cluster.conf MUST cause an not 
     # handled exception (because lack of a device name)
-    file = os.fdopen(os.open("test/cluster2.conf",os.O_RDONLY))
-    doc = reader.fromStream(file)
-    file.close()
+    my_file = os.fdopen(os.open("test/cluster2.conf", os.O_RDONLY))
+    doc = reader.fromStream(my_file)
+    my_file.close()
     element = xpath.Evaluate('/cluster', doc)[0]
 
     #create clusterRepository Object
-    clusterRepository = ClusterRepository(element,doc)
+    clusterRepository = ClusterRepository(element, doc)
 
     #create comclusterinfo object
     clusterInfo = ClusterInfo(clusterRepository)
@@ -279,9 +274,12 @@ def main():
         _nics = node.getNics()
         for _nic in _nics:
             _mac = _nic.getMac()
-            print "clusterInfo.getNic(" + _mac + "): " + clusterInfo.getNic(_mac)
-            print "\tclusterInfo.getNodeId(" + _mac + "): " + clusterInfo.getNodeId(_mac)
-            print "\tclusterInfo.getNodeName(" + _mac + "): " + clusterInfo.getNodeName(_mac)
+            try:
+                print "clusterInfo.getNic(" + _mac + "): " + clusterInfo.getNic(_mac)
+                print "\tclusterInfo.getNodeId(" + _mac + "): " + clusterInfo.getNodeId(_mac)
+                print "\tclusterInfo.getNodeName(" + _mac + "): " + clusterInfo.getNodeName(_mac)
+            except ClusterMacNotFoundException:
+                print "Verify that nic " + _nic.getName() + " does not have an mac-address"
         print "clusterInfo.getNode(" + _name + "): " + str(clusterInfo.getNode(_name))
         
     print "\nclusterInfo.getFailoverdomainNodes(testdomain1): " + str(clusterInfo.getFailoverdomainNodes("testdomain1"))
@@ -291,12 +289,14 @@ def main():
     
     print "\nclusterInfo: " + str(clusterInfo)
         
-
 if __name__ == '__main__':
     main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.5  2007-08-14 08:37:01  andrea2
+# Revision 1.6  2007-09-19 06:40:53  andrea2
+# adapted source code in dependence on Python Style Guide, removed not used imports and statements, adapted some debug messages, added NameError-Exception for Method getFailoverdomainPrefNode
+#
+# Revision 1.5  2007/08/14 08:37:01  andrea2
 # extended docu and test
 #
 # Revision 1.4  2007/08/06 12:09:27  andrea2
