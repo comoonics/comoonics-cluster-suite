@@ -55,6 +55,10 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Wed Sep 19 2007 AO <offermann@atix.de>, 0.1-5
+   - bug fixed BZ #79
+   - added unittests
+   - adapted code in dependence on Python Style Guide
 * Tue Sep 04 2007 MH <hlawatschek@atix.de>, 0.1-4
    - bug fixes
    - added man pages
