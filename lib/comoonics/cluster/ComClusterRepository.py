@@ -11,25 +11,25 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.5 2007-09-04 07:52:25 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.6 2007-09-19 06:42:28 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
 
 from xml import xpath
-from xml.dom.ext import PrettyPrint
+#from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
-from xml.dom.ext.reader.Sax2 import implementation
+#from xml.dom.ext.reader.Sax2 import implementation
 
-from ComClusterNode import *
+from comoonics.cluster.ComClusterNode import ClusterNode
 
 from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
-from comoonics.ComExceptions import *
+from comoonics.ComExceptions import ComException
 
 class ClusterMacNotFoundException(ComException): pass
 
@@ -46,18 +46,18 @@ class ClusterRepository(DataObject):
         instance of clusterrepository (general, redhat 
         or comoonics) has to be created.
         """
-        if xpath.Evaluate("/cluster/clusternodes/clusternode/com_info",args[0]):
+        if xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", args[0]):
             cls = ComoonicsClusterRepository
-        elif xpath.Evaluate("/cluster/clusternodes/clusternode",args[0]):
+        elif xpath.Evaluate("/cluster/clusternodes/clusternode", args[0]):
             cls = RedhatClusterRepository
         return object.__new__(cls, *args, **kwds)
     
-    def __init__(self,element,doc=None):
+    def __init__(self, element, doc=None):
         #node dictionaries depend on clustertype, setting later!
         self.nodeNameMap = {}
         self.nodeIdMap = {}
         
-        super(ClusterRepository,self).__init__(element,doc)
+        super(ClusterRepository, self).__init__(element, doc)
     
 class RedhatClusterRepository(ClusterRepository):
     """
@@ -68,23 +68,19 @@ class RedhatClusterRepository(ClusterRepository):
     """
     
     defaultcluster_path = "/cluster"
-    """@type: string"""
     defaultclusternode_path = defaultcluster_path + "/clusternodes/clusternode"
-    """@type: string"""
     
-    def __init__(self,element,doc=None):    
-        super(RedhatClusterRepository,self).__init__(element,doc)
+    def __init__(self, element, doc=None):    
+        super(RedhatClusterRepository, self).__init__(element, doc)
         
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
         _nodes = xpath.Evaluate(self.defaultclusternode_path, self.getElement())
         for i in range(len(_nodes)):
             _node = ClusterNode(_nodes[i], self.getElement())
-            _name = _node.getName()
-            _id = _node.getId()
-            self.nodeNameMap[_name] = _node
-            self.nodeIdMap[_id] = _node
+            self.nodeNameMap[_node.getName()] = _node
+            self.nodeIdMap[_node.getId()] = _node
 
-    def getNodeName(self,mac):
+    def getNodeName(self, mac):
         """
         @return: Nodename
         @rtype: string
@@ -92,15 +88,15 @@ class RedhatClusterRepository(ClusterRepository):
         """
         for node in self.nodeIdMap.values():
             try:
-                self.log.debug("get clusternodenic belonging to given mac: " + mac)
+                self.log.debug("get clusternodenic belonging to given mac: " + str(mac))
                 node.getNic(mac)
                 self.log.debug("get name belonging to searched clusternodenic: " + node.getName())
                 return node.getName()
             except KeyError:
-                pass
-        raise ClusterMacNotFoundException("Cannot find device with given mac: " + mac)
+                continue
+        raise ClusterMacNotFoundException("Cannot find device with given mac: " + str(mac))
     
-    def getNodeId(self,mac):
+    def getNodeId(self, mac):
         """
         @return: Nodeid
         @rtype: int
@@ -114,7 +110,7 @@ class RedhatClusterRepository(ClusterRepository):
                 self.log.debug("get id belonging to searched clusternodenic: " + node.getName())
                 return node.getId()
             except KeyError:
-                pass
+                continue
         raise ClusterMacNotFoundException("Cannot find device with given mac: " + mac)
 
 class ComoonicsClusterRepository(RedhatClusterRepository):
@@ -122,8 +118,8 @@ class ComoonicsClusterRepository(RedhatClusterRepository):
     Represents the clusterconfiguration file of an 
     comoonics cluster as an L{DataObject}.
     """
-    def __init__(self,element,doc=None):
-        super(ComoonicsClusterRepository,self).__init__(element,doc)
+    def __init__(self, element, doc=None):
+        super(ComoonicsClusterRepository, self).__init__(element, doc)
             
 def main():
     """
@@ -134,13 +130,13 @@ def main():
     reader = Sax2.Reader()
 
     #parse the document and create clusterrepository object
-    file = os.fdopen(os.open("test/cluster2.conf",os.O_RDONLY))
-    doc = reader.fromStream(file)
-    file.close()
+    my_file = os.fdopen(os.open("test/cluster2.conf", os.O_RDONLY))
+    doc = reader.fromStream(my_file)
+    my_file.close()
     element = xpath.Evaluate("/cluster", doc)[0]
 
     #create clusterRepository Object
-    clusterRepository = ClusterRepository(element,doc)
+    clusterRepository = ClusterRepository(element, doc)
     
     print "Dictionary Nodeid:Nodeobject"
     print clusterRepository.nodeIdMap
@@ -152,17 +148,24 @@ def main():
     
     for node in clusterRepository.nodeNameMap.values():
         print "Node " + str(node.getName())
-        for Nic in node.getNics():
-            print "\tNic " + Nic.getName() + ", mac " + Nic.getMac()
-            mac = Nic.getMac()
-            print "\tgetNodeName(mac): " + clusterRepository.getNodeName(mac)
-            print "\tgetNodeId(mac): " + clusterRepository.getNodeId(mac) + "\n"
+        for nic in node.getNics():
+            try:
+                print "\tNic " + nic.getName() + ", mac " + nic.getMac()
+                mac = nic.getMac()
+                print "\tgetNodeName(mac): " + clusterRepository.getNodeName(mac)
+                print "\tgetNodeId(mac): " + clusterRepository.getNodeId(mac) + "\n"
+            except ClusterMacNotFoundException:
+                print "\tNic " + nic.getName()
+                print "\tVerify that no mac-address is specified for this nic"
 
 if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.5  2007-09-04 07:52:25  andrea2
+# Revision 1.6  2007-09-19 06:42:28  andrea2
+# adapted source code in dependence on Python Style Guide, removed not used imports and statements
+#
+# Revision 1.5  2007/09/04 07:52:25  andrea2
 # Removed unused variable
 #
 # Revision 1.4  2007/08/06 12:09:27  andrea2

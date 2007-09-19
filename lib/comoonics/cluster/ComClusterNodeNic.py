@@ -8,19 +8,19 @@ clusternode instances) as an L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterNodeNic.py,v 1.3 2007-08-06 12:09:27 andrea2 Exp $
+# $Id: ComClusterNodeNic.py,v 1.4 2007-09-19 06:41:47 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
 import os
 
 from xml import xpath
-from xml.dom.ext import PrettyPrint
+#from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
-from xml.dom.ext.reader.Sax2 import implementation
+#from xml.dom.ext.reader.Sax2 import implementation
 
 from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
@@ -33,8 +33,8 @@ class ComoonicsClusterNodeNic(DataObject):
     
     log = ComLog.getLogger("comoonics.cluster.ComClusterNodeNic")
     
-    def __init__(self,element,doc=None):
-        super(ComoonicsClusterNodeNic,self).__init__(element,doc)
+    def __init__(self, element, doc=None):
+        super(ComoonicsClusterNodeNic, self).__init__(element, doc)
               
     def getName(self):
         """
@@ -120,15 +120,15 @@ def main():
     reader = Sax2.Reader()
 
     # parse the document
-    file=os.fdopen(os.open("test/cluster.conf",os.O_RDONLY))
-    doc = reader.fromStream(file)
-    file.close()
+    my_file = os.fdopen(os.open("test/cluster.conf", os.O_RDONLY))
+    doc = reader.fromStream(my_file)
+    my_file.close()
 
-    Nics=xpath.Evaluate("/cluster/clusternodes/clusternode/com_info/eth", doc)
+    nics = xpath.Evaluate("/cluster/clusternodes/clusternode/com_info/eth", doc)
 
-    for element in Nics:
+    for element in nics:
         # create example comnode
-        obj=ComoonicsClusterNodeNic(element, doc)
+        obj = ComoonicsClusterNodeNic(element, doc)
 
         try:
             name = obj.getName()
@@ -151,7 +151,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNodeNic.py,v $
-# Revision 1.3  2007-08-06 12:09:27  andrea2
+# Revision 1.4  2007-09-19 06:41:47  andrea2
+# adapted source code in dependence on Python Style Guide, removed not used imports and statements
+#
+# Revision 1.3  2007/08/06 12:09:27  andrea2
 # Added more Docu, removed ClusterMetainfo
 #
 # Revision 1.1  2007/06/05 13:11:21  andrea2
