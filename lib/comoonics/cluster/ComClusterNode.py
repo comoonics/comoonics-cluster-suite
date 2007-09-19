@@ -8,20 +8,20 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.4 2007-08-08 08:38:44 andrea2 Exp $
+# $Id: ComClusterNode.py,v 1.5 2007-09-19 06:37:37 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
 
 from xml import xpath
 from xml.dom.ext.reader import Sax2
-from xml.dom.ext import PrettyPrint
+#from xml.dom.ext import PrettyPrint
 
-from ComClusterNodeNic import *
+from comoonics.cluster.ComClusterNodeNic import ComoonicsClusterNodeNic
 
 from comoonics import ComLog
 from comoonics.ComDataObject import DataObject
@@ -40,7 +40,7 @@ class ClusterNode(DataObject):
         or comoonics) has to be created.
         """
         try:
-            xpath.Evaluate("/cluster/clusternodes/clusternode/com_info",args[0])
+            xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", args[0])
         except NameError:
             if args[0].getAttribute("name"):
                 cls = RedhatClusterNode
@@ -52,7 +52,7 @@ class ClusterNode(DataObject):
         return object.__new__(cls, *args, **kwds)
     
     def __init__(self, element, doc=None):
-        super(ClusterNode,self).__init__(element, doc=None)
+        super(ClusterNode, self).__init__(element, doc)
     
     def getName(self):
         """placeholder for getName method"""
@@ -70,7 +70,7 @@ class RedhatClusterNode(ClusterNode):
     type.
     """
     def __init__(self, element, doc=None):
-        super(RedhatClusterNode,self).__init__(element, doc=None)
+        super(RedhatClusterNode, self).__init__(element, doc)
 
     def getName(self):
         """
@@ -126,11 +126,12 @@ class ComoonicsClusterNode(RedhatClusterNode):
     defaultSyslog = ""
     
     def __init__(self, element, doc=None):
-        super(ComoonicsClusterNode,self).__init__(element, doc)
+        super(ComoonicsClusterNode, self).__init__(element, doc)
         
         # dictionaries device:nicobject and mac:nicobject
         self.nicMac = {}
         self.nicDev = {}
+        self.nicDevList = []
 
         _nics = xpath.Evaluate(self.cominfo_path + '/eth', self.getElement())
         for i in range(len(_nics)):
@@ -138,10 +139,16 @@ class ComoonicsClusterNode(RedhatClusterNode):
             _mac = _nic.getMac()
             _dev = _nic.getName()
 
+            # Hashmaps to provide an easy interface to search a nic 
+            # corresponding to a specific mac or devicename
             self.nicDev[_dev] = _nic
             self.nicMac[_mac] = _nic
+            
+            # List of Devicename/Nicobject Pairs for Operations which 
+            # need the informations in order of the cluster configuration
+            self.nicDevList.append([_dev, _nic])
          
-    def getNic(self,value):
+    def getNic(self, value):
         """
         @param value: Mac-Address (e.g. 00:11:22:33:44) or Devicename (e.g. eth0)
         @type value: string
@@ -163,7 +170,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         self.log.debug("get rootvolume attribute: " + self.rootvolume_path + "@name")
-        return xpath.Evaluate(self.rootvolume_path + "@name",self.getElement())[0].value          
+        return xpath.Evaluate(self.rootvolume_path + "@name", self.getElement())[0].value          
 
     def getRootFs(self):
         """
@@ -172,7 +179,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get rootfs attribute: " + self.rootvolume_path + "@fstype")
-            return xpath.Evaluate(self.rootvolume_path + "@fstype",self.getElement())[0].value
+            return xpath.Evaluate(self.rootvolume_path + "@fstype", self.getElement())[0].value
         except IndexError:
             return self.defaultRootFs
 
@@ -183,7 +190,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get mountopts attribute: " + self.rootvolume_path + "@mountopts")
-            return xpath.Evaluate(self.rootvolume_path + "@mountopts",self.getElement())[0].value
+            return xpath.Evaluate(self.rootvolume_path + "@mountopts", self.getElement())[0].value
         except IndexError:
             return self.defaultMountopts
         
@@ -194,7 +201,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get syslog attribute: " + self.cominfo_path + "syslog/@name")
-            return xpath.Evaluate(self.cominfo_path + "syslog/@name",self.getElement())[0].value
+            return xpath.Evaluate(self.cominfo_path + "syslog/@name", self.getElement())[0].value
         except IndexError:
             return self.defaultSyslog
     
@@ -205,7 +212,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get scsifailover attribute: " + self.cominfo_path + "scsi/@failover")
-            return xpath.Evaluate(self.cominfo_path + "scsi/@failover",self.getElement())[0].value
+            return xpath.Evaluate(self.cominfo_path + "scsi/@failover", self.getElement())[0].value
         except IndexError:
             return self.defaultScsiFailover
         
@@ -215,7 +222,12 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: list
         """
         self.log.debug("get all clusternodenics")
-        return self.nicDev.values()
+        #return self.nicDev.values()
+    
+        _tmp = []
+        for i in range(len(self.nicDevList)):
+            _tmp.append(self.nicDevList[i][1])
+        return _tmp
         
 def main():
     """
@@ -231,27 +243,31 @@ def main():
     reader = Sax2.Reader()
 
     # parse the document
-    file = os.fdopen(os.open(cluster_conf,os.O_RDONLY))
-    doc = reader.fromStream(file)
-    file.close()
+    my_file = os.fdopen(os.open(cluster_conf, os.O_RDONLY))
+    doc = reader.fromStream(my_file)
+    my_file.close()
 
-    Nodes=xpath.Evaluate(clusternode_path, doc)
+    nodes = xpath.Evaluate(clusternode_path, doc)
 
-    for element in Nodes:
+    for element in nodes:
         #create example comnode
-        obj=ClusterNode(element, doc)
+        obj = ClusterNode(element, doc)
 
         #test functions
         print "Name: obj.getName(): " + obj.getName() + " - ID: " + obj.getId()
     
-        print "\tobj.getVotes(): " + obj.getVotes()
+        #print "\tobj.getVotes(): " + obj.getVotes()
     
-        Nics = obj.getNics()
-        print "\tobj.getNics(): " + str(Nics)
+        nics = obj.getNics()
+        print "\tobj.getNics(): " + str(nics)
         
-        for Nic in Nics:
-            mac = Nic.getMac()
-            print "\tobj.getNic('" + mac + "'): " + str(obj.getNic(mac))
+        for nic in nics:
+            print nic.getName()
+            try:
+                mac = nic.getMac()
+                print "\tobj.getNic('" + mac + "'): " + str(obj.getNic(mac))
+            except KeyError:
+                print "Verify if nic " + obj.getName() + " really has got no mac-address."
             
         try:
             print "\tobj.getRootvolume(): " + obj.getRootvolume()
@@ -269,7 +285,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.4  2007-08-08 08:38:44  andrea2
+# Revision 1.5  2007-09-19 06:37:37  andrea2
+# Fixed Bug BZ #79, adapted source code in dependence on Python Style Guide
+#
+# Revision 1.4  2007/08/08 08:38:44  andrea2
 # Changed getNics() to get also more than one nic without mac-address
 #
 # Revision 1.3  2007/08/06 12:09:27  andrea2
