@@ -1,0 +1,199 @@
+#!/usr/bin/python
+"""
+searches from stdin for the given format.
+A non dateformat is always interpreted as regular expression as
+used by python.
+
+Dateformat:
+If a dateformat is used it has always to be formated as
+follows:
+Year/Month/Day Hour:Minute:Second
+Whereas an asterisk in that format means leave it.
+
+Valid searchformats are:
+"hallo.*hallo"   : matches "my hallo my hallo"
+"*/Sep/09 *:*:*" : matches every line that matches this date in the
+                   given dateformat.
+"""
+import sys
+import os.path
+from comoonics.search.datetime.TimeExpression import TimeExpression, DateFormat, ApacheErrorLogDateFormat, ApacheCombinedLogDateFormat, SyslogDateFormat, GuessedDateFormat
+from comoonics.search.SearchFormat import SearchFormat, RESearchFormat
+from comoonics.search.datetime.FileReaderThread import FileReaderThread
+import re
+import logging
+from threading import Lock
+from optparse import OptionParser, IndentedHelpFormatter
+from comoonics import ComLog
+
+__version__="$Revision: 1.1 $"
+logger=ComLog.getLogger("mgrep")
+ComLog.setLevel(logging.INFO)
+
+import textwrap
+class _IndentHelpFormatter(IndentedHelpFormatter):
+    def format_description(self, description):
+        if not description:
+            return ""
+        desc_width = self.width - self.current_indent
+        indent = " "*self.current_indent
+        return description
+
+validdateformats={
+  "apache-combinedlog": ApacheCombinedLogDateFormat(),
+  "apache-errorlog": ApacheErrorLogDateFormat(),
+  "syslog": SyslogDateFormat(),
+  "guess": GuessedDateFormat(),
+                  }
+def addFormat(parser, option, formater):
+    _formaters=getattr(parser.values, option.dest)
+    if not _formaters:
+        _formaters=list()
+        setattr(parser.values, option.dest, _formaters)
+    _formaters.append(formater)
+    logger.debug("addFormat: new: %s, Formaters: %s" %(formater, _formaters))
+
+def selectFormat(option, opt, value, parser):
+    logger.debug("selectFormat(%s, %s, %s, %s" %(option, opt, value, parser))
+    addFormat(parser, option, RESearchFormat(value))
+def selectDateFormat(option, opt, value, parser):
+    logger.debug("selectDateFormat(option %s, opt %s, value %s, parser %s)" %(option, opt, value, parser))
+    if value in validdateformats:
+        addFormat(parser, option, validdateformats[value])
+    else:
+        addFormat(parser, option, DateFormat(value))
+
+def selectCombinedLogDateFormat(option, opt, value, parser):
+    addFormat(parser, option, ApacheCombinedLogDateFormat(value))
+def selectErrorLogDateFormat(option, opt, value, parser):
+    addFormat(parser, option, ApacheErrorLogDateFormat(value))
+def selectSyslogFormat(option, opt, value, parser):
+    addFormat(parser, option, SyslogDateFormat(value))
+def selectGuessFormat(option, opt, value, parser):
+    addFormat(parser, option, GuessedDateFormat(value))
+def setDebug(option, opt, value, parser):
+    ComLog.setLevel(logging.DEBUG)
+    setattr(parser.values, option.dest, True)
+
+parser = OptionParser(description=__doc__, version=__version__, formatter=_IndentHelpFormatter())
+default_formaters=list()
+default_formaters.append(SearchFormat())
+parser.add_option("-s", "--search", dest="search", type="str", action="callback", callback=selectFormat, help="the string/regular expression to search for.")
+parser.add_option("-D", "--dateformat", dest="search", type="str", action="callback", callback=selectDateFormat, help="we are searching for a dateformat or select via string (%s)" %",".join(validdateformats.keys()))
+parser.add_option("-C", "--combinedlog-date", type="str", dest="search", action="callback", callback=selectCombinedLogDateFormat, help="The Apache combined access log date format")
+parser.add_option("-E", "--apacheerrorlog-date", type="str", dest="search", action="callback", callback=selectErrorLogDateFormat, help="The Apache errorlog date format")
+parser.add_option("-S", "--syslog-date", type="str", dest="search", action="callback", callback=selectSyslogFormat, help="The syslog date format")
+parser.add_option("-G", "--guess-date", type="str", dest="search", action="callback", callback=selectGuessFormat, help="Tries to goes the format of the given files. First successful guess is taken for all.")
+parser.add_option("-t", "--date", type="str", dest="datestring", help="The date string for generic (-D|--dateformat)")
+parser.add_option("-d", "--debug", dest="debug", default=False, action="callback", callback=setDebug, help="be more helpful")
+parser.add_option("-M", "--multi", dest="multi", default=False, action="store_true", help="enables multireading. That means sorted by time from multiple sources")
+parser.add_option("-H", "--with-filename", dest="filenames", default=False, action="store_true", help="prefixes every found line with the filename.")
+parser.add_option("-n", "--line-number", dest="linenumber", default=False, action="store_true", help="prefixes every found line with linenumber.")
+parser.add_option("-F", "--fixed-string", dest="fixedstring", default=False, action="store_true", help="PATTERN is a set of newline-separated strings")
+
+(options, args) = parser.parse_args()
+
+# First option might be a pattern let's check
+if not os.path.isfile(args[0]):
+    if options.fixedstring:
+        options.search.append(SearchFormat(args[0]))
+    else:
+        options.search.append(RESearchFormat(args[0]))
+    args=args[1:]
+#if options.format and isinstance(options.format, DateFormat):
+#    expr=TimeExpression(args[0])
+#else:
+#    expr=args[0]
+logger.debug("input: %s, search: %s" %(args, options.search))
+if options.search:
+    for _search in options.search:
+        if isinstance(_search, GuessedDateFormat):
+            if options.datestring:
+                logger.debug("setting searchfor: %s" %options.datestring)
+                _search.searchfor=options.datestring
+#        logger.debug("search: %s, format: %s" %(_search, _search.format()))
+#line="a"
+_lines=dict()
+_lineslock=Lock()
+# first_arg is the search string if not options.search
+try:
+    _rthreads=list()
+    _seqthreads=list()
+    if not args:
+        _thread=FileReaderThread(_lines, None, options.search, _lineslock)
+        _rthreads.append(_thread)
+        _seqthreads.append(_rthreads)
+    else:
+        for arg in args:
+            _thread=FileReaderThread(_lines, arg, options.search, _lineslock)
+            if options.multi:
+                _rthreads.append(_thread)
+            else:
+                _rthreads=list()
+                _rthreads.append(_thread)
+                _seqthreads.append(_rthreads)
+        if options.multi:
+            _seqthreads.append(_rthreads)
+    _mintimehash=None
+    for _rthreads in _seqthreads:
+        for _rthread in _rthreads:
+            _rthread.start()
+        while _rthreads and len(_rthreads)>0:
+            #logger.debug("in while")
+            # Clear old threads
+            _mintimehash=None
+            for _rthread in _rthreads:
+                #_rthread.lock()
+                #if _rthread.getLastTimehash() != None and _mintimehash!=None:
+                #    logger.debug("lasttimehash(%s)<_mintimehash(%s): %s" %(_rthread.getLastTimehash(), _mintimehash, _rthread.getLastTimehash() < _mintimehash))
+                #else:
+                #    logger.debug("lasttimehash(%s)<_mintimehash(%s)" %(_rthread.getLastTimehash(), _mintimehash))
+                if _rthread.getLastTimehash() != None and (_rthread.getLastTimehash() < _mintimehash or _mintimehash==None):
+                    _mintimehash=_rthread.getLastTimehash()
+                elif _rthread.getLastTimehash() == None:
+                    _mintimehash=None
+                if not _rthread.isAlive():
+                    _rthreads.remove(_rthread)
+                #_rthread.release()
+            #logger.debug("mintimehash: %s" %_mintimehash)
+            if _mintimehash:
+                _lineslock.acquire()
+                _times=_lines.keys()
+                _times.sort()
+                for _time in _times:
+                    #logger.debug("_time(%s)<_mintimehash(%s): %s" %(_time, _mintimehash,  _time < _mintimehash))
+                    if _time < _mintimehash or len(_rthreads)==0:
+                        #logger.debug("len(lines): %u, _time: %s, _mintimehash: %s" %(len(_lines[_time]), _time, _mintimehash))
+                        for _line in _lines[_time]:
+                            sys.stdout.write(_line.toString(options.filenames, options.linenumber))
+                        del _lines[_time]
+                _lineslock.release()
+except KeyboardInterrupt:
+    for _rthread in _rthreads:
+        _rthread.exit()
+except IOError, ioe:
+    for _rthread in _rthreads:
+        _rthread.exit()
+    if ioe.errno!=32:
+        print >>sys.stderr, "IOError: %s" %ioe
+        ComLog.infoTraceLog(logger)
+        try:
+            _lineslock.release()
+        except:
+            pass
+        sys.exit(ioe.errno)
+except Exception, e:
+    for _rthread in _rthreads:
+        _rthread.exit()
+    print >>sys.stderr, "Error: %s" %e
+    ComLog.infoTraceLog(logger)
+    try:
+        _lineslock.release()
+    except:
+        pass
+    sys.exit(-1)
+try:
+    _lineslock.release()
+except:
+    pass
+logger.debug("Byebye baby")

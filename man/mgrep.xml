@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding='utf-8'?>
+<!--<!DOCTYPE article
+  PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<article id="com-cluster-py manpages" lang="en">-->
+
+<refentry id="mgrep">
+	<indexterm><primary>Grep multiple files</primary></indexterm>
+	<indexterm><primary>mgrep</primary></indexterm>
+
+	<refmeta>
+		<refentrytitle>mgrep</refentrytitle>
+		<manvolnum>1</manvolnum>
+	</refmeta>
+
+	<refnamediv>
+		<refname>mgrep</refname>
+		<refpurpose>Searches one or multiple files sequential or parallel and also knows about time.</refpurpose>
+	</refnamediv>
+
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>mgrep</command>
+			<arg>--version</arg>
+			<arg>-h|--help</arg>
+			<arg>-s|--search <replaceable>SEARCH</replaceable></arg>
+			<arg>-d|--dateformat <replaceable>DATEFORMAT</replaceable></arg>
+			<arg>-G|--guess <replaceable>DATEFORMAT</replaceable></arg>
+			<arg>-C|--combinedlog-date <replaceable>DATE</replaceable></arg>
+			<arg>-E|--apacheerrorlog-date <replaceable>DATE</replaceable></arg>
+			<arg>-S|--syslog-date <replaceable>DATE</replaceable></arg>
+			<arg>-d|--debug</arg>
+			<arg>-M|--multi</arg>
+			<arg>-H|--with-filename</arg>
+			<arg>-n|--line-number</arg>
+			<arg>-F|--fixed-string</arg>
+			<arg choice="plain">SEARCH</arg>
+			<arg><replaceable>files</replaceable></arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+
+	<refsect1>
+		<title>Description</title>
+		<para>
+			MGrep basically works like grep. But brings some extra features. First it can grep files in
+			parallel. That becomes handy when analysing logfiles. Especially when special timeframes are
+			of interest. The idea is to have a tool where you can grep logfiles within special
+			timeframes and always give the same timeformat independently from the logfile format.
+			Right now only syslog, apachelog and apachecombinedlog are supported.
+		</para>
+		<para>You might also want to use the guess switch to let mgrep guess by itself.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Examples</title>
+		<indexterm><primary>example usage</primary></indexterm>
+		<informalexample>
+			<screen>
+				<prompt>$ </prompt>
+				<userinput>mgrep --search "mystring" --syslog-date "*/Sep/9 *:*:*" -M syslogfiles</userinput>
+			</screen>
+			<para>
+				This example greps for the
+				string "mystring" in all given syslogfiles and will order the result in time.
+			</para>
+		</informalexample>
+		<informalexample>
+			<screen>
+				<prompt>$ </prompt>
+				<userinput>mgrep --search "mystring" --combinedlog-date "*/Sep/9 *:*:*" -M combinedlogfiles</userinput>
+			</screen>
+			<para>
+				This example greps for the
+				string "mystring" in all given combinedlogfiles and will order the result in time.
+			</para>
+		</informalexample>
+		<informalexample>
+			<screen>
+				<prompt>$ </prompt>
+				<userinput>mgrep --search "mystring" --guess "*/Sep/9 *:*:*" -M combinedlogfiles</userinput>
+			</screen>
+			<para>
+				This example greps for the
+				string "mystring" in all given combinedlogfiles and will order the result in time.
+				It will automatically detect the filetype.
+			</para>
+		</informalexample>
+	</refsect1>
+
+	<refsect1 role='author'>
+		<title>Author</title>
+		<para>This manual page was written by Marc Grimme <email>grimme@atix.de</email>. Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts.</para>
+	</refsect1>
+</refentry>
+
+<!--</article>-->
+
