@@ -104,6 +104,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-46:
+   - FA: AutoDelegator
 * Tue Sep 13 2007 MG <grimme@atix.de>, 0.1-45:
    - fixed Bug BZ#111, where partitions where not created when devicemapper in use
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-44:
@@ -243,6 +245,10 @@ comoonics-pythonosfix-py
 * Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-1:
   initial revision
 
+comoonics-search-py
+* Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1:
+  initial revision
+
 comoonics-scsi-py
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
@@ -278,6 +284,10 @@ comoonics-storage-hp-py
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1 :
   added implementation for eva
   SSSU simulator for hp-eva-sssu (Storage scripting)
+
+mgrep
+* Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1
+  initial revision
 
 comoonics-end-not-change
 
