@@ -104,6 +104,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Mon Oct 08 2007 MG <grimme@atix.de>, 0.1-47:
+   - FA: stabilized
 * Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-46:
    - FA: AutoDelegator
 * Tue Sep 13 2007 MG <grimme@atix.de>, 0.1-45:
