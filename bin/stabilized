@@ -1,0 +1,39 @@
+#!/usr/bin/python
+"""
+stabilized is a module providing the stabilized command in nash.
+Supported types are hash and mtime.
+Background is to have a tool checking if a file has not changed in content, by polling or with mtime
+for some time.
+"""
+import logging
+import os, sys
+from optparse import OptionParser, IndentedHelpFormatter
+from comoonics import ComLog
+from comoonics import stabilized
+
+def setDebug(option, opt, value, parser):
+    ComLog.setLevel(logging.DEBUG)
+    setattr(parser.values, option.dest, True)
+
+__version__="$Revision: 1.1 $"
+logger=ComLog.getLogger("mgrep")
+ComLog.setLevel(logging.INFO)
+
+parser = OptionParser(description=__doc__, version=__version__)
+parser.add_option("-d", "--debug", dest="debug", default=False, action="callback", callback=setDebug, help="be more helpful")
+parser.add_option("-t", "--type", dest="type", default="mtime", help="set the type")
+parser.add_option("-I", "--interval", type="float", dest="interval", default=750, help="set the interval")
+parser.add_option("-i", "--iterations", type="int", dest="iterations", default=-1, help="set the iterations")
+parser.add_option("-g", "--good", dest="good", type="int", default=10, help="set the good matches")
+
+(options, args) = parser.parse_args()
+
+# First option might be a pattern let's check
+if len(args)==0:
+    raise IOError, "Please give a file as first argument"
+elif not os.path.isfile(args[0]):
+    raise IOError, "%s is no file please give a file as first argument" %args[0]
+
+_file=args[0]
+sys.exit(not stabilized.stabilized(file=_file, type=options.type, interval=options.interval,
+                                   iterations=options.iterations, good=options.good))
