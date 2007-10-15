@@ -34,11 +34,11 @@ supported flag name attributes: Note, that some may not be supported by the disk
 
 
 # here is some internal information
-# $Id: ComPartitionCopyset.py,v 1.4 2007-02-27 15:54:41 mark Exp $
+# $Id: ComPartitionCopyset.py,v 1.5 2007-10-15 09:11:47 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyset.py,v $
 
 import os
@@ -85,7 +85,10 @@ class PartitionCopyset(CopysetJournaled):
         self.source.cleanupSource()
         self.dest.cleanupDest()
 
-
+    def undoCopy(self):
+        self.source.cleanup()
+        self.dest.cleanup()
+        super(PartitionCopyset, self).undoCopy()
 
     def __doCopy_alt(self):
         __tmp=os.tempnam("/tmp")
@@ -128,7 +131,10 @@ class PartitionCopyset(CopysetJournaled):
 
 
 # $Log: ComPartitionCopyset.py,v $
-# Revision 1.4  2007-02-27 15:54:41  mark
+# Revision 1.5  2007-10-15 09:11:47  mark
+# Fixed BZ#42. Added source and dest cleanup
+#
+# Revision 1.4  2007/02/27 15:54:41  mark
 # changed Disk to HostDisk
 #
 # Revision 1.3  2006/12/08 09:42:53  mark
