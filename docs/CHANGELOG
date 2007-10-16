@@ -191,6 +191,8 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Sun Oct 16 2007 MG <grimme@atix.de>, 0.1-27
+   - Fixed BUG 27, rsync error detection and ignoring
 * Thu Oct 15 2007 MG <grimme@atix.de>, 0.1-27
    - Fixed BUG#42. Added source and dest cleanup to ComPartitionCopyset
 * Thu Sep 13 2007 MG <grimme@atix.de>, 0.1-26
