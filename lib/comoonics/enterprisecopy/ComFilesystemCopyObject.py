@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.8 2007-09-13 09:35:55 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.9 2007-10-16 15:26:24 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
@@ -77,7 +77,7 @@ class FilesystemCopyObject(CopyObjectJournaled):
 
     def prepareAsSource(self):
         # Check for mounted
-        FilesystemCopyObject.log.debug("prepareAsSource: Name %s options: %s" %(self, self.device.getAttribute("options", "")))
+        FilesystemCopyObject.log.debug("prepareAsSource: Name %s options: %s" %(self.device.getAttribute("name"), self.device.getAttribute("options", "")))
         for journal_command in self.device.resolveDeviceName():
             self.journal(self.device, journal_command)
         options=self.device.getAttribute("options", "")
@@ -85,12 +85,14 @@ class FilesystemCopyObject(CopyObjectJournaled):
         if options and "fsck" in options and not self.device.isMounted(self.mountpoint):
             self.filesystem.checkFs(self.device)
         if options and "skipmount" in options:
-            pass
+            FilesystemCopyObject.log.debug("prepareAsSource: skipping mount because specified")
         else:
             if not self.device.isMounted(self.mountpoint):
 #                FilesystemCopyObject.log.debug("prepareAsSource: mounting %s, %s" %(self.device, self.mountpoint))
                 self.filesystem.mount(self.device, self.mountpoint)
                 self.journal(self.filesystem, "mount", [self.mountpoint])
+            else:
+                FilesystemCopyObject.log.debug("prepareAsSource: device is mounted, skipping")
             #self.umountfs=True
         # scan filesystem options
         self.filesystem.scanOptions(self.device, self.mountpoint)
@@ -146,7 +148,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.8  2007-09-13 09:35:55  marc
+# Revision 1.9  2007-10-16 15:26:24  marc
+# - fixed BUG 27, break or warn when rsync error
+#
+# Revision 1.8  2007/09/13 09:35:55  marc
 # - fixed Bug BZ#110
 #   skipmount was wrongly checked
 #

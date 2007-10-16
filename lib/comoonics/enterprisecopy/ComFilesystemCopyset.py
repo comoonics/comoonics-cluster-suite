@@ -7,15 +7,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.6 2007-09-07 14:37:37 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.7 2007-10-16 15:26:24 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
 import exceptions
+import warnings
 from xml import xpath
 
 from ComCopyObject import CopyObject
@@ -24,12 +25,64 @@ from comoonics.ComDisk import Disk
 from comoonics.ComExceptions import *
 from comoonics import ComSystem
 from comoonics import ComLog
+from comoonics.ComExceptions import ComException
 
 from ComFilesystemCopyObject import FilesystemCopyObject
 from ComPathCopyObject import PathCopyObject
 from ComArchiveCopyObject import ArchiveCopyObject
 
 CMD_RSYNC="/usr/bin/rsync"
+
+class RSyncError(ComException):
+
+    """
+    EXIT_VALUES copied from manpage
+    """
+    EXIT_VALUES={
+       1:  "Syntax or usage error",
+       2:  "Protocol incompatibility",
+       3:  "Errors selecting input/output files, dirs",
+       4:  """Requested action not supported: an attempt was made to manipulate
+64-bit files on a platform that  cannot  support
+them; or an option was specified that is supported by the client
+and not by the server.
+""",
+       5:  "Error starting client-server protocol",
+       6:  "Daemon unable to append to log-file",
+       10: "Error in socket I/O",
+       11: "Error in file I/O",
+       12: "Error in rsync protocol data stream",
+       13: "Errors with program diagnostics",
+       14: "Error in IPC code",
+       20: "Received SIGUSR1 or SIGINT",
+       21: "Some error returned by waitpid()",
+       22: "Error allocating core memory buffers",
+       23: "Partial transfer due to error",
+       24: "Partial transfer due to vanished source files",
+       25: "The --max-delete limit stopped deletions",
+       30: "Timeout in data send/receive"
+    }
+
+    IGNORE_CODES= [ 6, 10, 11, 24 ]
+
+    def __init__(self, execlocalexc):
+        self._errorcode=execlocalexc.rc >> 8
+        self._error=execlocalexc.err
+        self._out=execlocalexc.out
+    def __str__(self):
+        _type=self.getErrorType()
+        return """<%s> %s<%u>: %s
+erroroutput: %s""" %(_type, "RSyncError", self._errorcode, self.getErrorMessage(), self._error)
+    def getErrorType(self):
+        if self.isIgnored():
+            return "WARNING"
+        else:
+            return "ERROR"
+    def isIgnored(self):
+        return self._errorcode in self.IGNORE_CODES
+
+    def getErrorMessage(self):
+        return self.EXIT_VALUES.get(self._errorcode, "Unknown Error")
 
 __logStrLevel__ = "comoonics.enterprisecopy.ComFilesystemCopyset.FilesystemCopyset"
 class FilesystemCopyset(Copyset):
@@ -63,7 +116,13 @@ class FilesystemCopyset(Copyset):
         self.prepareDest()
 
         # decide how to copy data
-        self._copyData()
+        try:
+            self._copyData()
+        except RSyncError, _re:
+            if _re.isIgnored():
+                warnings.warn(_re.__str__())
+            else:
+                raise _re
 
         self.postSource()
         self.postDest()
@@ -125,14 +184,12 @@ class FilesystemCopyset(Copyset):
             mountpoint=self.source.getMountpoint().getAttribute("name")
             if isinstance(self.dest, FilesystemCopyObject):
                 __cmd = self._getFSCopyCommand()
-                __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-                ComLog.getLogger(__logStrLevel__).debug("doCopy: "  + __cmd +" "+ __ret)
-                if __rc:
-                    # TODO
-                    # check for specific error codes
-                    #raise ComException(__cmd + __ret)
-                    ComLog.getLogger(__logStrLevel__).warning("doCopy: " + __ret)
-                return __rc
+                try:
+                    __out = ComSystem.execLocalOutput(__cmd, True)
+                except ComSystem.ExecLocalException, ele:
+                    raise RSyncError(ele)
+                #ComLog.getLogger(__logStrLevel__).debug("doCopy: "  + __cmd +" "+ __ret)
+                return True
 
             # 2. copy fs to archive
             elif isinstance(self.dest, ArchiveCopyObject):
@@ -159,7 +216,10 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.6  2007-09-07 14:37:37  marc
+# Revision 1.7  2007-10-16 15:26:24  marc
+# - fixed BUG 27, break or warn when rsync error
+#
+# Revision 1.6  2007/09/07 14:37:37  marc
 # - added support for PathCopyObject
 #
 # Revision 1.5  2007/08/07 11:18:01  marc
