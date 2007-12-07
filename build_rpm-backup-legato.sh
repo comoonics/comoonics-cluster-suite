@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: build_rpm-backup-legato.sh,v 1.5 2007-08-07 11:22:01 marc Exp $
+# $Id: build_rpm-backup-legato.sh,v 1.6 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -12,7 +12,7 @@ DESCRIPTION="Comoonics Legato Backup utilities and libraries written in Python"
 LONG_DESCRIPTION="
 Comoonics Legato Backup utilities and libraries written in Python
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.backup.EMCLegato" : "lib/comoonics/backup/EMCLegato"'
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-backup-legato.sh,v $
-# Revision 1.5  2007-08-07 11:22:01  marc
+# Revision 1.6  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.5  2007/08/07 11:22:01  marc
 # - Fix Bug BZ #77 that the restore command is likely to timeout. This is ignored now.
 #
 # Revision 1.4  2007/08/06 13:06:04  marc

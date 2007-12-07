@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: build_rpm-fenceacksv-plugins.sh,v 1.1 2007-09-10 15:15:41 marc Exp $
+# $Id: build_rpm-fenceacksv-plugins.sh,v 1.2 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -12,7 +12,7 @@ DESCRIPTION="Comoonics Fenceacksv plugins written in Python"
 LONG_DESCRIPTION="
 Comoonics Fenceacksv plugins written in Python
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.fenceacksv.plugins" : "lib/comoonics/fenceacksv/plugins"'
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-fenceacksv-plugins.sh,v $
-# Revision 1.1  2007-09-10 15:15:41  marc
+# Revision 1.2  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.1  2007/09/10 15:15:41  marc
 # released new version of:
 # - comoonics-cs-py: 0.1-44
 # - comoonics-ec-py: 0.1-25

@@ -11,7 +11,7 @@ DESCRIPTION="Comoonics cluster configuration utilities written in Python"
 LONG_DESCRIPTION="
 Comoonics cluster configuration utilities written in Python
 "
-AUTHOR="Andrea Offermann"
+AUTHOR="ATIX AG - Andrea Offermann"
 AUTHOR_EMAIL="offermann@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.cluster" : "lib/comoonics/cluster"'

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: build_rpm-backup.sh,v 1.2 2007-06-13 09:00:55 marc Exp $
+# $Id: build_rpm-backup.sh,v 1.3 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -12,7 +12,7 @@ DESCRIPTION="Comoonics Backup utilities and libraries written in Python"
 LONG_DESCRIPTION="
 Comoonics Backup utilities and libraries written in Python
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.backup" : "lib/comoonics/backup"'
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-backup.sh,v $
-# Revision 1.2  2007-06-13 09:00:55  marc
+# Revision 1.3  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.2  2007/06/13 09:00:55  marc
 # - now backuping full path to support incremental backups (0.1-2)
 #
 # Revision 1.1  2007/04/04 13:42:42  marc

@@ -10,7 +10,7 @@ DESCRIPTION="Comoonics modul to fix bug in os.path.realpath in python-2.3.4-14.4
 LONG_DESCRIPTION="
 Comoonics modul to fix bug in os.path.realpath in python-2.3.4-14.4
 "
-AUTHOR="Andrea Offermann"
+AUTHOR="ATIX AG - Andrea Offermann"
 AUTHOR_EMAIL="offermann@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.pythonosfix" : "lib/comoonics/pythonosfix"'

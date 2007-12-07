@@ -1,4 +1,4 @@
-# $Id: build-lib.sh,v 1.7 2007-09-10 15:15:57 marc Exp $
+# $Id: build-lib.sh,v 1.8 2007-12-07 14:29:23 reiner Exp $
 
 function setup {
   CHANGELOG=$(awk '
@@ -71,6 +71,7 @@ setup(name="'${NAME}'",
       packages=      [ '${PACKAGES}' ],
       scripts=       [ '${SCRIPTS}' ],
       data_files=    [ '${DATA_FILES}' ],
+      licence="GPL",
      )
 ' > setup.py
 
@@ -83,7 +84,10 @@ fi
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.7  2007-09-10 15:15:57  marc
+# Revision 1.8  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.7  2007/09/10 15:15:57  marc
 # better support for requires
 #
 # Revision 1.6  2007/09/04 13:28:52  mark

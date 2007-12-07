@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: build_rpm-storage.sh,v 1.2 2007-04-04 13:20:09 marc Exp $
+# $Id: build_rpm-storage.sh,v 1.3 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -12,7 +12,7 @@ DESCRIPTION="Comoonics Enterprisecopy Storage utilities and libraries written in
 LONG_DESCRIPTION="
 Comoonics Enterprisecopy Storage utilities and libraries written in Python
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.storage" : "lib/comoonics/storage"'
@@ -22,7 +22,10 @@ setup
 
 ##############
 # $Log: build_rpm-storage.sh,v $
-# Revision 1.2  2007-04-04 13:20:09  marc
+# Revision 1.3  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.2  2007/04/04 13:20:09  marc
 # new revisions for:
 # comoonics-cs-py-0.1-30
 # comoonics-ec-py-0.1-15

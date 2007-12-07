@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: build_rpm-storage-hp.sh,v 1.8 2007-08-06 13:06:33 marc Exp $
+# $Id: build_rpm-storage-hp.sh,v 1.9 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -12,7 +12,7 @@ DESCRIPTION="Comoonics Enterprisecopy HP Storage utilities and libraries written
 LONG_DESCRIPTION="
 Comoonics Enterprisecopy HP Storage utilities and libraries written in Python
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.storage.hp" : "lib/comoonics/storage/hp"'
@@ -22,7 +22,10 @@ setup
 
 ##############
 # $Log: build_rpm-storage-hp.sh,v $
-# Revision 1.8  2007-08-06 13:06:33  marc
+# Revision 1.9  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.8  2007/08/06 13:06:33  marc
 # new version
 #
 # Revision 1.7  2007/07/10 11:38:07  marc

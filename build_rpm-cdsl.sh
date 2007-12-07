@@ -11,7 +11,7 @@ DESCRIPTION="Comoonics cdsl utilities and library written in Python"
 LONG_DESCRIPTION="
 Comoonics cdsl utilities and library written in Python
 "
-AUTHOR="Andrea Offermann"
+AUTHOR="ATIX AG - Andrea Offermann"
 AUTHOR_EMAIL="offermann@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.cdsl" : "lib/comoonics/cdsl"'

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# $Id: build_rpm-search.sh,v 1.1 2007-10-02 12:18:44 marc Exp $
+# $Id: build_rpm-search.sh,v 1.2 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -13,7 +13,7 @@ DESCRIPTION="Searchlibraries used by mgrep"
 LONG_DESCRIPTION="
 Searchlibraries used by mgrep
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.search" : "lib/comoonics/search", "comoonics.search.datetime": "lib/comoonics/search/datetime"'
@@ -23,6 +23,9 @@ setup
 
 ##############
 # $Log: build_rpm-search.sh,v $
-# Revision 1.1  2007-10-02 12:18:44  marc
+# Revision 1.2  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.1  2007/10/02 12:18:44  marc
 # initial revision
 #

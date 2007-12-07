@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# $Id: build_rpm-cmdb.sh,v 1.13 2007-05-10 12:44:01 marc Exp $
+# $Id: build_rpm-cmdb.sh,v 1.14 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -13,7 +13,7 @@ DESCRIPTION="Comoonics Softwaremanagement CMDB utilities and libraries written i
 LONG_DESCRIPTION="
 Comoonics Softwaremanagement CMDB utilities and libraries written in Python
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.cmdb" : "lib/comoonics/cmdb"'
@@ -25,7 +25,10 @@ setup
 
 ##############
 # $Log: build_rpm-cmdb.sh,v $
-# Revision 1.13  2007-05-10 12:44:01  marc
+# Revision 1.14  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.13  2007/05/10 12:44:01  marc
 # Hilti RPM Control
 # - Bugfix for Where-Clause
 #

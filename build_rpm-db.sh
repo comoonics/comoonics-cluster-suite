@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# $Id: build_rpm-db.sh,v 1.6 2007-06-19 15:21:06 marc Exp $
+# $Id: build_rpm-db.sh,v 1.7 2007-12-07 14:29:23 reiner Exp $
 
 source ./build-lib.sh
 
@@ -13,7 +13,7 @@ DESCRIPTION="Comoonics Softwaremanagement Database utilities and libraries writt
 LONG_DESCRIPTION="
 Comoonics Softwaremanagement Database utilities and libraries written in Python
 "
-AUTHOR="Marc Grimme"
+AUTHOR="ATIX AG - Marc Grimme"
 AUTHOR_EMAIL="grimme@atix.de"
 URL="http://www.atix.de/comoonics/"
 PACKAGE_DIR='"comoonics.db" : "lib/comoonics/db"'
@@ -24,7 +24,10 @@ setup
 
 ##############
 # $Log: build_rpm-db.sh,v $
-# Revision 1.6  2007-06-19 15:21:06  marc
+# Revision 1.7  2007-12-07 14:29:23  reiner
+# Added GPL license to and ATIX AG as author name to RPM header.
+#
+# Revision 1.6  2007/06/19 15:21:06  marc
 # new version 0.1-9
 #
 # Revision 1.5  2007/06/13 09:04:42  marc
