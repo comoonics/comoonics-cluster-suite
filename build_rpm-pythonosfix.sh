@@ -2,7 +2,7 @@
 
 source ./build-lib.sh
 
-RELEASE=1
+RELEASE=2
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-pythonosfix-py"
 VERSION="0.1"

@@ -2,7 +2,7 @@
 
 source ./build-lib.sh
 
-RELEASE=3
+RELEASE=4
 REQUIRES="--requires=comoonics-cs-py,PyXML,comoonics-pythonosfix-py,comoonics-cluster-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cdsl-py"
