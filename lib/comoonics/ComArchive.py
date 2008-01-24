@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -249,6 +249,28 @@ class TarArchiveHandler(ArchiveHandler):
         self.compression=""
         self.compressionmode=""
 
+    def getCommandOptions(self):
+        """
+        Returns the options for the tar command and also the supported options. Xattrs, selinux, acls
+        """
+        _opts=[]
+        try:
+            __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-xattr'" %self.TAR)
+            _opts.append("--xattrs")
+        except ComSystem.ExecLocalException:
+            pass
+        try:
+            __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-acls'" %self.TAR)
+            _opts.append("--acls")
+        except ComSystem.ExecLocalException:
+            pass
+        try:
+            __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-selinux'" %self.TAR)
+            _opts.append("--selinux")
+        except ComSystem.ExecLocalException:
+            pass
+        return _opts
+
     def closeAll(self):
         ''' closes all open fds '''
         self.tarf.close()
@@ -261,7 +283,7 @@ class TarArchiveHandler(ArchiveHandler):
 
     def extractFile(self, name, dest):
         ''' extracts a file or directory from archiv' to destination dest '''
-        __cmd = TarArchiveHandler.TAR +" -x " + self.compression + " -f " \
+        __cmd = TarArchiveHandler.TAR +" ".join(self.getCommandOptions())+" -x " + self.compression + " -f " \
                 + self.tarfile + " -C " + dest + " " + name
         __rc, __rv = ComSystem.execLocalGetResult(__cmd)
         if __rc >> 8 != 0:
@@ -283,7 +305,7 @@ class TarArchiveHandler(ArchiveHandler):
          '''
         if not cdir:
             cdir=os.getcwd()
-        __cmd = TarArchiveHandler.TAR +" -c --one-file-system " + self.compression + " -f " \
+        __cmd = TarArchiveHandler.TAR +" ".join(self.getCommandOptions())+" -c --one-file-system " + self.compression + " -f " \
                 + self.tarfile + " -C " + cdir + " " + source
         __rc, __rv = ComSystem.execLocalGetResult(__cmd)
         if __rc >> 8 != 0:
@@ -505,7 +527,11 @@ if __name__ == '__main__':
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.10  2007-09-07 14:44:16  marc
+# Revision 1.11  2008-01-24 10:07:54  marc
+# bugfix for 189
+# - added options for rsync so that acls and xattrs will also be synced.
+#
+# Revision 1.10  2007/09/07 14:44:16  marc
 # - logging
 # - replaced taroption -l with --one-filesystem which is upword compatible
 #

@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.7 2007-10-16 15:26:24 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.8 2008-01-24 10:07:42 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -164,9 +164,26 @@ class FilesystemCopyset(Copyset):
 #        # restore saved attibutes from dest
 #        self.destination.getFileSystem().setAttributes(__attr)
 
+    def getCopyCommandOptions(self, _cmd=CMD_RSYNC):
+        """
+        Returns the options for the sync command and also the supported options. Xattrs, selinux, acls
+        """
+        _opts=["--archive", "--update", "--one-file-system", "--delete"]
+        try:
+            __out = ComSystem.execLocalOutput("%s --version | tr '\n' ' ' | grep -i capabilities | grep -i xattr" %_cmd)
+            _opts.append("--xattrs")
+        except ComSystem.ExecLocalException:
+            pass
+        try:
+            __out = ComSystem.execLocalOutput("%s --version | tr '\n\' ' ' | grep -i capabilities | grep -i acls" %_cmd)
+            _opts.append("--acls")
+        except ComSystem.ExecLocalException:
+            pass
+        return _opts
+
     def _getFSCopyCommand(self):
         __cmd=CMD_RSYNC
-        __cmd+=" -aux --delete "
+        __cmd+=" ".join(self.getCopyCommandOptions(__cmd))
         __cmd+=self.source.getMountpoint().getAttribute("name")
         __cmd+="/ "
         __cmd+=self.dest.getMountpoint().getAttribute("name")
@@ -216,7 +233,11 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.7  2007-10-16 15:26:24  marc
+# Revision 1.8  2008-01-24 10:07:42  marc
+# bugfix for 189
+# - added options for rsync so that acls and xattrs will also be synced.
+#
+# Revision 1.7  2007/10/16 15:26:24  marc
 # - fixed BUG 27, break or warn when rsync error
 #
 # Revision 1.6  2007/09/07 14:37:37  marc
