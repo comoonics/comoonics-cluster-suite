@@ -199,6 +199,8 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-29
+   - fixed bug in FilesystemsystemCopyset rsync without space
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-28
    - rebuild for rpmspecfile updates
    - fixed BUG BZ#189, support for selinux, xattrs and acls

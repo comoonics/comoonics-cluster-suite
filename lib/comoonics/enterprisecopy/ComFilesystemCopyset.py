@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.8 2008-01-24 10:07:42 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.9 2008-01-24 13:38:37 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -183,7 +183,7 @@ class FilesystemCopyset(Copyset):
 
     def _getFSCopyCommand(self):
         __cmd=CMD_RSYNC
-        __cmd+=" ".join(self.getCopyCommandOptions(__cmd))
+        __cmd+=" ".join(self.getCopyCommandOptions(__cmd))+" "
         __cmd+=self.source.getMountpoint().getAttribute("name")
         __cmd+="/ "
         __cmd+=self.dest.getMountpoint().getAttribute("name")
@@ -233,7 +233,10 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.8  2008-01-24 10:07:42  marc
+# Revision 1.9  2008-01-24 13:38:37  marc
+# - fixed bug that rsync has space missing
+#
+# Revision 1.8  2008/01/24 10:07:42  marc
 # bugfix for 189
 # - added options for rsync so that acls and xattrs will also be synced.
 #
