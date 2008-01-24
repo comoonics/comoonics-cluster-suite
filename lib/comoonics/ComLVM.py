@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -56,7 +56,7 @@ class LinuxVolumeManager(DataObject):
         if not (os.access(CMD_LVM, os.X_OK)) and (os.access("/sbin/lvm", os.X_OK)):
             CMD_LVM="/sbin/lvm"
 
-        if not os.access("/etc/lvm/.cache", os.R_OK):
+        if not os.access("/etc/lvm/.cache", os.R_OK) and not os.access("/etc/lvm/cache/.cache", os.R_OK):
             raise RuntimeError("LVM could not read lvm cache file")
 
         f = open("/proc/devices", "r")
@@ -902,7 +902,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.8  2007-08-22 14:13:40  marc
+# Revision 1.9  2008-01-24 09:54:51  mark
+# added lvm cache check for RHEL5. Solves BZ 188
+#
+# Revision 1.8  2007/08/22 14:13:40  marc
 # Fixed Bug BZ#88 (clustered flad is created when there is none)
 #
 # Revision 1.7  2007/08/06 07:39:12  marc
