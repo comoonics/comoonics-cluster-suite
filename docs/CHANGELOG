@@ -28,6 +28,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-8
+   - rebuild for rpmspecfile updates
 * Mon Sep 10 2007 AO <offermann@atix.de>, 0.1-7
     - Fixed Bug BZ #104 by adding requirement comoonics-cluster-py to build-script
     - Added documention for ComoonicsCdsl._pathdepth()
@@ -55,6 +57,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-6
+   - rebuild for rpmspecfile updates
 * Wed Sep 19 2007 AO <offermann@atix.de>, 0.1-5
    - bug fixed BZ #79
    - added unittests
@@ -104,6 +108,10 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-48
+   - rebuild for rpmspecfile updates
+   - fixed BUG BZ#189, support for selinux, xattrs and acls
+   - fixed BUG BZ#188, wrong lvm cache file for new lvm versions
 * Mon Oct 08 2007 MG <grimme@atix.de>, 0.1-47:
    - FA: stabilized
 * Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-46:
@@ -191,6 +199,9 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-28
+   - rebuild for rpmspecfile updates
+   - fixed BUG BZ#189, support for selinux, xattrs and acls
 * Sun Oct 16 2007 MG <grimme@atix.de>, 0.1-27
    - Fixed BUG 27, rsync error detection and ignoring
 * Thu Oct 15 2007 MG <grimme@atix.de>, 0.1-27
@@ -248,6 +259,9 @@ comoonics-fenceacksv-plugins-py
   initial revision
 
 comoonics-pythonosfix-py
+* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-2
+   - rebuild for rpmspecfile updates
+   - fixed BUG BZ#189, support for selinux, xattrs and acls
 * Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-1:
   initial revision
 
