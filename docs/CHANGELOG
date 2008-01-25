@@ -108,6 +108,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-50
+   - BUG#191 rewrote options support for FilesystemCopyset via properties 
 * Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-49
    - BUG#191 removed ACL support 
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-48
@@ -201,6 +203,8 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-32
+   - BUG#191 rewrote options support for FilesystemCopyset via properties 
 * Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-31
    - BUG#191 removed ACL support 
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-30

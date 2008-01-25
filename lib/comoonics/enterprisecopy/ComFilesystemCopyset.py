@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.11 2008-01-25 10:31:24 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.12 2008-01-25 13:07:12 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -169,16 +169,19 @@ class FilesystemCopyset(Copyset):
         Returns the options for the sync command and also the supported options. Xattrs, selinux, acls
         """
         _opts=["--archive", "--update", "--one-file-system", "--delete"]
-        try:
-            __out = ComSystem.execLocalOutput("%s --version | tr '\n' ' ' | grep -i capabilities | grep -i xattr" %_cmd)
-            _opts.append("--xattrs")
-        except ComSystem.ExecLocalException:
-            pass
-        #try:
-        #    __out = ComSystem.execLocalOutput("%s --version | tr '\n\' ' ' | grep -i capabilities | grep -i acls" %_cmd)
-        #    _opts.append("--acls")
-        #except ComSystem.ExecLocalException:
-        #    pass
+
+        for _property in self.getProperties().keys():
+            _value=self.getProperties()[_property].getValue()
+            if _value=="":
+                if len(_property)==1:
+                    _opts.append("-%s" %_property)
+                else:
+                    _opts.append("--%s" %_property)
+            else:
+                if len(_property)==1:
+                    _opts.append("-%s %s" %(_property, _value))
+                else:
+                    _opts.append("--%s %s" %(_property, _value))
         return _opts
 
     def _getFSCopyCommand(self):
@@ -233,7 +236,10 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.11  2008-01-25 10:31:24  marc
+# Revision 1.12  2008-01-25 13:07:12  marc
+# - Fix BUG#191 so that options might be given via properties
+#
+# Revision 1.11  2008/01/25 10:31:24  marc
 # - BUG#191 removed ACL support as it does not work so easily
 #
 # Revision 1.10  2008/01/24 16:16:55  marc

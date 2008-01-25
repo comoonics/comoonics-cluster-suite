@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -191,9 +191,13 @@ class ArchiveHandler(object):
 
     def __init__(self, name, properties=None):
         self.name=name
+        self.properties=properties
 
     def closeAll(self):
         pass
+
+    def getProperties(self):
+        return self.properties
 
     def getFileObj(self, name):
         ''' returns a fileobject of an archiv member '''
@@ -254,21 +258,19 @@ class TarArchiveHandler(ArchiveHandler):
         Returns the options for the tar command and also the supported options. Xattrs, selinux, acls
         """
         _opts=[]
-        try:
-            __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-xattr'" %self.TAR)
-            _opts.append("--xattrs")
-        except ComSystem.ExecLocalException:
-            pass
-        #try:
-        #    __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-acls'" %self.TAR)
-        #    _opts.append("--acls")
-        #except ComSystem.ExecLocalException:
-        #    pass
-        try:
-            __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-selinux'" %self.TAR)
-            _opts.append("--selinux")
-        except ComSystem.ExecLocalException:
-            pass
+
+        for _property in self.getProperties().keys():
+            _value=self.getProperties()[_property].getValue()
+            if _value=="":
+                if len(_property)==1:
+                    _opts.append("-%s" %_property)
+                else:
+                    _opts.append("--%s" %_property)
+            else:
+                if len(_property)==1:
+                    _opts.append("-%s %s" %(_property, _value))
+                else:
+                    _opts.append("--%s %s" %(_property, _value))
         return _opts
 
     def closeAll(self):
@@ -527,7 +529,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.12  2008-01-25 10:31:55  marc
+# Revision 1.13  2008-01-25 13:06:58  marc
+# - Fix BUG#191 so that options might be given via properties
+#
+# Revision 1.12  2008/01/25 10:31:55  marc
 # - BUG#191 removed ACL support as it does not work so easily
 #
 # Revision 1.11  2008/01/24 10:07:54  marc
