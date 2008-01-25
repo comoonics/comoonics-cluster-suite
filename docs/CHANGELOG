@@ -108,6 +108,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-49
+   - BUG#191 removed ACL support 
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-48
    - rebuild for rpmspecfile updates
    - fixed BUG BZ#189, support for selinux, xattrs and acls
@@ -199,6 +201,8 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-31
+   - BUG#191 removed ACL support 
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-30
    - fixed bug in FilesystemsystemCopyset rsync without space (2nd)
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-29
