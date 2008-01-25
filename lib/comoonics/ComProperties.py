@@ -5,7 +5,7 @@ Implementation of properties as DataObject
 
 __version__= "$Revision $"
 
-# $Id: ComProperties.py,v 1.5 2007-06-19 13:10:54 marc Exp $
+# $Id: ComProperties.py,v 1.6 2008-01-25 13:04:50 marc Exp $
 
 import warnings
 from comoonics.ComDataObject import DataObject
@@ -131,7 +131,7 @@ def main():
     property_name="testname2"
     print "Getting property %s: %s" %(property_name, properties[property_name].getValue())
     property_name="testflag"
-    print "Getting property %s: %s" %(property_name, properties.getAttribute(property_name))
+    print "Getting property %s: '%s'" %(property_name, properties[property_name].getValue())
     print "Setting property %s: %s" %("test123", "test213")
     properties["test123"]="test213"
     print "Getting property %s: %s" %("test123", properties["test123"].getValue())
@@ -157,7 +157,10 @@ def main():
 if __name__ == '__main__':
     main()
 # $Log: ComProperties.py,v $
-# Revision 1.5  2007-06-19 13:10:54  marc
+# Revision 1.6  2008-01-25 13:04:50  marc
+# better test with flags
+#
+# Revision 1.5  2007/06/19 13:10:54  marc
 # - changed some tests
 #
 # Revision 1.4  2007/06/13 09:13:08  marc
