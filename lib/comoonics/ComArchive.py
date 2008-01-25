@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -259,18 +259,19 @@ class TarArchiveHandler(ArchiveHandler):
         """
         _opts=[]
 
-        for _property in self.getProperties().keys():
-            _value=self.getProperties()[_property].getValue()
-            if _value=="":
-                if len(_property)==1:
-                    _opts.append("-%s" %_property)
+        if self.getProperties():
+            for _property in self.getProperties().keys():
+                _value=self.getProperties()[_property].getValue()
+                if _value=="":
+                    if len(_property)==1:
+                        _opts.append("-%s" %_property)
+                    else:
+                        _opts.append("--%s" %_property)
                 else:
-                    _opts.append("--%s" %_property)
-            else:
-                if len(_property)==1:
-                    _opts.append("-%s %s" %(_property, _value))
-                else:
-                    _opts.append("--%s %s" %(_property, _value))
+                    if len(_property)==1:
+                        _opts.append("-%s %s" %(_property, _value))
+                    else:
+                        _opts.append("--%s %s" %(_property, _value))
         return _opts
 
     def closeAll(self):
@@ -529,7 +530,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.13  2008-01-25 13:06:58  marc
+# Revision 1.14  2008-01-25 14:08:36  marc
+# - Fix BUG#191 so that options might be given via properties (2nd)
+#
+# Revision 1.13  2008/01/25 13:06:58  marc
 # - Fix BUG#191 so that options might be given via properties
 #
 # Revision 1.12  2008/01/25 10:31:55  marc
