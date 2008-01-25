@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -259,11 +259,11 @@ class TarArchiveHandler(ArchiveHandler):
             _opts.append("--xattrs")
         except ComSystem.ExecLocalException:
             pass
-        try:
-            __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-acls'" %self.TAR)
-            _opts.append("--acls")
-        except ComSystem.ExecLocalException:
-            pass
+        #try:
+        #    __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-acls'" %self.TAR)
+        #    _opts.append("--acls")
+        #except ComSystem.ExecLocalException:
+        #    pass
         try:
             __out = ComSystem.execLocalOutput("%s --help | grep -i '\-\-selinux'" %self.TAR)
             _opts.append("--selinux")
@@ -527,7 +527,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.11  2008-01-24 10:07:54  marc
+# Revision 1.12  2008-01-25 10:31:55  marc
+# - BUG#191 removed ACL support as it does not work so easily
+#
+# Revision 1.11  2008/01/24 10:07:54  marc
 # bugfix for 189
 # - added options for rsync so that acls and xattrs will also be synced.
 #

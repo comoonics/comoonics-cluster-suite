@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.10 2008-01-24 16:16:55 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.11 2008-01-25 10:31:24 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -174,11 +174,11 @@ class FilesystemCopyset(Copyset):
             _opts.append("--xattrs")
         except ComSystem.ExecLocalException:
             pass
-        try:
-            __out = ComSystem.execLocalOutput("%s --version | tr '\n\' ' ' | grep -i capabilities | grep -i acls" %_cmd)
-            _opts.append("--acls")
-        except ComSystem.ExecLocalException:
-            pass
+        #try:
+        #    __out = ComSystem.execLocalOutput("%s --version | tr '\n\' ' ' | grep -i capabilities | grep -i acls" %_cmd)
+        #    _opts.append("--acls")
+        #except ComSystem.ExecLocalException:
+        #    pass
         return _opts
 
     def _getFSCopyCommand(self):
@@ -233,7 +233,10 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.10  2008-01-24 16:16:55  marc
+# Revision 1.11  2008-01-25 10:31:24  marc
+# - BUG#191 removed ACL support as it does not work so easily
+#
+# Revision 1.10  2008/01/24 16:16:55  marc
 # - fixed bug that rsync has space missing
 #
 # Revision 1.9  2008/01/24 13:38:37  marc
