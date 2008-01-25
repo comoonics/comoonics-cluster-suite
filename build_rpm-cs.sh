@@ -4,7 +4,7 @@
 
 source ./build-lib.sh
 
-RELEASE=48
+RELEASE=49
 REQUIRES="--requires=PyXML,pyparted"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cs-py"
