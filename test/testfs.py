@@ -26,15 +26,108 @@ from xml import xpath
 # create Reader object
 reader = Sax2.Reader()
 
-file=os.fdopen(os.open("./example_config.xml",os.O_RDONLY))
-doc = reader.fromStream(file)
+xml_fs2fs="""
+<root>
+    <copyset type="filesystem">
+          <source type="filesystem">
+              <device name="/dev/VG_TEST/LV_SOURCE">
+                <filesystem type="gfs"/>
+                <mountpoint name="/mnt/source"/>
+            </device>
+          </source>
+          <destination type="filesystem">
+            <device name="/dev/VG_TEST/LV_DEST" id="testfs">
+                  <filesystem type="gfs" clustername="vmwareclusternew"/>
+                  <mountpoint name="/mnt/dest">
+                      <option name="lockproto" value="lock_nolock"/>
+                  </mountpoint>
+               </device>
+           </destination>
+    </copyset>
+</root>
+"""
+
+xml_fs2arc="""
+<root>
+    <copyset type="filesystem">
+          <source type="filesystem">
+              <device name="/dev/VG_TEST/LV_SOURCE">
+                <filesystem type="gfs"/>
+                <mountpoint name="/mnt/source">
+                    <option name="ro"/>
+                </mountpoint>
+            </device>
+          </source>
+          <destination type="backup">
+              <metadata>
+                <archive type="file" format="tar" compression="none" name="/tmp/metadata.tar">
+                    <file name="./testfs.xml"/>
+                </archive>
+              </metadata>
+              <data>
+                <archive type="file" format="tar" compression="gzip" name="/tmp/testdata.tar.gz"/>
+              </data>
+          </destination>
+    </copyset>
+</root>
+"""
+
+xml_arc2fs="""
+<root>
+    <copyset type="filesystem">
+          <source type="backup">
+              <metadata>
+                <archive type="file" format="tar" compression="none" name="/tmp/metadata.tar">
+                    <file name="./testfs.xml"/>
+                </archive>
+              </metadata>
+              <data>
+                <archive type="file" format="tar" compression="gzip" name="/tmp/testdata.tar.gz"/>
+              </data>
+          </source>
+          <destination type="filesystem">
+            <device name="/dev/VG_TEST/LV_DEST" id="testfs">
+                  <filesystem type="gfs" clustername="vmwareclusternew"/>
+                  <mountpoint name="/mnt/dest">
+                      <option name="lockproto" value="lock_nolock"/>
+                  </mountpoint>
+               </device>
+           </destination>
+    </copyset>
+</root>
+"""
+
+def usage():
+    print ("%s fs2fs | fs2arc | arc2fs" % sys.argv[0])
+    sys.exit(127)
+
+print len(sys.argv)
+if len(sys.argv) < 2:
+    usage()
+
+if sys.argv[1] == "fs2fs":
+    xml=xml_fs2fs
+elif sys.argv[1] == "fs2arc":
+    xml=xml_fs2arc
+elif sys.argv[1] == "arc2fs":
+    xml=xml_arc2fs
+else:
+    usage()
+
+
+
+#file=os.fdopen(os.open("./example_config.xml",os.O_RDONLY))
+#doc = reader.fromStream(file)
+
+doc = reader.fromString(xml)
 
 PrettyPrint(doc)
 
-sets = xpath.Evaluate('businesscopy/copyset[@type="filesystem"]', doc)
+sets = xpath.Evaluate('root/copyset[@type="filesystem"]', doc)
 print sets
 for i in range(len(sets)):
     print sets[i]
     cs=ComCopyset.getCopyset(sets[i], doc)
-    print "copy command: " + cs.getCopyCommand()
     cs.doCopy()
+    print("NOW DO THE UNDO")
+    cs.undoCopy()
