@@ -13,6 +13,7 @@ from ComMessage import MessageRequirement, MessageModification
 from ComPathModificationset import PathModificationset
 from ComPathCopyObject import PathCopyObject
 from ComSysrqModification import SysrqModification
+from ComISOFSModificationset import ISOFSModificationset
 
 registerModification("message", MessageModification)
 registerModification("sysrq", SysrqModification)
@@ -20,12 +21,16 @@ registerModification("sysrq", SysrqModification)
 registerRequirement("message", MessageRequirement)
 
 registerModificationset("path", PathModificationset)
+registerModificationset("isofs", ISOFSModificationset)
 
 registerCopyObject("path", PathCopyObject)
 
 ########
 # $Log: __init__.py,v $
-# Revision 1.2  2007-09-07 14:34:45  marc
+# Revision 1.3  2008-02-19 17:32:41  mark
+# added ComISOFSModificationset
+#
+# Revision 1.2  2007/09/07 14:34:45  marc
 # added registry implementation for all sets.
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
