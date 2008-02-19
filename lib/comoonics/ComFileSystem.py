@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.5 2007-04-23 22:07:42 marc Exp $
+# $Id: ComFileSystem.py,v 1.6 2008-02-19 14:13:16 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComFileSystem.py,v $
 
 import os
@@ -43,6 +43,8 @@ def getFileSystem(element, doc):
     returns a FileSystem object that fits to the description in element"
     """
     __type=element.getAttribute("type")
+    if __type == "auto":
+        return FileSystem(element, doc)
     if __type == "ext2":
         return ext2FileSystem(element, doc)
     if __type == "ext3":
@@ -368,7 +370,10 @@ class gfsFileSystem(FileSystem):
 
 
 # $Log: ComFileSystem.py,v $
-# Revision 1.5  2007-04-23 22:07:42  marc
+# Revision 1.6  2008-02-19 14:13:16  mark
+# add support for type=auto
+#
+# Revision 1.5  2007/04/23 22:07:42  marc
 # added fsck
 #
 # Revision 1.4  2007/03/26 08:29:17  marc
