@@ -13,20 +13,17 @@ Example Configuration:
 """
 
 # here is some internal information
-# $Id: ComISOFSModificationset.py,v 1.1 2008-02-19 17:32:20 mark Exp $
+# $Id: ComISOFSModificationset.py,v 1.2 2008-02-20 13:51:03 mark Exp $
 #
 
-
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComISOFSModificationset.py,v $
 
 from ComModificationset import ModificationsetJournaled
 from comoonics import ComLog, ComSystem
-from comoonics.ComPath import Path
 from comoonics.ComExceptions import ComException
 
 import os
-import os.path
 from xml import xpath
 
 CMD_MKISOFS="/usr/bin/mkisofs"
@@ -35,7 +32,6 @@ class ISOFSModificationset(ModificationsetJournaled):
     """ implementation class for this modificationset """
     __logStrLevel__="comoonics.enterprisecopy.ComISOFSModificationset.ISOFSModificationset"
     logger=ComLog.getLogger(__logStrLevel__)
-
     def __init__(self, element, doc):
         """
         default constructor:
@@ -67,21 +63,37 @@ class ISOFSModificationset(ModificationsetJournaled):
 
 
     def _get_mkisofs_command(self):
-        cmd=CMD_MKISOFS + " -o " + self.isoname + " -J -R -D "
+        _knownopts=["bootcd", "cdlabel" ]
+        _opts=["-o " + self.isoname, "-J", "-R", "-D"]
         if self.getProperties() and self.getProperties().has_key("bootcd"):
             if self.getProperties().getProperty("bootcd").getValue() == "livecd": 
-                cmd = cmd + "-no-emul-boot -boot-info-table -boot-load-size 4 -b boot/isolinux.bin -c boot/isolinux.boot "
+                _opts.append("-no-emul-boot")
+                _opts.append("-boot-info-table")
+                _opts.append("-boot-load-size 4")
+                _opts.append("-b boot/isolinux.bin")
+                _opts.append("-c boot/isolinux.boot")
         if self.getProperties() and self.getProperties().has_key("cdlabel"):
             key=self.getProperties().getProperty("cdlabel")
-            cmd = cmd + "-A '" + key.getValue() + "' -V '" + key.getValue() + "'"
-        for element in self.pathlist:
-            cmd = cmd + " " + element.getAttribute("name")
+            _opts.append("-A '%s'" %key.getValue())
+            _opts.append("-V '%s'" %key.getValue())
+        for _property in self.getProperties().keys(): 
+            if _property in _knownopts:
+                continue
+            _value=self.getProperties()[_property].getValue()
+            if _value=="":
+                _opts.append("-%s" %_property)
+            else:
+                _opts.append("-%s %s" %(_property, _value))
+        for _element in self.pathlist:
+            _opts.append(_element.getAttribute("name"))
  
-        
-        return cmd
+        return CMD_MKISOFS + " " + " ".join(_opts)
 
 # $Log: ComISOFSModificationset.py,v $
-# Revision 1.1  2008-02-19 17:32:20  mark
+# Revision 1.2  2008-02-20 13:51:03  mark
+# added genric Property support
+#
+# Revision 1.1  2008/02/19 17:32:20  mark
 # initial check in
 #
 # 
