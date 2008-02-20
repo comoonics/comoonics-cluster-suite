@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.13 2008-01-25 14:08:46 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.14 2008-02-20 10:52:40 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -203,7 +203,8 @@ class FilesystemCopyset(Copyset):
         ComLog.getLogger(__logStrLevel__).debug("doCopy: isinstance(%s, PathCopyObject): %s" %(self.source.__class__, isinstance(self.source, PathCopyObject)))
         if isinstance(self.source, FilesystemCopyObject) or isinstance(self.source, PathCopyObject):
             mountpoint=self.source.getMountpoint().getAttribute("name")
-            if isinstance(self.dest, FilesystemCopyObject):
+            ComLog.getLogger(__logStrLevel__).debug("doCopy: isinstance(%s, PathCopyObject): %s" %(self.dest.__class__, isinstance(self.dest, PathCopyObject)))
+            if isinstance(self.dest, FilesystemCopyObject) or isinstance(self.dest, PathCopyObject):
                 __cmd = self._getFSCopyCommand()
                 try:
                     __out = ComSystem.execLocalOutput(__cmd, True)
@@ -237,7 +238,10 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.13  2008-01-25 14:08:46  marc
+# Revision 1.14  2008-02-20 10:52:40  mark
+# add support for copy of FilesystemCopyObject to PathCopyObject
+#
+# Revision 1.13  2008/01/25 14:08:46  marc
 # - Fix BUG#191 so that options might be given via properties (2nd)
 #
 # Revision 1.12  2008/01/25 13:07:12  marc
