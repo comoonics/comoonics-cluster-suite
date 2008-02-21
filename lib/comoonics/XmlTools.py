@@ -5,10 +5,11 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.6 2007-09-07 14:49:07 marc Exp $
+# $Id: XmlTools.py,v 1.7 2008-02-21 16:10:59 mark Exp $
 
 import warnings
 from xml.dom import Node
+from xml.dom.ext.reader import Sax2
 from comoonics import ComLog
 
 logger=ComLog.getLogger("comoonics.XmlTools")
@@ -205,6 +206,28 @@ def getTextFromElement(element):
     return return_text
 
 
+def createDOMfromXML(xmlstring, xslfilename=None, validate=0):
+    """
+    creates a new DOM from a given xml string. Optionally, a xsl file can be used for translation
+    """
+    reader=Sax2.Reader(validate)
+    if xslfilename:
+        import libxslt
+        import libxml2
+        n_doc = libxml2.parseDoc(xmlstring)
+        style = libxml2.parseFile(xslfilename)
+        xslt_style = libxslt.parseStylesheetDoc(style)
+        params={}
+        res = xslt_style.applyStylesheet(n_doc, params)
+        str_buff=xslt_style.saveResultToString(res)
+        xslt_style.freeStylesheet()
+        n_doc.freeDoc()
+        res.freeDoc()
+        doc=reader.fromString(str_buff)
+    else:
+        doc=reader.fromStream(xmlstring)
+    return doc
+
 def main():
     xml="""<?xml version="1.0" encoding="UTF-8"?>
 <localclone>
@@ -288,7 +311,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.6  2007-09-07 14:49:07  marc
+# Revision 1.7  2008-02-21 16:10:59  mark
+# added new method createDOMfromXML
+#
+# Revision 1.6  2007/09/07 14:49:07  marc
 # - logging
 # - better testing
 # - added clone_node
