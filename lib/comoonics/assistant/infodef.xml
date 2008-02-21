@@ -2,7 +2,7 @@
     <entry name="cluster name" type="txt">
         <xpath name="localclone/cluster/@name"/>
         <xpath name="masterclone/cluster/@name"/>
-		<helper name="comoonics.helpers.ComClustername.Clustername"/>
+		<helper name="KernelAssistantHelper" query="version"/>
 		<validator name="None"/>
 		<comment lang="en">Name of the cluster</comment>
     </entry>
@@ -12,5 +12,6 @@
     </entry>
     <entry name="Destination suffix" type="device">
     	<xpath name="localclone/cluster/@destsuffix" />
+		<helper name="KernelAssistantHelper" query="processor"/>
     </entry>
 </info>
