@@ -11,3 +11,8 @@ class AssistantController(object):
     def getNeededInfo(self):
         pass
     
+    def run(self):
+        """
+        starts the process with the modified data model
+        """
+        pass
