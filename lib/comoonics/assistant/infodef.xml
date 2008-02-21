@@ -1,0 +1,16 @@
+<info>
+    <entry name="cluster name" type="txt">
+        <xpath name="localclone/cluster/@name"/>
+        <xpath name="masterclone/cluster/@name"/>
+		<helper name="comoonics.helpers.ComClustername.Clustername"/>
+		<validator name="None"/>
+		<comment lang="en">Name of the cluster</comment>
+    </entry>
+    <entry name="source rootdisk" type="device">
+    	<xpath name="localclone/sourcedisks/rootdisk/@name"/>
+    	<comment>Path of the source rootdisk</comment>
+    </entry>
+    <entry name="Destination suffix" type="device">
+    	<xpath name="localclone/cluster/@destsuffix" />
+    </entry>
+</info>

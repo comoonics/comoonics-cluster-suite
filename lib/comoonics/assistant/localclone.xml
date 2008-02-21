@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE localclone SYSTEM "/opt/atix/comoonics-cs/xml/comoonics-enterprise-clone.dtd">
+<localclone source="disk" destination="disk">
+  <cluster name="axqa01" sourcesuffix="" destsuffix="C"></cluster>
+  <sourcedisks name="disk">
+    <bootdisk name="/dev/sdb"/>
+    <rootdisk name="/dev/sdc"/>
+  </sourcedisks>
+  <destdisks>
+    <bootdisk name="/dev/sdl"/>
+    <rootdisk name="/dev/sdm"/>
+  </destdisks>
+  <destpartitions>
+    <rootpartition name="/dev/sdm1"/>
+  </destpartitions>
+  <kernel version="2.6.9-42.0.10.ELsmp"/>
+</localclone>
