@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLVMCopyObject.py,v 1.6 2007-04-04 12:52:20 marc Exp $
+# $Id: ComLVMCopyObject.py,v 1.7 2008-02-27 10:50:04 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyObject.py,v $
 
 from ComCopyObject import CopyObject
@@ -80,6 +80,8 @@ def main():
     from xml.dom.ext import PrettyPrint
     from xml.dom.ext.reader import Sax2
     from comoonics import ComSystem
+    import logging
+    ComLog.setLevel(logging.DEBUG)
     sourcexml="""
         <source type="lvm">
            <volumegroup name='centos' free='32' numlvs='2' attrs='wz--n-' numpvs='1' serial='0' size='3456'>
@@ -97,7 +99,7 @@ def main():
         </destination>
 """
     print "Testing updateMetData"
-    ComSystem.__EXEC_REALLY_DO=""
+    ComSystem.setExecMode(ComSystem.SIMULATE)
 
     reader = Sax2.Reader(validate=0)
     sourcedoc=reader.fromString(sourcexml)
@@ -117,7 +119,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: ComLVMCopyObject.py,v $
-# Revision 1.6  2007-04-04 12:52:20  marc
+# Revision 1.7  2008-02-27 10:50:04  marc
+# - better testing
+#
+# Revision 1.6  2007/04/04 12:52:20  marc
 # MMG Backup Legato Integration
 # - moved prepareAsDest and added activation support for not activated devices as Destination
 #
