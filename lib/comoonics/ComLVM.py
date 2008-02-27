@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -152,6 +152,9 @@ class LinuxVolumeManager(DataObject):
         Returns a list of phyicalvolumes found on this system
         '''
         LinuxVolumeManager.has_lvm()
+
+        if not doc:
+            doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
 
         pipe=""
         if vg:
@@ -636,28 +639,34 @@ class VolumeGroup(LinuxVolumeManager):
         __init__(element, doc)
         __init__(name, doc)
         '''
+  
         self.pvs=dict()
         self.lvs=dict()
-        if (len(params) == 2):
-            if isinstance(params[0], Node):
-                self.log.debug("createing volumegroup %s/%s from element" % (params[0].tagName, str(params[0].getAttribute("name"))))
-                LinuxVolumeManager.__init__(self, params[0], params[1])
-                # init all lvs
-                __lvs=self.getElement().getElementsByTagName(LogicalVolume.TAGNAME)
-                for i in range(len(__lvs)):
-                    self.addLogicalVolume(LogicalVolume(__lvs[i], self, params[1]))
-                # init all pvs
-                __pvs=self.getElement().getElementsByTagName(PhysicalVolume.TAGNAME)
-                for i in range(len(__pvs)):
-                    self.addPhysicalVolume(PhysicalVolume(__pvs[i], self, params[1]))
-            elif isinstance(params[0], basestring):
-                self.log.debug("createing volumegroup %s from new element" % params[0])
-                LinuxVolumeManager.__init__(self, params[1].createElement(self.TAGNAME), params[1])
-                self.setAttribute("name", params[0])
-            else:
-                raise TypeError("Unsupported type for constructor %s" % type(params[0]))
+        
+        if (len(params) == 1):
+            doc = doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
+        elif (len(params) == 2):
+            doc = params[1]
         else:
             raise IndexError("Index out of range for Volume Group constructor (%u)" % len(params))
+            
+        if isinstance(params[0], Node):
+            self.log.debug("createing volumegroup %s/%s from element" % (params[0].tagName, str(params[0].getAttribute("name"))))
+            LinuxVolumeManager.__init__(self, params[0], params[1])
+            # init all lvs
+            __lvs=self.getElement().getElementsByTagName(LogicalVolume.TAGNAME)
+            for i in range(len(__lvs)):
+                self.addLogicalVolume(LogicalVolume(__lvs[i], self, doc))
+            # init all pvs
+            __pvs=self.getElement().getElementsByTagName(PhysicalVolume.TAGNAME)
+            for i in range(len(__pvs)):
+                self.addPhysicalVolume(PhysicalVolume(__pvs[i], self, doc))
+        elif isinstance(params[0], basestring):
+            self.log.debug("createing volumegroup %s from new element" % params[0])
+            LinuxVolumeManager.__init__(self, doc.createElement(self.TAGNAME), doc)
+            self.setAttribute("name", params[0])
+        else:
+            raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvscan | grep "[[:blank:]]%s[[:blank:]]"' % str(self.getAttribute("name")), True)
         if rc >> 8 == 0:
             self.ondisk=True
@@ -902,7 +911,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.9  2008-01-24 09:54:51  mark
+# Revision 1.10  2008-02-27 09:14:14  mark
+# enhanced support for doc=None like initialization
+#
+# Revision 1.9  2008/01/24 09:54:51  mark
 # added lvm cache check for RHEL5. Solves BZ 188
 #
 # Revision 1.8  2007/08/22 14:13:40  marc
