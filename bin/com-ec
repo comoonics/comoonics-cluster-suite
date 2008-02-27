@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.19 2007-07-31 15:16:57 marc Exp $
+# $Id: com-ec,v 1.20 2008-02-27 10:45:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.19 $"
+__version__ = "$Revision: 1.20 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -65,7 +65,7 @@ class Config(GetOpts.BaseConfig):
         self.noundo=GetOpts.Option("noundo", "don't do the undoing if anything goes wrong", False, False, "U")
         self.xslt=GetOpts.Option("xslt", "preconvert xmlfile with given xsltfile.", self.xslt, False, "x")
         self.onlydisplay=GetOpts.Option("onlydisplay", "only display the resulting dom as xml", False, False, "X")
-        self.simulate=GetOpts.Option("simulate", "don't execute anything just simulate", False, False, "S")
+        self.simulate=GetOpts.Option("simulate", "don't execute anything just simulate. Only valid for developer. It might not do what you expect!", False, False, "S")
         self.sets=GetOpts.Option("sets", "Execute the given sets (serperated by %s), regular exception are also accepted" %self.DELIMITER, None, False, "s")
         self.setAdditionalParams("file [valuepath=value]*")
         self.values=dict()
@@ -130,7 +130,6 @@ try:
         try:
            import libxslt
            import libxml2
-           file=os.fdopen(os.open(config.xslt, os.O_RDONLY))
            n_doc = libxml2.parseFile(config.filename)
            if config.values:
                applyValues(n_doc, config.values)
@@ -224,7 +223,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.19  2007-07-31 15:16:57  marc
+# Revision 1.20  2008-02-27 10:45:48  marc
+# - added a better comment for simulation mode
+#
+# Revision 1.19  2007/07/31 15:16:57  marc
 # - logging (#BZ 69)
 #
 # Revision 1.18  2007/07/31 10:04:05  marc
