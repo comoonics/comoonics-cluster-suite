@@ -8,11 +8,11 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.6 2007-09-19 06:40:53 andrea2 Exp $
+# $Id: ComClusterInfo.py,v 1.7 2008-02-27 09:16:40 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 from xml import xpath
@@ -55,6 +55,15 @@ class ClusterInfo(object):
         """
         #Clusterrepository holds list of nodes and items like node_prefix etc.
         self.clusterRepository = clusterRepository
+        
+    def getClusterName(self):
+        """
+        @return: clustername
+        @rtype: string
+        """
+        self.log.debug("get clustername from clusterrepository")
+        return self.clusterRepository.getClusterName()
+        
     
     def getNodes(self):
         """
@@ -293,7 +302,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.6  2007-09-19 06:40:53  andrea2
+# Revision 1.7  2008-02-27 09:16:40  mark
+# added getClusterName support
+#
+# Revision 1.6  2007/09/19 06:40:53  andrea2
 # adapted source code in dependence on Python Style Guide, removed not used imports and statements, adapted some debug messages, added NameError-Exception for Method getFailoverdomainPrefNode
 #
 # Revision 1.5  2007/08/14 08:37:01  andrea2

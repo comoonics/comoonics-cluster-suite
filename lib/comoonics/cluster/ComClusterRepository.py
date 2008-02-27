@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.6 2007-09-19 06:42:28 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.7 2008-02-27 09:16:40 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -58,6 +58,7 @@ class ClusterRepository(DataObject):
         self.nodeIdMap = {}
         
         super(ClusterRepository, self).__init__(element, doc)
+        
     
 class RedhatClusterRepository(ClusterRepository):
     """
@@ -79,6 +80,15 @@ class RedhatClusterRepository(ClusterRepository):
             _node = ClusterNode(_nodes[i], self.getElement())
             self.nodeNameMap[_node.getName()] = _node
             self.nodeIdMap[_node.getId()] = _node
+
+    def getClusterName(self):
+        """
+        @return: clustername
+        @rtype: string
+        """
+        _clustername =  xpath.Evaluate(self.defaultcluster_path, self.getElement())[0]
+        return _clustername.getAttribute("name")
+
 
     def getNodeName(self, mac):
         """
@@ -162,7 +172,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.6  2007-09-19 06:42:28  andrea2
+# Revision 1.7  2008-02-27 09:16:40  mark
+# added getClusterName support
+#
+# Revision 1.6  2007/09/19 06:42:28  andrea2
 # adapted source code in dependence on Python Style Guide, removed not used imports and statements
 #
 # Revision 1.5  2007/09/04 07:52:25  andrea2
