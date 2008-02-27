@@ -108,6 +108,10 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-52
+   - ComLVM BUG#199 where creation of clustered volumegroups would yield problems with nodes not running the cluster
+   - ComLVM BUG#198 where clustered flag might occure without reason should also be fixed
+   - ComLVM support for simulation mode
 * Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-51
    - BUG#191 rewrote options support for FilesystemCopyset via properties (small Bugfix) 
 * Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-50
@@ -189,6 +193,8 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
+* Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-34
+   - fixed bug in select query (where_clause)
 * Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-9:
    - changed way of importing
    - loglevel
@@ -205,6 +211,11 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-34
+   - ComLVMCopyObject: more testing
+   - ComFileSystemCopyset/Modificationset: added fstype="auto"
+   - ComISOFSModificationset: initial revision. Given the possibilty to clone to isofs
+   - ComFilesystemCopyset: add support for copy of FilesystemCopyObject to PathCopyObject
 * Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-33
    - BUG#191 rewrote options support for FilesystemCopyset via properties (Bugfix) 
 * Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-32
