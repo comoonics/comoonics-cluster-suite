@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -48,6 +48,8 @@ class LinuxVolumeManager(DataObject):
         Just checks if lvm functionality is available.
         Returns true or raises an exception (RuntimeException)
         '''
+        if ComSystem.isSimulate():
+            return 1
         CMD_LVM="/usr/sbin/lvm"
         if not (os.access(CMD_LVM, os.X_OK) or
             os.access("/sbin/lvm", os.X_OK)):
@@ -358,23 +360,26 @@ class LogicalVolume(LinuxVolumeManager):
         Constructor
 
         __init__(element, parent_vg, doc=None)
-        __init__(name, parent_vg, doc)
+        __init__(name, parent_vg, doc=None)
         '''
-        if len(params) == 2:
-            DataObject.__init__(self, params[0])
+        if len(params)==2:
+            doc = doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
         elif len(params) == 3:
-            if isinstance(params[0], Node):
-                LinuxVolumeManager.__init__(self, params[0], params[2])
-            elif isinstance(params[0], basestring):
-                LinuxVolumeManager.__init__(self, params[2].createElement(LogicalVolume.TAGNAME), params[2])
-                self.setAttribute("name", params[0])
-            else:
-                raise TypeError("Unsupported type for constructor %s" % type(params[0]))
+            doc = params[2]
+
+        parent_vg=params[1]
+        if len(params) >= 2 and isinstance(params[0], Node):
+            element=params[0]
+            LinuxVolumeManager.__init__(self, element, doc)
+        elif len(params) >=2:
+            name=params[0]
+            LinuxVolumeManager.__init__(self, doc.createElement(LogicalVolume.TAGNAME), doc)
+            self.setAttribute("name", name)
         else:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
-        self.parentvg=params[1]
+        self.parentvg=parent_vg
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+str(self.parentvg.getAttribute("name"))+"/"+str(self.getAttribute("name")), True)
-        if rc >> 8 == 0:
+        if rc >> 8 == 0 and not ComSystem.isSimulate():
             self.ondisk=True
 
     '''
@@ -390,7 +395,7 @@ class LogicalVolume(LinuxVolumeManager):
         LinuxVolumeManager.has_lvm()
 
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+str(self.parentvg.getAttribute("name"))+"/"+str(self.getAttribute("name")), True)
-        if rc >> 8 != 0:
+        if rc >> 8 != 0 or not ComSystem.isSimulate():
             self.ondisk=False
             raise RuntimeError("running lvdisplay of %s failed: %u, %s, %s" % (str(self.parentvg.getAttribute("name"))+"/"+str(self.getAttribute("name")), rc,rv, stderr))
 
@@ -403,7 +408,8 @@ class LogicalVolume(LinuxVolumeManager):
             except:
                 continue
 
-        self.ondisk=True
+        if not ComSystem.isSimulate():
+            self.ondisk=True
 
     def create(self):
         """
@@ -429,11 +435,16 @@ class LogicalVolume(LinuxVolumeManager):
                 self.setAttribute("size", self.parentvg.getAttribute("free"))
                 size=self.getAttribute("size")
         except NameError:
-            size=self.parentvg.getAttribute("free")
+            if ComSystem.isSimulate():
+                size="1000"
+            else:
+                size=self.parentvg.getAttribute("free")
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' lvcreate -L %sM -n %s %s' %(size, str(self.getAttribute("name")), str(self.parentvg.getAttribute("name"))))
         if rc >> 8 != 0:
             raise RuntimeError("running lvcreate on %s/%s failed: %u,%s" % (str(self.parentvg.getAttribute("name")), str(self.getAttribute("name")),rc >> 8, rv))
         self.init_from_disk()
+        if ComSystem.isSimulate():
+            self.ondisk=True
 
     def remove(self):
         """
@@ -445,6 +456,7 @@ class LogicalVolume(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' lvremove -f %s/%s' % (str(self.parentvg.getAttribute("name")), str(self.getAttribute("name"))))
         if rc >> 8 != 0:
             raise RuntimeError("running lvremove on %s/%s failed: %u,%s" % (str(self.parentvg.getAttribute("name")), str(self.getAttribute("name")),rc >> 8, rv))
+        self.ondisk=False
 
     def rename(self, newname):
         """
@@ -488,23 +500,35 @@ class PhysicalVolume(LinuxVolumeManager):
         Constructor
 
         __init__(element, parent_vg, doc=None)
-        __init__(name, parent_vg, doc)
+        __init__(name, parent_vg, doc=None)
+        __init__(name, doc=None)
         '''
-        if len(params) == 2:
-            DataObject.__init__(self, params[0])
-        elif len(params) == 3:
-            if isinstance(params[0], Node):
-                LinuxVolumeManager.__init__(self, params[0], params[2])
-            elif isinstance(params[0], basestring):
-                LinuxVolumeManager.__init__(self, params[2].createElement(self.TAGNAME), params[0])
-                self.setAttribute("name", params[0])
-            else:
-                raise TypeError("Unsupported type for constructor %s" % type(params[0]))
-        else:
+        _parent_vg=None
+        if (len(params) == 2 or len(params) == 3) and isinstance(params[0], Node) and isinstance(params[1], VolumeGroup):
+            if len(params) == 2:
+                _doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
+            _element=params[0]
+            _parent_vg=params[1]
+            LinuxVolumeManager.__init__(self, _element, _doc)
+        elif len(params) <= 3 and isinstance(params[0], basestring):
+            if (len(params) == 2 and isinstance(params[1], VolumeGroup)) or len(params) == 1:
+                _doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
+            elif len(params) == 2:
+                _doc=params[1]
+            if len(params) >1 and isinstance(params[1], VolumeGroup):
+                _parent_vg=params[1]
+            _name=params[0]
+            
+            LinuxVolumeManager.__init__(self, _doc.createElement(self.TAGNAME), _doc)
+            self.setAttribute("name", _name)
+        elif len(params)<1 or len(params)>3:
             raise IndexError('Index out of range for Logical Volume constructor (%u)' % len(params))
-        self.parentvg=params[1]
+        else:
+            raise TypeError("Unsupported type for constructor %s" % type(params[0]))
+        if not _parent_vg:
+            self.parentvg=_parent_vg 
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvdisplay -C --noheadings --units b --nosuffix --separator : '+str(self.getAttribute("name")), True)
-        if rc >> 8 == 0:
+        if rc >> 8 == 0 and not ComSystem.isSimulate():
             self.ondisk=True
 
     '''
@@ -543,7 +567,8 @@ class PhysicalVolume(LinuxVolumeManager):
                 self.setAttribute("free", long(math.floor(long(free) / (1024 * 1024))))
             except:
                 continue
-        self.ondisk=True
+        if not ComSystem.isSimulate():
+            self.ondisk=True
 
     def create(self):
         """
@@ -567,6 +592,8 @@ class PhysicalVolume(LinuxVolumeManager):
         if rc >> 8 != 0:
             raise RuntimeError("running pvcreate on %s failed: %u,%s" % (str(self.getAttribute("name")),rc >> 8, rv))
         self.init_from_disk()
+        if ComSystem.isSimulate():
+            self.ondisk=True
 
     def remove(self):
         """
@@ -578,6 +605,7 @@ class PhysicalVolume(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' pvremove -ff '+str(self.getAttribute("name")))
         if rc >> 8 != 0:
             raise RuntimeError("running pvremove on %s failed: %u,%s" % (str(self.getAttribute("name")),rc >> 8, rv))
+        self.ondisk=False
 
     def rename(self, newname):
         """
@@ -636,16 +664,16 @@ class VolumeGroup(LinuxVolumeManager):
         Constructor
 
         Valid Constructors are:
-        __init__(element, doc)
-        __init__(name, doc)
+        __init__(element, doc=None)
+        __init__(name, _pv=None, doc=None)
         '''
   
         self.pvs=dict()
         self.lvs=dict()
         
-        if (len(params) == 1):
+        if (len(params) == 1) or (len(params)==2 and isinstance(params[1], PhysicalVolume)):
             doc = doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
-        elif (len(params) == 2):
+        elif (len(params) == 2) and not isinstance(params[2], PhysicalVolume):
             doc = params[1]
         else:
             raise IndexError("Index out of range for Volume Group constructor (%u)" % len(params))
@@ -665,10 +693,11 @@ class VolumeGroup(LinuxVolumeManager):
             self.log.debug("createing volumegroup %s from new element" % params[0])
             LinuxVolumeManager.__init__(self, doc.createElement(self.TAGNAME), doc)
             self.setAttribute("name", params[0])
+            self.addPhysicalVolume(params[1])
         else:
             raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvscan | grep "[[:blank:]]%s[[:blank:]]"' % str(self.getAttribute("name")), True)
-        if rc >> 8 == 0:
+        if rc >> 8 == 0 and not ComSystem.isSimulate():
             self.ondisk=True
 
     def __str__(self):
@@ -768,7 +797,8 @@ class VolumeGroup(LinuxVolumeManager):
                 self.setAttribute("free", long(math.floor(long(free) / (1024 * 1024))))
             except:
                 continue
-        self.ondisk=True
+        if not ComSystem.isSimulate():
+            self.ondisk=True
 
     def activate(self):
         """
@@ -838,20 +868,22 @@ class VolumeGroup(LinuxVolumeManager):
 
         if self.ondisk:
             raise LinuxVolumeManager.LVMAlreadyExistsException(self.__class__.__name__+"("+str(self.getAttribute("name"))+")")
-        pesize=""
+        _cmdoptions=list()
         try:
-            pesize="-s %sk" % self.getAttribute("pe_size")
+            _cmdoptions.append("--physicalextentsize %sk" % self.getAttribute("pe_size"))
         except:
             pass
 
-        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgcreate %s %s %s' % (pesize, str(self.getAttribute("name")), ' '.join(self.getPhysicalVolumeMap().keys())))
+        if self.isClustered():
+            _cmdoptions.append("--clustered y")
+        else:
+            _cmdoptions.append("--clustered n")
+        (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgcreate %s %s %s' % (" ".join(_cmdoptions), str(self.getAttribute("name")), ' '.join(self.getPhysicalVolumeMap().keys())))
         if rc >> 8 != 0:
             raise RuntimeError("running vgcreate on %s failed: %u,%s" % (str(self.getAttribute("name")),rc >> 8, rv))
-        if self.isClustered():
-            self.clustered()
-        else:
-            self.notclustered()
         self.init_from_disk()
+        if ComSystem.isSimulate():
+            self.ondisk=True
 
     def remove(self):
         """Removes a volume group.  Deactivates the volume group first
@@ -867,6 +899,7 @@ class VolumeGroup(LinuxVolumeManager):
         (rc, rv) = ComSystem.execLocalStatusOutput(CMD_LVM+' vgremove '+str(self.getAttribute("name")))
         if rc >> 8 != 0:
             raise RuntimeError("running vgremove on %s failed: %u, %s" % (str(self.getAttribute("name")),rc >> 8, rv))
+        self.ondisk=False
 
     def rename(self, newname):
         """
@@ -897,6 +930,9 @@ def __line__(str):
     print "---------------------------------------%s-----------------------------" %(str)
 
 def test():
+    from logging import INFO
+    ComLog.setLevel(INFO)
+    ComSystem.setExecMode(ComSystem.SIMULATE)
     devicenames=["/dev/sda", "/dev/cciss/c0d0p1", "zipfl", "/dev/mapper/abc-def", "/dev/abc/def", "/dev/mapper/abc/def", "/dev/abc/def/geh" ]
     for device in devicenames:
         __line__("device="+device)
@@ -906,12 +942,61 @@ def test():
         except LogicalVolume.LVMInvalidLVPathException, e:
             print e.value
 
+    __line__("Testing core functionality in simulation mode")
+    try:
+        vgs=LinuxVolumeManager.vglist()
+        for _vg in vgs:
+            print "Volume group: "
+            print _vg
+            for lv in _vg.getLogicalVolumes():
+                print "Logical volume: ", lv
+
+            for pv in _vg.getPhysicalVolumes():
+                print "Physical volume: ", pv
+    except RuntimeError, re:
+        print re
+
+    try:
+        vgname="test_vg"
+        lvname="test_lv"
+        pvname="/dev/sda"
+        __line__("Creating pv: %s" %pvname)
+        _pv=PhysicalVolume(pvname)
+        _pv.create()
+        __line__("Creating vg: %s" %vgname)
+        _vg=VolumeGroup(vgname, _pv)
+        _vg.create()
+        _vg.addPhysicalVolume(_pv)
+        __line__("Creating lv: %s" %lvname)
+        _lv=LogicalVolume(lvname, _vg)
+        _lv.create()
+        _vg.addLogicalVolume(_lv)
+        
+        print "Volumegroup %s: %s" %(vgname, _vg)
+        
+        __line__("Changing clustered")
+        _vg.clustered()
+        _vg.notclustered()
+        
+        __line__("Removing lv")
+        _lv.remove()
+        __line__("Removing vg")
+        _vg.remove()
+        __line__("Removing pv")
+        _pv.remove()
+    except Exception:
+        ComLog.errorTraceLog()
+
 if __name__=="__main__":
     test()
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.10  2008-02-27 09:14:14  mark
+# Revision 1.11  2008-02-27 10:41:47  marc
+# - Fixed BZ#199 where creation of clustered volumegroups would yield problems with nodes not running the cluster
+# - Support for simulation mode
+#
+# Revision 1.10  2008/02/27 09:14:14  mark
 # enhanced support for doc=None like initialization
 #
 # Revision 1.9  2008/01/24 09:54:51  mark
