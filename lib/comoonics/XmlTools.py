@@ -5,10 +5,10 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.8 2008-02-22 09:42:57 mark Exp $
+# $Id: XmlTools.py,v 1.9 2008-02-27 09:15:43 mark Exp $
 
 import warnings
-import xml.dom.Node
+#import xml.dom.Node
 from xml.dom import Node
 from xml.dom.ext.reader import Sax2
 from comoonics import ComLog
@@ -312,7 +312,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.8  2008-02-22 09:42:57  mark
+# Revision 1.9  2008-02-27 09:15:43  mark
+# reversed last change
+#
+# Revision 1.8  2008/02/22 09:42:57  mark
 # minor import fix
 #
 # Revision 1.7  2008/02/21 16:10:59  mark
