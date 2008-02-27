@@ -3,7 +3,7 @@ Class for connecting to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBConnection.py,v 1.3 2007-06-13 09:03:52 marc Exp $
+# $Id: ComDBConnection.py,v 1.4 2008-02-27 10:46:25 marc Exp $
 #
 
 import MySQLdb
@@ -30,7 +30,8 @@ class DBConnection(object):
             self.db=MySQLdb.connect(host=kwds["hostname"], user=kwds["user"], passwd=kwds["password"], db=kwds["database"])
 
         for key in kwds.keys():
-            setattr(self, key, kwds[key])
+            if not hasattr(self, key):
+                setattr(self, key, kwds[key])
 
     def SelectQuery(self, *params, **kwds):
         if params and len(params)>0:
@@ -48,6 +49,8 @@ class DBConnection(object):
                     selectclause=", ".join(kwds["select"])
             if kwds.has_key("From"):
                 fromclause="%s" %(kwds["From"])
+            elif kwds.has_key("from"):
+                fromclause="%s" %(kwds["from"])
             else:
                 raise KeyError("Missing parameter from")
             if kwds.has_key("where"):
@@ -61,12 +64,19 @@ class DBConnection(object):
                         if type(where[key]) == list:
                             _where=""
                             for value in where[key]:
-                                _where+="OR %s=\"%s\"" %(key, self.db.escape_string(value))
+                                if isinstance(value, basestring):
+                                    _where+="OR %s=\"%s\" " %(key, self.db.escape_string(value))
+                                else:
+                                    _where+="OR %s=%s " %(key, str(value))
                             _where=_where[3:]
                             whereclause+="(%s)" %(_where)
                         else:
-                            whereclause+=" AND %s=\"%s\"" %(key, self.db.escape_string(where[key]))
-                            whereclause=whereclause[4:]
+                            value=where[key]
+                            if isinstance(value, basestring):
+                                whereclause+="AND %s=\"%s\" " %(key, self.db.escape_string(value))
+                            else:
+                                whereclause+="AND %s=%s " %(key, str(value))
+                    whereclause=whereclause[4:]
             elif kwds.has_key("orwhere"):
                 if isinstance(kwds["orwhere"], basestring):
                     whereclause=kwds["orwhere"]
@@ -78,12 +88,19 @@ class DBConnection(object):
                         if type(where[key]) == list:
                             _where=""
                             for value in where[key]:
-                                _where+="OR %s=\"%s\"" %(key, self.db.escape_string(value))
+                                if isinstance(value, basestring):
+                                    _where+="OR %s=\"%s\" " %(key, self.db.escape_string(value))
+                                else:
+                                    _where+="OR %s=%s " %(key, str(value))
                             _where=_where[3:]
                             whereclause+="%s" %(_where)
                         else:
-                            whereclause+=" OR %s=\"%s\"" %(key, self.db.escape_string(where[key]))
-                            whereclause=whereclause[3:]
+                            value=where[key]
+                            if isinstance(value, basestring):
+                                whereclause+="OR %s=\"%s\" " %(key, self.db.escape_string(value))
+                            else:
+                                whereclause+="OR %s=%s " %(key, str(value))
+                        whereclause=whereclause[3:]
             if kwds.has_key("order"):
                 if isinstance(kwds["order"], basestring):
                     orderclause=kwds["order"]
@@ -161,7 +178,10 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBConnection.py,v $
-# Revision 1.3  2007-06-13 09:03:52  marc
+# Revision 1.4  2008-02-27 10:46:25  marc
+# - Fixed bug in selectQuery where_clause
+#
+# Revision 1.3  2007/06/13 09:03:52  marc
 # - using new ComLog api
 # - default importing of ComDBLogger and registering at ComLog
 #
