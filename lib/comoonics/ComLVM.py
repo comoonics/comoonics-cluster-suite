@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -507,6 +507,8 @@ class PhysicalVolume(LinuxVolumeManager):
         if (len(params) == 2 or len(params) == 3) and isinstance(params[0], Node) and isinstance(params[1], VolumeGroup):
             if len(params) == 2:
                 _doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
+            else:
+                _doc=params[2]
             _element=params[0]
             _parent_vg=params[1]
             LinuxVolumeManager.__init__(self, _element, _doc)
@@ -673,7 +675,7 @@ class VolumeGroup(LinuxVolumeManager):
         
         if (len(params) == 1) or (len(params)==2 and isinstance(params[1], PhysicalVolume)):
             doc = doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
-        elif (len(params) == 2) and not isinstance(params[2], PhysicalVolume):
+        elif (len(params) == 2) and not isinstance(params[1], PhysicalVolume):
             doc = params[1]
         else:
             raise IndexError("Index out of range for Volume Group constructor (%u)" % len(params))
@@ -992,7 +994,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.11  2008-02-27 10:41:47  marc
+# Revision 1.12  2008-02-27 10:48:12  marc
+# - another bug in constructor
+#
+# Revision 1.11  2008/02/27 10:41:47  marc
 # - Fixed BZ#199 where creation of clustered volumegroups would yield problems with nodes not running the cluster
 # - Support for simulation mode
 #
