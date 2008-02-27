@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.12 2007-07-31 15:14:20 marc Exp $
+# $Id: ComLog.py,v 1.13 2008-02-27 10:42:28 marc Exp $
 #
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -287,7 +287,7 @@ def main():
     _mylogger.setLevel(logging.DEBUG)
     from comoonics.db.ComDBLogger import DBLogger
     registerHandler("DBLogger", DBLogger)
-    _filenames=("../../test/loggingconfig.xml",)
+    _filenames=("../../test/loggingconfig.ini", "../../test/loggingconfig.xml")
     getLogger().info("Testing ComLog:")
     loggers={"test1": logging.DEBUG,
              "test2": logging.INFO,
@@ -319,7 +319,10 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.12  2007-07-31 15:14:20  marc
+# Revision 1.13  2008-02-27 10:42:28  marc
+# - change in testing
+#
+# Revision 1.12  2007/07/31 15:14:20  marc
 # - added getLevel
 #
 # Revision 1.11  2007/06/19 15:11:20  marc
