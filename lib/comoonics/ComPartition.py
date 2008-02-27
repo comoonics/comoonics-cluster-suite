@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartition.py,v 1.1 2006-12-08 09:47:01 mark Exp $
+# $Id: ComPartition.py,v 1.2 2008-02-27 09:14:52 mark Exp $
 #
 
 import parted
@@ -21,7 +21,7 @@ import ComParted
 from ComDataObject import DataObject
 from ComExceptions import *
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComPartition.py,v $
 
 class Partition(DataObject):
@@ -42,7 +42,7 @@ class Partition(DataObject):
         if len(args) !=2:
             raise RuntimeError("2 Arguments required")
         if not isinstance(args[1], Node):
-             raise RuntimeError("1. Argument must be a xml.dom.Document")
+            raise RuntimeError("1. Argument must be a xml.dom.Document")
         doc=args[1]
         if isinstance(args[0], Node):
             element=args[0]
@@ -64,7 +64,7 @@ class Partition(DataObject):
         #element.setAttribute("start", str(part.geom.start))
         #end
         #element.setAttribute("end", str(part.geom.end))
-         #all flags
+        #all flags
         for flag in phelper.get_flags_as_string(part):
             felem=PartitionFlag(doc.createElement("flag"), doc)
             felem.setAttribute("name", flag)
@@ -74,12 +74,12 @@ class Partition(DataObject):
 
     def __name_of_part_type(self, type):
         for t in self.PARTITION_TYPES.iteritems():
-           if t[1]==type:
+            if t[1]==type:
                 return t[0]
         return None
 
     def __type_of_part_name(self, name):
-        return PARTITION_TYPES.get(name)
+        return Partition.PARTITION_TYPES.get(name)
 
     def getType(self):
         return self.getAttribute("type")
@@ -160,7 +160,7 @@ class Partition(DataObject):
 
     def setFlag(self, name):
         if self.hasFlag(name):
-           return True
+            return True
         flag=PartitionFlag(self.doc.createElement("flag"), self.doc)
         flag.setAttribute("name", name)
         self.appendChild(flag)
@@ -168,7 +168,7 @@ class Partition(DataObject):
     def removeFlag(self, name):
         try:
             node=xpath.Evaluate('flag/@name='+name, self.element)[0]
-            this.element.removeChild(node)
+            self.element.removeChild(node)
         except Exception:
             raise ComException("no flag with name %s found" %name)
 
@@ -187,7 +187,7 @@ class PartitionFlag(DataObject):
         DataObject.__init__(self, element, doc)
 
     def getAllFlags(self):
-        return ALLFLAGS.keys()
+        return PartitionFlag.ALLFLAGS.keys()
 
     def getFlagName(self):
         return self.getAttribute("name")
