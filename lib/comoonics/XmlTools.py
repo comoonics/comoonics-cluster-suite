@@ -5,7 +5,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.9 2008-02-27 09:15:43 mark Exp $
+# $Id: XmlTools.py,v 1.10 2008-02-27 10:44:31 marc Exp $
 
 import warnings
 #import xml.dom.Node
@@ -44,8 +44,8 @@ def overwrite_element_with_xpaths(element, xpaths):
         try:
             import xml
             logger.debug("overwrite_element_with_xpaths xpath %s=%s, rootnode: %s, type(element): %s, class(element): %s" %(xpath, xpaths[xpath], element, type(element), element.__class__))
-            if isinstance(element, xml.dom.Node):
-                from xml.dom   import Element, Node
+            if isinstance(element, Node):
+                from xml.dom   import Element
                 from xml.xpath import Evaluate
                 sets = Evaluate(xpath, element)
                 logger.debug("overwrite_element_with_xpaths found %u matches. overwriting." %len(sets))
@@ -90,7 +90,7 @@ def merge_trees_with_pk(source, dest, doc, pk="name", filter=None, onlyone=False
     for s_child in source.childNodes:
 
         if filter and filter.acceptNode(s_child) != ElementFilter.FILTER_ACCEPT: continue
-        if s_child.nodeType != xml.dom.Node.ELEMENT_NODE: continue
+        if s_child.nodeType != Node.ELEMENT_NODE: continue
 
 
         # get pk values from source childs
@@ -143,7 +143,7 @@ def clone_node(node, doc=None):
     if not doc:
         _impl=xml.dom.getDOMImplementation()
         doc=_impl.createDocument(None, node.tagName, None)
-    if node.nodeType==xml.dom.Node.ELEMENT_NODE:
+    if node.nodeType==Node.ELEMENT_NODE:
         newnode=doc.createElement(node.tagName)
         for _child in node.childNodes:
             newnode.appendChild(clone_node(_child, doc))
@@ -151,11 +151,11 @@ def clone_node(node, doc=None):
             _attr=node.attributes.item(_i)
             newnode.setAttribute(_attr.nodeName, _attr.nodeValue)
         return newnode
-    elif node.nodeType==xml.dom.Node.TEXT_NODE or node.nodeType==xml.dom.Node.CDATA_SECTION_NODE:
+    elif node.nodeType==Node.TEXT_NODE or node.nodeType==Node.CDATA_SECTION_NODE:
         return doc.createTextNode(node.data)
-    elif node.nodeType==xml.dom.Node.PROCESSING_INSTRUCTION_NODE:
+    elif node.nodeType==Node.PROCESSING_INSTRUCTION_NODE:
         return doc.createProcessingInstruction(node.target, node.data)
-    elif node.nodeType==xml.dom.Node.COMMENT_NODE:
+    elif node.nodeType==Node.COMMENT_NODE:
         return doc.createComment(node.data)
     else:
         return node.cloneNode(1)
@@ -168,7 +168,7 @@ def add_element_to_node(child, element, doc=None):
     if not doc:
         _impl=xml.dom.getDOMImplementation()
         doc=_impl.createDocument(None, doc.documentElement.tagName, None)
-    if child.nodeType==xml.dom.Node.ELEMENT_NODE:
+    if child.nodeType==Node.ELEMENT_NODE:
         newchild=doc.createElement(child.tagName)
         for _child in child.childNodes:
             add_element_to_node(_child, newchild, doc)
@@ -188,7 +188,7 @@ def add_element_to_node_sorted(child, elem, key):
 
     for mychild in elem.childNodes:
 
-        if mychild.nodeType != xml.dom.Node.ELEMENT_NODE: continue
+        if mychild.nodeType != Node.ELEMENT_NODE: continue
 
         if mychild.getAttribute(key) > keyval:
             elem.insertBefore(child, mychild)
@@ -312,7 +312,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.9  2008-02-27 09:15:43  mark
+# Revision 1.10  2008-02-27 10:44:31  marc
+# - changed an import
+#
+# Revision 1.9  2008/02/27 09:15:43  mark
 # reversed last change
 #
 # Revision 1.8  2008/02/22 09:42:57  mark
