@@ -39,7 +39,7 @@ from xml import xpath
 import logging
 import StringIO
 
-from comoonics import ComLog, XmlTools
+from comoonics import ComLog, XmlTools, odict
 from comoonics.ComDataObject import DataObject
 from comoonics.enterprisecopy import ComEnterpriseCopy
 
@@ -52,23 +52,23 @@ import ComAssistantHelper
 
 __logStrLevel__ = "comoonics.assistant.ECAssistant"
 class ECAssistantController(AssistantController):
-    def __init__(self, xml_tmpl_file, value_def_file, xsl_file=None, validate=0):
+    def __init__(self, xml_tmpl_file, value_def_file, xsl_file=None, validate=0, scan=False):
         self.xsl_file=xsl_file
 
         reader = Sax2.Reader(validate)
         self.doc = reader.fromStream(xml_tmpl_file)
         self.value_def_doc = reader.fromStream(value_def_file)
-        
-        PrettyPrint(self.doc)
-        PrettyPrint(self.value_def_doc)
-        
-        self._createInfoList()
+                
+        self._createInfoDict(scan)
     
     def getNeededInfo(self):
         """
-        @return: list of Info objects
+        @return: Dictionary of Info objects
         """
-        return self.infolist
+        return self.infodict.values()
+        
+    def getInfoDict(self):
+        return self.infodict
     
     def run(self):
         if self.xsl_file:
@@ -91,9 +91,12 @@ class ECAssistantController(AssistantController):
     
     def getDocument(self):
         return self.doc
+    
+    def printDocument(self):
+        PrettyPrint(self.doc)
         
-    def _createInfoList(self):
-        _infolist=[]
+    def _createInfoDict(self, scan):
+        _infodict=odict.Odict()
         # get the root element
         _info=self.value_def_doc.getElementsByTagName("info")[0]
         # For all <entry> elements
@@ -117,13 +120,16 @@ class ECAssistantController(AssistantController):
                 ComLog.getLogger(__logStrLevel__).warning("element %s not found" %_elem.getName())
                 break
             
-            _infolist.append(AttrAssistantInfo(_node, _elem.getName(), \
+            _ainfo=AttrAssistantInfo(_node, _elem.getName(), \
                                                _elem.getAttribute("type"),\
                                                _elem.getComment(),\
                                                None,\
-                                               ComAssistantHelper.createAssistantHelper(_elem.getHelperClassName(), _elem.getHelperQuery())))
+                                               ComAssistantHelper.createAssistantHelper(_elem.getHelperClassName(), _elem.getHelperQuery()))
+            if scan:
+                _ainfo.scan()
+            _infodict[_elem.getName()]=_ainfo
             
-        self.infolist=_infolist
+        self.infodict=_infodict
     
     
     
@@ -160,20 +166,15 @@ class InfoElement(DataObject):
     
 def test():
     ComLog.setLevel(logging.DEBUG)
-    ac=ECAssistantController("./localclone.xml", "./infodef.xml", "/opt/atix/comoonics-cs/xsl/localclone.xsl")
+    ac=ECAssistantController("./localclone.xml", "./infodef.xml", "/opt/atix/comoonics-cs/xsl/localclone.xsl", scan=False)
     for _info in  ac.getNeededInfo():
         print "Name    : %s" %_info.getName()   
         print "Value   : %s" %_info.getValue()
         print "Comment : %s" %_info.getComment()
         print "Type    : %s" %_info.getType()
-        try: 
-            _helper=_info.getHelper().scan()
-        except Exception:
-            _helper=None
-            pass
-        print "Helper  : %s" %_helper
+        
         print "---------------------------------"
-
+        print _info
         _info.setValue("allesneu")
 
 
