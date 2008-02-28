@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComExceptions.py,v 1.4 2007-02-27 15:55:26 mark Exp $
+# $Id: ComExceptions.py,v 1.5 2008-02-28 14:20:11 marc Exp $
 #
 
 
@@ -36,8 +36,20 @@ class ComException(Exception):
          return repr(self.value)
 
 
+def test():
+    try:
+        raise ComException, "Error: testmessage"
+    except ComException, e:
+        print e
+
+if __name__=="__main__":
+    test()
+
 # $Log: ComExceptions.py,v $
-# Revision 1.4  2007-02-27 15:55:26  mark
+# Revision 1.5  2008-02-28 14:20:11  marc
+# - added tests
+#
+# Revision 1.4  2007/02/27 15:55:26  mark
 # minor bugfixes
 #
 # Revision 1.3  2007/02/09 11:34:10  marc
