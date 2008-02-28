@@ -3,7 +3,7 @@ Class for logging to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBLogger.py,v 1.5 2007-06-19 15:09:55 marc Exp $
+# $Id: ComDBLogger.py,v 1.6 2008-02-28 14:19:37 marc Exp $
 #
 
 import logging
@@ -98,7 +98,7 @@ INSERT INTO %s
     logmsg="%s",
     logexecinfo="%s";
 """  %(self.tablename, record.name, self.logsource, record.levelno, record.pathname,
-       record.lineno, self.dbconnection.db.escape_string(record.msg %record.args),exc_info)
+       record.lineno, self.dbconnection.db.escape_string(str(record.msg) %record.args),exc_info)
 #        self.log.debug("LogRecordToInsert: "+query)
         return query
 
@@ -142,7 +142,10 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBLogger.py,v $
-# Revision 1.5  2007-06-19 15:09:55  marc
+# Revision 1.6  2008-02-28 14:19:37  marc
+# small bugfix in exeception logging
+#
+# Revision 1.5  2007/06/19 15:09:55  marc
 # fixed logging
 #
 # Revision 1.4  2007/06/13 09:03:52  marc
