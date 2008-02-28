@@ -6,11 +6,17 @@ Init this package
 
 from comoonics import ComLog
 from ComDBLogger import DBLogger
+from ComDBObject import DBObject, NoDataFoundForObjectException, loadDBObjectsRegistry, setDBObjectsRegistry, registerDBObjectProperties, getDBObjectProperties, hasDBObjectProperties
+from ComDBJobs import DBJobs, DBJob, DBAction, DBJob2Action, registerActionObject, JobException
 ComLog.registerHandler("DBLogger", DBLogger)
 
 ########
 # $Log: __init__.py,v $
-# Revision 1.3  2007-06-19 15:10:07  marc
+# Revision 1.4  2008-02-28 14:19:09  marc
+# - added autoimports.
+# - added the dbobject and dbjobs
+#
+# Revision 1.3  2007/06/19 15:10:07  marc
 # fixed importing
 #
 # Revision 1.2  2007/06/13 09:03:52  marc
