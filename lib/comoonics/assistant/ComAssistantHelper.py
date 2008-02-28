@@ -7,9 +7,11 @@ from comoonics import ComSystem, ComLog
 __logStrLevel__="comoonics.assistant.ComAssistantHelper"
 
 def createAssistantHelper(classname, query):
+    from ComClusterAssistantHelper import RedHatClusterAssistantHelper
+    from ComStorageAssistantHelper import StorageAssistantHelper
+
     if classname:
         try: 
-            print "Classname:%s" %classname
             return eval(classname)(query)
         except Exception:
             ComLog.getLogger(__logStrLevel__).warning("Assitanthelper %s coud not be initialized" %classname)
@@ -44,12 +46,11 @@ class KernelAssistantHelper(AssistantHelper):
         
             
     def scan_processor(self):
-       _ret = ComSystem.execLocalOutput("uname -p") 
-       return _ret[0].strip("\n")
+        _ret = ComSystem.execLocalOutput("uname -p") 
+        return [ _ret[0].strip("\n") ]
         
     
     def scan_release(self):
-       _ret = ComSystem.execLocalOutput("uname -r") 
-       return _ret[0].strip("\n")
-   
+        _ret = ComSystem.execLocalOutput("uname -r") 
+        return [ _ret[0].strip("\n") ]
    
