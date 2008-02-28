@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -517,6 +517,8 @@ class PhysicalVolume(LinuxVolumeManager):
                 _doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
             elif len(params) == 2:
                 _doc=params[1]
+            elif len(params) == 3:
+                _doc=params[2]
             if len(params) >1 and isinstance(params[1], VolumeGroup):
                 _parent_vg=params[1]
             _name=params[0]
@@ -695,7 +697,8 @@ class VolumeGroup(LinuxVolumeManager):
             self.log.debug("createing volumegroup %s from new element" % params[0])
             LinuxVolumeManager.__init__(self, doc.createElement(self.TAGNAME), doc)
             self.setAttribute("name", params[0])
-            self.addPhysicalVolume(params[1])
+            if len(params) > 1 and isinstance(params[1], PhysicalVolume):
+                self.addPhysicalVolume(params[1])
         else:
             raise TypeError("Unsupported type for constructor %s" % type(params[0]))
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' pvscan | grep "[[:blank:]]%s[[:blank:]]"' % str(self.getAttribute("name")), True)
@@ -994,7 +997,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.12  2008-02-27 10:48:12  marc
+# Revision 1.13  2008-02-28 09:29:21  mark
+# bugfixes in constructors
+#
+# Revision 1.12  2008/02/27 10:48:12  marc
 # - another bug in constructor
 #
 # Revision 1.11  2008/02/27 10:41:47  marc
