@@ -1,0 +1,95 @@
+#!/usr/bin/python
+"""Assistant for the Comoonics desatster recovery DVD
+
+
+"""
+
+# here is some internal information
+# $Id: com-livecd-admin.py,v 1.1 2008/02/21 16:11:20 mark Exp $
+#
+
+__version__ = "$Revision: $"
+__description__="""
+Comoonics Assistant to create a Comoonics desaster recovery dvd
+"""
+# $Source:  $
+
+import sys
+import logging
+from optparse import OptionParser, IndentedHelpFormatter
+
+sys.path.append("../lib")
+
+
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
+
+from comoonics.assistant.ComAssistantTui import AssistantTui, CancelException
+from comoonics.assistant.ComECAssistantController import ECAssistantController
+
+#default settings
+
+#DRBACKUP_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drbackup.xml"
+#DRBACKUP_INFODEF="/etc/comoonics/enterprisecopy/drbackup.infodef.xml"
+#MKRESTORECD_XML_TEMPLATE="/etc/comoonics/enterprisecopy/mkrestorecd.xml"
+#MKRESTORECD_INFODEF="/etc/comoonics/enterprisecopy/mkrestorecd.infodef.xml"
+#DRRESTORE_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drrestore.xml"
+#LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
+
+DRBACKUP_XML_TEMPLATE="../lib/comoonics/assistant/localclone.xml"
+DRBACKUP_INFODEF="../lib/comoonics/assistant/infodef.xml"
+MKRESTORECD_XML_TEMPLATE="../lib/comoonics/assistant/createlivecd.xml"
+MKRESTORECD_INFODEF="../lib/comoonics/assistant/createlivecd.infodef.xml"
+LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
+DRRESTORE_XML_TEMPLATE="../lib/comoonics/assistant/drrestore.template.xml"
+DRRESTORE_INFODEF="../lib/comoonics/assistant/drrestore.infodef.xml"
+DRRESTORE_XML_NAME="drrestore.xml"
+
+NAME_LIVECD_EXTRAS="Backup temp path"
+
+def setDebug(option, opt, value, parser):
+	ComLog.setLevel(logging.DEBUG)
+	setattr(parser.values, option.dest, True)
+
+def setSimulate(option, opt, value, parser):
+	ComSystem.__EXEC_REALLY_DO="simulate"
+	setattr(parser.values, option.dest, True)
+
+def setAsk(option, opt, value, parser):
+	ComSystem.__EXEC_REALLY_DO="ask"
+	setattr(parser.values, option.dest, True)
+	
+ComLog.setLevel(logging.INFO)
+log=ComLog.getLogger("comoonics-assistant")
+
+parser = OptionParser(description=__doc__, version=__version__)
+
+# Default Options
+parser.add_option("-D", "--debug", dest="debug", default=False, action="callback", callback=setDebug, help="Debug")
+parser.add_option("-s", "--simulate", dest="debug", default=False, action="callback", callback=setSimulate, help="Simulate")
+parser.add_option("-a", "--ask", dest="debug", default=False, action="callback", callback=setAsk, help="Ask")
+#
+
+(options, args) = parser.parse_args()
+    
+# generate the assistant controllers
+
+ac_drbackup=ECAssistantController(DRBACKUP_XML_TEMPLATE, DRBACKUP_INFODEF, LOCALCLONE_XSL, scan=True)
+ac_mkrestorecd=ECAssistantController(MKRESTORECD_XML_TEMPLATE, MKRESTORECD_INFODEF, scan=True)
+ac_drrestore=ECAssistantController(DRRESTORE_XML_TEMPLATE, DRRESTORE_INFODEF)
+
+tui=AssistantTui([ ac_drbackup, ac_mkrestorecd, ac_drrestore ])
+if tui.run(): 
+	# we need the path where all extras will be:
+	if tui.getInfoDict().has_key(NAME_LIVECD_EXTRAS):
+		extras_path=tui.getInfoDict().get(NAME_LIVECD_EXTRAS).getValue()
+		log.debug("drrestore file: %s/%s" %(extras_path, DRRESTORE_XML_NAME))
+		ac_drrestore.writeXMLFile("%s/%s" %(extras_path, DRRESTORE_XML_NAME))
+	else:
+		log.debug("key %s not found" %NAME_LIVECD_EXTRAS)
+ 	ac_drbackup.run()
+ 	ac_mkrestorecd.run()
+else:
+	print "Exiting ..."
+
+

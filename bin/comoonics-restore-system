@@ -1,0 +1,79 @@
+#!/usr/bin/python
+"""Assistant for the Comoonics desaster recovery
+
+
+"""
+
+# here is some internal information
+# $Id:  $
+#
+
+__version__ = "$Revision: $"
+__description__="""
+Comoonics Assistant for desaster recovery
+"""
+# $Source:  $
+
+import sys
+import logging
+from optparse import OptionParser, IndentedHelpFormatter
+
+sys.path.append("../lib")
+
+
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
+
+from comoonics.assistant.ComAssistantTui import AssistantTui, CancelException
+from comoonics.assistant.ComECAssistantController import ECAssistantController
+
+#default settings
+
+#DRBACKUP_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drbackup.xml"
+#DRBACKUP_INFODEF="/etc/comoonics/enterprisecopy/drbackup.infodef.xml"
+#MKRESTORECD_XML_TEMPLATE="/etc/comoonics/enterprisecopy/mkrestorecd.xml"
+#MKRESTORECD_INFODEF="/etc/comoonics/enterprisecopy/mkrestorecd.infodef.xml"
+#DRRESTORE_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drrestore.xml"
+#LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
+
+LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
+DRRESTORE_XML_TEMPLATE="../lib/comoonics/assistant/drrestore.template.xml"
+DRRESTORE_INFODEF="../lib/comoonics/assistant/drrestore.infodef.xml"
+
+
+def setDebug(option, opt, value, parser):
+	ComLog.setLevel(logging.DEBUG)
+	setattr(parser.values, option.dest, True)
+
+def setSimulate(option, opt, value, parser):
+	ComSystem.__EXEC_REALLY_DO="simulate"
+	setattr(parser.values, option.dest, True)
+
+def setAsk(option, opt, value, parser):
+	ComSystem.__EXEC_REALLY_DO="ask"
+	setattr(parser.values, option.dest, True)
+	
+ComLog.setLevel(logging.INFO)
+log=ComLog.getLogger("comoonics-assistant")
+
+parser = OptionParser(description=__doc__, version=__version__)
+
+# Default Options
+parser.add_option("-D", "--debug", dest="debug", default=False, action="callback", callback=setDebug, help="Debug")
+parser.add_option("-s", "--simulate", dest="debug", default=False, action="callback", callback=setSimulate, help="Simulate")
+parser.add_option("-a", "--ask", dest="debug", default=False, action="callback", callback=setAsk, help="Ask")
+#
+
+(options, args) = parser.parse_args()
+    
+# generate the assistant controllers
+
+ac_drrestore=ECAssistantController(DRRESTORE_XML_TEMPLATE, DRRESTORE_INFODEF, LOCALCLONE_XSL, scan=True)
+
+tui=AssistantTui([ ac_drrestore ])
+if tui.run(): 
+	ac_drrestore.run()
+else:
+	print "Exiting ..."
+
+
