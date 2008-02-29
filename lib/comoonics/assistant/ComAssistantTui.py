@@ -120,7 +120,7 @@ class AssistantTui(object):
         return _dict
          
     def _run_warning(self, warning):
-        _rec=ButtonChoiceWindow(self.screen, "Save", warning, buttons = [ 'Ok', 'Back' ]) 
+        _rec=ButtonChoiceWindow(self.screen, "Are you sure ?", warning, buttons = [ 'Ok', 'Back' ]) 
         if _rec == "ok":
             return self.OK
         else:
