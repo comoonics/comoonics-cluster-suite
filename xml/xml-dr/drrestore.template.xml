@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE localclone SYSTEM "/opt/atix/comoonics-cs/xml/comoonics-enterprise-clone.dtd">
+<localclone name="drrestore" source="backup" destination="disk">
+  <cluster name="unknown" sourcesuffix="" destsuffix="C"/>
+  <sourcearchive name="drbackup" path="/">
+    <metaarchive name="meta-clone-drbackup-01.tar"/>
+    <bootarchive name="boot-clone-drbackup-01.tgz"/>
+    <rootarchive name="root-clone-drbackup-01.tgz"/>
+  </sourcearchive>
+  <destdisks>
+     <bootdisk name="/dev/sda"/>
+     <rootdisk name="/dev/sdb"/>
+  </destdisks>
+  <kernel version="2.6.9-42.0.3.ELsmp"/>
+</localclone>

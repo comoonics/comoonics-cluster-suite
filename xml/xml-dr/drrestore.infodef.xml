@@ -1,0 +1,18 @@
+<info>
+    <entry name="cluster name" type="txt">
+        <xpath name="localclone/cluster/@name"/>
+        <xpath name="masterclone/cluster/@name"/>
+		<comment lang="en">Name of the cluster</comment>
+    </entry>
+    <entry name="bootdisk" type="device">
+    	<xpath name="localclone/destdisks/bootdisk/@name"/>
+    	<comment>Path of the destination bootdisk</comment>
+    </entry>
+    <entry name="rootdisk" type="device">
+    	<xpath name="localclone/destdisks/rootdisk/@name"/>
+    	<comment>Path of the destination rootdisk</comment>
+    </entry>
+    <entry name="Kernel Version" type="device">
+    	<xpath name="localclone/kernel/@version" />
+    </entry>
+</info>

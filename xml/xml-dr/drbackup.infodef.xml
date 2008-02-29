@@ -1,0 +1,28 @@
+<info>
+    <entry name="cluster name" type="txt">
+        <xpath name="localclone/cluster/@name"/>
+        <xpath name="masterclone/cluster/@name"/>
+		<helper name="RedHatClusterAssistantHelper" query="clustername"/>
+		<validator name="None"/>
+		<comment lang="en">Name of the cluster</comment>
+    </entry>
+    <entry name="bootdisk" type="device">
+    	<xpath name="localclone/sourcedisks/bootdisk/@name"/>
+		<helper name="StorageAssistantHelper" query="bootdisk"/>
+    	<comment>Path of the source bootdisk</comment>
+    </entry>
+    <entry name="rootdisk" type="device">
+    	<xpath name="localclone/sourcedisks/rootdisk/@name"/>
+		<helper name="StorageAssistantHelper" query="rootdisk"/>
+    	<comment>Path of the source rootdisk</comment>
+    </entry>
+    <entry name="Kernel Version" type="device">
+    	<xpath name="localclone/kernel/@version" />
+		<helper name="KernelAssistantHelper" query="version"/>
+		<comment>The current kernel version</comment>
+    </entry>
+    <entry name="Backup temp path" type="device">
+    	<xpath name="localclone/destarchive/@path"/>
+		<comment>Temporary directory to hold the backup data</comment>
+    </entry>
+</info>

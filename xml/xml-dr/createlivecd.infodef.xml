@@ -1,0 +1,23 @@
+<info>
+    <entry name="LiveCD device" type="path">
+        <xpath name="/enterprisecopy/copyset/source/device/@name"/>
+		<helper name="StorageAssistantHelper" query="livecd"/>
+		<validator name="None"/>
+		<comment lang="en">Path of the cdrom device where the LiveCD is inserted</comment>
+    </entry>
+    <entry name="LiveCD mountpoint" type="path">
+        <xpath name="/enterprisecopy/copyset/source/device/mountpoint/@name"/>
+		<validator name="None"/>
+		<comment lang="en">Path where the LiveCD should be mounted</comment>
+    </entry>
+    <entry name="iso destination" type="path">
+        <xpath name="/enterprisecopy/modificationset[@id='iso_path']/@name"/>
+		<validator name="None"/>
+		<comment lang="en">Path of the rescuecd ISOfile that will be created (e.g. /tmp/rescuecd.iso)</comment>
+    </entry>
+    <entry name="Backup temp path" type="path">
+        <xpath name="/enterprisecopy/modificationset/path[@id='livecd_extras']/@name"/>
+		<validator name="None"/>
+		<comment lang="en">Temporary directory to hold the backup data</comment>
+    </entry>
+</info>
