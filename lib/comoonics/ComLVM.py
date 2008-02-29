@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -395,7 +395,7 @@ class LogicalVolume(LinuxVolumeManager):
         LinuxVolumeManager.has_lvm()
 
         (rc, rv, stderr) = ComSystem.execLocalGetResult(CMD_LVM+' lvdisplay -C --noheadings --units b --nosuffix --separator : '+str(self.parentvg.getAttribute("name"))+"/"+str(self.getAttribute("name")), True)
-        if rc >> 8 != 0 or not ComSystem.isSimulate():
+        if rc >> 8 != 0:
             self.ondisk=False
             raise RuntimeError("running lvdisplay of %s failed: %u, %s, %s" % (str(self.parentvg.getAttribute("name"))+"/"+str(self.getAttribute("name")), rc,rv, stderr))
 
@@ -997,7 +997,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.13  2008-02-28 09:29:21  mark
+# Revision 1.14  2008-02-29 15:24:55  mark
+# fixed typo
+#
+# Revision 1.13  2008/02/28 09:29:21  mark
 # bugfixes in constructors
 #
 # Revision 1.12  2008/02/27 10:48:12  marc
