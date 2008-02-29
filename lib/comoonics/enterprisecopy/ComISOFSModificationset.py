@@ -13,15 +13,16 @@ Example Configuration:
 """
 
 # here is some internal information
-# $Id: ComISOFSModificationset.py,v 1.2 2008-02-20 13:51:03 mark Exp $
+# $Id: ComISOFSModificationset.py,v 1.3 2008-02-29 15:04:11 mark Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComISOFSModificationset.py,v $
 
 from ComModificationset import ModificationsetJournaled
 from comoonics import ComLog, ComSystem
 from comoonics.ComExceptions import ComException
+from comoonics.ComPath import Path
 
 import os
 from xml import xpath
@@ -85,12 +86,15 @@ class ISOFSModificationset(ModificationsetJournaled):
             else:
                 _opts.append("-%s %s" %(_property, _value))
         for _element in self.pathlist:
-            _opts.append(_element.getAttribute("name"))
+            _opts.append(Path(_element, self.getDocument()).getPath())
  
         return CMD_MKISOFS + " " + " ".join(_opts)
 
 # $Log: ComISOFSModificationset.py,v $
-# Revision 1.2  2008-02-20 13:51:03  mark
+# Revision 1.3  2008-02-29 15:04:11  mark
+# use Path Object
+#
+# Revision 1.2  2008/02/20 13:51:03  mark
 # added genric Property support
 #
 # Revision 1.1  2008/02/19 17:32:20  mark
