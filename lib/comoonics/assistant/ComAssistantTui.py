@@ -70,6 +70,8 @@ class AssistantTui(object):
     OK=0
     NEXT=1
     MODIFY=2
+    SAVE=3
+    RUN=4
     CANCEL=-1
     
     def __init__(self, controller):
@@ -86,12 +88,22 @@ class AssistantTui(object):
     def getInfoDict(self):
         return self.infodict
          
-    def run(self):
+    def run(self, warning=None):
+        step=self.OK
         try: 
-            while self._run_confirmation() == self.MODIFY:
-                self._run_collector()
-            self.cleanup()
-            return True
+            while True:
+                _ret = self._run_confirmation()
+                if _ret == self.SAVE:
+                    self._run_save()
+                if _ret == self.MODIFY:
+                    self._run_collector()
+                if _ret == self.RUN:
+                    if warning:
+                        _rc = self._run_warning(warning)
+                        if _rc == self.CANCEL:
+                            continue
+                    self.cleanup()
+                    return True                 
         except CancelException:
             self.cleanup()
             return False
@@ -107,13 +119,22 @@ class AssistantTui(object):
                     _tdict.get(_key).setValue(_dict.get(_key).getValue())
         return _dict
          
+    def _run_warning(self, warning):
+        _rec=ButtonChoiceWindow(self.screen, "Save", warning, buttons = [ 'Ok', 'Back' ]) 
+        if _rec == "ok":
+            return self.OK
+        else:
+            return self.CANCEL
+         
     def _run_confirmation(self):
         _button = ConfirmationWindow(self.screen, "Com-EC Assistant", self.getInfoList())
         if _button == "start": 
-            return self.OK
+            return self.RUN
         if _button == "modify":
             return self.MODIFY
-        if _button == "cancel":
+        if _button == "save":
+            return self.SAVE
+        if _button == "exit":
             raise CancelException()
         
     def _run_collector(self, page=0):
@@ -122,9 +143,9 @@ class AssistantTui(object):
         while i < len(_list):
             _info=_list[i]
             if i == 0:
-                _buttons=[ 'Next', 'Cancel' ]
+                _buttons=[ 'Next', 'Return' ]
             else:
-                _buttons=[ 'Next', 'Previous', 'Cancel' ]
+                _buttons=[ 'Next', 'Previous', 'Return' ]
             _button, _value = AssistantWindow(self.screen, "Com-EC Assistant", _info, buttons=_buttons)
             if _button == "next":
                 i=i+1
@@ -132,9 +153,20 @@ class AssistantTui(object):
             if _button == "previous":
                 i=i-1
                 self._set_info_value(_info.getName(), _value)
-            if _button == "cancel":
+            if _button == "return":
                 return self.CANCEL
         return self.NEXT
+        
+    def _run_save(self):
+        try:
+            for _controller in self.controller:
+                _controller.save()
+            _msg="Save complete"
+        except Exception, e:
+            _msg="An error occured:%s" %e
+        ButtonChoiceWindow(self.screen, "Save", _msg, buttons = [ 'Ok' ]) 
+
+        
         
     def _set_info_value(self, key, value):
         for _controller in self.controller:
@@ -157,7 +189,7 @@ class AssistantTui(object):
 
     
 
-def AssistantWindow(screen, title, info, width = 40, buttons = [ 'Next', 'Previous', 'Cancel' ], help = None):
+def AssistantWindow(screen, title, info, width = 40, buttons = [ 'Next', 'Previous', 'Return' ], help = None):
     """
     EntryWindow():
     """
@@ -176,7 +208,7 @@ def AssistantWindow(screen, title, info, width = 40, buttons = [ 'Next', 'Previo
 
     return (bb.buttonPressed(result), rb.getSelection())
 
-def ConfirmationWindow(screen, title, infolist, width = 40, buttons = [ 'Start', 'Modify', 'Cancel' ], help = None):
+def ConfirmationWindow(screen, title, infolist, width = 40, buttons = [ 'Start', 'Modify', 'Save', 'Exit' ], help = None):
 
     bb = ButtonBar(screen, buttons);
     ig=Grid(2, len(infolist))
