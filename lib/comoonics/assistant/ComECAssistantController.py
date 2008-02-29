@@ -71,7 +71,7 @@ class ECAssistantController(AssistantController):
     def getInfoDict(self):
         return self.infodict
     
-    def run(self):
+    def run(self, really=False):
         if self.xsl_file:
             _xml=StringIO.StringIO()
             PrettyPrint(self.doc, _xml)
@@ -79,9 +79,12 @@ class ECAssistantController(AssistantController):
         else:
             _doc=self.doc
         
-        PrettyPrint(_doc)
-        #ecopy=ComEnterpriseCopy.getEnterpriseCopy(_doc.documentElement, _doc)
-        #ecopy.doAllsets()
+        if really:
+            ecopy=ComEnterpriseCopy.getEnterpriseCopy(_doc.documentElement, _doc)
+            ecopy.doAllsets()
+        else:
+            PrettyPrint(_doc)
+
         
     def save(self):
         self.writeXMLFile(self.xml_tmpl_file)    
