@@ -54,6 +54,7 @@ __logStrLevel__ = "comoonics.assistant.ECAssistant"
 class ECAssistantController(AssistantController):
     def __init__(self, xml_tmpl_file, value_def_file, xsl_file=None, validate=0, scan=False):
         self.xsl_file=xsl_file
+        self.xml_tmpl_file=xml_tmpl_file
 
         reader = Sax2.Reader(validate)
         self.doc = reader.fromStream(xml_tmpl_file)
@@ -82,6 +83,9 @@ class ECAssistantController(AssistantController):
         #ecopy=ComEnterpriseCopy.getEnterpriseCopy(_doc.documentElement, _doc)
         #ecopy.doAllsets()
         
+    def save(self):
+        self.writeXMLFile(self.xml_tmpl_file)    
+    
     def writeXMLFile(self, filename):
         _file=open(filename, "w")
         PrettyPrint(self.doc, _file)

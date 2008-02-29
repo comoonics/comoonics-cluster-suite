@@ -16,3 +16,6 @@ class AssistantController(object):
         starts the process with the modified data model
         """
         pass
+    
+    def save(self):
+        pass
