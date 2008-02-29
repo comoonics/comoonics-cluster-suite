@@ -3,11 +3,11 @@ CopyObject to implement a path source/destination.
 """
 
 # here is some internal information
-# $Id: ComPathCopyObject.py,v 1.1 2007-09-07 14:39:54 marc Exp $
+# $Id: ComPathCopyObject.py,v 1.2 2008-02-29 15:02:48 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPathCopyObject.py,v $
 
 from ComCopyObject import CopyObjectJournaled
@@ -36,6 +36,7 @@ class PathCopyObject(CopyObjectJournaled):
         self.addToUndoMap(self.path.__class__.__name__, "pushd", "popd")
 
     def __prepare(self):
+        self.origpath=self.path.getPath()
         self.path.mkdir()
         self.path.pushd()
         self.journal(self.path, "pushd")
@@ -52,7 +53,7 @@ class PathCopyObject(CopyObjectJournaled):
         PathCopyObject.logger.debug("__cleanup: remove: %s" %self.getAttribute("remove", "false"))
         self.path.remove(oldpath)
         PathCopyObject.logger.debug("doPost() CWD: " + os.getcwd())
-
+        self.path.setPath(self.origpath)
 
     def prepareAsSource(self):
         ''' prepare CopyObject as source '''
@@ -133,6 +134,9 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComPathCopyObject.py,v $
-# Revision 1.1  2007-09-07 14:39:54  marc
+# Revision 1.2  2008-02-29 15:02:48  mark
+# workaroud for bz 204
+#
+# Revision 1.1  2007/09/07 14:39:54  marc
 # initial revision
 #
