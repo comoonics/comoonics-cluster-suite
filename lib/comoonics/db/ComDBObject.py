@@ -3,7 +3,7 @@ Class for object to database persistence to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBObject.py,v 1.1 2008-02-28 14:19:23 marc Exp $
+# $Id: ComDBObject.py,v 1.2 2008-03-03 08:32:51 marc Exp $
 #
 from ComDBConnection import DBConnection
 from comoonics import ComLog
@@ -22,23 +22,30 @@ def setDBObjectsRegistry(parser):
     global _dbobject_properties
     _dbobject_properties=parser
 def registerDBObjectProperties(_classname, _properties):
-    if isinstance(_classname, type):
+    if not isinstance(_classname, basestring):
         _classname=_classname.__name__
     _dbobject_properties.add_section(_classname)
     for key, value in _properties.items():
         _dbobject_properties.set(_classname, key, value)
 def getDBObjectProperties(_classname):
-    if isinstance(_classname, type):
+    if not isinstance(_classname, basestring):
         _classname=_classname.__name__
     _props=dict()
+    if not _dbobject_properties.has_section(_classname):
+        _classname=_classname.split(".")[-1]
     for key, value in _dbobject_properties.items(_classname):
         if isinstance(value, basestring) and _dbobject_properties.has_section(value):
             value=dict(getDBObjectProperties(value))
+        elif value.startswith("python: "):
+            value=value[len("python: "):]
+            value=eval(value) 
         _props[key]=value
     return _props.items()
 def hasDBObjectProperties(_classname):
-    if isinstance(_classname, type):
+    if not isinstance(_classname, basestring):
         _classname=_classname.__name__
+    if not _dbobject_properties.has_section(_classname):
+        _classname=_classname.split(".")[-1]
     return _dbobject_properties.has_section(_classname)
 
 class DBObject(DBConnection):
@@ -94,7 +101,8 @@ class DBObject(DBConnection):
             for _key, _value in _obj[0].items():
                 setattr(self, self.__dict__["schemarev"][_key], _value)
         else:
-            raise NoDataFoundForObjectException("No data found for object. ID: %s" %str(self.id))
+            ComLog.debugTraceLog(self.logger)
+            raise NoDataFoundForObjectException("No data found for object. ID: %s/%s" %(str(self.tablename), str(self.id)))
         self._fromdb=True
 
     def _getPersistentAttributes(self):
@@ -116,6 +124,9 @@ class DBObject(DBConnection):
 
 ########################
 # $Log: ComDBObject.py,v $
-# Revision 1.1  2008-02-28 14:19:23  marc
+# Revision 1.2  2008-03-03 08:32:51  marc
+# - rewrote the ObjectRegistry so that if also supports ConfigParser.
+#
+# Revision 1.1  2008/02/28 14:19:23  marc
 # initial revision
 #
