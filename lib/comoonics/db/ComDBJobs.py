@@ -3,7 +3,7 @@ Jobs as object to database persistence to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBJobs.py,v 1.1 2008-02-28 14:19:23 marc Exp $
+# $Id: ComDBJobs.py,v 1.2 2008-03-03 08:32:08 marc Exp $
 #
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
@@ -93,6 +93,7 @@ class DBJob(DBObject):
         """
         Executes the action found with the given name in the global action repository.
         """
+        self._fromDB()
         self.setStartTime()
         self.logger.info("Executing job %s at %s" %(self, self.starttime))
         self.errorcode=0
@@ -102,8 +103,7 @@ class DBJob(DBObject):
             self.errormessage="Successfully executed job %(job)s at %(endtime)s"
         except JobException, e:
             self.logger.error(e)
-            import traceback, sys
-            traceback.print_exc(self.logger)
+            ComLog.debugTraceLog(self.logger)
             self.errorcode=e.errorcode
             self.errormessage=e.__str__()
             
@@ -198,6 +198,10 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBJobs.py,v $
-# Revision 1.1  2008-02-28 14:19:23  marc
+# Revision 1.2  2008-03-03 08:32:08  marc
+# - fixed bug where data where not read from db
+# - more detailed error messages
+#
+# Revision 1.1  2008/02/28 14:19:23  marc
 # initial revision
 #
