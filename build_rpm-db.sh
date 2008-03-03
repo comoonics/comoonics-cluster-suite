@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# $Id: build_rpm-db.sh,v 1.8 2008-02-27 11:07:19 marc Exp $
+# $Id: build_rpm-db.sh,v 1.9 2008-03-03 08:36:39 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=10
+RELEASE=12
 REQUIRES="--requires=comoonics-cs-py,MySQL-python"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-db-py"
@@ -24,7 +24,10 @@ setup
 
 ##############
 # $Log: build_rpm-db.sh,v $
-# Revision 1.8  2008-02-27 11:07:19  marc
+# Revision 1.9  2008-03-03 08:36:39  marc
+# new version for comoonics-db-py (0.1-12)
+#
+# Revision 1.8  2008/02/27 11:07:19  marc
 # *** empty log message ***
 #
 # Revision 1.7  2007/12/07 14:29:23  reiner
