@@ -13,7 +13,7 @@
         </destination>
     </copyset>
     <modificationset type="isofs" name="/tmp/rescuecd.iso" id="iso_path">
-        <path ref="livecd_tmp"/>
+        <path refid="livecd_tmp"/>
         <path name="/tmp/extras" id="livecd_extras"/>
         <properties>
             <property name="bootcd" value="livecd"/>
