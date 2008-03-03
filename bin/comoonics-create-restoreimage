@@ -21,7 +21,7 @@ from optparse import OptionParser, IndentedHelpFormatter
 sys.path.append("../lib")
 
 
-from comoonics import ComLog
+from comoonics import ComLog, ComSystem
 from comoonics.ComExceptions import ComException
 
 from comoonics.assistant.ComAssistantTui import AssistantTui, CancelException
@@ -29,21 +29,16 @@ from comoonics.assistant.ComECAssistantController import ECAssistantController
 
 #default settings
 
-#DRBACKUP_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drbackup.xml"
-#DRBACKUP_INFODEF="/etc/comoonics/enterprisecopy/drbackup.infodef.xml"
-#MKRESTORECD_XML_TEMPLATE="/etc/comoonics/enterprisecopy/mkrestorecd.xml"
-#MKRESTORECD_INFODEF="/etc/comoonics/enterprisecopy/mkrestorecd.infodef.xml"
-#DRRESTORE_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drrestore.xml"
-#LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
-
-DRBACKUP_XML_TEMPLATE="../lib/comoonics/assistant/localclone.xml"
-DRBACKUP_INFODEF="../lib/comoonics/assistant/infodef.xml"
-MKRESTORECD_XML_TEMPLATE="../lib/comoonics/assistant/createlivecd.xml"
-MKRESTORECD_INFODEF="../lib/comoonics/assistant/createlivecd.infodef.xml"
+DRBACKUP_XML_TEMPLATE="/etc/comoonics/enterprisecopy/xml-dr/drbackup.xml"
+DRBACKUP_INFODEF="/etc/comoonics/enterprisecopy/xml-dr/drbackup.infodef.xml"
+MKRESTORECD_XML_TEMPLATE="/etc/comoonics/enterprisecopy/xml-dr/createlivecd.xml"
+MKRESTORECD_INFODEF="/etc/comoonics/enterprisecopy/xml-dr/createlivecd.infodef.xml"
+DRRESTORE_XML_TEMPLATE="/etc/comoonics/enterprisecopy/xml-dr/drrestore.template.xml"
+DRRESTORE_INFODEF="/etc/comoonics/enterprisecopy/xml-dr/drrestore.infodef.xml"
 LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
-DRRESTORE_XML_TEMPLATE="../lib/comoonics/assistant/drrestore.template.xml"
-DRRESTORE_INFODEF="../lib/comoonics/assistant/drrestore.infodef.xml"
 DRRESTORE_XML_NAME="drrestore.xml"
+
+WARNING_MESSAGE="Are you sure, you want to start the generation of the desaster recovery dvd now?"
 
 NAME_LIVECD_EXTRAS="Backup temp path"
 
@@ -59,6 +54,19 @@ def setAsk(option, opt, value, parser):
 	ComSystem.__EXEC_REALLY_DO="ask"
 	setattr(parser.values, option.dest, True)
 	
+def setReally(option, opt, value, parser):
+	setattr(parser.values, option.dest, False)
+	
+def setFast(option, opt, value, parser):
+	setattr(parser.values, option.dest, False)
+	
+def setLivecdOnly(option, opt, value, parser):
+	setattr(parser.values, option.dest, True)
+	
+def setTarOnly(option, opt, value, parser):
+	setattr(parser.values, option.dest, True)
+
+	
 ComLog.setLevel(logging.INFO)
 log=ComLog.getLogger("comoonics-assistant")
 
@@ -68,18 +76,22 @@ parser = OptionParser(description=__doc__, version=__version__)
 parser.add_option("-D", "--debug", dest="debug", default=False, action="callback", callback=setDebug, help="Debug")
 parser.add_option("-s", "--simulate", dest="debug", default=False, action="callback", callback=setSimulate, help="Simulate")
 parser.add_option("-a", "--ask", dest="debug", default=False, action="callback", callback=setAsk, help="Ask")
+parser.add_option("-l", "--livecd", dest="livecd_only", default=False, action="callback", callback=setLivecdOnly)
+parser.add_option("-t", "--tar", dest="tar_only", default=False, action="callback", callback=setTarOnly)
+parser.add_option("-X", "--xml", dest="really", default=True, action="callback", callback=setReally)
+parser.add_option("-F", "--fast", dest="scan", default=True, action="callback", callback=setFast)
 #
 
 (options, args) = parser.parse_args()
     
 # generate the assistant controllers
 
-ac_drbackup=ECAssistantController(DRBACKUP_XML_TEMPLATE, DRBACKUP_INFODEF, LOCALCLONE_XSL, scan=True)
-ac_mkrestorecd=ECAssistantController(MKRESTORECD_XML_TEMPLATE, MKRESTORECD_INFODEF, scan=True)
+ac_drbackup=ECAssistantController(DRBACKUP_XML_TEMPLATE, DRBACKUP_INFODEF, LOCALCLONE_XSL, scan=options.scan)
+ac_mkrestorecd=ECAssistantController(MKRESTORECD_XML_TEMPLATE, MKRESTORECD_INFODEF, scan=options.scan)
 ac_drrestore=ECAssistantController(DRRESTORE_XML_TEMPLATE, DRRESTORE_INFODEF)
 
 tui=AssistantTui([ ac_drbackup, ac_mkrestorecd, ac_drrestore ])
-if tui.run(): 
+if tui.run(WARNING_MESSAGE): 
 	# we need the path where all extras will be:
 	if tui.getInfoDict().has_key(NAME_LIVECD_EXTRAS):
 		extras_path=tui.getInfoDict().get(NAME_LIVECD_EXTRAS).getValue()
@@ -87,8 +99,8 @@ if tui.run():
 		ac_drrestore.writeXMLFile("%s/%s" %(extras_path, DRRESTORE_XML_NAME))
 	else:
 		log.debug("key %s not found" %NAME_LIVECD_EXTRAS)
- 	ac_drbackup.run()
- 	ac_mkrestorecd.run()
+ 	if not options.livecd_only:	ac_drbackup.run(options.really)
+ 	if not options.tar_only: ac_mkrestorecd.run(options.really)
 else:
 	print "Exiting ..."
 

@@ -15,13 +15,15 @@ Comoonics Assistant for desaster recovery
 # $Source:  $
 
 import sys
+import os
+import os.path
 import logging
 from optparse import OptionParser, IndentedHelpFormatter
 
 sys.path.append("../lib")
 
 
-from comoonics import ComLog
+from comoonics import ComLog, ComSystem
 from comoonics.ComExceptions import ComException
 
 from comoonics.assistant.ComAssistantTui import AssistantTui, CancelException
@@ -29,16 +31,14 @@ from comoonics.assistant.ComECAssistantController import ECAssistantController
 
 #default settings
 
-#DRBACKUP_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drbackup.xml"
-#DRBACKUP_INFODEF="/etc/comoonics/enterprisecopy/drbackup.infodef.xml"
-#MKRESTORECD_XML_TEMPLATE="/etc/comoonics/enterprisecopy/mkrestorecd.xml"
-#MKRESTORECD_INFODEF="/etc/comoonics/enterprisecopy/mkrestorecd.infodef.xml"
-#DRRESTORE_XML_TEMPLATE="/etc/comoonics/enterprisecopy/drrestore.xml"
-#LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
+WARNING="CAUTION: This operation will destroy all data on the destination devices ! \
+	Are you sure to continue ?" 
+
+MOUNTPOINT="/restore"
 
 LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
-DRRESTORE_XML_TEMPLATE="../lib/comoonics/assistant/drrestore.template.xml"
-DRRESTORE_INFODEF="../lib/comoonics/assistant/drrestore.infodef.xml"
+DRRESTORE_XML_TEMPLATE="/mnt/cdrom/drrestore.xml"
+DRRESTORE_INFODEF="/etc/comoonics/enterprisecopy/xml-dr/drrestore.infodef.xml"
 
 
 def setDebug(option, opt, value, parser):
@@ -53,6 +53,13 @@ def setAsk(option, opt, value, parser):
 	ComSystem.__EXEC_REALLY_DO="ask"
 	setattr(parser.values, option.dest, True)
 	
+def setReally(option, opt, value, parser):
+	setattr(parser.values, option.dest, False)
+	
+def setFast(option, opt, value, parser):
+	setattr(parser.values, option.dest, False)
+	
+
 ComLog.setLevel(logging.INFO)
 log=ComLog.getLogger("comoonics-assistant")
 
@@ -63,17 +70,28 @@ parser.add_option("-D", "--debug", dest="debug", default=False, action="callback
 parser.add_option("-s", "--simulate", dest="debug", default=False, action="callback", callback=setSimulate, help="Simulate")
 parser.add_option("-a", "--ask", dest="debug", default=False, action="callback", callback=setAsk, help="Ask")
 #
+parser.add_option("-X", "--xml", dest="really", default=True, action="callback", callback=setReally)
+parser.add_option("-F", "--fast", dest="scan", default=True, action="callback", callback=setFast)
+parser.add_option("-s", "--source", dest="source", default="/dev/cdrom", action="store", help="source device")
 
 (options, args) = parser.parse_args()
     
 # generate the assistant controllers
 
+
+if not os.path.exists(MOUNTPOINT):
+	os.makedirs(MOUNTPOINT)
+rc, ret = ComSystem.execLocalStatusOutput("mount %s %s" %( options.source, MOUNTPOINT))
+if rc != 0:
+	print "Error: cannot mount %s %s." %( options.source, MOUNTPOINT )
+	sys.exit(1)
+
 ac_drrestore=ECAssistantController(DRRESTORE_XML_TEMPLATE, DRRESTORE_INFODEF, LOCALCLONE_XSL, scan=True)
 
 tui=AssistantTui([ ac_drrestore ])
-if tui.run(): 
-	ac_drrestore.run()
+if tui.run(WARNING): 
+	ac_drrestore.run(options.really)
 else:
 	print "Exiting ..."
 
-
+ComSystem.execLocalStatusOutput("umount %s" %( MOUNTPOINT))

@@ -2,7 +2,7 @@
 <!DOCTYPE localclone SYSTEM "/opt/atix/comoonics-cs/xml/comoonics-enterprise-clone.dtd">
 <localclone name="drrestore" source="backup" destination="disk">
   <cluster name="unknown" sourcesuffix="" destsuffix="C"/>
-  <sourcearchive name="drbackup" path="/">
+  <sourcearchive name="drbackup" path="/restore">
     <metaarchive name="meta-clone-drbackup-01.tar"/>
     <bootarchive name="boot-clone-drbackup-01.tgz"/>
     <rootarchive name="root-clone-drbackup-01.tgz"/>
