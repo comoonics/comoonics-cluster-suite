@@ -6,16 +6,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.6 2007-04-02 11:48:55 marc Exp $
+# $Id: ComArchiveCopyObject.py,v 1.7 2008-03-12 09:40:18 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from xml import xpath
 
-from comoonics import ComLog
+from comoonics import ComLog, ComSystem
 from ComCopyObject import CopyObjectJournaled
 from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
@@ -59,7 +59,7 @@ class ArchiveCopyObject(CopyObjectJournaled):
     def prepareAsDest(self):
         ''' writes all metadata to archive'''
         self.log.debug("prepareAsDest()")
-        self.serializer.serialize(self.metadata)
+        ComSystem.execMethod(self.serializer.serialize, self.metadata)
 
     def cleanupDest(self):
         pass
@@ -68,7 +68,10 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.6  2007-04-02 11:48:55  marc
+# Revision 1.7  2008-03-12 09:40:18  marc
+# made it simulation save
+#
+# Revision 1.6  2007/04/02 11:48:55  marc
 # *** empty log message ***
 #
 # Revision 1.5  2007/03/26 07:51:36  marc
