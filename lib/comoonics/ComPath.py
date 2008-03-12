@@ -14,11 +14,11 @@ hello world2
 """
 
 # here is some internal information
-# $Id: ComPath.py,v 1.1 2007-09-07 14:44:41 marc Exp $
+# $Id: ComPath.py,v 1.2 2008-03-12 09:35:25 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComPath.py,v $
 
 from ComDataObject import DataObject
@@ -48,6 +48,7 @@ class Path(DataObject):
         __init__(element=.., doc=..)
         __init__(path=..)
         """
+        # Case path is given
         if params and len(params)==1:
             (element, doc)=self._createElement(params[0])
         elif params and len(params)==2:
@@ -69,7 +70,10 @@ class Path(DataObject):
         return self.getAttribute("name")
     def setPath(self, path):
         try:
-            self.setAttribute("name",str(ComSystem.execLocalOutput("echo %s" %path)[0])[:-1])
+            if ComSystem.isSimulate():
+                self.setAttribute("name", path)
+            else:
+                self.setAttribute("name",str(ComSystem.execLocalOutput("echo %s" %path)[0])[:-1])
         except ExecLocalException:
             self.setAttribute("name", path)
     def getOldPaths(self):
@@ -118,6 +122,9 @@ class Path(DataObject):
 
 ################
 # $Log: ComPath.py,v $
-# Revision 1.1  2007-09-07 14:44:41  marc
+# Revision 1.2  2008-03-12 09:35:25  marc
+# made Path simulation save and added a comment.
+#
+# Revision 1.1  2007/09/07 14:44:41  marc
 # initial revision
 #
