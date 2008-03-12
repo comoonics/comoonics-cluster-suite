@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.14 2008-02-20 10:52:40 mark Exp $
+# $Id: ComFilesystemCopyset.py,v 1.15 2008-03-12 12:27:41 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -86,22 +86,49 @@ erroroutput: %s""" %(_type, "RSyncError", self._errorcode, self.getErrorMessage(
 
 __logStrLevel__ = "comoonics.enterprisecopy.ComFilesystemCopyset.FilesystemCopyset"
 class FilesystemCopyset(Copyset):
-    def __init__(self, element, doc):
-        Copyset.__init__(self, element, doc)
-        try:
-            __source=xpath.Evaluate('source', element)[0]
-            self.source=CopyObject(__source, doc)
-        except Exception, e:
-            ComLog.getLogger(__logStrLevel__).warning(e)
-            raise ComException("Source for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
-        try:
-            __dest=xpath.Evaluate('destination', element)[0]
-            self.dest=CopyObject(__dest, doc)
-        except Exception, e:
-        #except None:
-            #print ("EXCEPTION: %s\n" %e)
-            ComLog.getLogger(__logStrLevel__).warning(e)
-            raise ComException("Destination for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
+    DEFAULT_OPTIONS=["--archive", "--update", "--one-file-system", "--delete"]
+    def __init__(self, *params, **kwds):
+        """
+        Valid constructors are
+        __init__(element, doc)
+        __init__(source, dest)
+        __init__(source=source, dest=dest)
+        """
+        if (len(params)==2 and isinstance(params[0], CopyObject) and isinstance(params[1], CopyObject)) or \
+           (kwds and kwds.has_key("source") and kwds.has_key("dest")):
+            source=None
+            dest=None
+            if len(params)==2:
+                source=params[0]
+                dest=params[1]
+            else:
+                source=kwds["source"]
+                dest=kwds["dest"]
+            doc=xml.dom.getDOMImplementation().createDocument(None, self.TAGNAME, None)
+            element=doc.documentElement
+            element.setAttribute("type", "filesystem")
+            element.appendChild(source.getElement())
+            element.appendChild(dest.getElement())
+            Copyset.__init__(self, element, doc)
+            self.source=source
+            self.dest=dest
+        elif len(params)==2:
+            element=params[0]
+            doc=params[1]
+            Copyset.__init__(self, element, doc)
+            try:
+                __source=xpath.Evaluate('source', element)[0]
+                self.source=CopyObject(__source, doc)
+            except Exception, e:
+                ComLog.getLogger(__logStrLevel__).warning(e)
+                ComLog.debugTraceLog(ComLog.getLogger(__logStrLevel__))
+                raise ComException("Source for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
+            try:
+                __dest=xpath.Evaluate('destination', element)[0]
+                self.dest=CopyObject(__dest, doc)
+            except Exception, e:
+                ComLog.getLogger(__logStrLevel__).warning(e)
+                raise ComException("Destination for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
 
     def doCopy(self):
         # do everything
@@ -168,7 +195,7 @@ class FilesystemCopyset(Copyset):
         """
         Returns the options for the sync command and also the supported options. Xattrs, selinux, acls
         """
-        _opts=["--archive", "--update", "--one-file-system", "--delete"]
+        _opts=FilesystemCopyset.DEFAULT_OPTIONS
 
         if self.getProperties():
             for _property in self.getProperties().keys():
@@ -237,8 +264,67 @@ class FilesystemCopyset(Copyset):
         raise ComException("data copy %s to %s is not supported" \
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
+def __testCopyset(_copyset):
+    import os
+    print "testing PathModificationset..."
+    print "cwd: %s" %os.getcwd()
+    _copyset.doPre()
+    print "cwd(after doPre): %s" %os.getcwd()
+    _copyset.doCopy()
+    print "cwd(before doPost): %s" %os.getcwd()
+    _copyset.doPost()
+    print "cwd: %s" %os.getcwd()
+
+def main():
+    _xmls=[
+           """
+    <copyset type="filesystem" name="save-sysreport-redhat">
+        <source type="path">
+            <path name="/tmp/sysreport-$(date -u +%G%m%d%k%M%S | /usr/bin/tr -d ' ')"/>
+        </source>
+        <destination type="backup">
+            <metadata>
+                <archive name='/tmp/meta-clone-lilr627-02.tar' format='tar' type='file'>
+                    <file name='./path.xml'/>
+                </archive>
+            </metadata>
+            <data>
+                <archive name='/tmp/path-02.tgz' format='tar' type='file' compression='gzip'/>
+            </data>
+        </destination>
+    </copyset>
+           """,
+           ]
+    import logging
+    from ComPathCopyObject import PathCopyObject 
+    from ComCopyObject import registerCopyObject
+    from xml.dom.ext.reader import Sax2
+    ComLog.setLevel(logging.DEBUG)
+    ComSystem.setExecMode(ComSystem.SIMULATE)
+    print "registering %s" %PathCopyObject
+    registerCopyObject("path", PathCopyObject)
+    reader=Sax2.Reader(validate=0)
+    print "Test with xml:"
+    for _xml in _xmls:
+        doc=reader.fromString(_xml)
+        _copyset=Copyset(doc.documentElement, doc)
+        print "Copyset: %s" %_copyset
+        __testCopyset(_copyset)
+    print "Test with params: "
+    FilesystemCopyset.DEFAULT_OPTIONS=["--archive", "--update", "--one-file-system"]
+    copyset=FilesystemCopyset(PathCopyObject(path="/tmp", source=True), PathCopyObject(path="/tmp2", dest=True))
+    __testCopyset(copyset)
+
+if __name__ == "__main__":
+    main()
+
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.14  2008-02-20 10:52:40  mark
+# Revision 1.15  2008-03-12 12:27:41  marc
+# - added a constructor that also would take copyobjects as is
+# - introduced static variable for DEFAULT_OPTIONS to be overwritten if needed
+# - added tests.
+#
+# Revision 1.14  2008/02/20 10:52:40  mark
 # add support for copy of FilesystemCopyObject to PathCopyObject
 #
 # Revision 1.13  2008/01/25 14:08:46  marc
