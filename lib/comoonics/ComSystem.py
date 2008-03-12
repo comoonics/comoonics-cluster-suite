@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.15 2008-02-27 10:42:54 marc Exp $
+# $Id: ComSystem.py,v 1.16 2008-03-12 09:34:42 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -100,7 +100,10 @@ def execLocalOutput(__cmd, asstr=False):
     (rc, out, err)=execLocalGetResult(__cmd, True)
     if asstr:
         out="".join(out)
-        err="".join(err)
+        if not err:
+            err=err
+        else:
+            err="".join(err)
     if rc==0:
         return out
     else:
@@ -171,7 +174,7 @@ def execMethod(cmd, *params):
             _tmpList.append(type(i).__name__)
 
     if not askExecModeCmd("%s(%s)" %(cmd.__name__, ", ".join(_tmpList))):
-        return 0
+        return True
     else:
         return cmd(*params)
 
@@ -204,7 +207,10 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.15  2008-02-27 10:42:54  marc
+# Revision 1.16  2008-03-12 09:34:42  marc
+# fixed bug in execLocalOutput where when SIMULATION-Mode this function would raise an exception where it should not.
+#
+# Revision 1.15  2008/02/27 10:42:54  marc
 # - added isSimulate() to return TRUE when simulation mode is on
 #
 # Revision 1.14  2007/09/18 09:23:00  marc
