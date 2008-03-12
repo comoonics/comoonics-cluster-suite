@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.7 2008-03-12 09:40:18 marc Exp $
+# $Id: ComArchiveCopyObject.py,v 1.8 2008-03-12 12:26:19 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from xml import xpath
@@ -29,12 +29,19 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
     def __init__(self, element, doc):
         CopyObjectJournaled.__init__(self, element, doc)
-        __serializer=self.element.getElementsByTagName("metadata")[0]
-        self.serializer=MetadataSerializer(__serializer)
+        _metadata=self.element.getElementsByTagName("metadata")
+        if len(_metadata)>0:
+            __serializer=_metadata[0]
+            self.serializer=MetadataSerializer(__serializer)
+        else:
+            self.log.warn("ArchivCopyObject %s has no metadata defined!" %self.getAttribute("name", "unknown"))
 
 
     def prepareAsSource(self):
-        self.metadata=self.serializer.resolve()
+        if hasattr(self, "serializer"):
+            self.metadata=self.serializer.resolve()
+        else:
+            self.metadata=None
 
     def cleanupSource(self):
         pass
@@ -68,7 +75,10 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.7  2008-03-12 09:40:18  marc
+# Revision 1.8  2008-03-12 12:26:19  marc
+# added support for empty metadata. Needed for ComPathCopyObjects as dest.
+#
+# Revision 1.7  2008/03/12 09:40:18  marc
 # made it simulation save
 #
 # Revision 1.6  2007/04/02 11:48:55  marc
