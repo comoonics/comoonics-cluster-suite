@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.7 2007-09-07 14:35:33 marc Exp $
+# $Id: ComCopyObject.py,v 1.8 2008-03-12 09:40:53 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -79,7 +79,7 @@ class CopyObject(DataObject, Requirements):
             ComLog.getLogger(CopyObject.__logStrLevel__).debug("Returning new object %s" %(cls))
             return object.__new__(cls, args, kwds)
         else:
-            raise UnsupportedMetadataException("Unsupported Metadata type because no domelement given (%u)" %(len(args)))
+            return object.__new__(cls, args, kwds)
 
 
     def __init__(self, element, doc):
@@ -131,7 +131,10 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.7  2007-09-07 14:35:33  marc
+# Revision 1.8  2008-03-12 09:40:53  marc
+# support for a more general constructor
+#
+# Revision 1.7  2007/09/07 14:35:33  marc
 # added registry implementation for all sets.
 #
 # Revision 1.6  2007/03/26 07:52:25  marc
