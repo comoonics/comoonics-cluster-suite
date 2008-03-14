@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComArchive.py,v $
 
 import os
@@ -286,7 +286,7 @@ class TarArchiveHandler(ArchiveHandler):
 
     def extractFile(self, name, dest):
         ''' extracts a file or directory from archiv' to destination dest '''
-        __cmd = TarArchiveHandler.TAR +" ".join(self.getCommandOptions())+" -x " + self.compression + " -f " \
+        __cmd = TarArchiveHandler.TAR +" "+" ".join(self.getCommandOptions())+" -x " + self.compression + " -f " \
                 + self.tarfile + " -C " + dest + " " + name
         __rc, __rv = ComSystem.execLocalGetResult(__cmd)
         if __rc >> 8 != 0:
@@ -308,7 +308,7 @@ class TarArchiveHandler(ArchiveHandler):
          '''
         if not cdir:
             cdir=os.getcwd()
-        __cmd = TarArchiveHandler.TAR +" ".join(self.getCommandOptions())+" -c --one-file-system " + self.compression + " -f " \
+        __cmd = TarArchiveHandler.TAR +" "+" ".join(self.getCommandOptions())+" -c --one-file-system " + self.compression + " -f " \
                 + self.tarfile + " -C " + cdir + " " + source
         __rc, __rv = ComSystem.execLocalGetResult(__cmd)
         if __rc >> 8 != 0:
@@ -530,7 +530,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.14  2008-01-25 14:08:36  marc
+# Revision 1.15  2008-03-14 10:39:17  marc
+# - BUGFix: where options defined within properties would lead to a missing space and therefore the tar would fail
+#
+# Revision 1.14  2008/01/25 14:08:36  marc
 # - Fix BUG#191 so that options might be given via properties (2nd)
 #
 # Revision 1.13  2008/01/25 13:06:58  marc
