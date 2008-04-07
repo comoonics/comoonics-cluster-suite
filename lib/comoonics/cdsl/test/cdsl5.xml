@@ -1,25 +1,4 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE cdsls SYSTEM "/home/andrea/python_workspace/CDSL_Tools/lib/comoonics/cdsl/test/cdsl.dtd">
 <cdsls config_version='1'>
-  <cdsl src='/hostdependent' timestamp='1187965708.26' type='hostdependent'>
-    <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
-    </nodes>
-  </cdsl>
-  <cdsl src='/hostdependent/shared' timestamp='1187965708.29' type='shared'>
-    <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
-    </nodes>
-  </cdsl>
-  <defaults use_nodeids='False' mountpoint='/home/andrea/test' cdsltree_shared='cluster/shared' cdsl_link='/cdsl.local' maxnodeidnum='0' cdsltree='cluster/cdsl'>
-    <nodesdefault>
-      <nodedefault id='gfs-node1'/>
-      <nodedefault id='gfs-node2'/>
-      <nodedefault id='gfs-node4'/>
-    </nodesdefault>
-  </defaults>
+  <defaults maxnodeidnum='0' cdsltree='cluster/cdsl/test' cdsl_link='/cdsl.local' cdsltree_shared='cluster/shared' use_nodeids='False' mountpoint='/home/andrea2/test'/>
 </cdsls>
