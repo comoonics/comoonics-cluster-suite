@@ -7,11 +7,12 @@ Wrotes overview about failed cdsls to logfile and prints result of validation
 """
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 
 from ComCdslRepository import *
 
 import comoonics.pythonosfix as os
+import shutil
 
 def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/cdsl_check_list",root="/"):
     """
@@ -53,7 +54,7 @@ def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/c
         return False
     else:
         if os.path.exists(logfile):
-            os.remove(logfile)
+            shutil.move(logfile, logfile + ".old")
         print "Sucessful CDSL inventory check"
         return True
 
