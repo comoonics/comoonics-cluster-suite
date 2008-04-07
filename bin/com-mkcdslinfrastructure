@@ -24,14 +24,14 @@ class Config(GetOpts.BaseConfig):
         
         self.cdsltree=GetOpts.Option("cdsltree", "path for hostdependent","cluster/cdsl",False,"t")
         self.cdsltreeShared=GetOpts.Option("cdsltreeShared", "path for shared cdsltree","cluster/shared",False,"s")
-        self.cdsllink=GetOpts.Option("cdslLink", "path for cdsl link","/cdsl.local",False,"L")
+        self.cdslLink=GetOpts.Option("cdslLink", "path for cdsl link","/cdsl.local",False,"L")
         self.maxnodeidnum=GetOpts.Option("maxnodeidnum", "maxnodeidnum","0",False,"m")
-        self.usenodeids=GetOpts.Option("useNodeids", "set use nodeids to True or False",False,False,"i")
+        self.useNodeids=GetOpts.Option("useNodeids", "set use nodeids to True or False",False,False,"i")
         
         self.root=GetOpts.Option("root", "set chroot-path","/",False,"r")
         self.mountpoint=GetOpts.Option("mountpoint", "set mountpoint",None,False,"M")
-        self.defaultdir=GetOpts.Option("defaultDir", "set default directory",None,False,"D")
-        self.nodeprefix=GetOpts.Option("nodePrefix", "set nodeprefix",None,False,"p")
+        self.defaultDir=GetOpts.Option("defaultDir", "set default directory",None,False,"D")
+        self.nodePrefix=GetOpts.Option("nodePrefix", "set nodeprefix",None,False,"p")
         
         self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
         self.clusterconf=GetOpts.Option("clusterconf", "path to used cluster.conf","/etc/cluster/cluster.conf",False,"c")
@@ -40,7 +40,7 @@ class Config(GetOpts.BaseConfig):
         self.noexecute=GetOpts.Option("noexecute", "display what would be done, but not really change filesystem",False,False,"n")
         self.defaultvalues=GetOpts.Option("defaultvalues", "use defaultvalues to create infrastructure/inventoryfile, only needed when no other parameter is given",False,False,"V")
         
-        self.createinventory=GetOpts.Option("createInventory", "only create inventoryfile, don't build infrastructure",False,False,"C")
+        self.createInventory=GetOpts.Option("createInventory", "only create inventoryfile, don't build infrastructure",False,False,"C")
 
     def do(self, args_proper):
         import os.path
@@ -71,12 +71,12 @@ elif len(sys.argv) == 1:
 if Config.noexecute:
     ComSystem.__EXEC_REALLY_DO="simulate"
 
-if not Config.usenodeids:
-    Config.usenodeids = "False"
+if not Config.useNodeids:
+    Config.useNodeids = "False"
 else:
-    Config.usenodeids = "True"
+    Config.useNodeids = "True"
     
-cdslRepository = CdslRepository(Config.inventoryfile,Config.inventorydtd,False,Config.cdsltree,Config.cdsltreeShared,Config.cdsllink,Config.maxnodeidnum,Config.usenodeids,Config.root,Config.mountpoint,Config.defaultdir,Config.nodeprefix)
+cdslRepository = CdslRepository(Config.inventoryfile,Config.inventorydtd,False,Config.cdsltree,Config.cdsltreeShared,Config.cdslLink,Config.maxnodeidnum,Config.useNodeids,Config.root,Config.mountpoint,Config.defaultDir,Config.nodePrefix)
 
 # parse the document and create comclusterinfo object
 reader = Sax2.Reader(validate=False)
@@ -91,6 +91,6 @@ file.close()
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 
-if not Config.createinventory:
+if not Config.createInventory:
     clusterInfo = ClusterInfo(clusterRepository)
     cdslRepository.buildInfrastructure(clusterInfo)

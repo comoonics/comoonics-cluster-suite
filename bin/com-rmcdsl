@@ -22,7 +22,7 @@ class CdslNotExistsException(ComException):pass
 class Config(GetOpts.BaseConfig):
     def __init__(self):
         GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.symbolicOnly=GetOpts.Option("symboliconly", "Removes only symbolic links", False, False, "s")
+        self.symbolicOnly=GetOpts.Option("symbolicOnly", "Removes only symbolic links", False, False, "s")
         self.noexecute=GetOpts.Option("noexecute", "display what would be done, but not really change filesystem",False,False,"n")
         self.quiet=GetOpts.Option("quiet", "Quiet, does not show any output",False,False,"q", self.setQuiet)
         self.verbose=GetOpts.Option("verbose", "Verbose, add debugging output",False,False,"d", self.setDebug)
