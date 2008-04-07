@@ -43,7 +43,7 @@ class Config(GetOpts.BaseConfig):
     def setQuiet(self, value):
         ComLog.setLevel(logging.CRITICAL)
 
-ComLog.setLevel(logging.INFO)
+ComLog.setLevel(logging.WARNING)
 #break if some wrong arguments exist
 Config=Config()
 ret=Config.getopt(sys.argv[1:])
