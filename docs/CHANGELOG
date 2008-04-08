@@ -37,6 +37,12 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Tue Apr 08 2008 AO <offermann@atix.de>, 0.1-9
+   - Added support to prepare filesystem for additional nodes (copy defaultdir)
+   - changed comoonicsCdslRepository to handle initialisations with less than five options
+   - changed CdslRepository to expect filenames without a maybe used chroot-directory
+   - changed CdslValidate to not delete an old logfile, instead of change it to logfile.old
+   - changed binaries to fix use of log parameters
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-8
    - rebuild for rpmspecfile updates
 * Mon Sep 10 2007 AO <offermann@atix.de>, 0.1-7
@@ -66,6 +72,10 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Tue Apr 08 2008 AO <offermann@atix.de>, 0.1-9
+   - added new methods
+   - added posibility to hand over a hash to ClusterRepository (instead of an xml-object)
+   - changed binaries to fix use of log parameters
 * Fri Feb 29 2008 MH <hlawatschek@atix.de>, 0.1-7
    - added new methods
 * Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-6
