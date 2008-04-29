@@ -129,6 +129,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Thu Apr 10 2008 MG <grimme@atix.de>, 0.1-54
+   - added lockfile
 * Fri Feb 29 2008 MH <hlawatschek@atix.de>, 0.1-53
    - ComLVM bug fixes in generic constructors
 * Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-52
