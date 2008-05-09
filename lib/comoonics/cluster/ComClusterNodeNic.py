@@ -8,11 +8,11 @@ clusternode instances) as an L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterNodeNic.py,v 1.4 2007-09-19 06:41:47 andrea2 Exp $
+# $Id: ComClusterNodeNic.py,v 1.5 2008-05-09 12:57:46 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
 import os
@@ -64,9 +64,26 @@ class ComoonicsClusterNodeNic(DataObject):
         #optional attribute, return empty string if not set
         try:
             self.log.debug("get ip attribute: " + self.getAttribute("ip"))
-            return self.getAttribute("ip")
+            # special case for dhcp we'll return the given ipaddress
+            if self.isDHCP():
+                from comoonics import ComSystem
+                import re
+                try:
+                    output=ComSystem.execLocalOutput("PATH=/sbin:/usr/sbin ip addr show %s" %self.getName(), True)
+                    return re.search("inet (?P<ip>[0-9.]+)", output).group("ip")
+                except:
+                    ComLog.debugTraceLog(self.log)
+                    return self.getAttribute("ip")
+            else:
+                return self.getAttribute("ip")
         except NameError:
             return ""
+    
+    def isDHCP(self):
+        """
+        @return: True when NIC is configured via DHCP else False
+        """
+        return self.getAttribute("ip")=="dhcp"
     
     def getGateway(self):
         """
@@ -151,7 +168,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNodeNic.py,v $
-# Revision 1.4  2007-09-19 06:41:47  andrea2
+# Revision 1.5  2008-05-09 12:57:46  marc
+# - implemented BUG#218 right ip returning whenever node is configured for dhcp
+#
+# Revision 1.4  2007/09/19 06:41:47  andrea2
 # adapted source code in dependence on Python Style Guide, removed not used imports and statements
 #
 # Revision 1.3  2007/08/06 12:09:27  andrea2
