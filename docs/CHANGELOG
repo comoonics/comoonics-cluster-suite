@@ -72,6 +72,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Fri May 09 2008 MG <grimme@atix.de>, 0.1-10
+   - Implemented BUG#218 for creating hosts with dhcp
 * Tue Apr 08 2008 AO <offermann@atix.de>, 0.1-9
    - added new methods
    - added posibility to hand over a hash to ClusterRepository (instead of an xml-object)
