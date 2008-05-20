@@ -157,7 +157,7 @@ class OSRClusterNode(KSObject):
         self.nodename=_nodename
         self.rootvol=_rootvol
         if _nodeid==None:
-            self.nodeid=self.cluster.getNextNodeId()
+            self.nodeid=str(self.cluster.getNextNodeId())
         else:
             self.nodeid=_nodeid
         self.netdevs=dict()
@@ -254,6 +254,9 @@ if __name__ == "__main__":
     test()
 ####################################
 # $Log: osrcluster.py,v $
-# Revision 1.1  2008-05-20 15:55:36  marc
+# Revision 1.2  2008-05-20 16:05:03  marc
+# nodeid must be str not int
+#
+# Revision 1.1  2008/05/20 15:55:36  marc
 # first official release
 #
