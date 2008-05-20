@@ -72,6 +72,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Tue May 20 2008 MG <grimme@atix.de>, 0.1-11
+   - Changed the text of an errormessage to be better readable.
 * Fri May 09 2008 MG <grimme@atix.de>, 0.1-10
    - Implemented BUG#218 for creating hosts with dhcp
 * Tue Apr 08 2008 AO <offermann@atix.de>, 0.1-9
@@ -312,6 +314,10 @@ comoonics-fenceacksv-py
 
 comoonics-fenceacksv-plugins-py
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
+  initial revision
+
+comoonics-installation-py
+* Tue May 20 2008 MG <grimme@atix.de>, 0.1-1
   initial revision
 
 comoonics-pythonosfix-py
