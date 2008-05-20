@@ -1,4 +1,4 @@
-# $Id: build-lib.sh,v 1.8 2007-12-07 14:29:23 reiner Exp $
+# $Id: build-lib.sh,v 1.9 2008-05-20 15:57:30 marc Exp $
 
 function setup {
   CHANGELOG=$(awk '
@@ -76,15 +76,17 @@ setup(name="'${NAME}'",
 ' > setup.py
 
 echo ${REQUIRES} | grep "^--requires" 2>&1 > /dev/null
-if [ $? -eq 0 ]; then
-  python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
-else
-  python setup.py -v bdist_rpm --release=${RELEASE} --requires="${REQUIRES}" ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
+if [ $? -ne 0 ] && [ -n "$REQUIRES" ]; then
+	REQUIRES="--requires $REQUIRES"
 fi
+python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.8  2007-12-07 14:29:23  reiner
+# Revision 1.9  2008-05-20 15:57:30  marc
+# bugfix with --requires when empty
+#
+# Revision 1.8  2007/12/07 14:29:23  reiner
 # Added GPL license to and ATIX AG as author name to RPM header.
 #
 # Revision 1.7  2007/09/10 15:15:57  marc
