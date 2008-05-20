@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.8 2008-04-07 09:45:22 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.9 2008-05-20 11:14:39 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -86,7 +86,7 @@ def applyDefaults(hash,defaults,clusternodeelement=None,numberofnodes=None):
         # if type(defaults[key]) == type(hash[key]) which was queried above is false, 
         # the structure of hash and defaults differ - this is not allowed!
         else:
-            raise AttributeError("Structure of given hash " + str(hash) + " and defaults " + str(defaults) + " differs, could not proceed")
+            raise AttributeError("Keys from hash and defaults don't fit! key: %s, %s!=%s. Information: Structure of given hash " %(key, type(defaults[key]), type(hash[key])) + str(hash) + " and defaults " + str(defaults) + " differs, could not proceed")
             
     return hash
         
@@ -446,11 +446,14 @@ def main():
                 print "\tVerify that no mac-address is specified for this nic"
 
 if __name__ == '__main__':
-    #main2()
+    main2()
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.8  2008-04-07 09:45:22  andrea2
+# Revision 1.9  2008-05-20 11:14:39  marc
+# - Error better readable
+#
+# Revision 1.8  2008/04/07 09:45:22  andrea2
 # added searchDict, applyDefaults(apply defaultvalues to a hash), setConfigVersion, createDomFromHash, adds posibility to hand over a hash over to ClusterRepository
 #
 # Revision 1.7  2008/02/27 09:16:40  mark
