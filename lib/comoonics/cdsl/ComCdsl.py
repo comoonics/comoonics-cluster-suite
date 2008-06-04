@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 
 import re
 import sys
@@ -728,7 +728,7 @@ def main():
     ComSystem.__EXEC_REALLY_DO="continue"
     
     # create Reader object
-    reader = Sax2.Reader(validate=True)
+    reader = Sax2.Reader()
 
     #parse the document and create clusterrepository object
     file = os.fdopen(os.open("test/cluster.conf",os.O_RDONLY))
@@ -744,7 +744,7 @@ def main():
     clusterinfo = ClusterInfo(clusterRepository)
     
     # create cdsl objects
-    cdslRepository = CdslRepository("test/cdsl5.xml")
+    cdslRepository = CdslRepository("test/cdsl5.xml", None, False)
     
     cdsl_1 = Cdsl("/hostdependent", "hostdependent", cdslRepository, clusterinfo, None)
     cdsl_2 = Cdsl("/hostdependent/shared", "shared", cdslRepository, clusterinfo, None)
