@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 
 import fcntl # needed for filelocking
 import time  # needed for creation of timestamp
@@ -129,6 +129,7 @@ class inventoryfileProcessing:
         self.conf.close()
 
 class CdslRepository(DataObject):
+    DEFAULT_INVENTORY="/var/lib/cdsl/cdsl_inventory.xml"
     """
     Represents cdsl-inventoryfile as L{DataObject}
     """
@@ -184,7 +185,7 @@ class CdslRepository(DataObject):
         
         return object.__new__(cls, *args, **kwds)
     
-    def __init__(self, configfile="/var/lib/cdsl/cdsl_inventory.xml", dtd=None, validate=True, *options):
+    def __init__(self, configfile=DEFAULT_INVENTORY, dtd=None, validate=True, *options):
         """
         Constructs a new CdslRepository from given configfile. Creates 
         a list of cdsls from configfile to provide an easy access to them.
@@ -273,7 +274,7 @@ class ComoonicsCdslRepository(CdslRepository):
     noderef_path_part = "nodes/noderef/@ref"
     
     
-    def __init__(self, configfile="/var/lib/cdsl/cdsl_inventory.xml", dtd=None, validate=True, *options):
+    def __init__(self, configfile=CdslRepository.DEFAULT_INVENTORY, dtd=None, validate=True, *options):
         """
         Constructs a new comoonicsCdslRepository from given configfile. Creates 
         a list of cdsls from configfile to provide an easy access to them.
@@ -800,7 +801,7 @@ def main():
     clusterinfo = ClusterInfo(clusterRepository)
 
     #__init__(self, configfile="/var/lib/cdsl/cdsl_inventory.xml", dtd=None, validate=True, *options):
-    cdslrepository = CdslRepository("test/cdsl5.xml","test/cdsl.dtd",True,"cluster/cdsl","cluster/shared","/cdsl.local","0","False",None,"/home/andrea2/test")
+    cdslrepository = CdslRepository("test/cdsl5.xml","test/cdsl.dtd",False,"cluster/cdsl","cluster/shared","/cdsl.local","0","False",None,"/tmp")
     
     #print cdslrepository (xml) and build infrastructure
     cdslrepository.buildInfrastructure(clusterinfo)
