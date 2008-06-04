@@ -7,14 +7,16 @@ Wrotes overview about failed cdsls to logfile and prints result of validation
 """
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 
-from ComCdslRepository import *
+from ComCdslRepository import CdslRepository
 
 import comoonics.pythonosfix as os
 import shutil
 
-def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/cdsl_check_list",root="/"):
+DEFAULT_LOGFILE="/var/lib/cdsl/cdsl_check_list.log"
+
+def cdslValidate(filename=CdslRepository.DEFAULT_INVENTORY,logfile=DEFAULT_LOGFILE,root="/"):
     """
     Validates cdsls in given inventoryfile against filesystem and writes informations 
     about not existing/damaged cdsls to logfile. Returns if validation was sucessfull 
@@ -42,7 +44,7 @@ def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/c
             failed_cdsls.append([cdsl.src,cdsl.type])
     
     if failure == True:
-        print "Fail CDSL inventory check. See details in " + os.path.abspath(logfile)
+        print "Failed CDSL inventory check. See details in " + os.path.abspath(logfile)
         if os.path.exists(logfile):
             os.remove(logfile)
         elif not os.path.exists(os.path.dirname(logfile)):
@@ -55,7 +57,7 @@ def cdslValidate(filename="/var/lib/cdsl/cdsl_inventory.xml",logfile="/var/adm/c
     else:
         if os.path.exists(logfile):
             shutil.move(logfile, logfile + ".old")
-        print "Sucessful CDSL inventory check"
+        print "Sucessfully executed CDSL inventory check"
         return True
 
 def main():
