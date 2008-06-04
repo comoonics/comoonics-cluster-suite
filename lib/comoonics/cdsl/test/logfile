@@ -1,0 +1,27 @@
+Expected CDSL /something of type hostdependent
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /hostdependent of type hostdependent
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /something of type hostdependent
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /hostdependent of type hostdependent
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /hostdependent/shared of type shared
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /hostdependent/shared/hostdependent_subdir of type hostdependent
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /hostdependent/shared/hostdependent_subdir/shared_subdir of type shared
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /hostdependent/shared/hostdependent_file of type hostdependent
+An administrator or application has removed/damaged this cdsl
+
+Expected CDSL /hostdependent/shared/hostdependent_subdir/shared_file of type shared
+An administrator or application has removed/damaged this cdsl
+
