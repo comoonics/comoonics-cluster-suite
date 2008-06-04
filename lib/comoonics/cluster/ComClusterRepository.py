@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.9 2008-05-20 11:14:39 marc Exp $
+# $Id: ComClusterRepository.py,v 1.10 2008-06-04 10:28:28 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -342,6 +342,45 @@ class ComoonicsClusterRepository(RedhatClusterRepository):
         else:
             super(ComoonicsClusterRepository, self).__init__(element, doc, *options)
         
+    def createOCFS2ClusterConf(self):
+        """
+        returns a string containing a valid OCFS2 cluster configuration
+        """
+        __NODE_TMPL__="""
+node:
+        ip_port = %(tcp_port)u
+        ip_address = %(ip_address)s
+        number = %(nodeid)s
+        name = %(name)s
+        cluster = %(clustername)s
+"""
+        __CL_TMPL__="""
+cluster:
+        node_count = %(nodecount)u
+        name = %(clustername)s
+"""
+        import StringIO
+
+        output = StringIO.StringIO()
+
+        _nodehash=dict()
+        for _node in self.nodeIdMap.values():
+            _nodehash.clear()
+            _nodehash["tcp_port"]=int(_node.getAttribute("tcp_port", "7777"))
+            _nodehash["clustername"]=self.getClusterName()
+            _nodehash["nodeid"]=_node.getId()
+            _nodehash["name"]=_node.getName()
+            for _nic in _node.getNics():
+                _ip=_nic.getIP()
+                if _ip != "":
+                    _nodehash["ip_address"]=_ip
+            output.write(__NODE_TMPL__ %_nodehash)
+        _clusterhash=dict()
+        _clusterhash["nodecount"]=len(self.nodeIdMap.keys())
+        _clusterhash["clustername"]=self.getClusterName()
+        output.write(__CL_TMPL__ %_clusterhash)
+        
+        return output.getvalue()
                     
 def main2():
     ComLog.setLevel(ComLog.logging.INFO)
@@ -444,13 +483,19 @@ def main():
             except ClusterMacNotFoundException:
                 print "\tNic " + nic.getName()
                 print "\tVerify that no mac-address is specified for this nic"
+                
+    print "Generating ocfs2 configuration"
+    print clusterRepository.createOCFS2ClusterConf()
 
 if __name__ == '__main__':
     main2()
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.9  2008-05-20 11:14:39  marc
+# Revision 1.10  2008-06-04 10:28:28  marc
+# - added ocfs2config creation
+#
+# Revision 1.9  2008/05/20 11:14:39  marc
 # - Error better readable
 #
 # Revision 1.8  2008/04/07 09:45:22  andrea2
