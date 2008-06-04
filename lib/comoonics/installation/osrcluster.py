@@ -142,7 +142,7 @@ class OSRCluster(KSObject):
             return len(self.nodeslist)<nameornumber
         
     def getNextNodeId(self):
-        return len(self.nodeslist)
+        return len(self.nodeslist)+1
     
 class OSRClusterNode(KSObject):
     def __init__(self, _osrcluster, _nodename="unknownnodename", _rootvol=None, _nodeid=None):
@@ -151,8 +151,8 @@ class OSRClusterNode(KSObject):
         self.IGNORE_ATTRS.append("netdevs")
         self.IGNORE_ATTRS.append("netdevslist")
         self.MAP_ATTRS["nodename"]="name"
-        self.MAP_ATTRS["rootvol"]="rootvolume"
-        self.PARENTS_FOR_ATTRS["rootvol"]=["com_info", "name" ]
+        self.MAP_ATTRS["rootvol"]="name"
+        self.PARENTS_FOR_ATTRS["rootvol"]=["com_info", "rootvolume" ]
         self.cluster=_osrcluster
         self.nodename=_nodename
         self.rootvol=_rootvol
@@ -237,7 +237,8 @@ def test(clustername="testcluster", numnodes=5, usehostnames=False, rootvolume="
     log.debug("Setting up cluster %s" %clustername)
     osrcluster=OSRCluster(clustername, usehostnames, numnodes)
     for i in range(1, 6):
-        _node=OSRClusterNode(osrcluster, "name%u" %i, rootvolume, str(i))
+        _node=OSRClusterNode(osrcluster, "name%u" %i, rootvolume)
+        _node.rootvol=rootvolume
         _node.addNetdev(OSRClusterNodeNetdev(_node, netdev))
         _node.getNetdev(netdev).mac="00:00:00:xx:0%u" %i
         _node.getNetdev(netdev).ip="dhcp"
@@ -254,7 +255,10 @@ if __name__ == "__main__":
     test()
 ####################################
 # $Log: osrcluster.py,v $
-# Revision 1.2  2008-05-20 16:05:03  marc
+# Revision 1.3  2008-06-04 10:28:56  marc
+# -bugfixes
+#
+# Revision 1.2  2008/05/20 16:05:03  marc
 # nodeid must be str not int
 #
 # Revision 1.1  2008/05/20 15:55:36  marc
