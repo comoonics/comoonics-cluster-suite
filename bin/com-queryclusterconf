@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -46,6 +46,7 @@ query_commands:
                              the given failoverdomain.
     nodeids [<sep>]          returns all defined nodeids seperated by <sep>.
     scsifailover nodename    returns the scsifailovertype for the given nodename
+    convert type             converts the cluster repository to the given type (supported types are: ocfs2) 
         """
         GetOpts.BaseConfig.__init__(self, sys.argv[0], helptext, __version__)
         self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
@@ -158,7 +159,7 @@ elif Config.query == "gateway":
 elif Config.query == "hosts":
     for node in clusterInfo.getNodes():
         for Nic in node.getNics():
-            if Nic.getIP() != "":
+            if Nic.getIP() != "" and Nic.getIP() != "dhcp":
                 print Nic.getIP() +  "\t" + node.getName()
                 break
 
@@ -214,5 +215,8 @@ elif Config.query == "nodeids":
 elif Config.query == "scsifailover":
         print clusterInfo.getNode(Config.values[0]).getScsifailover()
         
+elif Config.query == "convert":
+    print clusterInfo.clusterRepository.convert(Config.values[0])
+    
 else:
     raise NameError("Cannot find query named " + Config.query)

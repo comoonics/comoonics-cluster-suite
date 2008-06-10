@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.10 2008-06-04 10:28:28 marc Exp $
+# $Id: ComClusterRepository.py,v 1.11 2008-06-10 10:16:15 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -32,6 +32,7 @@ from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
 class ClusterMacNotFoundException(ComException): pass
+class ClusterRepositoryConverterNotFoundException(ComException): pass
 
 def searchDict(myhash,searchedElement):
     """
@@ -92,6 +93,7 @@ def applyDefaults(hash,defaults,clusternodeelement=None,numberofnodes=None):
         
                 
 class ClusterRepository(DataObject):
+    CONVERTERS=dict()
     """
     Provides generall functionality for a clusterrepository instance
     """
@@ -128,7 +130,12 @@ class ClusterRepository(DataObject):
         
         super(ClusterRepository, self).__init__(element, doc)
         
-    
+    def convert(self, _type="ocfs2"):
+        if self.CONVERTERS.has_key(_type):
+            return self.CONVERTERS[_type](self)
+        else:
+            raise ClusterRepositoryConverterNotFoundException("Could not find converter of clusterrepository for type %s" %_type)
+            
 class RedhatClusterRepository(ClusterRepository):
     """
     Represents the clusterconfiguration file of an redhat 
@@ -341,8 +348,8 @@ class ComoonicsClusterRepository(RedhatClusterRepository):
             raise AttributeError("You have to specify element OR filename attribute")
         else:
             super(ComoonicsClusterRepository, self).__init__(element, doc, *options)
-        
-    def createOCFS2ClusterConf(self):
+
+    def createOCFS2ClusterConf(clusterRepository):
         """
         returns a string containing a valid OCFS2 cluster configuration
         """
@@ -364,23 +371,28 @@ cluster:
         output = StringIO.StringIO()
 
         _nodehash=dict()
-        for _node in self.nodeIdMap.values():
+        for _node in clusterRepository.nodeIdMap.values():
             _nodehash.clear()
             _nodehash["tcp_port"]=int(_node.getAttribute("tcp_port", "7777"))
-            _nodehash["clustername"]=self.getClusterName()
+            _nodehash["clustername"]=clusterRepository.getClusterName()
             _nodehash["nodeid"]=_node.getId()
             _nodehash["name"]=_node.getName()
-            for _nic in _node.getNics():
-                _ip=_nic.getIP()
-                if _ip != "":
-                    _nodehash["ip_address"]=_ip
+            _nodehash["ip_address"]=_node.getIPs()[0]
+            #for _nic in _node.getNics():
+            #    _ip=_nic.getIP()
+            #    if _ip != "":
+            #        _nodehash["ip_address"]=_ip
             output.write(__NODE_TMPL__ %_nodehash)
         _clusterhash=dict()
-        _clusterhash["nodecount"]=len(self.nodeIdMap.keys())
-        _clusterhash["clustername"]=self.getClusterName()
+        _clusterhash["nodecount"]=len(clusterRepository.nodeIdMap.keys())
+        _clusterhash["clustername"]=clusterRepository.getClusterName()
         output.write(__CL_TMPL__ %_clusterhash)
         
         return output.getvalue()
+    
+    createOCFS2ClusterConf=staticmethod(createOCFS2ClusterConf)
+
+ClusterRepository.CONVERTERS["ocfs2"]=ComoonicsClusterRepository.createOCFS2ClusterConf
                     
 def main2():
     ComLog.setLevel(ComLog.logging.INFO)
@@ -456,7 +468,7 @@ def main():
     reader = Sax2.Reader()
 
     #parse the document and create clusterrepository object
-    my_file = os.fdopen(os.open("test/cluster2.conf", os.O_RDONLY))
+    my_file = os.fdopen(os.open("test/cluster3.conf", os.O_RDONLY))
     doc = reader.fromStream(my_file)
     my_file.close()
     element = xpath.Evaluate("/cluster", doc)[0]
@@ -485,14 +497,19 @@ def main():
                 print "\tVerify that no mac-address is specified for this nic"
                 
     print "Generating ocfs2 configuration"
-    print clusterRepository.createOCFS2ClusterConf()
+    print clusterRepository.convert("ocfs2")
 
 if __name__ == '__main__':
+    import logging
+    ComLog.setLevel(logging.DEBUG)
     main2()
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.10  2008-06-04 10:28:28  marc
+# Revision 1.11  2008-06-10 10:16:15  marc
+# - added ClusterConf conversion
+#
+# Revision 1.10  2008/06/04 10:28:28  marc
 # - added ocfs2config creation
 #
 # Revision 1.9  2008/05/20 11:14:39  marc
