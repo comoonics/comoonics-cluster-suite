@@ -8,11 +8,11 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.5 2007-09-19 06:37:37 andrea2 Exp $
+# $Id: ComClusterNode.py,v 1.6 2008-06-10 10:14:52 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
@@ -147,7 +147,24 @@ class ComoonicsClusterNode(RedhatClusterNode):
             # List of Devicename/Nicobject Pairs for Operations which 
             # need the informations in order of the cluster configuration
             self.nicDevList.append([_dev, _nic])
-         
+    
+    def getIPForNic(self, value):
+        """
+        Returns the ip for the nic given
+        @param value: Mac-Address (e.g. 00:11:22:33:44) or Devicename (e.g. eth0)
+        @type value: string
+        @return: ip which belongs to the given nic if dhcp the nodename is tried to be resolved and that ip is taken
+        @rtype: L{ComoonicsClusterNodeNic}
+        """
+        _nic=self.getNic(value)
+        _ip=""
+        if _nic.isDHCP():
+            import socket
+            _ip=socket.gethostbyname(self.getName())
+        elif _nic.hasAttribute("ip"):
+            _ip=_nic.getIP()
+        return _ip
+        
     def getNic(self, value):
         """
         @param value: Mac-Address (e.g. 00:11:22:33:44) or Devicename (e.g. eth0)
@@ -228,7 +245,22 @@ class ComoonicsClusterNode(RedhatClusterNode):
         for i in range(len(self.nicDevList)):
             _tmp.append(self.nicDevList[i][1])
         return _tmp
-        
+    
+    def getIPs(self):
+        """
+        @return: all resolved ips of the corresponding network interfaces
+        @rtype: list of strings which represent ips
+        """
+        _tmp=[]
+        for nic in self.getNics():
+            try:
+                _ip=self.getIPForNic(nic.getName())
+                if _ip and _ip!="":
+                    _tmp.append(_ip)
+            except:
+                pass
+        return _tmp
+    
 def main():
     """
     Method to test module. Creates a ClusterNode object and test all defined methods 
@@ -285,7 +317,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.5  2007-09-19 06:37:37  andrea2
+# Revision 1.6  2008-06-10 10:14:52  marc
+# - added getIPForNic
+#
+# Revision 1.5  2007/09/19 06:37:37  andrea2
 # Fixed Bug BZ #79, adapted source code in dependence on Python Style Guide
 #
 # Revision 1.4  2007/08/08 08:38:44  andrea2
