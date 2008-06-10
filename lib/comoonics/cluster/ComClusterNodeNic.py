@@ -8,11 +8,11 @@ clusternode instances) as an L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterNodeNic.py,v 1.5 2008-05-09 12:57:46 marc Exp $
+# $Id: ComClusterNodeNic.py,v 1.6 2008-06-10 10:15:42 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
 import os
@@ -70,7 +70,12 @@ class ComoonicsClusterNodeNic(DataObject):
                 import re
                 try:
                     output=ComSystem.execLocalOutput("PATH=/sbin:/usr/sbin ip addr show %s" %self.getName(), True)
-                    return re.search("inet (?P<ip>[0-9.]+)", output).group("ip")
+                    _mac=re.search("link/ether (?P<mac>\S+)", output).group("mac")
+                    _ip=re.search(".*inet (?P<ip>[0-9.]+)", output).group("ip")
+                    if _mac.upper() == self.getMac().upper():
+                        return _ip
+                    else:
+                        return self.getAttribute("ip")
                 except:
                     ComLog.debugTraceLog(self.log)
                     return self.getAttribute("ip")
@@ -168,7 +173,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNodeNic.py,v $
-# Revision 1.5  2008-05-09 12:57:46  marc
+# Revision 1.6  2008-06-10 10:15:42  marc
+# fixed getIP to work with dhcp and being able to resolve it
+#
+# Revision 1.5  2008/05/09 12:57:46  marc
 # - implemented BUG#218 right ip returning whenever node is configured for dhcp
 #
 # Revision 1.4  2007/09/19 06:41:47  andrea2
