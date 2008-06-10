@@ -37,6 +37,10 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Wed Jun 04 2008 MG <grimme@atix.de>, 0.1-11
+   - changed error msgs
+   - removed * includes
+   - introduced constants
 * Tue Apr 08 2008 AO <offermann@atix.de>, 0.1-9
    - Added support to prepare filesystem for additional nodes (copy defaultdir)
    - changed comoonicsCdslRepository to handle initialisations with less than five options
@@ -72,6 +76,10 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Tue Jun 10 2008 MG <grimme@atix.de>, 0.1-13
+   - added cluster.conf conversion
+* Wed Jun 04 2008 MG <grimme@atix.de>, 0.1-12
+   - added createOCFS2ClusterConf
 * Tue May 20 2008 MG <grimme@atix.de>, 0.1-11
    - Changed the text of an errormessage to be better readable.
 * Fri May 09 2008 MG <grimme@atix.de>, 0.1-10
