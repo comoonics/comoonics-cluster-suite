@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -26,6 +26,7 @@ query_commands:
     netdevs <hostname> [<sep>]
                              print out the network device names for given host. Separated by <sep>
     nodename <mac>           print out the nodename for given mac.
+    nodenamebyid <id>        print out the nodename for given nodeid.
     nodeid <mac>             print out the nodeid for given mac.
     ip <nodename> <dev>      print out the IP address for given hostname and network device name
     master <nodename> <dev>  print out the master if for given hostname and network device name
@@ -120,6 +121,10 @@ elif Config.query == "netdevs":
 elif Config.query == "nodename":
     print clusterInfo.getNodeName(Config.values[0])
     
+#Query Nodename to given id, raise exception if id not found
+elif Config.query == "nodenamebyid":
+    print clusterInfo.getNodeNameById(Config.values[0])
+
 #Query Nodeid to given mac, raise exception if mac not found
 elif Config.query == "nodeid":
     print clusterInfo.getNodeId(Config.values[0])

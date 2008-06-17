@@ -8,11 +8,11 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.7 2008-02-27 09:16:40 mark Exp $
+# $Id: ComClusterInfo.py,v 1.8 2008-06-17 16:22:55 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 from xml import xpath
@@ -162,6 +162,16 @@ class RedhatClusterInfo(ClusterInfo):
         self.log.debug("get name of node with given mac from clusterrepository:" + str(mac))
         return self.clusterRepository.getNodeName(mac)
             
+    def getNodeNameById(self, id):
+        """
+        @param id: nodeid
+        @type id: int
+        @return: Clusternodename belonging to given nodeid
+        @rtype: string
+        """
+        self.log.debug("get name of node with given nodid from clusterrepository:" + str(id))
+        return self.clusterRepository.getNodeNameById(id)
+
     def getNodeId(self, mac):
         """
         @param mac: mac-address
@@ -302,7 +312,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.7  2008-02-27 09:16:40  mark
+# Revision 1.8  2008-06-17 16:22:55  mark
+# added support for query nodenamebyid. This is needed for passing the nodeid as boot parameter.
+#
+# Revision 1.7  2008/02/27 09:16:40  mark
 # added getClusterName support
 #
 # Revision 1.6  2007/09/19 06:40:53  andrea2

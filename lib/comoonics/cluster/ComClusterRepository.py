@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.11 2008-06-10 10:16:15 marc Exp $
+# $Id: ComClusterRepository.py,v 1.12 2008-06-17 16:22:55 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -32,6 +32,7 @@ from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
 class ClusterMacNotFoundException(ComException): pass
+class ClusterIdNotFoundException(ComException): pass
 class ClusterRepositoryConverterNotFoundException(ComException): pass
 
 def searchDict(myhash,searchedElement):
@@ -206,6 +207,19 @@ class RedhatClusterRepository(ClusterRepository):
             except KeyError:
                 continue
         raise ClusterMacNotFoundException("Cannot find device with given mac: " + str(mac))
+
+    def getNodeNameById(self, id):
+        """
+        @param id: id of node
+        @type int
+        @return: Nodename
+        @rtype: string
+        @raise ClusterIdNotFoundException: Raises Exception if search for node with given mac failed.
+        """
+        if self.nodeIdMap.has_key(id):
+            return self.nodeIdMap.get(id).getName()
+        
+        raise ClusterIdNotFoundException("Cannot find node with id " + str(id))
 
     def setConfigVersion(self,version):
         """
@@ -506,7 +520,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.11  2008-06-10 10:16:15  marc
+# Revision 1.12  2008-06-17 16:22:55  mark
+# added support for query nodenamebyid. This is needed for passing the nodeid as boot parameter.
+#
+# Revision 1.11  2008/06/10 10:16:15  marc
 # - added ClusterConf conversion
 #
 # Revision 1.10  2008/06/04 10:28:28  marc
