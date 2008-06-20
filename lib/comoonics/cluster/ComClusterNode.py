@@ -8,11 +8,11 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.6 2008-06-10 10:14:52 marc Exp $
+# $Id: ComClusterNode.py,v 1.7 2008-06-20 14:58:04 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
@@ -121,7 +121,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
 
     #define default values
     defaultRootFs = "gfs"
-    defaultMountopts = "noatime,nodiratime"
+    defaultMountopts = ""
     defaultScsiFailover = "driver"
     defaultSyslog = ""
     
@@ -317,7 +317,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.6  2008-06-10 10:14:52  marc
+# Revision 1.7  2008-06-20 14:58:04  mark
+# set default mountopts to "" as this has to be set within the fs-lib.sh
+#
+# Revision 1.6  2008/06/10 10:14:52  marc
 # - added getIPForNic
 #
 # Revision 1.5  2007/09/19 06:37:37  andrea2
