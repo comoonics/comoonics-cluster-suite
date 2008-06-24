@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComLVM.py,v $
 
 import os
@@ -399,13 +399,22 @@ class LogicalVolume(LinuxVolumeManager):
             self.ondisk=False
             raise RuntimeError("running lvdisplay of %s failed: %u, %s, %s" % (str(self.parentvg.getAttribute("name"))+"/"+str(self.getAttribute("name")), rc,rv, stderr))
 
+        #FIXME
+        # an exception should be thrown, if lvdisplay output has changed the syntax.
+        # do we really need the for loop ?
         for line in rv:
             try:
-                (lvname, vgname, attrs, size, origin, snap, move, log, copy) = line.strip().split(':')
+                if line.count(":") == 8:
+                    (lvname, vgname, attrs, size, origin, snap, move, log, copy) = line.strip().split(':')
+                else:
+                    #This is for newer lvm implementations.
+                    (lvname, vgname, attrs, size, origin, snap, move, log, copy, convert) = line.strip().split(':')
                 self.setAttribute("attrs", attrs)
                 self.setAttribute("size", long(math.floor(long(size) / (1024 * 1024))))
                 self.setAttribute("origin", origin)
             except:
+                #FIXME
+                # this should be fixed to get an exception if the values cannot be parsed.
                 continue
 
         if not ComSystem.isSimulate():
@@ -997,7 +1006,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.14  2008-02-29 15:24:55  mark
+# Revision 1.15  2008-06-24 20:01:20  mark
+# add support for latest lvdisplay output like in RHEL5.2
+#
+# Revision 1.14  2008/02/29 15:24:55  mark
 # fixed typo
 #
 # Revision 1.13  2008/02/28 09:29:21  mark
