@@ -76,6 +76,10 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Fri Jun 20 2008 MH <hlawatschek@atix.de>, 0.1-15
+   - removed default mountopts
+* Wed Jun 18 2008 MH <hlawatschek@atix.de>, 0.1-14
+   - added query for nodenamebyid
 * Tue Jun 10 2008 MG <grimme@atix.de>, 0.1-13
    - added cluster.conf conversion
 * Wed Jun 04 2008 MG <grimme@atix.de>, 0.1-12
@@ -141,6 +145,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Tue Jun 24 2008 MH <hlawatschek@atix.de>, 0.1-55
+   - added support for RHEL5.2ish lvdisplay output
 * Thu Apr 10 2008 MG <grimme@atix.de>, 0.1-54
    - added lockfile
 * Fri Feb 29 2008 MH <hlawatschek@atix.de>, 0.1-53
