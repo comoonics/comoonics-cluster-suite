@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.12 2008-06-17 16:22:55 mark Exp $
+# $Id: ComClusterRepository.py,v 1.13 2008-07-08 07:34:30 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -23,83 +23,29 @@ import os
 from xml import xpath
 from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
-from xml.dom.ext.reader.Sax2 import implementation
+
+import comoonics.cluster
 
 from comoonics.cluster.ComClusterNode import ClusterNode
+from comoonics.cluster.ComClusterInfo import ClusterInfo
 
 from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
+from comoonics.DictTools import searchDict, applyDefaults, createDomFromHash
+
+log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
 
 class ClusterMacNotFoundException(ComException): pass
 class ClusterIdNotFoundException(ComException): pass
 class ClusterRepositoryConverterNotFoundException(ComException): pass
-
-def searchDict(myhash,searchedElement):
-    """
-    Searches for a given key in a nested dictionary
-    @param myhash: Dictionary to seach in
-    @type myhash: L{dict}
-    @param searchedElement: key to search for
-    """
-    for (key, value) in myhash.items():
-        if key == searchedElement:
-            return True
-        else:
-            #dicts are used to represent the different layers in the (later) xml
-            if type(value) == dict:
-                if searchDict(value,searchedElement) == True: return True
-            #list are used to define more than one element with same name
-            elif type(value) == list:
-                for element in value:
-                    if searchDict(element,searchedElement) == True: return True
-    return False
-
-def applyDefaults(hash,defaults,clusternodeelement=None,numberofnodes=None):
-    """
-    Applies default values to a given hash. Hash and default values 
-    has to be available as a dict with the same structure.
-    @param hash: hash to apply defaults to
-    @type hash: L{dict}
-    @param defaults: defaults to apply
-    @type defaults: L{dict}
-    """
-    for (key,value) in defaults.items():
-        # if hash does not contain any value for a key defined in default, use 
-        # key/value pair from defaults
-        if not hash.has_key(key):
-            hash[key] = value
-        # if a nested structure is found, continue recursively
-        elif type(defaults[key]) == dict and type(hash[key]) == dict:
-            hash[key] = applyDefaults(hash[key],defaults[key],clusternodeelement,numberofnodes)
-        # a special nested structure, used to handle elements whose names appear 
-        # several times on the same level
-        # split list and for each continue recursively
-        elif type(defaults[key]) == list and type(hash[key]) == list:
-            if len(hash[key]) < numberofnodes and key == clusternodeelement:
-                for i in range(numberofnodes - len(hash[key])):
-                    hash[key].append(defaults[key][0])
-            for i in range(len(hash[key])):
-                hash[key][i] = applyDefaults(hash[key][i],defaults[key][0],clusternodeelement,numberofnodes)
-        # if hash already contains a value which is defined in defaults, pass default 
-        # value and keep hash value
-        elif type(defaults[key]) == type(hash[key]):
-            pass
-        # if type(defaults[key]) == type(hash[key]) which was queried above is false, 
-        # the structure of hash and defaults differ - this is not allowed!
-        else:
-            raise AttributeError("Keys from hash and defaults don't fit! key: %s, %s!=%s. Information: Structure of given hash " %(key, type(defaults[key]), type(hash[key])) + str(hash) + " and defaults " + str(defaults) + " differs, could not proceed")
-            
-    return hash
-        
                 
 class ClusterRepository(DataObject):
     CONVERTERS=dict()
     """
     Provides generall functionality for a clusterrepository instance
     """
-
-    log = ComLog.getLogger("comoonics.cluster.ComClusterRepository")
+    log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
 
     def __new__(cls, *args, **kwds):
         """
@@ -110,15 +56,15 @@ class ClusterRepository(DataObject):
         """
         if len(args) >= 2:
             if (args[0] != None):                
-                if xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", args[0]) or len(args[2]) == 0:
+                if xpath.Evaluate(comoonics.cluster.cominfo_path, args[0]) or len(args[2]) == 0:
                     cls = ComoonicsClusterRepository
-                elif xpath.Evaluate("/cluster/clusternodes/clusternode", args[0]):
+                elif xpath.Evaluate(comoonics.cluster.clusternode_path, args[0]):
                     cls = RedhatClusterRepository
                     
             elif type(args[2]) == dict:                
-                if searchDict(args[2],"com_info"):
+                if searchDict(args[2],comoonics.cluster.cominfo_name):
                     cls = ComoonicsClusterRepository
-                elif searchDict(args[2],"clusternode"):
+                elif searchDict(args[2],comoonics.cluster.clusternode_name):
                     cls = RedhatClusterRepository
                 
                                     
@@ -143,11 +89,7 @@ class RedhatClusterRepository(ClusterRepository):
     cluster as an L{DataObject}. Extends generall 
     clusterrepository by special queries for this cluster 
     type.
-    """
-    
-    defaultcluster_path = "/cluster"
-    defaultclusternode_path = defaultcluster_path + "/clusternodes/clusternode"
-    
+    """    
     def __init__(self, element=None, doc=None, *options):
         if ((element == None) and (len(options) == 0)) or ((element != None) and (len(options) != 0)):
             raise AttributeError("You have to specify element OR options to create a new element")
@@ -155,18 +97,16 @@ class RedhatClusterRepository(ClusterRepository):
             """
             if no element is given create a "default" cluster.conf is generated from given hash
             """
-            if len(options) == 2:
-                doc = self.createDomFromHash(options[0],defaults=options[1])
-            if len(options) == 3:
-                doc = self.createDomFromHash(options[0],defaults=options[1],numberofnodes=options[2])
+            if (len(options) == 2) or (len(options) == 3):
+                doc = createDomFromHash(options[0],defaults=options[1])
             else:
-                doc = self.createDomFromHash(options[0])
-            element = xpath.Evaluate("/cluster", doc)[0]
+                doc = createDomFromHash(options[0])
+            element = xpath.Evaluate(comoonics.cluster.cluster_path, doc)[0]
 
         super(RedhatClusterRepository, self).__init__(element, doc)
         
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
-        _nodes = xpath.Evaluate(self.defaultclusternode_path, self.getElement())
+        _nodes = xpath.Evaluate(comoonics.cluster.clusternode_path, self.getElement())
         for i in range(len(_nodes)):
             _node = ClusterNode(_nodes[i], self.getElement())
             self.nodeNameMap[_node.getName()] = _node
@@ -186,7 +126,7 @@ class RedhatClusterRepository(ClusterRepository):
         @return: clustername
         @rtype: string
         """
-        _clustername =  xpath.Evaluate(self.defaultcluster_path, self.getElement())[0]
+        _clustername =  xpath.Evaluate(comoonics.cluster.cluster_path, self.getElement())[0]
         return _clustername.getAttribute("name")
 
 
@@ -235,8 +175,9 @@ class RedhatClusterRepository(ClusterRepository):
         @return: clustername
         @rtype: string
         """
+        #FIXME: config_version hardcoded
         self.log.debug("get version attribute: " + self.getAttribute("config_version"))
-        #no try-except construct because name ist an obligatory object
+        #no try-except construct because name is an obligatory object
         return self.getAttribute("config_version")
     
     def getNodeId(self, mac):
@@ -255,49 +196,6 @@ class RedhatClusterRepository(ClusterRepository):
             except KeyError:
                 continue
         raise ClusterMacNotFoundException("Cannot find device with given mac: " + mac)
-    
-    def createDomFromHash(self,hash,doc=None,element=None,defaults=None,clusternodeelementname="clusternode",numberofnodes=None):
-        """
-        Creates or manipulates a DOM (cluster.conf) from given hash.
-        @param hash: Hash to create DOM
-        @type hash: L{dict}
-        @param doc: if given, expand with content from hash
-        @type doc: L{DOM}
-        @param element: element in doc to work on
-        @param clusternodeelementname: define element which includes clusternodes, default is clusternodes
-        @type clusternodeelementname: L{string}
-        @return: XML-Dom-Element created from hash
-        @rtype: L{DOM}
-        """
-        if defaults != None:
-            hash = applyDefaults(hash, defaults, clusternodeelementname, numberofnodes)
-          
-        if doc==None:            
-            doc = implementation.createDocument(None,hash.keys()[0],None)
-            newelement = doc.documentElement                
-        else:
-            newelement = doc.createElement(hash.keys()[0])                    
-            element.appendChild(newelement)
-            
-        _tmp = hash[hash.keys()[0]]
-        for i in _tmp.keys():
-            #if i == clusternodeselementname:
-            #    nodeselement = doc.createElement(clusternodeselementname)                    
-            #    newelement.appendChild(nodeselement)
-            #    nodes = self.createClusterNodesElement(_tmp[i],doc,nodeselement)
-            #    for node in nodes:
-            #        nodeselement.appendChild(node)
-            #elif (type(_tmp[i]) != dict) and (type(_tmp[i]) != list):
-            if (type(_tmp[i]) != dict) and (type(_tmp[i]) != list):
-                newelement.setAttribute(str(i),str(_tmp[i]))
-            elif type(_tmp[i]) == list:
-                for element in _tmp[i]:
-                    self.createDomFromHash({i:element},doc,newelement)
-            else:
-                _tmp2 = {i: _tmp[i]}
-                self.createDomFromHash(_tmp2,doc,newelement)
-        
-        return doc
     
     def createClusterNodesElement(self,myhash,doc=None,element=None,initial=True):
         """
@@ -455,7 +353,7 @@ def main2():
     
     #print str(searchDict(hash,"nodeid"))
     
-    print str(type(_tmp))
+    print "type should be comoonicsClusterRepository: " + str(type(_tmp))
     PrettyPrint(_tmp.getDocument())
     
     import fcntl
@@ -464,20 +362,21 @@ def main2():
     fcntl.lockf(conf,fcntl.LOCK_EX)
     PrettyPrint(_tmp.getDocument(), conf)
     fcntl.lockf(conf,fcntl.LOCK_UN)
-    conf.close()    
-    
-    print
+    conf.close()
     
     _tmp2 = {"cluster":{"config":"1"},"clusternodes":[{"node1":"node1"}],"default":"default"}
     _tmp1 = {"cluster":{"config":"2","name":"myName"},"clusternodes":[{"mynode1":"mynode1"},{"mynode2":"mynode2"}],"extra":"extra"}
     
-    print "\n" + str(applyDefaults(_tmp1, _tmp2))
+    print "Test applyDefaults, should contain default and extra: " + str(applyDefaults(_tmp1, _tmp2))
+    print "End of main2()"
     
 def main():
     """
     Method to test module. Creates a ClusterRepository object, prints defined hashmaps 
     and test getting of nodename and nodeid of nodes defined in a example cluster.conf.
     """
+    from comoonics.cluster.ComClusterRepository import ClusterRepository
+    
     # create Reader object
     reader = Sax2.Reader()
 
@@ -485,10 +384,14 @@ def main():
     my_file = os.fdopen(os.open("test/cluster3.conf", os.O_RDONLY))
     doc = reader.fromStream(my_file)
     my_file.close()
-    element = xpath.Evaluate("/cluster", doc)[0]
+    element = xpath.Evaluate(comoonics.cluster.cluster_path, doc)[0]
 
     #create clusterRepository Object
     clusterRepository = ClusterRepository(element, doc)
+    nodevalues = {"clusternode":{"name":"mynode","nodeid:":"3","com_info":{"eth":[{"name":"eth5"}]}}}
+    clusterRepository.addClusterNode(nodevalues)
+    PrettyPrint(clusterRepository.element)
+    return
     
     print "Dictionary Nodeid:Nodeobject"
     print clusterRepository.nodeIdMap
@@ -520,7 +423,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.12  2008-06-17 16:22:55  mark
+# Revision 1.13  2008-07-08 07:34:30  andrea2
+# Improved imports (no imports with *), sourced out dict-tools, sourced out validate_xml to xmltools, use constants (xpath, filenames) from __init__
+#
+# Revision 1.12  2008/06/17 16:22:55  mark
 # added support for query nodenamebyid. This is needed for passing the nodeid as boot parameter.
 #
 # Revision 1.11  2008/06/10 10:16:15  marc
