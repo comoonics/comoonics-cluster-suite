@@ -5,12 +5,15 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.10 2008-02-27 10:44:31 marc Exp $
+# $Id: XmlTools.py,v 1.11 2008-07-08 07:27:15 andrea2 Exp $
 
 import warnings
 #import xml.dom.Node
 from xml.dom import Node
 from xml.dom.ext.reader import Sax2
+from xml.parsers.xmlproc import xmlproc
+from xml.parsers.xmlproc import xmlval
+from xml.parsers.xmlproc import xmldtd
 from comoonics import ComLog
 
 logger=ComLog.getLogger("comoonics.XmlTools")
@@ -229,6 +232,19 @@ def createDOMfromXML(xmlstring, xslfilename=None, validate=0):
         doc=reader.fromStream(xmlstring)
     return doc
 
+def validate_xml(xml_filename, dtd_filename):
+    """
+    Validates a given XML file with a given external DTD.
+    If the XML file is not valid, an exception will be 
+    printed with an error message.
+    """
+    dtd = xmldtd.load_dtd(dtd_filename)
+    parser = xmlproc.XMLProcessor()
+    parser.set_application(xmlval.ValidatingApp(dtd, parser))
+    parser.dtd = dtd
+    parser.ent = dtd
+    parser.parse_resource(xml_filename)
+
 def main():
     xml="""<?xml version="1.0" encoding="UTF-8"?>
 <localclone>
@@ -312,7 +328,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.10  2008-02-27 10:44:31  marc
+# Revision 1.11  2008-07-08 07:27:15  andrea2
+# Added validate_xml
+#
+# Revision 1.10  2008/02/27 10:44:31  marc
 # - changed an import
 #
 # Revision 1.9  2008/02/27 09:15:43  mark
