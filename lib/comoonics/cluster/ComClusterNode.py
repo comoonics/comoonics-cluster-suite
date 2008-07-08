@@ -8,18 +8,19 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.7 2008-06-20 14:58:04 mark Exp $
+# $Id: ComClusterNode.py,v 1.8 2008-07-08 07:22:31 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
 
 from xml import xpath
 from xml.dom.ext.reader import Sax2
-#from xml.dom.ext import PrettyPrint
+
+import comoonics.cluster
 
 from comoonics.cluster.ComClusterNodeNic import ComoonicsClusterNodeNic
 
@@ -40,7 +41,7 @@ class ClusterNode(DataObject):
         or comoonics) has to be created.
         """
         try:
-            xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", args[0])
+            xpath.Evaluate(comoonics.cluster.cominfo_path, args[0])
         except NameError:
             if args[0].getAttribute("name"):
                 cls = RedhatClusterNode
@@ -113,12 +114,6 @@ class ComoonicsClusterNode(RedhatClusterNode):
     type and Hashmaps to combine clusteridentifiers 
     with the corresponding network interfaces.
     """
-    
-    #define needed pathes from cluster.conf
-    cominfo_path = "com_info/"
-    rootvolume_path = cominfo_path + "rootvolume/"
-    clusternode_path = "/cluster/clusternodes/clusternode"
-
     #define default values
     defaultRootFs = "gfs"
     defaultMountopts = ""
@@ -133,7 +128,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         self.nicDev = {}
         self.nicDevList = []
 
-        _nics = xpath.Evaluate(self.cominfo_path + '/eth', self.getElement())
+        _nics = xpath.Evaluate(comoonics.cluster.netdev_path, self.getElement())
         for i in range(len(_nics)):
             _nic = ComoonicsClusterNodeNic(_nics[i], self.getElement())
             _mac = _nic.getMac()
@@ -186,8 +181,8 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @return: device belonging to rootvolume
         @rtype: string
         """
-        self.log.debug("get rootvolume attribute: " + self.rootvolume_path + "@name")
-        return xpath.Evaluate(self.rootvolume_path + "@name", self.getElement())[0].value          
+        self.log.debug("get rootvolume attribute: " + comoonics.cluster.rootvolume_path + "/@name")
+        return xpath.Evaluate(comoonics.cluster.rootvolume_path + "/@name", self.getElement())[0].value          
 
     def getRootFs(self):
         """
@@ -195,8 +190,8 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
-            self.log.debug("get rootfs attribute: " + self.rootvolume_path + "@fstype")
-            return xpath.Evaluate(self.rootvolume_path + "@fstype", self.getElement())[0].value
+            self.log.debug("get rootfs attribute: " + comoonics.cluster.rootvolume_path + "/@fstype")
+            return xpath.Evaluate(comoonics.cluster.rootvolume_path + "/@fstype", self.getElement())[0].value
         except IndexError:
             return self.defaultRootFs
 
@@ -206,8 +201,8 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
-            self.log.debug("get mountopts attribute: " + self.rootvolume_path + "@mountopts")
-            return xpath.Evaluate(self.rootvolume_path + "@mountopts", self.getElement())[0].value
+            self.log.debug("get mountopts attribute: " + comoonics.cluster.rootvolume_path + "/@mountopts")
+            return xpath.Evaluate(comoonics.cluster.rootvolume_path + "/@mountopts", self.getElement())[0].value
         except IndexError:
             return self.defaultMountopts
         
@@ -217,8 +212,8 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
-            self.log.debug("get syslog attribute: " + self.cominfo_path + "syslog/@name")
-            return xpath.Evaluate(self.cominfo_path + "syslog/@name", self.getElement())[0].value
+            self.log.debug("get syslog attribute: " + comoonics.cluster.syslog_path + "/@name")
+            return xpath.Evaluate(comoonics.cluster.syslog_path + "/@name", self.getElement())[0].value
         except IndexError:
             return self.defaultSyslog
     
@@ -228,8 +223,8 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         try:
-            self.log.debug("get scsifailover attribute: " + self.cominfo_path + "scsi/@failover")
-            return xpath.Evaluate(self.cominfo_path + "scsi/@failover", self.getElement())[0].value
+            self.log.debug("get scsifailover attribute: " + comoonics.cluster.scsi_path + "/@failover")
+            return xpath.Evaluate(comoonics.cluster.scsi_path + "/@failover", self.getElement())[0].value
         except IndexError:
             return self.defaultScsiFailover
         
@@ -266,7 +261,6 @@ def main():
     Method to test module. Creates a ClusterNode object and test all defined methods 
     on an cluster.conf example (use a loop to proceed every node).
     """
-    clusternode_path = "/cluster/clusternodes/clusternode"
     # can use only cluster2.conf for test, cluster.conf MUST cause an not 
     # handled exception (because lack of a device name)
     cluster_conf = "test/cluster2.conf"
@@ -279,7 +273,7 @@ def main():
     doc = reader.fromStream(my_file)
     my_file.close()
 
-    nodes = xpath.Evaluate(clusternode_path, doc)
+    nodes = xpath.Evaluate(comoonics.cluster.clusternode_path, doc)
 
     for element in nodes:
         #create example comnode
@@ -311,13 +305,18 @@ def main():
         print "\tobj.SCSIFailover(): " + obj.getScsifailover()
     
         print "\tobj: " + str(obj)
+        from xml.dom.ext import PrettyPrint
+        PrettyPrint(obj.element)
     
     
 if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.7  2008-06-20 14:58:04  mark
+# Revision 1.8  2008-07-08 07:22:31  andrea2
+# Use constants from __init__ (xpathes, filenames)
+#
+# Revision 1.7  2008/06/20 14:58:04  mark
 # set default mountopts to "" as this has to be set within the fs-lib.sh
 #
 # Revision 1.6  2008/06/10 10:14:52  marc
