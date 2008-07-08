@@ -8,19 +8,17 @@ clusternode instances) as an L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterNodeNic.py,v 1.6 2008-06-10 10:15:42 marc Exp $
+# $Id: ComClusterNodeNic.py,v 1.7 2008-07-08 07:25:31 andrea2 Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
 import os
 
 from xml import xpath
-#from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
-#from xml.dom.ext.reader.Sax2 import implementation
 
 from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
@@ -138,6 +136,8 @@ def main():
     methods on an cluster.conf example (use a loop to proceed every nic of every 
     node).
     """
+    import comoonics.cluster
+    
     # create Reader object
     reader = Sax2.Reader()
 
@@ -146,7 +146,7 @@ def main():
     doc = reader.fromStream(my_file)
     my_file.close()
 
-    nics = xpath.Evaluate("/cluster/clusternodes/clusternode/com_info/eth", doc)
+    nics = xpath.Evaluate(comoonics.cluster.netdev_path, doc)
 
     for element in nics:
         # create example comnode
@@ -173,7 +173,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNodeNic.py,v $
-# Revision 1.6  2008-06-10 10:15:42  marc
+# Revision 1.7  2008-07-08 07:25:31  andrea2
+# Use constants (xpathes, filenames) from __init__
+#
+# Revision 1.6  2008/06/10 10:15:42  marc
 # fixed getIP to work with dhcp and being able to resolve it
 #
 # Revision 1.5  2008/05/09 12:57:46  marc
