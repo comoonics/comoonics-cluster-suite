@@ -7,12 +7,12 @@ version of os.walk() (see L{os} for details), which skips submounts but follows 
 """
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 
 from xml import xpath
 from xml.dom.ext.reader import Sax2
 
-from ComCdslRepository import *
+from ComCdslRepository import CdslRepository
 
 import comoonics.pythonosfix as os
     

@@ -6,27 +6,27 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 
 import re
 import sys
 import shutil
 import mimetypes
 import operator
+import logging
+import time
 
 from xml import xpath
 from xml.dom.ext.reader import Sax2
 from xml.dom.ext.reader.Sax2 import implementation
 
-from ComCdslRepository import *
-
 from comoonics import ComSystem
-from comoonics.ComLog import *
-from comoonics.ComExceptions import *
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
 
-from comoonics.cluster.ComClusterInfo import *
-from comoonics.cluster.ComClusterRepository import *
+from comoonics.cluster.ComClusterInfo import ClusterInfo
+from comoonics.cluster.ComClusterRepository import ClusterRepository
 
 import comoonics.pythonosfix as os
 
@@ -724,6 +724,8 @@ def main():
     cdsl-structure and check every single cdsl for existance. Creates a cdsl-object 
     without commiting it to filesystem to check if exists()-method fails correctly.
     """
+    from ComCdslRepository import CdslRepository
+
     #set behaviour of comsystem, could be ask, simulate or continue
     ComSystem.__EXEC_REALLY_DO="continue"
     
