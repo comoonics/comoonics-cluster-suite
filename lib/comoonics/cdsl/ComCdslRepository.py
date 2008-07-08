@@ -9,10 +9,12 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 
 import fcntl # needed for filelocking
 import time  # needed for creation of timestamp
+import logging
+import re
 
 import xml
 from xml import xpath
@@ -20,16 +22,15 @@ from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
 from xml.dom.ext.reader.Sax2 import implementation
 
-from ComCdsl import *
+from ComCdsl import Cdsl
 
-from comoonics.ComLog import *
-import comoonics.ComExceptions
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
 from comoonics import ComSystem
 
-from comoonics.cluster.ComClusterInfo import *
-from comoonics.cluster.ComClusterNode import *
-from comoonics.cluster.ComClusterRepository import *
+from comoonics.cluster.ComClusterInfo import ClusterInfo
+from comoonics.cluster.ComClusterRepository import ClusterRepository
 
 import comoonics.pythonosfix as os
 
@@ -279,14 +280,14 @@ class ComoonicsCdslRepository(CdslRepository):
         Constructs a new comoonicsCdslRepository from given configfile. Creates 
         a list of cdsls from configfile to provide an easy access to them.
         @param configfile: path to configfile, should be created if it does not already exist
-        @type configfile: string
+        @type configfile: L{string}
         @param dtd: path to dtd used with configfile (Default: None)
-        @type dtd: string
+        @type dtd: L{string}
         @param validate: set to false to skip validation of configfile (Default: True)
-        @type validate: Boolean
+        @type validate: L{Boolean}
         @param options: options could contain: cdsltree (cluster/cdsl), cdsltreeShared (cluster/shared), cdslLink (cdsl.local), maxnodeidnum (0), useNodeids (False), root, mountpoint, defaultDir, nodePrefix
         If you want to use options you MUST set the first fifth, if you do not want to use all other options, set the one you don't want to "None"
-        @type options: list
+        @type options: L{list}
         """
         if len(options) > 4 and options[5] != None:
             self.root = options[5]
