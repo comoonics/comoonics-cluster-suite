@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 
 import fcntl # needed for filelocking
 import time  # needed for creation of timestamp
@@ -108,7 +108,7 @@ class inventoryfileProcessing:
         
         return doc
 
-    def prettyprintUnlockClose(self,doc=None):
+    def prettyprintUnlockClose(self,doc=None,simulate=False):
         """
         Writes given xml to file, unlock it via fcntl and close.
         @param doc: Content to write back to locked file (overwrites existing content!), if None only unlock and close
@@ -116,15 +116,18 @@ class inventoryfileProcessing:
         """
         
         if doc != None:
-            #prepare file for writing (delete content)
-            self.conf.truncate(0)
-            self.conf.seek(0)
+            if simulate:
+                PrettyPrint(doc)
+            else:
+                #prepare file for writing (delete content)
+                self.conf.truncate(0)
+                self.conf.seek(0)
+                
+                #write new xml to file
+                PrettyPrint(doc,self.conf)
         
-            #write new xml to file
-            PrettyPrint(doc,self.conf)
-        
-            #flush conf to avoid problems if file is changed between unlocking and closing
-            self.conf.flush()
+                #flush conf to avoid problems if file is changed between unlocking and closing
+                self.conf.flush()
         
         fcntl.lockf(self.conf,fcntl.LOCK_UN)        
         self.conf.close()
@@ -620,7 +623,7 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_useNodeids_attribute),self.getElement())[0].value
     
-    def addNode(self,node,cdslfilter=None,addtofilesystem=False):
+    def addNode(self,node,cdslfilter=None,addtofilesystem=False,simulate=False):
         """
         Adds node to all defined cdsls in inventoryfile (does not consider directories of cdsl in filesystem) 
         @param node: ID of node which should be added to cdsls, needed type of ID (nodeID, name or prefix & ID) 
@@ -663,10 +666,10 @@ class ComoonicsCdslRepository(CdslRepository):
             _newref.setAttribute(self.noderef_ref_attribute,node)
             _tmp = _node.appendChild(_newref)
             
-        Lockfile.prettyprintUnlockClose(doc)
-            
+        Lockfile.prettyprintUnlockClose(doc,simulate=simulate)
+        
         #adds node to defaults part if not already existing there
-        self.addDefaultNode(node)
+        self.addDefaultNode(node,simulate=simulate,mydoc=doc)
     
     def removeNode(self,node,cdslfilter=None):
         """
@@ -688,7 +691,7 @@ class ComoonicsCdslRepository(CdslRepository):
             
         Lockfile.prettyprintUnlockClose(doc)
     
-    def addDefaultNode(self,node,validate=False):
+    def addDefaultNode(self,node,validate=False,simulate=False,mydoc=None):
         """
         Adds DefaultNode to defaults part of inventoryfile.
         @param node: ID of node which should be added to defaults section, needed type of ID (nodeID, name or 
@@ -706,6 +709,9 @@ class ComoonicsCdslRepository(CdslRepository):
         Lockfile = inventoryfileProcessing(self.configfile)
         doc = Lockfile.openLock(validate)
         
+        if simulate and mydoc:
+            doc = mydoc
+        
         #if not xpath.Evaluate("/cdsls/defaults/nodesdefault/nodedefault[@id='%s']" %(node),doc):
         if not xpath.Evaluate("%s/%s/%s[@%s='%s']" %(self.defaults_path,self.nodesdefault_element,self.nodedefault_element,self.nodedefault_id_attribute,node),doc):
             nodesdefault = doc.getElementsByTagName(self.nodesdefault_element)
@@ -720,7 +726,7 @@ class ComoonicsCdslRepository(CdslRepository):
             nodedefault.setAttribute(self.nodedefault_id_attribute,node)
             nodesdefault.appendChild(nodedefault)
             
-        Lockfile.prettyprintUnlockClose(doc)
+        Lockfile.prettyprintUnlockClose(doc,simulate=simulate)
 
         
     def update(self,src,clusterInfo,chroot="/"):
