@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 
 import re
 import sys
@@ -747,6 +747,14 @@ def main():
     
     # create cdsl objects
     cdslRepository = CdslRepository("test/cdsl5.xml", None, False)
+
+    mypath = os.path.join(cdslRepository.getDefaultMountpoint(),"hostdependent/shared/")
+    
+    os.makedirs(mypath + "hostdependent_subdir/shared_subdir")
+    file1 = open(mypath + "hostdependent_subdir/shared_subdir/shared_file",'w')
+    file1.close()
+    file2 = open(mypath + "hostdependent_file",'w')
+    file2.close()
     
     cdsl_1 = Cdsl("/hostdependent", "hostdependent", cdslRepository, clusterinfo, None)
     cdsl_2 = Cdsl("/hostdependent/shared", "shared", cdslRepository, clusterinfo, None)
