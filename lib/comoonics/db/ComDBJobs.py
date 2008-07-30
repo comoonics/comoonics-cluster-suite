@@ -3,7 +3,7 @@ Jobs as object to database persistence to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBJobs.py,v 1.2 2008-03-03 08:32:08 marc Exp $
+# $Id: ComDBJobs.py,v 1.3 2008-07-30 13:04:24 marc Exp $
 #
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
@@ -135,7 +135,7 @@ class Action(object):
             if _actionobject_registry.has_key(_job.action):
                 cls=getActionClassForAction(_job.action)
             else:
-                raise NoActionObjectFoundException("Could not find action object for action: %s. Use registry to register." % (_job.action))
+                raise NoActionObjectFoundException("Could not find action object for action: "+_job.action+". Use registry to register.")
             return object.__new__(cls, args, kwds)
         else:
             raise UnsupportedActionMetadataException("Unsupported ActionMetadata for constructor: %s. The action must be given a DBJob as first argument or a jobobject with job as keyword." %(args[0]))
@@ -198,7 +198,10 @@ if __name__=="__main__":
 
 ########################
 # $Log: ComDBJobs.py,v $
-# Revision 1.2  2008-03-03 08:32:08  marc
+# Revision 1.3  2008-07-30 13:04:24  marc
+# bugfix in weired exception
+#
+# Revision 1.2  2008/03/03 08:32:08  marc
 # - fixed bug where data where not read from db
 # - more detailed error messages
 #
