@@ -3,7 +3,7 @@ Class for object to database persistence to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBObject.py,v 1.2 2008-03-03 08:32:51 marc Exp $
+# $Id: ComDBObject.py,v 1.3 2008-07-30 13:05:06 marc Exp $
 #
 from ComDBConnection import DBConnection
 from comoonics import ComLog
@@ -36,7 +36,7 @@ def getDBObjectProperties(_classname):
     for key, value in _dbobject_properties.items(_classname):
         if isinstance(value, basestring) and _dbobject_properties.has_section(value):
             value=dict(getDBObjectProperties(value))
-        elif value.startswith("python: "):
+        elif isinstance(value, basestring) and value.startswith("python: "):
             value=value[len("python: "):]
             value=eval(value) 
         _props[key]=value
@@ -124,7 +124,10 @@ class DBObject(DBConnection):
 
 ########################
 # $Log: ComDBObject.py,v $
-# Revision 1.2  2008-03-03 08:32:51  marc
+# Revision 1.3  2008-07-30 13:05:06  marc
+# bugfix when no strings are being given to getDBObjectProperties
+#
+# Revision 1.2  2008/03/03 08:32:51  marc
 # - rewrote the ObjectRegistry so that if also supports ConfigParser.
 #
 # Revision 1.1  2008/02/28 14:19:23  marc
