@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.16 2008-03-12 09:34:42 marc Exp $
+# $Id: ComSystem.py,v 1.17 2008-08-04 09:17:35 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -75,8 +75,36 @@ def askExecModeCmd(__cmd):
         return False
     return True
 
-def execLocalStatusOutput(__cmd):
-    """ exec %__cmd and return output and status (rc, out)"""
+def __simret(**kwds):
+    cmd=kwds["command"]
+    log.info("SIMULATE: "+ cmd)
+    returncode=kwds.get("returncode", 0)
+    out=kwds.get("output", SKIPPED)
+    errormsg=kwds.get("error", None)
+
+    if kwds.get("tostderr", False) != False:
+        sys.stderr.write("%s" %errormsg)
+    if kwds.get("tostdout", False) != False:
+        sys.stderr.write(out)
+
+    if kwds.get("asstring", False) != False:
+        if returncode==0:
+            return out
+        else:
+            raise ExecLocalException(cmd, returncode, out, errormsg)
+    elif kwds.get("asstring", False) == False and kwds.has_key("error"):
+        return [returncode, out, errormsg]
+    elif kwds.get("tostdout", False) != False:
+        return returncode
+    else:
+        return [returncode, out]
+
+def execLocalStatusOutput(__cmd, __output=None):
+    """ 
+    exec %__cmd and return output and status (rc, out).
+    @param __cmd the command to be executed
+    @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
+    """
     global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == ASK:
@@ -87,17 +115,19 @@ def execLocalStatusOutput(__cmd):
             return commands.getstatusoutput(__cmd)
         return [0,SKIPPED]
     elif __EXEC_REALLY_DO == SIMULATE:
-        log.info("SIMULATE: "+__cmd)
-        return [0,SKIPPED]
+        return __simret(command=__cmd, output=__output)
     return commands.getstatusoutput(__cmd)
 
 
-def execLocalOutput(__cmd, asstr=False):
-    """ executes the given command and returns stdout output. If status is not 0 an ExecLocalExeception is thrown
-        and errorcode, cmd, stdout and stderr are in that exception
-        @asstr returns out and error as string not as array of lines.
+def execLocalOutput(__cmd, asstr=False, __output=None):
+    """ 
+    executes the given command and returns stdout output. If status is not 0 an ExecLocalExeception is thrown
+    and errorcode, cmd, stdout and stderr are in that exception
+    @param asstr returns out and error as string not as array of lines.
+    @type asstr boolean
+    @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
-    (rc, out, err)=execLocalGetResult(__cmd, True)
+    (rc, out, err)=execLocalGetResult(__cmd, True, __output)
     if asstr:
         out="".join(out)
         if not err:
@@ -109,8 +139,11 @@ def execLocalOutput(__cmd, asstr=False):
     else:
         raise ExecLocalException(__cmd, rc, out, err)
 
-def execLocalGetResult(__cmd, err=False):
-    """ exec %__cmd and returns an array ouf output lines (rc, out, err)"""
+def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
+    """ 
+    exec %__cmd and returns an array ouf output lines (rc, out, err)
+    @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
+    """
     global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == ASK:
@@ -123,11 +156,10 @@ def execLocalGetResult(__cmd, err=False):
             else:
                 return [0, SKIPPED]
     elif __EXEC_REALLY_DO == SIMULATE:
-        log.info("SIMULATE: "+__cmd)
         if err:
-            return [0,SKIPPED, None]
+            return __simret(command=__cmd, output=__output, error=__err)
         else:
-            return [0, SKIPPED]
+            return __simret(command=__cmd, output=__output)
     child=popen2.Popen3(__cmd, err)
     __rc=child.wait()
     __rv=child.fromchild.readlines()
@@ -137,8 +169,12 @@ def execLocalGetResult(__cmd, err=False):
     return [__rc, __rv]
 
 
-def execLocal(__cmd):
-    """ exec %cmd and return status output goes to sys.stdout, sys.stderr"""
+def execLocal(__cmd, __output=None, __error=None):
+    """ 
+    exec %cmd and return status output goes to sys.stdout, sys.stderr
+    @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
+    @param __error overwrite the output for this command so that it will be executed. Will only work in Simulated environment
+    """
     global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == ASK:
@@ -149,8 +185,7 @@ def execLocal(__cmd):
             __EXEC_REALLY_DO=CONTINUE
         return 0
     elif __EXEC_REALLY_DO == SIMULATE:
-        log.info("SIMULATE: "+__cmd)
-        return 0
+        return __simret(command=__cmd, output=__output, tostdout=True, tostderr=True, error=__error)
 
     return os.system(__cmd)
 
@@ -184,16 +219,16 @@ def test(level):
     cmd1='echo "hallo stdout"'
     cmd2='echo "hallo stderr" >&2'
 
-    print execLocalOutput(cmd1)
-    print execLocalStatusOutput(cmd1)
-    print execLocalGetResult(cmd1)
-    print execLocalOutput(cmd2)
-    print execLocalStatusOutput(cmd2)
-    print execLocalGetResult(cmd2, True)
-    print execMethod(execLocalGetResult,cmd2,True)
+    print execLocalOutput(cmd1, True, "output cmd1 execLocalOutput")
+    print execLocalStatusOutput(cmd1, "output cmd1 execLocalStatusOutput")
+    print execLocalGetResult(cmd1, False, "output cmd1 execLocalGetResult")
+    print execLocalOutput(cmd2, True, "output cmd2 execLocalOutput")
+    print execLocalStatusOutput(cmd2, "output cmd2 execLocalStatusOutput")
+    print execLocalGetResult(cmd2, True, "output cmd2 execLocalGetResult")
+    print execMethod(execLocalGetResult, cmd2, True)
 
-    print execLocalStatusOutput("/bin/false")
-    print execLocal("/bin/false")
+    print execLocalStatusOutput("/bin/false", "output of /bin/false, execLocalStatusOutput")
+    print execLocal("/bin/false", "output of /bin/false, execLocal")
 
 def __line(text):
     print("-------------------------- %s --------------------------------------" %(text))
@@ -207,7 +242,10 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.16  2008-03-12 09:34:42  marc
+# Revision 1.17  2008-08-04 09:17:35  marc
+# - added better simulation so that you can give any method an output to be returned if simulation is on
+#
+# Revision 1.16  2008/03/12 09:34:42  marc
 # fixed bug in execLocalOutput where when SIMULATION-Mode this function would raise an exception where it should not.
 #
 # Revision 1.15  2008/02/27 10:42:54  marc
