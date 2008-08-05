@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.9 2007-06-15 18:59:13 marc Exp $
+# $Id: ComDataObject.py,v 1.10 2008-08-05 13:07:20 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -39,7 +39,21 @@ class DataObject(object):
     '''
     Public methods
     '''
-    def __init__(self, element, doc=None):
+    def __init__(self, *params, **kwds):
+        element=None
+        doc=None
+        if len(params) >= 1:
+            if isinstance(params[0], basestring):
+                from xml.dom.ext.reader import Sax2
+                reader = Sax2.Reader()
+                _xml=open(params[0])
+                doc = reader.fromStream(_xml)
+                _xml.close()
+                element=doc.documentElement
+            else:
+                element=params[0]
+        if len(params) == 2:
+            doc=params[1]
         if element.hasAttribute("refid"):
             __newelement=self.searchReference(element, doc)
             element.parentNode.replaceChild(__newelement, element)
@@ -273,7 +287,10 @@ if __name__ == "__main__":
     __test()
 
 # $Log: ComDataObject.py,v $
-# Revision 1.9  2007-06-15 18:59:13  marc
+# Revision 1.10  2008-08-05 13:07:20  marc
+# - added a one param constructor that can either be a file (xml) or an element
+#
+# Revision 1.9  2007/06/15 18:59:13  marc
 # fixed bug in ComDataObject for empty attributes. Use getAttributeBoolean.
 #
 # Revision 1.8  2007/04/23 22:07:14  marc
