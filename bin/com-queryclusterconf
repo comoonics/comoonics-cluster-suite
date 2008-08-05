@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -8,12 +8,15 @@ Binary to query clusterconfiguration
 import getopt
 import sys
 import logging
+import os
+from xml.dom.ext.reader import Sax2
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics import GetOpts
 
-from comoonics.cluster.ComClusterInfo import *
+from comoonics.cluster.ComClusterInfo import ClusterInfo
+from comoonics.cluster.ComClusterRepository import ClusterRepository, ClusterMacNotFoundException
 
 ComLog.setLevel(logging.INFO)
 
