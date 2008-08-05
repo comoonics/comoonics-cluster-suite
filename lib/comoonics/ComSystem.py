@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.17 2008-08-04 09:17:35 marc Exp $
+# $Id: ComSystem.py,v 1.18 2008-08-05 13:06:35 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -129,7 +129,8 @@ def execLocalOutput(__cmd, asstr=False, __output=None):
     """
     (rc, out, err)=execLocalGetResult(__cmd, True, __output)
     if asstr:
-        out="".join(out)
+        if type(out) == list:
+            out="".join(out)
         if not err:
             err=err
         else:
@@ -242,7 +243,10 @@ if __name__=="__main__":
     test(ASK)
 
 # $Log: ComSystem.py,v $
-# Revision 1.17  2008-08-04 09:17:35  marc
+# Revision 1.18  2008-08-05 13:06:35  marc
+# - added simulated output for simulated commands
+#
+# Revision 1.17  2008/08/04 09:17:35  marc
 # - added better simulation so that you can give any method an output to be returned if simulation is on
 #
 # Revision 1.16  2008/03/12 09:34:42  marc
