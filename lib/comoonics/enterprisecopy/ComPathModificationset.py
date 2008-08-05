@@ -12,11 +12,11 @@ Hello world
 """
 
 # here is some internal information
-# $Id: ComPathModificationset.py,v 1.1 2007-09-07 14:40:07 marc Exp $
+# $Id: ComPathModificationset.py,v 1.2 2008-08-05 13:10:14 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPathModificationset.py,v $
 
 from ComModificationset import ModificationsetJournaled
@@ -40,11 +40,11 @@ class PathModificationset(ModificationsetJournaled):
         """
         super(PathModificationset, self).__init__(element, doc)
         try:
-            __path=xpath.Evaluate('path', element)[0]
+            __path=xpath.Evaluate('path', self.element)[0]
         except Exception:
             raise ComException("Path for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
         self.path=Path(__path, doc)
-        self.createModificationsList(__path.getElementsByTagName("modification"), doc)
+        self.createModificationsList(self.path.getElement().getElementsByTagName("modification"), doc)
         self.addToUndoMap(self.path.__class__.__name__, "pushd", "popd")
 
     def doPre(self):
@@ -118,6 +118,9 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComPathModificationset.py,v $
-# Revision 1.1  2007-09-07 14:40:07  marc
+# Revision 1.2  2008-08-05 13:10:14  marc
+# - fixed bug so that refids now work
+#
+# Revision 1.1  2007/09/07 14:40:07  marc
 # initial revision
 #
