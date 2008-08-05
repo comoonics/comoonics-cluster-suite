@@ -8,11 +8,11 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.9 2008-08-05 13:09:23 marc Exp $
+# $Id: ComClusterNode.py,v 1.10 2008-08-05 18:28:18 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
@@ -209,7 +209,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         self.log.debug("get rootvolume attribute: " + comoonics.cluster.rootvolume_path + "/@name")
-        return xpath.Evaluate(comoonics.cluster.rootvolume_path %self.getName() + "/@name", self.getElement())[0].value          
+        return xpath.Evaluate(comoonics.cluster.rootvolume_path %("[@name='%s']" %self.getName()) + "/@name", self.getElement())[0].value          
 
     def getRootFs(self):
         """
@@ -218,7 +218,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get rootfs attribute: " + comoonics.cluster.rootvolume_path + "/@fstype")
-            return xpath.Evaluate(comoonics.cluster.rootvolume_path %self.getName() + "/@fstype", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.rootvolume_path %("[@name='%s']" %self.getName()) + "/@fstype", self.getElement())[0].value
         except IndexError:
             return self.defaultRootFs
 
@@ -229,7 +229,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get mountopts attribute: " + comoonics.cluster.rootvolume_path + "/@mountopts")
-            return xpath.Evaluate(comoonics.cluster.rootvolume_path %self.getName() + "/@mountopts", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.rootvolume_path %("[@name='%s']" %self.getName()) + "/@mountopts", self.getElement())[0].value
         except IndexError:
             return self.defaultMountopts
         
@@ -240,7 +240,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get syslog attribute: " + comoonics.cluster.syslog_path + "/@name")
-            return xpath.Evaluate(comoonics.cluster.syslog_path %self.getName() + "/@name", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.syslog_path %("[@name='%s']" %self.getName()) + "/@name", self.getElement())[0].value
         except IndexError:
             return self.defaultSyslog
     
@@ -251,7 +251,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get scsifailover attribute: " + comoonics.cluster.scsi_path + "/@failover")
-            return xpath.Evaluate(comoonics.cluster.scsi_path %self.getName() + "/@failover", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.scsi_path %("[@name='%s']" %self.getName()) + "/@failover", self.getElement())[0].value
         except IndexError:
             return self.defaultScsiFailover
         
@@ -340,7 +340,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.9  2008-08-05 13:09:23  marc
+# Revision 1.10  2008-08-05 18:28:18  marc
+# more bugfixes
+#
+# Revision 1.9  2008/08/05 13:09:23  marc
 # - fixed bugs with constants
 # - optimized imports
 # - added nonstatic attributes

@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.14 2008-08-05 13:09:40 marc Exp $
+# $Id: ComClusterRepository.py,v 1.15 2008-08-05 18:28:18 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -65,9 +65,9 @@ class ClusterRepository(ClusterObject):
                 cls = RedhatClusterRepository
         if len(args) >= 2:
             if (args[0] != None):                
-                if xpath.Evaluate(comoonics.cluster.cominfo_path, args[0]) or len(args[2]) == 0:
+                if xpath.Evaluate(comoonics.cluster.cominfo_path %"", args[0]) or len(args[2]) == 0:
                     cls = ComoonicsClusterRepository
-                elif xpath.Evaluate(comoonics.cluster.clusternode_path, args[0]):
+                elif xpath.Evaluate(comoonics.cluster.clusternode_path %"", args[0]):
                     cls = RedhatClusterRepository
                     
             elif type(args[2]) == dict:                
@@ -436,7 +436,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.14  2008-08-05 13:09:40  marc
+# Revision 1.15  2008-08-05 18:28:18  marc
+# more bugfixes
+#
+# Revision 1.14  2008/08/05 13:09:40  marc
 # - fixed bugs with constants
 # - optimized imports
 # - added nonstatic attributes
