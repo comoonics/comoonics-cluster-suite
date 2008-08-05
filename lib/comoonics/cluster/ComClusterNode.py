@@ -8,11 +8,11 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.8 2008-07-08 07:22:31 andrea2 Exp $
+# $Id: ComClusterNode.py,v 1.9 2008-08-05 13:09:23 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
@@ -22,12 +22,13 @@ from xml.dom.ext.reader import Sax2
 
 import comoonics.cluster
 
-from comoonics.cluster.ComClusterNodeNic import ComoonicsClusterNodeNic
+from ComClusterInfo import ClusterObject
+from ComClusterNodeNic import ComoonicsClusterNodeNic
 
 from comoonics import ComLog
 from comoonics.ComDataObject import DataObject
 
-class ClusterNode(DataObject):
+class ClusterNode(ClusterObject):
     """
     Provides generall functionality for a clusternode instance
     """
@@ -41,7 +42,7 @@ class ClusterNode(DataObject):
         or comoonics) has to be created.
         """
         try:
-            xpath.Evaluate(comoonics.cluster.cominfo_path, args[0])
+            xpath.Evaluate(comoonics.cluster.cominfo_path %"", args[0])
         except NameError:
             if args[0].getAttribute("name"):
                 cls = RedhatClusterNode
@@ -54,6 +55,8 @@ class ClusterNode(DataObject):
     
     def __init__(self, element, doc=None):
         super(ClusterNode, self).__init__(element, doc)
+        from helper import RedHatClusterHelper
+        self.helper=RedHatClusterHelper()
     
     def getName(self):
         """placeholder for getName method"""
@@ -62,7 +65,9 @@ class ClusterNode(DataObject):
     def getId(self):
         """placeholder for getId method"""
         pass
-                
+    def isActive(self):
+        """placeholder for isActvie method. Should return True if node is actively joined to the given cluster"""
+        return False                
 
 class RedhatClusterNode(ClusterNode):
     """
@@ -70,8 +75,24 @@ class RedhatClusterNode(ClusterNode):
     by adding special queries for this cluster 
     type.
     """
+
+    clustat_pathroot="/clustat/nodes/node[@name='%s']"
+    
     def __init__(self, element, doc=None):
         super(RedhatClusterNode, self).__init__(element, doc)
+        self.addNonStatic("state")
+        self.addNonStatic("local")
+        self.addNonStatic("estranged")
+        self.addNonStatic("rgmanager")
+        self.addNonStatic("rgmanager_master")
+        self.addNonStatic("qdisk")
+
+    def query(self, param):
+        import os.path
+        if self.non_statics.get(param, None) != None:
+            return self.helper.queryStatusElement(query= os.path.join(self.clustat_pathroot %self.getName(), self.non_statics.get(param)))
+        else:
+            return self.helper.queryStatusElement(query=os.path.join(self.clustat_pathroot %self.getName(), "@"+param))
 
     def getName(self):
         """
@@ -106,6 +127,11 @@ class RedhatClusterNode(ClusterNode):
             #if attribute notes does not exist, use default value 1
             return "1"
     
+    def isActive(self):
+        """
+        @return: True if clusternode is active
+        """
+        return self.state=='1'
 
 class ComoonicsClusterNode(RedhatClusterNode):
     """
@@ -128,9 +154,10 @@ class ComoonicsClusterNode(RedhatClusterNode):
         self.nicDev = {}
         self.nicDevList = []
 
-        _nics = xpath.Evaluate(comoonics.cluster.netdev_path, self.getElement())
+        _path=comoonics.cluster.netdev_path %("[@name='%s']" %self.getName())
+        _nics = xpath.Evaluate(_path, self.getElement())
         for i in range(len(_nics)):
-            _nic = ComoonicsClusterNodeNic(_nics[i], self.getElement())
+            _nic = ComoonicsClusterNodeNic(_nics[i], doc)
             _mac = _nic.getMac()
             _dev = _nic.getName()
 
@@ -182,7 +209,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @rtype: string
         """
         self.log.debug("get rootvolume attribute: " + comoonics.cluster.rootvolume_path + "/@name")
-        return xpath.Evaluate(comoonics.cluster.rootvolume_path + "/@name", self.getElement())[0].value          
+        return xpath.Evaluate(comoonics.cluster.rootvolume_path %self.getName() + "/@name", self.getElement())[0].value          
 
     def getRootFs(self):
         """
@@ -191,7 +218,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get rootfs attribute: " + comoonics.cluster.rootvolume_path + "/@fstype")
-            return xpath.Evaluate(comoonics.cluster.rootvolume_path + "/@fstype", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.rootvolume_path %self.getName() + "/@fstype", self.getElement())[0].value
         except IndexError:
             return self.defaultRootFs
 
@@ -202,7 +229,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get mountopts attribute: " + comoonics.cluster.rootvolume_path + "/@mountopts")
-            return xpath.Evaluate(comoonics.cluster.rootvolume_path + "/@mountopts", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.rootvolume_path %self.getName() + "/@mountopts", self.getElement())[0].value
         except IndexError:
             return self.defaultMountopts
         
@@ -213,7 +240,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get syslog attribute: " + comoonics.cluster.syslog_path + "/@name")
-            return xpath.Evaluate(comoonics.cluster.syslog_path + "/@name", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.syslog_path %self.getName() + "/@name", self.getElement())[0].value
         except IndexError:
             return self.defaultSyslog
     
@@ -224,7 +251,7 @@ class ComoonicsClusterNode(RedhatClusterNode):
         """
         try:
             self.log.debug("get scsifailover attribute: " + comoonics.cluster.scsi_path + "/@failover")
-            return xpath.Evaluate(comoonics.cluster.scsi_path + "/@failover", self.getElement())[0].value
+            return xpath.Evaluate(comoonics.cluster.scsi_path %self.getName() + "/@failover", self.getElement())[0].value
         except IndexError:
             return self.defaultScsiFailover
         
@@ -313,7 +340,13 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.8  2008-07-08 07:22:31  andrea2
+# Revision 1.9  2008-08-05 13:09:23  marc
+# - fixed bugs with constants
+# - optimized imports
+# - added nonstatic attributes
+# - added helper class
+#
+# Revision 1.8  2008/07/08 07:22:31  andrea2
 # Use constants from __init__ (xpathes, filenames)
 #
 # Revision 1.7  2008/06/20 14:58:04  mark

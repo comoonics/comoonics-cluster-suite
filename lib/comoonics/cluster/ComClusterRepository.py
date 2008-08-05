@@ -11,11 +11,11 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.13 2008-07-08 07:34:30 andrea2 Exp $
+# $Id: ComClusterRepository.py,v 1.14 2008-08-05 13:09:40 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 import os
@@ -26,10 +26,9 @@ from xml.dom.ext.reader import Sax2
 
 import comoonics.cluster
 
-from comoonics.cluster.ComClusterNode import ClusterNode
-from comoonics.cluster.ComClusterInfo import ClusterInfo
+from ComClusterNode import ClusterNode
+from ComClusterInfo import ClusterObject
 
-from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics.DictTools import searchDict, applyDefaults, createDomFromHash
@@ -40,12 +39,12 @@ class ClusterMacNotFoundException(ComException): pass
 class ClusterIdNotFoundException(ComException): pass
 class ClusterRepositoryConverterNotFoundException(ComException): pass
                 
-class ClusterRepository(DataObject):
-    CONVERTERS=dict()
+class ClusterRepository(ClusterObject):
     """
     Provides generall functionality for a clusterrepository instance
     """
     log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
+    CONVERTERS=dict()
 
     def __new__(cls, *args, **kwds):
         """
@@ -54,6 +53,16 @@ class ClusterRepository(DataObject):
         or comoonics) has to be created.
         args = (element,doc,options)
         """
+        if len(args) >= 1 and isinstance(args[0], basestring):
+            reader = Sax2.Reader()
+            _xml=open(args[0])
+            doc = reader.fromStream(_xml)
+            _xml.close()
+            x=xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", doc.documentElement)
+            if len(xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", doc.documentElement)) > 0:
+                cls = ComoonicsClusterRepository
+            elif len(xpath.Evaluate("/cluster/clusternodes/clusternode", doc.documentElement)) > 0:
+                cls = RedhatClusterRepository
         if len(args) >= 2:
             if (args[0] != None):                
                 if xpath.Evaluate(comoonics.cluster.cominfo_path, args[0]) or len(args[2]) == 0:
@@ -70,12 +79,12 @@ class ClusterRepository(DataObject):
                                     
         return object.__new__(cls, *args, **kwds)
     
-    def __init__(self, element=None, doc=None, *options):
+    def __init__(self, *params, **kwds):
         #node dictionaries depend on clustertype, setting later!
         self.nodeNameMap = {}
         self.nodeIdMap = {}
         
-        super(ClusterRepository, self).__init__(element, doc)
+        super(ClusterRepository, self).__init__(*params, **kwds)
         
     def convert(self, _type="ocfs2"):
         if self.CONVERTERS.has_key(_type):
@@ -89,7 +98,12 @@ class RedhatClusterRepository(ClusterRepository):
     cluster as an L{DataObject}. Extends generall 
     clusterrepository by special queries for this cluster 
     type.
-    """    
+    """
+    
+    defaultcluster_conf = "/etc/cluster/cluster.conf"
+    defaultcluster_path = "/cluster"
+    defaultclusternode_path = defaultcluster_path + "/clusternodes/clusternode"
+    
     def __init__(self, element=None, doc=None, *options):
         if ((element == None) and (len(options) == 0)) or ((element != None) and (len(options) != 0)):
             raise AttributeError("You have to specify element OR options to create a new element")
@@ -108,7 +122,7 @@ class RedhatClusterRepository(ClusterRepository):
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
         _nodes = xpath.Evaluate(comoonics.cluster.clusternode_path, self.getElement())
         for i in range(len(_nodes)):
-            _node = ClusterNode(_nodes[i], self.getElement())
+            _node = ClusterNode(_nodes[i], doc)
             self.nodeNameMap[_node.getName()] = _node
             self.nodeIdMap[_node.getId()] = _node
             
@@ -138,9 +152,9 @@ class RedhatClusterRepository(ClusterRepository):
         @rtype: string
         @raise ClusterMacNotFoundException: Raises Exception if search for node with given mac failed.
         """
+        self.log.debug("get clusternodenic belonging to given mac: " + str(mac))
         for node in self.nodeIdMap.values():
             try:
-                self.log.debug("get clusternodenic belonging to given mac: " + str(mac))
                 node.getNic(mac)
                 self.log.debug("get name belonging to searched clusternodenic: " + node.getName())
                 return node.getName()
@@ -148,7 +162,7 @@ class RedhatClusterRepository(ClusterRepository):
                 continue
         raise ClusterMacNotFoundException("Cannot find device with given mac: " + str(mac))
 
-    def getNodeNameById(self, id):
+    def getNodeNameById(self, _id):
         """
         @param id: id of node
         @type int
@@ -156,8 +170,8 @@ class RedhatClusterRepository(ClusterRepository):
         @rtype: string
         @raise ClusterIdNotFoundException: Raises Exception if search for node with given mac failed.
         """
-        if self.nodeIdMap.has_key(id):
-            return self.nodeIdMap.get(id).getName()
+        if self.nodeIdMap.has_key(_id):
+            return self.nodeIdMap.get(_id).getName()
         
         raise ClusterIdNotFoundException("Cannot find node with id " + str(id))
 
@@ -375,7 +389,6 @@ def main():
     Method to test module. Creates a ClusterRepository object, prints defined hashmaps 
     and test getting of nodename and nodeid of nodes defined in a example cluster.conf.
     """
-    from comoonics.cluster.ComClusterRepository import ClusterRepository
     
     # create Reader object
     reader = Sax2.Reader()
@@ -423,7 +436,13 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.13  2008-07-08 07:34:30  andrea2
+# Revision 1.14  2008-08-05 13:09:40  marc
+# - fixed bugs with constants
+# - optimized imports
+# - added nonstatic attributes
+# - added helper class
+#
+# Revision 1.13  2008/07/08 07:34:30  andrea2
 # Improved imports (no imports with *), sourced out dict-tools, sourced out validate_xml to xmltools, use constants (xpath, filenames) from __init__
 #
 # Revision 1.12  2008/06/17 16:22:55  mark

@@ -8,11 +8,11 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.9 2008-07-08 07:20:42 andrea2 Exp $
+# $Id: ComClusterInfo.py,v 1.10 2008-08-05 13:09:15 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 import os
@@ -21,16 +21,39 @@ from xml import xpath
 from xml.dom.ext.reader import Sax2
 from xml.dom.ext import PrettyPrint
 
-import comoonics.cluster
+import os
 
 from comoonics.DictTools import createDomFromHash
 from comoonics.ComExceptions import ComException
 
 from comoonics import ComLog
+from comoonics.ComDataObject import DataObject
+
+import comoonics.cluster
 
 class ClusterMacNotFoundException(ComException): pass
 
-class ClusterInfo(object):
+class ClusterObject(DataObject):
+    non_statics=dict()
+    def __init__(self, *params, **kwds):
+        super(ClusterObject, self).__init__(*params, **kwds)
+        self.non_statics=dict()
+    def isstatic(self, _property):
+        if self.non_statics.has_key(_property):
+            return False
+        return True
+    def addNonStatic(self, name, rest=None):
+        path_end=self.non_statics
+        path_end[name]=rest
+    def query(self, _property):
+        pass
+    def __getattr__(self, value):
+        if not self.isstatic(value):
+            return self.query(value)
+        else:
+            return DataObject.__getattribute__(self, value)
+
+class ClusterInfo(ClusterObject):
     """
     Provides a set of queries to use with a L{ClusterRepository} to get 
     information about the used clusterconfiguration.
@@ -43,8 +66,7 @@ class ClusterInfo(object):
         Decides by type of given clusterrepository which instance of 
         clusterinfo (general, redhat or comoonics) has to be created.
         """
-        from comoonics.cluster.ComClusterRepository import ClusterRepository, RedhatClusterRepository, ComoonicsClusterRepository
-        
+        from ComClusterRepository import ComoonicsClusterRepository, RedhatClusterRepository, ClusterRepository
         if isinstance(args[0], ComoonicsClusterRepository):
             cls = ComoonicsClusterInfo
         elif isinstance(args[0], RedhatClusterRepository):
@@ -69,27 +91,40 @@ class ClusterInfo(object):
         return self.clusterRepository.getClusterName()
         
     
-    def getNodes(self):
+    def getNodes(self, active=False):
         """
+        @param active: only returns actively joined nodes
+        @type active: boolean
         @return: list of all node instances
         @rtype: list
         """
-        self.log.debug("get clusternodes from clusterrepository")
-        return self.clusterRepository.nodeNameMap.values()
+        self.log.debug("get clusternodes from clusterrepository(active=%s)" %active)
+        _nodes=list()
+        for _node in self.clusterRepository.nodeNameMap.values():
+            if not active or _node.isActive():
+                _nodes.append(_node)
+        return _nodes
     
-    def getNodeIdentifiers(self, idType="name"):
+    def getNodeIdentifiers(self, idType="name", active=False):
         """
-        @param type: specifies type of returned identifier (could be name or id)
-        @type type: string
+        @param idType: specifies type of returned identifier (could be name or id)
+        @type idType: string
+        @param active: only returns actively joined nodes
+        @type active: boolean
         @return: list of all node identifiers (e.g. nodenames or nodeids)
         @rtype: list
         """
+        _nodes=self.getNodes(active)
+        _ids=list()
         if idType == "id":
-            self.log.debug("get nodeids from clusterrepositories")
-            return self.clusterRepository.nodeIdMap.keys()
+            self.log.debug("get nodeids from clusterrepositories(active=%s)" %active)
+            for _node in _nodes:
+                _ids.append(_node.getId())
         elif idType == "name":
-            self.log.debug("get nodenames from clusterrepository")
-            return self.clusterRepository.nodeNameMap.keys()
+            self.log.debug("get nodenames from clusterrepository(active=%s)" %active)
+            for _node in _nodes:
+                _ids.append(_node.getName())
+        return _ids
     
 class RedhatClusterInfo(ClusterInfo):
     """
@@ -98,13 +133,29 @@ class RedhatClusterInfo(ClusterInfo):
     about the used redhat clusterconfiguration.
     """
     
+    clustat_pathroot="/clustat/cluster"
+    
     def __init__(self, clusterRepository):
         """
         Set used clusterRepository
         @param clusterRepository: clusterRepository to use
         @type clusterRepository: L{RedhatClusterRepository}
         """
+        from helper import RedHatClusterHelper
         super(RedhatClusterInfo, self).__init__(clusterRepository)
+        self.helper=RedHatClusterHelper()
+        self.addNonStatic("name")
+#        self.addNonStatic(RedhatClusterInfo, "id")
+        self.addNonStatic("generation")
+        self.addNonStatic("quorum_quorate", "/clustat/quorum/@quorate")
+        self.addNonStatic("quorum_groupmember", "/clustat/quorum/@groupmember")
+
+    def query(self, param):
+        import os.path
+        if self.non_statics.get(param, None) != None:
+            return self.helper.queryStatusElement(query= os.path.join(self.clustat_pathroot, self.non_statics.get(param)))
+        else:
+            return self.helper.queryStatusElement(query=os.path.join(self.clustat_pathroot, "@"+param))
 
     def queryValue(self, query):
         """
@@ -141,7 +192,7 @@ class RedhatClusterInfo(ClusterInfo):
         _tmp2 = StringIO.StringIO()
         PrettyPrint(_tmp1[0], stream=_tmp2)
         return _tmp2.getvalue()
-        
+                
     def getNode(self, name):
         """
         @param name: name of clusternode
@@ -267,6 +318,7 @@ class ComoonicsClusterInfo(RedhatClusterInfo):
         @rtype: L{ComoonicsClusterNodeNic}
         @raise ClusterMacNotFoundException: Raises Exception if search for node with given mac failed.
         """
+        from ComClusterRepository import ClusterMacNotFoundException
         for node in self.getNodes():
             try:
                 self.log.debug("get clusternodenic with given mac: %s" %(str(mac)))
@@ -280,8 +332,7 @@ def main():
     Method to test module. Creates a ClusterInfo object and test all defined methods 
     on an cluster.conf example (use a loop to proceed every node).
     """
-    from comoonics.cluster.ComClusterRepository import ClusterRepository
-    
+    from ComClusterRepository import ClusterRepository, ClusterMacNotFoundException
     # create Reader object
     reader = Sax2.Reader()
 
@@ -356,7 +407,13 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.9  2008-07-08 07:20:42  andrea2
+# Revision 1.10  2008-08-05 13:09:15  marc
+# - fixed bugs with constants
+# - optimized imports
+# - added nonstatic attributes
+# - added helper class
+#
+# Revision 1.9  2008/07/08 07:20:42  andrea2
 # Use constants from __init__ for xpathes (except attributes)
 #
 # Revision 1.8  2008/06/17 16:22:55  mark

@@ -8,11 +8,11 @@ clusternode instances) as an L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterNodeNic.py,v 1.7 2008-07-08 07:25:31 andrea2 Exp $
+# $Id: ComClusterNodeNic.py,v 1.8 2008-08-05 13:09:31 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
 import os
@@ -20,10 +20,10 @@ import os
 from xml import xpath
 from xml.dom.ext.reader import Sax2
 
-from comoonics.ComDataObject import DataObject
+from ComClusterInfo import ClusterObject
 from comoonics import ComLog
 
-class ComoonicsClusterNodeNic(DataObject):
+class ComoonicsClusterNodeNic(ClusterObject):
     """
     Represents network interfaces (e.g. of comoonics 
     clusternode instances) as an L{DataObject}.
@@ -173,7 +173,13 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComClusterNodeNic.py,v $
-# Revision 1.7  2008-07-08 07:25:31  andrea2
+# Revision 1.8  2008-08-05 13:09:31  marc
+# - fixed bugs with constants
+# - optimized imports
+# - added nonstatic attributes
+# - added helper class
+#
+# Revision 1.7  2008/07/08 07:25:31  andrea2
 # Use constants (xpathes, filenames) from __init__
 #
 # Revision 1.6  2008/06/10 10:15:42  marc
