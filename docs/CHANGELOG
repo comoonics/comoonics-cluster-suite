@@ -76,6 +76,9 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Mon Aug 04 2008 MG <grimme@atix.de>, 0.1-16
+   - added non static clusteroptions and redhat helper class
+   - fixed some unittesting
 * Fri Jun 20 2008 MH <hlawatschek@atix.de>, 0.1-15
    - removed default mountopts
 * Wed Jun 18 2008 MH <hlawatschek@atix.de>, 0.1-14
@@ -145,6 +148,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-cs-py:
+* Mon Aug 04 2008 MG <grimme@atix.de>, 0.1-56
+    - fixed broken com-dsh to use new cluster functions
 * Tue Jun 24 2008 MH <hlawatschek@atix.de>, 0.1-55
    - added support for RHEL5.2ish lvdisplay output
 * Thu Apr 10 2008 MG <grimme@atix.de>, 0.1-54
