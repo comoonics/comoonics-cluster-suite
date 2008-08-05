@@ -35,7 +35,7 @@ clusternode_nodeid_attribute = "nodeid"
 clusternode_votes_attribute = "votes"
 
 cominfo_name = "com_info"
-cominfo_path = os.path.join(clusternode_path,cominfo_name)
+cominfo_path = os.path.join(clusternode_path+"%s",cominfo_name)
 
 rootvolume_name = "rootvolume"
 rootvolume_path = os.path.join(cominfo_path,rootvolume_name)
