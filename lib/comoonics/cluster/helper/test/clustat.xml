@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<clustat version="4.1.1">
+  <cluster name="clu_generix" id="15354" generation="900"/>
+  <quorum quorate="1" groupmember="1"/>
+  <nodes>
+    <node name="gfs-node1" state="1" local="0" estranged="0" rgmanager="1" rgmanager_master="0" qdisk="0" nodeid="0x00000002"/>
+    <node name="gfs-node2" state="1" local="0" estranged="0" rgmanager="1" rgmanager_master="0" qdisk="0" nodeid="0x00000003"/>
+    <node name="gfs-node3" state="1" local="1" estranged="0" rgmanager="1" rgmanager_master="0" qdisk="0" nodeid="0x00000004"/>
+  </nodes>
+  <groups>
+    <group name="service:vmware_ip" state="110" state_str="stopped"  owner="none" last_owner="none" restarts="1" last_transition="1217835879" last_transition_str="Mon Aug  4 09:44:39 2008"/>
+    <group name="service:xen_ip" state="112" state_str="started"  owner="gfs-node2" last_owner="gfs-node1" restarts="1" last_transition="1217836101" last_transition_str="Mon Aug  4 09:48:21 2008"/>
+  </groups>
+</clustat>
