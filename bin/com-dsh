@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.3
+#!/usr/bin/python
 """
 ComDSH - The Python Distributed Shell based on pydsh but extended for redhat clustersuite
 
@@ -127,7 +127,7 @@ CMD_PRMPT_INT      = re.compile('^[\S@]*?[$].*$\Z', re.M)
 CONNECTION_REFUSED = re.compile('^\s*?Connection refused.*\n.*?[^ ][$#%]$\Z',
                                 re.M)
 LOGIN_PROMPT       = re.compile('^\s*?[Ll]ogin:$\Z', re.M)
-PASSWORD_PROMPT    = re.compile('^\s*?[Pp]assword:$\Z', re.M)
+PASSWORD_PROMPT    = re.compile('^.*[Pp]assword:\s*$\Z', re.M)
 SSH_NEWKEY_PROMPT  = re.compile('Are you sure you want to continue ' + \
                                 'connecting (yes/no)?')
 ssh_hostkey_FAIL   = re.compile('^Host key verification failed.\s*?\r\n' + \
@@ -151,7 +151,7 @@ def command_options (appname, usage):
 
     # Options
     cmd_options = [make_option("--timeout", action="store", type="int",
-                               dest="timeout", default=60, metavar="<SEC>",
+                               dest="timeout", default=4, metavar="<SEC>",
                                help="Set timeout."),
                    make_option("-v", "--verbose", action="count",
                                dest="verbose", help="Verbose (may be " + \
@@ -184,6 +184,10 @@ def command_options (appname, usage):
                             "hostnames, or ip addresses (individually" + \
                             " or as a range i.e. node01-10 or " + \
                             "192.168.0.1-254).")
+    from comoonics.cluster.ComClusterRepository import RedhatClusterRepository
+    host_options.add_option("-c", "--clusterconf", type="string", dest="clusterconf", help="Overwrites the default clusterconf file", 
+                            default=RedhatClusterRepository.defaultcluster_conf)
+    host_options.add_option("-A", "--ask", action="store_true", dest="ask", default=False, help="Sets in ask mode to ask user which commands would be executed.")
     cmd_parser.add_option_group(host_options)
 
     # Shell Options
@@ -793,7 +797,7 @@ def scp (options, hostlist):
                                      self.local, self.user,
                                      port_exception.group(1), self.remote))
 
-            pl_scp = session.compile_pattern_list([pexpect.TIMEOUT,
+            pl_scp = session.compile_pattern_list([timeout,
                      pexpect.EOF, SSH_NEWKEY_PROMPT, CONNECTION_REFUSED,
                      PASSWORD_PROMPT])
             pass_count = 0
@@ -957,15 +961,16 @@ def sess_remote (options):
     while True:
         time.sleep(1)
         login = session.expect_list(pl_ssh_login, options.timeout)
+        if options.verbose > 4:
+            print "ssh login code: %u" %login
         if login == 0: # Timeout
             error_return = '%s login failure (Timeout), mesg: %s' % (
                            proto.upper(), session.before)
             session = None
             break
         if login == 1: # EOF
-            error_hostkey.find(session.before, 'RSA host key for %s' %
-                               (options.host.lower()) + ' has changed and ' + \
-                               'you have requested strict checking.')
+            error_hostkey=session.before.find('RSA host key for %s' %(options.host.lower()) + ' has changed and ' + \
+                                              'you have requested strict checking.')
             if error_hostkey >= 0:
                 mutex.acquire()
                 no_test = False
@@ -1100,7 +1105,7 @@ def sess_su (session, host, pass_root, timeout, verbose):
     """
 
     sulogin = session.sendline ('/bin/su -')
-    sulogin_pl = session.compile_pattern_list([pexpect.TIMEOUT, pexpect.EOF,
+    sulogin_pl = session.compile_pattern_list([timeout, pexpect.EOF,
                  PASSWORD_PROMPT, SU_LOGINFAIL, SU_DEB_LOGINFAIL, CMD_PRMPT])
     sulogin_fail = 0
     sulogin_retry = 0
@@ -1277,35 +1282,30 @@ def ssh_keygen (options):
     if keygen.isalive():
         keygen.kill(1)
 
-def getHostsFromCluster(filename, verbose):
+def getHostsFromCluster(clusterconf, verbose, localhost="localhost"):
     """
     Returns all hosts from the cluster. Until now only works for RH Cluster
     """
-    RH_CLUSTER_CONF=filename
-    hostlist=[]
-    if os.path.isfile(RH_CLUSTER_CONF):
-        if verbose >= 2:
-            print "  Adding hosts from %s to hostlist.." % (RH_CLUSTER_CONF)
-        from comoonics import ComSystem
-        from comoonics.ComSystem import ExecLocalException
-        ComSystem.__EXEC_REALLY_DO=""
-        try:
-            _output=ComSystem.execLocalOutput("/sbin/cman_tool nodes")
-            import re
-            _regexp=re.compile("\s+(?P<node>\d+)\s+(?P<votes>\d+)\s+(?P<exp>\d+)\s+(?P<state>M)\s+(?P<name>\S+)$")
-            for _line in _output[1:]:
-                _match=_regexp.match(_line)
-                if _match:
-                    _hostname=_match.group("name")
-                    # no quorum disk
-                    if not os.path.exists(_hostname):
-                        hostlist.append(_hostname)
-        except ExecLocalException:
-            pass
-
-    return hostlist
-
-
+    if verbose >= 2:
+        print "  Adding hosts to hostlist.."
+    from comoonics.cluster.ComClusterRepository import ClusterRepository
+    from comoonics.cluster.ComClusterInfo import ClusterInfo
+    from comoonics import ComSystem
+    
+    repo=ClusterRepository(clusterconf)
+    info=ClusterInfo(repo)
+    if ComSystem.isSimulate():
+        info.helper.setSimOutput()
+        for node in info.getNodes():
+            node.helper.output=info.helper.output
+        
+    names=list()
+    for node in info.getNodes(True):
+        if node.local=="1":
+            names.append(localhost)
+        else:
+            names.append(node.getName())
+    return names
 
 # ------------------------------------------------------------------------------
 # Main
@@ -1350,13 +1350,26 @@ def main (argv):
         if options.verbose > 0:
             print "com-dsh - Python Distributed Shell"
 
+    if options.verbose > 2:
+        import logging
+        from comoonics import ComLog
+        ComLog.setLevel(logging.DEBUG)
+        logger=ComLog.getLogger(appname)
+        
+    from comoonics import ComSystem
+    if options.dryrun:
+        logger.debug("Dryrun mode detected.")
+        ComSystem.setExecMode(ComSystem.SIMULATE)
+    if options.ask:
+        logger.debug("Setting ask mode.")
+        ComSystem.setExecMode(ComSystem.ASK)
+
     if not options.nocluster and not (options.allgroup or options.hostfiles or options.nodes or options.group):
         if options.verbose > 4:
             print "Detecting cluster"
-        hostlist=getHostsFromCluster("/proc/cluster/nodes", options.verbose)
+        hostlist=getHostsFromCluster(options.clusterconf, options.verbose)
         if options.verbose > 4:
             print "Found nodes: %s" %(hostlist)
-
 
     # Force single thread at high verbosity
     if options.verbose >= 4:
@@ -1372,7 +1385,7 @@ def main (argv):
             print "Process host list"
         if not hostlist:
             hostlist=process_hostlist(options.allgroup, allgroup_file,
-                                        options.hostfiles, options.group, options.nodes, options.verbose)
+                                      options.hostfiles, options.group, options.nodes, options.verbose)
         if options.verbose >= 2:
             print '  Hostlist:  %s' % (hostlist)
         # Max host length
@@ -1382,9 +1395,10 @@ def main (argv):
         if options.verbose >= 2:
             print '  Max Host Length:  %s' % (max_host_len)
         # Window width
-        window = fcntl.ioctl(0, termios.TIOCGWINSZ, "\000"*8)
-        row, column = struct.unpack('hhhh', window)[0:2]
-        win_width = column - (max_host_len + 3)
+        if not options.dryrun:
+            window = fcntl.ioctl(0, termios.TIOCGWINSZ, "\000"*8)
+            row, column = struct.unpack('hhhh', window)[0:2]
+            win_width = column - (max_host_len + 3)
         # Test hosts for connectivity
         if options.verbose >= 1:
             print "Test hosts for connectivity."
