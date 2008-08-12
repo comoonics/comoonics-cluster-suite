@@ -2,8 +2,6 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 version="1.0">
 
-  <xsl:output method="xml" doctype-system="/opt/atix/comoonics_cs/xml/comoonics-enterprise-copy.dtd" indent="yes"/>
-  
   <xsl:template match="/">
     <xsl:variable name="clustername"><xsl:value-of select="localclone/cluster/@name"/></xsl:variable>
     <xsl:variable name="sbootdisk"><xsl:value-of select="localclone/sourcedisks/bootdisk/@name"/></xsl:variable>
