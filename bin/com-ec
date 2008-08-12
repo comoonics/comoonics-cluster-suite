@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.20 2008-02-27 10:45:48 marc Exp $
+# $Id: com-ec,v 1.21 2008-08-12 09:46:45 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.20 $"
+__version__ = "$Revision: 1.21 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -126,11 +126,20 @@ if not config.filename:
     sys.exit(1)
 
 try:
+    file=open(config.filename,"r")
+    line("Parsing document %s " % config.filename)
+    import StringIO
+    _buf=StringIO.StringIO()
+    for _line in file:
+        _line=_line %config.values
+        _buf.write(_line)
+    file.close()
     if config.xslt:
         try:
            import libxslt
            import libxml2
-           n_doc = libxml2.parseFile(config.filename)
+           _buf2=_buf.getvalue()
+           n_doc = libxml2.parseMemory(_buf2, len(_buf2))
            if config.values:
                applyValues(n_doc, config.values)
            style = libxml2.parseFile(config.xslt)
@@ -149,11 +158,10 @@ try:
             raise e
         libxslt.cleanup()
     else:
-        file=open(config.filename,"r")
-        line("Parsing document %s " % config.filename)
-        doc = reader.fromStream(file)
+        doc = reader.fromStream(_buf)
         if config.values:
             applyValues(doc, config.values)
+    _buf.close()
 
     if config.onlydisplay:
         PrettyPrint(doc)
@@ -223,7 +231,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.20  2008-02-27 10:45:48  marc
+# Revision 1.21  2008-08-12 09:46:45  marc
+# - added ability to overwrite xml variables with  commandline arguments
+#
+# Revision 1.20  2008/02/27 10:45:48  marc
 # - added a better comment for simulation mode
 #
 # Revision 1.19  2007/07/31 15:16:57  marc
