@@ -1,4 +1,4 @@
-# $Id: build-lib.sh,v 1.9 2008-05-20 15:57:30 marc Exp $
+# $Id: build-lib.sh,v 1.10 2008-08-14 13:00:51 marc Exp $
 
 function setup {
   CHANGELOG=$(awk '
@@ -77,13 +77,17 @@ setup(name="'${NAME}'",
 
 echo ${REQUIRES} | grep "^--requires" 2>&1 > /dev/null
 if [ $? -ne 0 ] && [ -n "$REQUIRES" ]; then
-	REQUIRES="--requires $REQUIRES"
+    python setup.py -v bdist_rpm --release=${RELEASE} --requires="${REQUIRES}" ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
+else
+    python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
 fi
-python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.9  2008-05-20 15:57:30  marc
+# Revision 1.10  2008-08-14 13:00:51  marc
+# bugfix
+#
+# Revision 1.9  2008/05/20 15:57:30  marc
 # bugfix with --requires when empty
 #
 # Revision 1.8  2007/12/07 14:29:23  reiner
