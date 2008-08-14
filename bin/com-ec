@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.22 2008-08-14 12:20:09 marc Exp $
+# $Id: com-ec,v 1.23 2008-08-14 13:01:20 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.22 $"
+__version__ = "$Revision: 1.23 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -148,8 +148,8 @@ try:
            import libxml2
            _buf2=_buf.getvalue()
            n_doc = libxml2.parseMemory(_buf2, len(_buf2))
-           if config.values:
-               applyValues(n_doc, config.values)
+#           if config.values:
+#               applyValues(n_doc, config.values)
            style = libxml2.parseFile(config.xslt)
            xslt_style = libxslt.parseStylesheetDoc(style)
            params={}
@@ -239,7 +239,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.22  2008-08-14 12:20:09  marc
+# Revision 1.23  2008-08-14 13:01:20  marc
+# - removed applyValues
+#
+# Revision 1.22  2008/08/14 12:20:09  marc
 # finally added args
 #
 # Revision 1.21  2008/08/12 09:46:45  marc
