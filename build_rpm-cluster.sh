@@ -3,7 +3,7 @@
 source ./build-lib.sh
 
 RELEASE=16
-REQUIRES="--requires=comoonics-cs-py,PyXML"
+REQUIRES="--requires=comoonics-cs-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cluster-py"
 VERSION="0.1"
