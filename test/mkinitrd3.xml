@@ -6,7 +6,7 @@
       			<filesystem type="ext3" exlock="/var/sharelock/bootfs.lock"/>     	
       			<mountpoint name="/mnt/tmp"/>
 					<modification type="exec" 
-						command="/opt/atix/comoonics_bootimage/mkinitrd -f myinitrd_sr-%(kernelversion)s.img %(kernelversion)s"/>
+						command="/opt/atix/comoonics_bootimage/mkinitrd -f myinitrd_sr-%(1)s.img %(args1)s"/>
 		</device>
 	</modificationset>
 </enterprisecopy>
