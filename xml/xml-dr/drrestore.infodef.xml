@@ -12,6 +12,10 @@
     	<xpath name="localclone/destdisks/rootdisk/@name"/>
     	<comment>Path of the destination rootdisk</comment>
     </entry>
+    <entry name="rootpartition" type="number">
+    	<xpath name="localclone/destdisks/rootdisk/@partition"/>
+    	<comment>Number of the root partition</comment>
+    </entry>
     <entry name="Kernel Version" type="device">
     	<xpath name="localclone/kernel/@version" />
     </entry>

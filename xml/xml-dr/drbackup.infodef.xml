@@ -16,6 +16,10 @@
 		<helper name="StorageAssistantHelper" query="rootdisk"/>
     	<comment>Path of the source rootdisk</comment>
     </entry>
+    <entry name="rootpartition" type="number">
+    	<xpath name="localclone/sourcedisks/rootdisk/@partition"/>
+   	<comment>Number of the root partition. Leave empty if none</comment>
+    </entry>
     <entry name="Kernel Version" type="device">
     	<xpath name="localclone/kernel/@version" />
 		<helper name="KernelAssistantHelper" query="version"/>

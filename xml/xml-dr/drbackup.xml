@@ -4,7 +4,7 @@
   <cluster name="unknown" sourcesuffix="" destsuffix="C"/>
   <sourcedisks>
      <bootdisk name="/dev/sda"/>
-     <rootdisk name="/dev/sdb"/>
+     <rootdisk name="/dev/sdb" partition=""/>
   </sourcedisks>
   <destarchive name="drbackup" path="/data/clones">
     <metaarchive name="meta-clone-drbackup-01.tar"/>
