@@ -25,7 +25,7 @@ cdsl_type_attribute = "type"
 cdsl_timestamp_attribute = "timestamp"
 
 defaults_element = "defaults"
-defaults_path = os.path.join(cdsls_path,cdslDefaults_element)
+defaults_path = os.path.join(cdsls_path,defaults_element)
 defaults_cdsltree_attribute = "cdsltree"
 defaults_cdsltreeshared_attribute = "cdsltree_shared"
 defaults_cdsllink_attribute = "cdsl_link"
