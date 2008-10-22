@@ -38,10 +38,12 @@ from xml.dom.ext.reader import Sax2
 from xml import xpath
 import logging
 import StringIO
+import os
 
 from comoonics import ComLog, XmlTools, odict
 from comoonics.ComDataObject import DataObject
 from comoonics.enterprisecopy import ComEnterpriseCopy
+from comoonics.ComExceptions import ComException
 
 
 from ComAssistantController import *
@@ -50,16 +52,25 @@ from ComAssistantInfo import *
 import ComAssistantHelper
 
 
+class FileNotFoundException(ComException):
+    pass
+
 __logStrLevel__ = "comoonics.assistant.ECAssistant"
 class ECAssistantController(AssistantController):
-    def __init__(self, xml_tmpl_file, value_def_file, xsl_file=None, validate=0, scan=False):
+    def __init__(self, xml_tmpl_file, value_def_file, xsl_file=None, validate=0, scan=False, xsl_path="/opt/atix/comoonics-cs/xsl"):
         self.xsl_file=xsl_file
         self.xml_tmpl_file=xml_tmpl_file
+        self.xsl_path=xsl_path
 
         reader = Sax2.Reader(validate)
         self.doc = reader.fromStream(xml_tmpl_file)
         self.value_def_doc = reader.fromStream(value_def_file)
-                
+
+        if xsl_file == True:
+            self.xsl_file=self._search_xsl_file() 
+            if self.xsl_file == None: 
+                raise FileNotFoundException("Could not find xsl file in %s for %s" %(self.xsl_path, self.xml_tmpl_file))
+
         self._createInfoDict(scan)
     
     def getNeededInfo(self):
@@ -101,7 +112,21 @@ class ECAssistantController(AssistantController):
     
     def printDocument(self):
         PrettyPrint(self.doc)
+
+    def _search_xsl_file(self):
+        xsl_file=self._check_for_known_xsl_files()
+        if xsl_file == None: return None
+        _path="%s/%s" %(self.xsl_path, xsl_file)
+        if os.path.isfile(_path):
+            return _path
+
+    def _check_for_known_xsl_files(self):
+        _xpaths={"/localclone": "localclone.xsl", "/masterclone":"masterclone.xsl"}
+        for _xpath in _xpaths.iterkeys():
+            _node=xpath.Evaluate(_xpath, self.doc)
+            if len(_node) != 0: return _xpaths.get(_xpath)
         
+            
     def _createInfoDict(self, scan):
         _infodict=odict.Odict()
         # get the root element
