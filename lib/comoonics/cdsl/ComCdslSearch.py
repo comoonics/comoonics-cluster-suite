@@ -7,8 +7,9 @@ version of os.walk() (see L{os} for details), which skips submounts but follows 
 """
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 
+import re
 from xml import xpath
 from xml.dom.ext.reader import Sax2
 
