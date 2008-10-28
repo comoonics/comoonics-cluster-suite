@@ -49,7 +49,7 @@ class ConfigurationManagerTui(object):
             if _res[0] == "rename":
                 _name=names[_res[1]]
                 _type=self.confignames.get(_name)
-                _newname=self._run_rename()
+                _newname=self._run_rename(_name)
                 if _newname:
                     self.controller.renameConfigSet(_name, _type, _newname)
             if _res[0] == "delete":
@@ -89,8 +89,8 @@ class ConfigurationManagerTui(object):
         name=_res[1][0]
         self.controller.createConfigSet(name, type)
         
-    def _run_rename(self):
-        _res=EntryWindow(self.screen, "Rename configuration set", "Enter new name of the configuration set", ['Name'], allowCancel = 1, width = 40, entryWidth = 20, buttons = [ 'Ok', 'Cancel' ], help = None)
+    def _run_rename(self, oldname=""):
+        _res=EntryWindow(self.screen, "Rename configuration set", "Enter new name of the configuration set\nOld name: %s" %oldname, ['New name:'], allowCancel = 1, width = 40, entryWidth = 20, buttons = [ 'Ok', 'Cancel' ], help = None)
         if _res[0]!="ok": return
         name=_res[1][0]
         return name
