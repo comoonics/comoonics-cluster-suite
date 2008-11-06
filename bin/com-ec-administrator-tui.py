@@ -5,10 +5,10 @@
 """
 
 # here is some internal information
-# $Id: com-ec-administrator-tui.py,v 1.1 2008-10-22 18:32:01 mark Exp $
+# $Id: com-ec-administrator-tui.py,v 1.2 2008-11-06 15:43:56 mark Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __description__="""
 Comoonics Assistant to create a Comoonics desaster recovery dvd
 """
@@ -90,7 +90,7 @@ parser.add_option("-a", "--ask", dest="debug", default=False, action="callback",
 parser.add_option("-X", "--xml", dest="really", default=True, action="callback", callback=setReally)
 parser.add_option("-F", "--fast", dest="scan", default=True, action="callback", callback=setFast)
 parser.add_option("-p", "--path", dest="configpath", help="Set path for configuration files",
-				  action="store", default=CONFIGURATION_PATH, type="string", dest="configpath")
+				  action="store", default=CONFIGURATION_PATH, type="string")
 #
 
 (options, args) = parser.parse_args()
@@ -106,7 +106,6 @@ tui = ConfigurationManagerTui(manager)
 result = tui.run()
 
 if result == None: exit(0)
-print result
 
 name, type, direction = result
 
@@ -147,7 +146,7 @@ tui = AssistantTui(aclist, tuititle)
 if tui.run(warning):
 	if ac_2: 
 		ac_2.writeXMLFile(rst_configfile)
-	print "now I would start the process ..."
+	ac_main.run(options.really)
 else:
 	print "Exiting on user request ..."
 
