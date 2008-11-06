@@ -1,0 +1,34 @@
+<info>
+    <entry name="cluster name" type="txt">
+        <xpath name="masterclone/sourcecluster/@name"/>
+        <xpath name="masterclone/destcluster/@name"/>
+		<helper name="RedHatClusterAssistantHelper" query="clustername"/>
+		<validator name="None"/>
+		<comment lang="en">Name of the cluster</comment>
+    </entry>
+    <entry name="archive name" type="name">
+    	<xpath name="masterclone/destarchive/volumegrouparchive/@archivename"/>
+    	<comment>Name of the archive</comment>
+    </entry>
+    <entry name="archive path" type="device">
+    	<xpath name="masterclone/destarchive/@path"/>
+    	<comment>Path to the archive repositories</comment>
+    </entry>
+    <entry name="volumegroup" type="name">
+    	<xpath name="masterclone/sourcedisks/volumegroup/@name"/>
+    	<xpath name="masterclone/destarchive/volumegrouparchive/@source"/>
+    	<comment>Name of the volume group</comment>
+    </entry>
+    <entry name="logical volume" type="name">
+    	<xpath name="masterclone/sourcedisks/volumegroup/logicalvolume/@name"/>
+    	<comment>Name of the logical volume</comment>
+    </entry>
+    <entry name="disk" type="device">
+    	<xpath name="masterclone/sourcedisks/volumegroup/disk/@name"/>
+    	<comment>Path of the source disk</comment>
+    </entry>
+    <entry name="partition" type="number">
+    	<xpath name="masterclone/sourcedisks/volumegroup/disk/@partition"/>
+   	<comment>Number of the partition. Leave empty if none</comment>
+    </entry>
+ </info>

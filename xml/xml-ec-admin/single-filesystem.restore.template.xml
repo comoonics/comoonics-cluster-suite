@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE masterclone SYSTEM "/opt/atix/comoonics-cs/xml/comoonics-enterprise-clone.dtd">
+<masterclone name="restore-tar" source="backup" destination="disk">
+  	<destcluster name="unknown"/>
+    <sourcearchive name="clone-vmware_cluster-sr" path="/mnt/miraculix/archiv/backup/test">
+        <volumegrouparchive name="vg_test_backup" format="tar" type="backup" archivename="Backup-test" displayname="vg_test_lv_test">
+        </volumegrouparchive>
+    </sourcearchive>
+    <destdisks>
+        <volumegroup name="vg_test" source="vg_test_backup">
+            <logicalvolume name="lv_test" fstype="gfs"/>
+            <disk name="/dev/sdf" partition="1">
+            </disk>
+        </volumegroup>
+    </destdisks>
+</masterclone>
