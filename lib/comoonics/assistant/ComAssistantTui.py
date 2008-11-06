@@ -74,10 +74,11 @@ class AssistantTui(object):
     RUN=4
     CANCEL=-1
     
-    def __init__(self, controller):
+    def __init__(self, controller, title="Com-EC Assistant"):
         """
         @param: controller, a list of AssistantControllers
         """
+        self.title=title
         self.controller=controller
         self.infodict=self._build_infodict()
         self.screen = SnackScreen()
@@ -127,7 +128,7 @@ class AssistantTui(object):
             return self.CANCEL
          
     def _run_confirmation(self):
-        _button = ConfirmationWindow(self.screen, "Com-EC Assistant", self.getInfoList())
+        _button = ConfirmationWindow(self.screen, self.title, self.getInfoList())
         if _button == "start": 
             return self.RUN
         if _button == "modify":
@@ -146,7 +147,7 @@ class AssistantTui(object):
                 _buttons=[ 'Next', 'Return' ]
             else:
                 _buttons=[ 'Next', 'Previous', 'Return' ]
-            _button, _value = AssistantWindow(self.screen, "Com-EC Assistant", _info, buttons=_buttons)
+            _button, _value = AssistantWindow(self.screen, self.title, _info, buttons=_buttons)
             if _button == "next":
                 i=i+1
                 self._set_info_value(_info.getName(), _value)
@@ -179,7 +180,7 @@ class AssistantTui(object):
         
         
     def getEntryWindow(self, screen):
-        w = EntryWindow(screen ,"Com-ec Assistant", "text", ("a", "b", "c", "d", "e", "f", "g"), buttons = [ 'Ok', 'Scan', 'Cancel' ])
+        w = EntryWindow(screen ,self.title, "text", ("a", "b", "c", "d", "e", "f", "g"), buttons = [ 'Ok', 'Scan', 'Cancel' ])
         w.run()
         
         
