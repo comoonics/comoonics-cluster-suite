@@ -33,10 +33,11 @@ class AssistantInfo(object):
         return self.attr_name
  
     def setValue(self, val):
-        pass
+        for _elem in self.data:
+            _elem.nodeValue=val
 
     def getValue(self):
-        pass
+        return self.data[0]
 
     def setDefault(self, default):
         self.default=default
@@ -84,18 +85,16 @@ class AssistantInfo(object):
 
     def getComment(self, lang=None):
         if not self.comment:
-            return "No addittional information available"
+            return "No additional information available"
         return self.comment
 
     def scan(self):
         if self.hasHelper():
             self.setSuggestions(self.getHelper().scan())
             
-    
     def validate(self):
         pass
 
-            
 
 class AttrAssistantInfo(AssistantInfo):
     def __init__(self, attr, attr_name, attr_type, comment=None, validator=None, helper=None, doc=None):
@@ -107,5 +106,7 @@ class AttrAssistantInfo(AssistantInfo):
     def setValue(self, val):
         for _elem in self.data:
             _elem.nodeValue=val
+            
+            
     
     
