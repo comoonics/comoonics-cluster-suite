@@ -58,7 +58,7 @@ class ConfigurationManagerTui(object):
                 _name=names[_res[1]]
                 _type=self.confignames.get(_name)
                 set = self.controller.getConfigStore().getConfigTypeStoreByName(_type).getConfigset(_name)
-                direction = self._run_direction(_name, set.getDirections())
+                direction = self._run_direction(_name, set.getDirections(ordered=True))
                 if direction == None: continue
                 result=[_name,_type,direction]
                 break
@@ -85,7 +85,6 @@ class ConfigurationManagerTui(object):
         type=templatetypes[_res[1]]
         _res=EntryWindow(self.screen, "New Configuration", "Name of the new configuration set", ['Name'], allowCancel = 1, width = 40, entryWidth = 20, buttons = [ 'Ok', 'Cancel' ], help = None)
         if _res[0]!="ok": return
-        print _res 
         name=_res[1][0]
         self.controller.createConfigSet(name, type)
         

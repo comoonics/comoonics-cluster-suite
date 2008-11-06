@@ -61,7 +61,6 @@ class ConfigurationManager(object):
         tset=tstore.getConfigTemplateset()
         for dir in _all_dirs:
             dpath=os.path.normpath("%s/%s.%s.config.%s.xml" %(self.getConfigPath(), type, dir, name))
-            print "copy %s -> %s" %(tset.getConfiguration(dir).getConfigFile(), dpath)
             shutil.copyfile(tset.getConfiguration(dir).getConfigFile(), dpath)
             self.store.addConfig(Configuration(type, dir, "config", name, dpath))
             
@@ -71,8 +70,7 @@ class ConfigurationManager(object):
         tstore = self.store.getConfigTypeStoreByName(type)
         set = tstore.getConfigset(name)
         for config in set.getConfigurations():
-            print "remove %s" %(config.getConfigFile())
-            os.rename(config.getConfigFile(), "%s.bak" % config.getConfigFile())
+           os.rename(config.getConfigFile(), "%s.bak" % config.getConfigFile())
         self.store.removeConfigSet(type, name)
         
     def renameConfigSet(self, name, type, newname):
@@ -262,8 +260,11 @@ class ConfigurationSet(object):
     def getConfigurations(self):
         return self.set.values()
     
-    def getDirections(self):
-        return self.set.keys()
+    def getDirections(self, ordered=False):
+        _dirs=self.set.keys()
+        if ordered:
+            _dirs.sort()
+        return _dirs
                 
     def getName(self):
         return self.name
