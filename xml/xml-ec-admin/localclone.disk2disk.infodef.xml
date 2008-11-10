@@ -6,27 +6,35 @@
 		<validator name="None"/>
 		<comment lang="en">Name of the cluster</comment>
     </entry>
-    <entry name="bootdisk" type="device">
+    <entry name="source bootdisk" type="device">
     	<xpath name="localclone/sourcedisks/bootdisk/@name"/>
 		<helper name="StorageAssistantHelper" query="bootdisk"/>
     	<comment>Path of the source bootdisk</comment>
     </entry>
-    <entry name="rootdisk" type="device">
+    <entry name="source rootdisk" type="device">
     	<xpath name="localclone/sourcedisks/rootdisk/@name"/>
 		<helper name="StorageAssistantHelper" query="rootdisk"/>
     	<comment>Path of the source rootdisk</comment>
     </entry>
-    <entry name="rootpartition" type="number">
+    <entry name="source rootpartition" type="number">
     	<xpath name="localclone/sourcedisks/rootdisk/@partition"/>
-   	<comment>Number of the root partition. Leave empty if none</comment>
+   	<comment>Number of the source root partition. Leave empty if none</comment>
+    </entry>
+    <entry name="destination bootdisk" type="device">
+    	<xpath name="localclone/destdisks/bootdisk/@name"/>
+    	<comment>Path of the destination bootdisk</comment>
+    </entry>
+    <entry name="destination rootdisk" type="device">
+    	<xpath name="localclone/destdisks/rootdisk/@name"/>
+    	<comment>Path of the destination rootdisk</comment>
+    </entry>
+    <entry name="destination rootpartition" type="number">
+    	<xpath name="localclone/destdisks/rootdisk/@partition"/>
+   	<comment>Number of the destination root partition. Leave empty if none</comment>
     </entry>
     <entry name="Kernel Version" type="device">
     	<xpath name="localclone/kernel/@version" />
 		<helper name="KernelAssistantHelper" query="version"/>
 		<comment>The current kernel version</comment>
-    </entry>
-    <entry name="Backup temp path" type="device">
-    	<xpath name="localclone/destarchive/@path"/>
-		<comment>Temporary directory to hold the backup data</comment>
     </entry>
 </info>
