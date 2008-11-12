@@ -18,7 +18,8 @@
     </entry>
     <entry name="rootpartition" type="number">
     	<xpath name="localclone/sourcedisks/rootdisk/@partition"/>
-   	<comment>Number of the root partition. Leave empty if none</comment>
+		<helper name="StorageAssistantHelper" query="rootpartition"/>
+	   	<comment>Number of the root partition. Leave empty if none</comment>
     </entry>
     <entry name="Kernel Version" type="device">
     	<xpath name="localclone/kernel/@version" />

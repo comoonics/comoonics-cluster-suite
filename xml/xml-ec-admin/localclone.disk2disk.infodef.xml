@@ -18,7 +18,8 @@
     </entry>
     <entry name="source rootpartition" type="number">
     	<xpath name="localclone/sourcedisks/rootdisk/@partition"/>
-   	<comment>Number of the source root partition. Leave empty if none</comment>
+ 		<helper name="StorageAssistantHelper" query="rootpartition"/>
+	   	<comment>Number of the source root partition. Leave empty if none</comment>
     </entry>
     <entry name="destination bootdisk" type="device">
     	<xpath name="localclone/destdisks/bootdisk/@name"/>

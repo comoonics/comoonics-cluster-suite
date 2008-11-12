@@ -3,10 +3,10 @@ Assistant helper for storage information
 """
 
 # here is some internal information
-# $Id: ComStorageAssistantHelper.py,v 1.1 2008-02-28 16:33:35 mark Exp $
+# $Id: ComStorageAssistantHelper.py,v 1.2 2008-11-12 10:05:10 mark Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/assistant/ComStorageAssistantHelper.py,v $
 
 import re
@@ -25,6 +25,8 @@ class StorageAssistantHelper(AssistantHelper):
                 _dev=self.getRootDevice()
                 ComLog.getLogger(__logStrLevel__).debug("detected rootdevice %s" %_dev)                
                 return _dev
+            if self.query == "rootpartition":
+                return self.getRootPartition()
             if self.query == "bootdisk":
                 return self.getBootDevice()
             if self.query == "livecd":
@@ -41,8 +43,19 @@ class StorageAssistantHelper(AssistantHelper):
             return
         _pv = self._getLVM_physicalVolume(_dev)
         if _pv:
-            return [ _pv ]
-        return [ _dev ]
+            return [ self._normalizeDisk(_pv)[0] ]
+        return [ self._normalizeDisk(_dev) [0] ]
+    
+    def getRootPartition(self):
+        _dev = self._scanRootDevice()
+        ComLog.getLogger(__logStrLevel__).debug("detected rootdevice %s" %_dev)                
+        if not _dev: 
+            return
+        _pv = self._getLVM_physicalVolume(_dev)
+        if _pv:
+            return [ self._normalizeDisk(_pv)[1] ]
+        return [ self._normalizeDisk(_dev) [1] ]
+        
     
     def getBootDevice(self):
         _labels=["/boot", "boot", "/bootsr", "bootsr"]
@@ -51,7 +64,7 @@ class StorageAssistantHelper(AssistantHelper):
             try: 
                 _part = ComSystem.execLocalOutput("findfs LABEL=%s" %_label)
                 ComLog.getLogger(__logStrLevel__).debug("detected disk %s" %_part)
-                _device=self._normalizeDisk(_part[0])
+                _device=self._normalizeDisk(_part[0])[0]
                 ComLog.getLogger(__logStrLevel__).debug("normalized disk %s" %_device)
                 _devs.append(_device)
             except Exception:
@@ -68,17 +81,19 @@ class StorageAssistantHelper(AssistantHelper):
         return []
     
     def _normalizeDisk(self, name):
+        ''' returns an array of the real disk device and partition '''
         #VERY NASTY implementation
         re_m=re.compile(r"/mapper/")
-        re_md=re.compile(r"(^/dev/mapper/\w+?)p*\d+")
-        re_d=re.compile(r"(^/dev/\w+?)\d+")
+        re_md=re.compile(r"(^/dev/mapper/\w+?)(p*\d+)")
+        re_d=re.compile(r"(^/dev/\w+?)(\d+)")
         if re_m.search(name):
             #mapper
             m=re_md.search(name)
-            return m.group(1)
+            return m.group(1), m.group(2) 
         else:
             m=re_d.search(name)
-            return m.group(1)
+            return m.group(1), m.group(2)
+        return name, ""
         
             
     
