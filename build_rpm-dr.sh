@@ -2,7 +2,7 @@
 
 source ./build-lib.sh
 
-RELEASE=1
+RELEASE=4
 REQUIRES="--requires=comoonics-assistant-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-dr-py"
