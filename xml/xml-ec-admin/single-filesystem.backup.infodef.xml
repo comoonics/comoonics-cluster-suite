@@ -15,8 +15,11 @@
     	<comment>Path to the archive repositories</comment>
     </entry>
     <entry name="volumegroup" type="name">
-    	<xpath name="masterclone/sourcedisks/volumegroup/@name"/>
     	<xpath name="masterclone/destarchive/volumegrouparchive/@source"/>
+    	<comment>Name of the volume group</comment>
+    </entry>
+    <entry name="volumegroup" type="name">
+    	<xpath name="masterclone/sourcedisks/volumegroup/@name"/>
     	<comment>Name of the volume group</comment>
     </entry>
     <entry name="logical volume" type="name">
