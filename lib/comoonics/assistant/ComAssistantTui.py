@@ -115,9 +115,10 @@ class AssistantTui(object):
             _tdict=_controller.getInfoDict()
             for _key in _tdict.iterkeys():
                 if not _dict.has_key(_key):
-                    _dict[_key]=_tdict.get(_key)
+                    _dict[_key]=_tdict.get(_key)[0]
                 else:
-                    _tdict.get(_key).setValue(_dict.get(_key).getValue())
+                    for elem in _tdict.get(_key):
+                        elem.setValue(_dict.get(_key).getValue())
         return _dict
          
     def _run_warning(self, warning):
@@ -172,7 +173,8 @@ class AssistantTui(object):
     def _set_info_value(self, key, value):
         for _controller in self.controller:
             if _controller.getInfoDict().has_key(key):
-                _controller.getInfoDict().get(key).setValue(value)
+                for elem in _controller.getInfoDict().get(key):
+                    elem.setValue(value)
     
     def _exit(self, val):
         self.cleanup()

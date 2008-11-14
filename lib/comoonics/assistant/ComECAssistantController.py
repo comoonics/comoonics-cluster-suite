@@ -128,7 +128,7 @@ class ECAssistantController(AssistantController):
         
             
     def _createInfoDict(self, scan):
-        _infodict=odict.Odict()
+        self.infodict=InfoDict()
         # get the root element
         _info=self.value_def_doc.getElementsByTagName("info")[0]
         # For all <entry> elements
@@ -159,11 +159,16 @@ class ECAssistantController(AssistantController):
                                                ComAssistantHelper.createAssistantHelper(_elem.getHelperClassName(), _elem.getHelperQuery()))
             if scan:
                 _ainfo.scan()
-            _infodict[_elem.getName()]=_ainfo
-            
-        self.infodict=_infodict
+            self.infodict.addValue(_elem.getName(),_ainfo)
+                
     
-    
+class InfoDict(odict.Odict):        
+    def addValue(self, key, val):
+        if self.has_key(key):
+            self.get(key).append(val)
+        else:
+            self[key]=[val]
+                    
     
 class InfoElement(DataObject):
     def __init__(self, element, doc=None):
@@ -195,6 +200,13 @@ class InfoElement(DataObject):
         except Exception, e:
             return
     
+def test_infodict():
+    dict=InfoDict()
+    dict.addValue("a", "aA")
+    dict.addValue("b", "bA")
+    dict.addValue("a", "aB")
+    
+    print dict
     
 def test():
     ComLog.setLevel(logging.DEBUG)
@@ -214,7 +226,7 @@ def test():
     
     
 if __name__=="__main__":
-    test()
+    test_infodict()
         
         
 
