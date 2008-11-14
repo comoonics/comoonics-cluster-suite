@@ -37,7 +37,7 @@ WARNING="CAUTION: This operation will destroy all data on the destination device
 MOUNTPOINT="/restore"
 
 LOCALCLONE_XSL="/opt/atix/comoonics-cs/xsl/localclone.xsl"
-DRRESTORE_XML_TEMPLATE="/mnt/cdrom/drrestore.xml"
+DRRESTORE_XML_TEMPLATE="drrestore.xml"
 DRRESTORE_INFODEF="/etc/comoonics/enterprisecopy/xml-dr/drrestore.infodef.xml"
 
 
@@ -72,7 +72,7 @@ parser.add_option("-a", "--ask", dest="debug", default=False, action="callback",
 #
 parser.add_option("-X", "--xml", dest="really", default=True, action="callback", callback=setReally)
 parser.add_option("-F", "--fast", dest="scan", default=True, action="callback", callback=setFast)
-parser.add_option("-s", "--source", dest="source", default="/dev/cdrom", action="store", help="source device")
+parser.add_option("-S", "--source", dest="source", default="/dev/cdrom", action="store", help="source device")
 
 (options, args) = parser.parse_args()
     
@@ -86,7 +86,7 @@ if rc != 0:
 	print "Error: cannot mount %s %s." %( options.source, MOUNTPOINT )
 	sys.exit(1)
 
-ac_drrestore=ECAssistantController(DRRESTORE_XML_TEMPLATE, DRRESTORE_INFODEF, LOCALCLONE_XSL, scan=True)
+ac_drrestore=ECAssistantController("%s/%s" %( MOUNTPOINT, DRRESTORE_XML_TEMPLATE), DRRESTORE_INFODEF, LOCALCLONE_XSL, scan=True)
 
 tui=AssistantTui([ ac_drrestore ])
 if tui.run(WARNING): 
