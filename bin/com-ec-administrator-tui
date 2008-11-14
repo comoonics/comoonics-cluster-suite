@@ -5,10 +5,10 @@
 """
 
 # here is some internal information
-# $Id: com-ec-administrator-tui,v 1.1 2008-11-10 08:57:43 mark Exp $
+# $Id: com-ec-administrator-tui,v 1.2 2008-11-14 14:49:56 mark Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __description__="""
 Comoonics Assistant to create a Comoonics desaster recovery dvd
 """
@@ -150,19 +150,5 @@ if tui.run(warning):
 else:
 	print "Exiting on user request ..."
 
-
-
-#if tui.run(WARNING_MESSAGE): 
-#	# we need the path where all extras will be:
-#	if tui.getInfoDict().has_key(NAME_LIVECD_EXTRAS):
-#		extras_path=tui.getInfoDict().get(NAME_LIVECD_EXTRAS).getValue()
-#		log.debug("drrestore file: %s/%s" %(extras_path, DRRESTORE_XML_NAME))
-#		ac_drrestore.writeXMLFile("%s/%s" %(extras_path, DRRESTORE_XML_NAME))
-#	else:
-#		log.debug("key %s not found" %NAME_LIVECD_EXTRAS)
-# 	if not options.livecd_only:	ac_drbackup.run(options.really)
-# 	if not options.tar_only: ac_mkrestorecd.run(options.really)
-#else:
-#	print "Exiting ..."
 
 
