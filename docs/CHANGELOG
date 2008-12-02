@@ -254,7 +254,9 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
-* Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-34
+* Tue Dez 02 2008 MG <grimme@atix.de>, 0.1-13
+   - fixed bug when DBObjects that have been newly created could not be made persistent (Bug #301)
+* Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-11
    - fixed bug in select query (where_clause)
 * Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-9:
    - changed way of importing
