@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# $Id: build_rpm-db.sh,v 1.9 2008-03-03 08:36:39 marc Exp $
+# $Id: build_rpm-db.sh,v 1.10 2008-12-02 15:49:49 marc Exp $
 
 source ./build-lib.sh
 
-RELEASE=12
+RELEASE=13
 REQUIRES="--requires=comoonics-cs-py,MySQL-python"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-db-py"
@@ -24,7 +24,10 @@ setup
 
 ##############
 # $Log: build_rpm-db.sh,v $
-# Revision 1.9  2008-03-03 08:36:39  marc
+# Revision 1.10  2008-12-02 15:49:49  marc
+# fixed bug for DBOBjects that could not be made persistent when newly created (Bug #301).
+#
+# Revision 1.9  2008/03/03 08:36:39  marc
 # new version for comoonics-db-py (0.1-12)
 #
 # Revision 1.8  2008/02/27 11:07:19  marc
