@@ -3,7 +3,7 @@ Class for object to database persistence to a generic database
 
 """
 # here is some internal information
-# $Id: ComDBObject.py,v 1.4 2008-12-02 15:49:28 marc Exp $
+# $Id: ComDBObject.py,v 1.5 2008-12-03 13:13:18 marc Exp $
 #
 from ComDBConnection import DBConnection
 from comoonics import ComLog
@@ -120,6 +120,8 @@ class DBObject(DBConnection):
             else:
                 query="UPDATE %s SET %s WHERE %s=%s" %(self.tablename, self._getPersistentAttributes(), self.schema["id"], self.id)
             self.execQuery(query)
+            if not hasattr(self, "id") or not getattr(self, "id"):
+                self.id=self.db.insert_id()
     
     def delete(self):
         query="DELETE FROM %s WHERE %s=%s" %(self.tablename, self.schema["id"], self.id)
@@ -127,7 +129,10 @@ class DBObject(DBConnection):
 
 ########################
 # $Log: ComDBObject.py,v $
-# Revision 1.4  2008-12-02 15:49:28  marc
+# Revision 1.5  2008-12-03 13:13:18  marc
+# fixed bug for DBOBjects that could not be made persistent when newly created (Bug #301).
+#
+# Revision 1.4  2008/12/02 15:49:28  marc
 # fixed bug for DBOBjects that could not be made persistent when newly created (Bug #301).
 #
 # Revision 1.3  2008/07/30 13:05:06  marc
