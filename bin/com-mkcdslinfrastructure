@@ -78,15 +78,7 @@ else:
     
 cdslRepository = CdslRepository(Config.inventoryfile,Config.inventorydtd,False,Config.cdsltree,Config.cdsltreeShared,Config.cdslLink,Config.maxnodeidnum,Config.useNodeids,Config.root,Config.mountpoint,Config.defaultDir,Config.nodePrefix)
 
-# parse the document and create comclusterinfo object
-reader = Sax2.Reader(validate=False)
-file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
-try:
-    doc = reader.fromStream(file)
-except xml.sax._exceptions.SAXParseException, arg:
-    log.critical("Problem while reading XML: " + str(arg))
-    raise
-file.close()
+doc=parseClusterConf(Config.clusterconf)
 
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)

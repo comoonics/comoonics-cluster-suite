@@ -8,13 +8,13 @@ Binary to manage cdsls
 import getopt
 import sys
 import logging
-import xml
-import os,re
+import os.path
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics import GetOpts
 
+from comoonics.cluster import parseClusterConf
 from comoonics.cdsl.ComCdsl import *
 from comoonics.cdsl.ComCdslRepository import *
 
@@ -39,7 +39,6 @@ class Config(GetOpts.BaseConfig):
         self.setAdditionalParams("[sourcename]")
 
     def do(self, args_proper):
-        import os.path
         if len(args_proper) > 0:
             self.src=args_proper[0]
         else:
@@ -64,24 +63,14 @@ elif ret > 0:
     
 if Config.noexecute:
     ComSystem.__EXEC_REALLY_DO="simulate"
-          
-# parse the document and create comclusterinfo object
-reader = Sax2.Reader(validate=False)
-file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
-try:
-    doc = reader.fromStream(file)
-except xml.sax._exceptions.SAXParseException, arg:
-    log.critical("Problem while reading XML: " + str(arg))
-    raise
-file.close()
 
+doc=parseClusterConf(Config.clusterconf)
+          
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
     
 #create cdsl objects
-if not os.path.exists(os.path.join(Config.root,re.sub('^/','', Config.inventoryfile))):
-	raise IOError("Inventoryfile " + os.path.join(Config.root,re.sub('^/','', Config.inventoryfile)) + " not found.")
 cdslRepository = CdslRepository(Config.inventoryfile,None,False,None,None,None,None,None,Config.root)
 
 _root = Config.root

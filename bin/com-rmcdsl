@@ -8,14 +8,15 @@ Binary to remove cdsls
 import getopt
 import sys
 import logging
-import xml
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics import GetOpts
 
-from comoonics.cdsl.ComCdsl import *
-from comoonics.cdsl.ComCdslRepository import *
+from comoonics.cluster import parseClusterConf
+from comoonics.cluster.ComClusterRepository import ClusterRepository
+from comoonics.cdsl.ComCdsl import CdslNotExistsException
+from comoonics.cdsl.ComCdslRepository import CdslRepository
 
 class CdslNotExistsException(ComException):pass
 
@@ -61,15 +62,7 @@ elif ret > 0:
 if Config.noexecute:
     ComSystem.__EXEC_REALLY_DO="simulate"
           
-# parse the document and create comclusterinfo object
-reader = Sax2.Reader(validate=False)
-file = os.fdopen(os.open(Config.clusterconf,os.O_RDONLY))
-try:
-    doc = reader.fromStream(file)
-except xml.sax._exceptions.SAXParseException, arg:
-    log.critical("Problem while reading XML: " + str(arg))
-    raise
-file.close()
+doc=comoonics.cluster.parseClusterConf(Config.clusterconf)
 
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)

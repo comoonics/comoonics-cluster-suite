@@ -13,7 +13,7 @@ import re
 from comoonics import ComLog
 from comoonics import GetOpts
 
-from comoonics.cdsl.ComCdslValidate import *
+from comoonics.cdsl.ComCdslValidate import cdslValidate
 
 ComLog.setLevel(logging.INFO)
 

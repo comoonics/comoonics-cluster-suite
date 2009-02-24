@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 
 import fcntl # needed for filelocking
 import time  # needed for creation of timestamp
@@ -33,6 +33,7 @@ from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository
 
 import comoonics.pythonosfix as os
+import os.path
 
 log = ComLog.getLogger("comoonics.cdsl.ComCdslRepository")
 
@@ -95,7 +96,6 @@ class inventoryfileProcessing:
             validate = False
         
         reader = Sax2.Reader(validate)
-        
         #use exclusive filelocking to avoid competively access to file
         self.conf = file(self.filename,"r+")
         fcntl.lockf(self.conf ,fcntl.LOCK_EX)
@@ -206,6 +206,8 @@ class CdslRepository(DataObject):
         self.validate = validate
         import xml
         reader = Sax2.Reader(self.validate)
+        if not os.path.exists(configfile):
+            raise IOError("Inventoryfile " + configfile + " not found.")
         file = os.fdopen(os.open(self.configfile,os.O_RDONLY))
         try:
             doc = reader.fromStream(file)

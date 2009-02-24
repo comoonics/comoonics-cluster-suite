@@ -8,14 +8,13 @@ Binary to search for cdsls in filesystem and add them to given inventoryfile
 import getopt
 import sys
 import logging
-import xml
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics import GetOpts
 
-from comoonics.cdsl.ComCdslRepository import *
-from comoonics.cdsl.ComCdslSearch import *
+from comoonics.cdsl.ComCdslRepository import CdslRepository
+from comoonics.cdsl.ComCdslSearch import cdslSearch
 
 class Config(GetOpts.BaseConfig):
     def __init__(self):
