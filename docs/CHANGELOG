@@ -50,6 +50,9 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Tue Feb 24 2009 MG <grimme@atix.de>, 0.1-12
+   - To understand error messages better
+   - removed more * includes
 * Wed Jun 04 2008 MG <grimme@atix.de>, 0.1-11
    - changed error msgs
    - removed * includes
@@ -89,6 +92,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Tue Feb 24 2009 MG <grimme@atix.de>, 0.1-17
+   - added a helper method for parsing the clusterconfiguration
 * Mon Aug 04 2008 MG <grimme@atix.de>, 0.1-16
    - added non static clusteroptions and redhat helper class
    - fixed some unittesting
