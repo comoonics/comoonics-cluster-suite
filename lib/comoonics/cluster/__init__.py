@@ -6,6 +6,7 @@ Provides modules to manage and query the cluster configuration. Discovers type
 of used cluster configuration by parsing given cluster configuration.
 """
 import os.path
+from xml.dom.ext.reader import Sax2
 
 # needed files
 clusterconf = "/etc/cluster/cluster.conf"
@@ -50,3 +51,21 @@ syslog_name_attribute = "name"
 scsi_name = "scsi"
 scsi_path = os.path.join(cominfo_path,scsi_name)
 scsi_failover_attribute = "failover"
+
+def parseClusterConf(_clusterconf=clusterconf):
+    # parse the document and create comclusterinfo object
+    reader = Sax2.Reader(validate=False)
+    file = os.fdopen(os.open(_clusterconf,os.O_RDONLY))
+    try:
+        doc = reader.fromStream(file)
+    except xml.sax._exceptions.SAXParseException, arg:
+        log.critical("Problem while reading clusterconfiguration (%s): %s" %(_clusterconf, str(arg)))
+        raise
+    file.close()
+    return doc
+
+###############
+# $Log: __init__.py,v $
+# Revision 1.6  2009-02-24 10:16:01  marc
+# added helper method to parse clusterconfiguration
+#
