@@ -1,14 +1,7 @@
 from comoonics import ComLog
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterNode import ComoonicsClusterNode
-from comoonics.cluster.ComClusterNodeNic import ComoonicsClusterNodeNic
-from comoonics.cluster.ComClusterRepository import ClusterRepository
-
-from xml.dom.ext.reader import Sax2
 
 import os
 import os.path
-from xml import xpath
 
 import sys
 sys.path.append("./lib")
@@ -19,24 +12,27 @@ class baseClusterTestClass(unittest.TestCase):
     """
     Unittests for Clustertools
     """
-    def setUp(self):
+    def __init__(self, testMethod="runTest"):
+        super(baseClusterTestClass, self).__init__(testMethod)
+        self.init()
+    
+    def init(self):
         """
         set up data used in the tests.
         setUp is called before each test function execution.
         """        
-        #create comclusterRepository Object
-        self.clusterRepository = ClusterRepository("cluster2.conf")
+        testpath=os.path.dirname(sys.argv[0])
+        for _module in sys.modules.keys():
+            if _module.endswith("BaseClusterTestClass"):
+                testpath=os.path.dirname(sys.modules[_module].__file__)
 
-        #create comclusterinfo object
-        self.clusterInfo = ClusterInfo(self.clusterRepository)
-        
+        self._testpath=testpath
+
         #create comclusternodenic objects
         
-        """
-        The following specifications must match these of the used clusterconfiguration
-        """
+        #        The following specifications must match these of the used clusterconfiguration
         
-        """Preparation of failoverdomains"""
+        # Preparation of failoverdomains
         self.failoverdomainValues = []
         
         self.failoverdomainValues.append({})
@@ -54,15 +50,15 @@ class baseClusterTestClass(unittest.TestCase):
         self.failoverdomainValues[2]["members"] = []
         self.failoverdomainValues[2]["prefnode"] = ""
 
-        """Perparation of nics"""
+        # Perparation of nics
         self.nicValues = []
         
         self.nicValues.append({})
-        self.nicValues[0]["name"] = "eth0"
+        self.nicValues[0]["name"] = "eth1"
         self.nicValues[0]["nodename"] = "gfs-node1"
         self.nicValues[0]["nodeid"] = "1"
         self.nicValues[0]["mac"] = ""
-        self.nicValues[0]["ip"] = ""
+        self.nicValues[0]["ip"] = "dhcp"
         self.nicValues[0]["gateway"] = ""
         self.nicValues[0]["netmask"] = ""
         self.nicValues[0]["master"] = ""
@@ -123,16 +119,16 @@ class baseClusterTestClass(unittest.TestCase):
         self.nicValues[5]["master"] = ""
         self.nicValues[5]["slave"] = ""
         
-        """Preparation of nodes"""
+        # Preparation of nodes
         self.nodeValues = []
         
         self.nodeValues.append({})
         self.nodeValues[0]["name"] = "gfs-node1"
         self.nodeValues[0]["id"] = "1"
         self.nodeValues[0]["votes"] = "1"
-        self.nodeValues[0]["rootvolume"] = ""
+        self.nodeValues[0]["rootvolume"] = "/dev/VG_SHAREDROOT/LV_SHAREDROOT"
         self.nodeValues[0]["rootfs"] = "gfs"
-        self.nodeValues[0]["mountopts"] = "noatime,nodiratime"
+        self.nodeValues[0]["mountopts"] = ""
         self.nodeValues[0]["syslog"] = ""
         self.nodeValues[0]["scsifailover"] = "driver"
         
@@ -150,21 +146,12 @@ class baseClusterTestClass(unittest.TestCase):
         self.nodeValues[2]["name"] = "gfs-node3"
         self.nodeValues[2]["id"] = ""
         self.nodeValues[2]["votes"] = "1"
-        self.nodeValues[2]["rootvolume"] = ""
-        self.nodeValues[2]["rootfs"] = "gfs"
-        self.nodeValues[2]["mountopts"] = "noatime,nodiratime"
+        self.nodeValues[2]["rootvolume"] = "/dev/VG_SHAREDROOT/LV_SHAREDROOT"
+        self.nodeValues[2]["rootfs"] = "ocfs2"
+        self.nodeValues[2]["mountopts"] = "noatime"
         self.nodeValues[2]["syslog"] = ""
         self.nodeValues[2]["scsifailover"] = "driver"
-        
-        # setup the cashes for clustat for redhat cluster
-        import logging
-        from comoonics import ComSystem
-        ComSystem.setExecMode(ComSystem.SIMULATE)
-        ComLog.setLevel(logging.DEBUG)
-        self.clusterInfo.helper.__setSimOutput()
-        for node in self.clusterInfo.getNodes():
-            node.helper.output=self.clusterInfo.helper.output
-        
+                
     def createNodeList(self, key):
         _list = []
         for i in range(len(self.nodeValues)):

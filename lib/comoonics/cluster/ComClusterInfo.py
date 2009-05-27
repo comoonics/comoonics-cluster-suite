@@ -8,50 +8,24 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.10 2008-08-05 13:09:15 marc Exp $
+# $Id: ComClusterInfo.py,v 1.11 2009-05-27 18:31:59 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
-import os
 
 from xml import xpath
-from xml.dom.ext.reader import Sax2
 from xml.dom.ext import PrettyPrint
+from comoonics.XmlTools import xpathjoin, xpathsplit, XPATH_SEP
 
-import os
-
-from comoonics.DictTools import createDomFromHash
 from comoonics.ComExceptions import ComException
 
 from comoonics import ComLog
-from comoonics.ComDataObject import DataObject
-
-import comoonics.cluster
+from comoonics.cluster.ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository, ClusterObject
 
 class ClusterMacNotFoundException(ComException): pass
-
-class ClusterObject(DataObject):
-    non_statics=dict()
-    def __init__(self, *params, **kwds):
-        super(ClusterObject, self).__init__(*params, **kwds)
-        self.non_statics=dict()
-    def isstatic(self, _property):
-        if self.non_statics.has_key(_property):
-            return False
-        return True
-    def addNonStatic(self, name, rest=None):
-        path_end=self.non_statics
-        path_end[name]=rest
-    def query(self, _property):
-        pass
-    def __getattr__(self, value):
-        if not self.isstatic(value):
-            return self.query(value)
-        else:
-            return DataObject.__getattribute__(self, value)
 
 class ClusterInfo(ClusterObject):
     """
@@ -66,11 +40,10 @@ class ClusterInfo(ClusterObject):
         Decides by type of given clusterrepository which instance of 
         clusterinfo (general, redhat or comoonics) has to be created.
         """
-        from ComClusterRepository import ComoonicsClusterRepository, RedhatClusterRepository, ClusterRepository
         if isinstance(args[0], ComoonicsClusterRepository):
             cls = ComoonicsClusterInfo
-        elif isinstance(args[0], RedhatClusterRepository):
-            cls = RedhatClusterInfo
+        elif isinstance(args[0], RedHatClusterRepository):
+            cls = RedHatClusterInfo
         return object.__new__(cls, *args, **kwds)
     
     def __init__(self, clusterRepository):
@@ -80,6 +53,7 @@ class ClusterInfo(ClusterObject):
         @type clusterRepository: L{clusterRepository}
         """
         #Clusterrepository holds list of nodes and items like node_prefix etc.
+        super(ClusterInfo, self).__init__(clusterRepository.getElement())
         self.clusterRepository = clusterRepository
         
     def getClusterName(self):
@@ -126,14 +100,12 @@ class ClusterInfo(ClusterObject):
                 _ids.append(_node.getName())
         return _ids
     
-class RedhatClusterInfo(ClusterInfo):
+class RedHatClusterInfo(ClusterInfo):
     """
     Extends L{ClusterInfo} to provides a set of special queries 
     to use with a L{RedhatClusterRepository} to get information 
     about the used redhat clusterconfiguration.
     """
-    
-    clustat_pathroot="/clustat/cluster"
     
     def __init__(self, clusterRepository):
         """
@@ -142,20 +114,29 @@ class RedhatClusterInfo(ClusterInfo):
         @type clusterRepository: L{RedhatClusterRepository}
         """
         from helper import RedHatClusterHelper
-        super(RedhatClusterInfo, self).__init__(clusterRepository)
+        super(RedHatClusterInfo, self).__init__(clusterRepository)
         self.helper=RedHatClusterHelper()
-        self.addNonStatic("name")
+        self.addNonStatic("name", xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_clustat_cluster, "@"+RedHatClusterRepository.attribute_clustat_cluster_name))
 #        self.addNonStatic(RedhatClusterInfo, "id")
-        self.addNonStatic("generation")
-        self.addNonStatic("quorum_quorate", "/clustat/quorum/@quorate")
-        self.addNonStatic("quorum_groupmember", "/clustat/quorum/@groupmember")
+        self.addNonStatic("generation",         xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_clustat_cluster, "@"+RedHatClusterRepository.attribute_clustat_cluster_generation))
+        self.addNonStatic("quorum_quorate",     xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_quorum, "@"+RedHatClusterRepository.attribute_quorum_quorate))
+        self.addNonStatic("quorum_groupmember", xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_quorum, "@"+RedHatClusterRepository.attribute_quorum_groupmember))
 
-    def query(self, param):
-        import os.path
-        if self.non_statics.get(param, None) != None:
-            return self.helper.queryStatusElement(query= os.path.join(self.clustat_pathroot, self.non_statics.get(param)))
+    def query(self, param, *params, **keys):
+        if keys and keys.has_key("pathroot"):
+            _pathroot=keys["pathroot"]
+        elif params and len(params)>=1:
+            _pathroot=params[0]
         else:
-            return self.helper.queryStatusElement(query=os.path.join(self.clustat_pathroot, "@"+param))
+            _pathroot=RedHatClusterRepository.getDefaultClustatXPath()
+        if xpathsplit(_pathroot)[0] == RedHatClusterRepository.element_clustat:
+            if self.non_statics.get(param, None) != None:
+                return self.helper.queryStatusElement(query= xpathjoin(_pathroot, self.non_statics.get(param)))
+            else:
+                return self.helper.queryStatusElement(query= xpathjoin(_pathroot, "@"+param))
+        else:
+            return self.queryValue(param)
+
 
     def queryValue(self, query):
         """
@@ -203,15 +184,15 @@ class RedhatClusterInfo(ClusterInfo):
         self.log.debug("get node with given name from clusterrepository: %s" %(name))
         return self.clusterRepository.nodeNameMap[name]
         
-    def getNodeFromId(self, id):
+    def getNodeFromId(self, _id):
         """
-        @param name: id of clusternode
+        @param name: _id of clusternode
         @type name: int
         @return: Clusternodeinstance belonging to given nodeid
         @rtype: L{ClusterNode}
         """
-        self.log.debug("get node with given id from clusterrepository: %s" %(str(id)))
-        return self.clusterRepository.nodeIdMap[str(id)]
+        self.log.debug("get node with given id from clusterrepository: %s" %(str(_id)))
+        return self.clusterRepository.nodeIdMap[str(_id)]
             
     def getNodeName(self, mac):
         """
@@ -223,15 +204,15 @@ class RedhatClusterInfo(ClusterInfo):
         self.log.debug("get name of node with given mac from clusterrepository: %s" %(str(mac)))
         return self.clusterRepository.getNodeName(mac)
             
-    def getNodeNameById(self, id):
+    def getNodeNameById(self, _id):
         """
-        @param id: nodeid
+        @param _id: nodeid
         @type id: int
         @return: Clusternodename belonging to given nodeid
         @rtype: string
         """
-        self.log.debug("get name of node with given nodid from clusterrepository: %s" %(str(id)))
-        return self.clusterRepository.getNodeNameById(id)
+        self.log.debug("get name of node with given nodid from clusterrepository: %s" %(str(_id)))
+        return self.clusterRepository.getNodeNameById(_id)
 
     def getNodeId(self, mac):
         """
@@ -251,8 +232,9 @@ class RedhatClusterInfo(ClusterInfo):
         @rtype: string
         """
         #no defaultvalue specified because every dailoverdomain needs to have one or more failoverdomainnodes
-        self.log.debug("get failoverdomainnodes from failoverdomain %s: %s [@name='%s']/%s/@name" %(failoverdomain,comoonics.cluster.failoverdomain_path,failoverdomain,comoonics.cluster.failoverdomain_name))
-        _tmp1 = self.queryValue("%s[@name='%s']/%s/@name" %(comoonics.cluster.failoverdomain_path,failoverdomain,comoonics.cluster.failoverdomainnode_name))
+        _xpath=xpathjoin(RedHatClusterRepository.getDefaultClusterFailoverDomain(failoverdomain), RedHatClusterRepository.element_failoverdomainnode, "@"+RedHatClusterRepository.attribute_failoverdomainnode_name)
+        self.log.debug("get failoverdomainnodes from failoverdomain %s: %s" %(failoverdomain,_xpath))
+        _tmp1 = self.queryValue(_xpath)
         return _tmp1
     
     def getFailoverdomainPrefNode(self, failoverdomain):
@@ -268,16 +250,18 @@ class RedhatClusterInfo(ClusterInfo):
         #search for lowest priority
         minprio = "0"
         for i in range(len(_tmp1)):
-            self.log.debug("query lowest priority of failoverdomainnodes belonging to %s : %s[@name='%s']/%s[@name='%s']/@priority" %(failoverdomain,comoonics.cluster.failoverdomain_path,failoverdomain,comoonics.cluster.failoverdomainnode_name,_tmp1[i]))
-            _tmp2 = self.queryValue("%s[@name='%s']/%s[@name='%s']/@priority" %(comoonics.cluster.failoverdomain_path,failoverdomain,comoonics.cluster.failoverdomainnode_name,_tmp1[i]))[0]
+            _xpath=xpathjoin(RedHatClusterRepository.getDefaultClusterFailoverDomain(failoverdomain), RedHatClusterRepository.element_failoverdomainnode+"[@"+RedHatClusterRepository.attribute_failoverdomainnode_name+"=\""+_tmp1[i]+"\"]", "@"+RedHatClusterRepository.attribute_failoverdomainnode_priority)
+            self.log.debug("query lowest priority of failoverdomainnodes belonging to %s : %s" %(failoverdomain,_xpath))
+            _tmp2 = self.queryValue(_xpath)[0]
             if (minprio == "0") or (_tmp2 < minprio):
                 minprio = _tmp2
         #get node with lowest priority
         try:
-            self.log.debug("get failoverprefdomainnode from failoverdomain %s: %s[@name='%s']/%s[@priority='%s']/@name" %(failoverdomain,comoonics.cluster.failoverdomain_path,failoverdomain,comoonics.cluster.failoverdomainnode_name,str(minprio)))
-            return self.queryValue("%s[@name='%s']/%s[@priority='%s']/@name" %(comoonics.cluster.failoverdomain_path,failoverdomain,comoonics.cluster.failoverdomainnode_name,str(minprio)))[0]
+            _xpath=xpathjoin(RedHatClusterRepository.getDefaultClusterFailoverDomain(failoverdomain), RedHatClusterRepository.element_failoverdomainnode+"[@"+RedHatClusterRepository.attribute_failoverdomainnode_priority+"=\""+str(minprio)+"\"]", "@"+RedHatClusterRepository.attribute_failoverdomainnode_name)
+            self.log.debug("get failoverprefdomainnode from failoverdomain %s: %s" %(failoverdomain, _xpath))
+            return self.queryValue(_xpath)[0]
         except IndexError:
-            raise NameError("Cannot find prefered failoverdomainnode at xpath %s[@name='%s']/%s[@priority='%s']/@name" %(comoonics.cluster.failoverdomain_path,failoverdomain,comoonics.cluster.failoverdomainnode_name,str(minprio)))
+            raise NameError("Cannot find prefered failoverdomainnode for domain %s." %failoverdomain) 
     
     def getNodeIds(self):
         """
@@ -296,7 +280,7 @@ class RedhatClusterInfo(ClusterInfo):
         idlist.sort()
         return int(idlist[-1])+1
 
-class ComoonicsClusterInfo(RedhatClusterInfo):
+class ComoonicsClusterInfo(RedHatClusterInfo):
     """
     Extends L{RedhatClusterInfo} to provides a set of special queries 
     to use with a L{ComoonicsClusterRepository} to get information 
@@ -318,7 +302,6 @@ class ComoonicsClusterInfo(RedhatClusterInfo):
         @rtype: L{ComoonicsClusterNodeNic}
         @raise ClusterMacNotFoundException: Raises Exception if search for node with given mac failed.
         """
-        from ComClusterRepository import ClusterMacNotFoundException
         for node in self.getNodes():
             try:
                 self.log.debug("get clusternodenic with given mac: %s" %(str(mac)))
@@ -326,88 +309,13 @@ class ComoonicsClusterInfo(RedhatClusterInfo):
             except KeyError:
                 continue
         raise ClusterMacNotFoundException("Cannot find device with given mac: %s" %(str(mac)))
-    
-def main():
-    """
-    Method to test module. Creates a ClusterInfo object and test all defined methods 
-    on an cluster.conf example (use a loop to proceed every node).
-    """
-    from ComClusterRepository import ClusterRepository, ClusterMacNotFoundException
-    # create Reader object
-    reader = Sax2.Reader()
-
-    # parse the document and create clusterrepository object
-    # can use only cluster2.conf for test, cluster.conf MUST cause an not 
-    # handled exception (because lack of a device name)
-    my_file = os.fdopen(os.open("test/cluster2.conf", os.O_RDONLY))
-    doc = reader.fromStream(my_file)
-    my_file.close()
-    element = xpath.Evaluate(comoonics.cluster.cluster_path, doc)[0]
-
-    #create clusterRepository Object
-    clusterRepository = ClusterRepository(element, doc)
-
-    #create comclusterinfo object
-    clusterInfo = ClusterInfo(clusterRepository)
-    
-    #test functions
-    print "clusterInfo.getNodeIdentifiers('name'): " + str(clusterInfo.getNodeIdentifiers("name"))
-    print "clusterInfo.getNodeIds(): " + str(clusterInfo.getNodeIds())
-    
-    print "Next free ID: " + str(clusterInfo.getNextNodeID())
-    
-    my_file = os.fdopen(os.open("test/cluster2.conf", os.O_RDONLY))
-    doc = reader.fromStream(my_file)
-    my_file.close()
-    element = xpath.Evaluate(comoonics.cluster.cluster_path, doc)[0]
-    #create clusterRepository Object
-    clusterRepository = ClusterRepository(element, doc)
-    print "Typ ClusterRepository: " + str(type(clusterRepository))
-    #create comclusterinfo object
-    clusterInfo = ClusterInfo(clusterRepository)
-    print "Typ ClusterInfo: " + str(type(clusterInfo))
-    _tmpnode = clusterInfo.getNodeFromId(clusterInfo.getNextNodeID()-1)
-    _defaults = {"clusternode":{"nodeid":str(clusterInfo.getNextNodeID()),"votes":"1","com_info":{"rootvolume":{"name":_tmpnode.getRootvolume()},"eth":{"name":"eth0"}}}}
-    _mydom = createDomFromHash(_defaults)
-    #default = xpath.Evaluate("/cluster/clusternodes/clusternode",doc)[-1]
-    _tmp = xpath.Evaluate(comoonics.cluster.clusternode_path, doc)
-    _node = doc.importNode(_mydom.documentElement,True)  
-    #_tmp[0].insertBefore(_node,default)
-    _tmp[0].appendChild(_node)
-    PrettyPrint(_tmp[0])
-    #return
-
-    _nodes = clusterInfo.getNodes()
-    print "clusterInfo.getNodes(): %s" %(str(_nodes))
-    print "clusterInfo.queryValue('%s/@name'): " %(comoonics.cluster.clusternode_name) + str(clusterInfo.queryValue("%s/@name" %(comoonics.cluster.clusternode_path)))
-    print "clusterInfo.queryXml('%s/@name'): " %(comoonics.cluster.clusternode_name) + str(clusterInfo.queryXml("%s/@name" %(comoonics.cluster.clusternode_path)))
-    
-    for node in _nodes:
-        print "\nName: %s  - ID: %s" %(node.getName(),node.getId())
-        _name = node.getName()
-        _nics = node.getNics()
-        for _nic in _nics:
-            _mac = _nic.getMac()
-            try:
-                print "clusterInfo.getNic(%s): %s" %(_mac,clusterInfo.getNic(_mac))
-                print "\tclusterInfo.getNodeId(%s): %s: " %(_mac,clusterInfo.getNodeId(_mac))
-                print "\tclusterInfo.getNodeName(%s): %s: " %(_mac,clusterInfo.getNodeName(_mac))
-            except ClusterMacNotFoundException:
-                print "Verify that nic %s does not have an mac-address" %(_nic.getName())
-        print "clusterInfo.getNode(" + _name + "): " + str(clusterInfo.getNode(_name))
-        
-    print "\nclusterInfo.getFailoverdomainNodes(testdomain1): %s" %(str(clusterInfo.getFailoverdomainNodes("testdomain1")))
-    print "clusterInfo.getFailoverdomainPrefNode(testdomain1): %s" %(str(clusterInfo.getFailoverdomainPrefNode("testdomain1")))
-    print "\nclusterInfo.getFailoverdomainNodes(testdomain2): %s" %(str(clusterInfo.getFailoverdomainNodes("testdomain2")))
-    print "clusterInfo.getFailoverdomainPrefNode(testdomain2): %s" %(str(clusterInfo.getFailoverdomainPrefNode("testdomain2")))
-    
-    print "\nclusterInfo: %s" %(str(clusterInfo))
-        
-if __name__ == '__main__':
-    main()
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.10  2008-08-05 13:09:15  marc
+# Revision 1.11  2009-05-27 18:31:59  marc
+# - prepared and added querymap concept
+# - reviewed and changed code to work with unittests and being more modular
+#
+# Revision 1.10  2008/08/05 13:09:15  marc
 # - fixed bugs with constants
 # - optimized imports
 # - added nonstatic attributes

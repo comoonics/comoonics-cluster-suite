@@ -7,5 +7,4 @@ Those should never be used outside the comoonics.cluster package.
 """
 
 from RedHatClusterHelper import RedHatClusterHelper
-
-pass
+__all__=['RedHatClusterHelper']

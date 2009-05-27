@@ -2,10 +2,32 @@ from BaseClusterTestClass import baseClusterTestClass
 
 import unittest
 
-class testClusterNode(baseClusterTestClass):
+class test_ClusterNode(baseClusterTestClass):
     """
     Methods from RedhatClusterNode
     """
+    def init(self):
+        import os.path
+        from comoonics.cluster.ComClusterRepository import ClusterRepository
+        from comoonics.cluster.ComClusterInfo import ClusterInfo
+        super(test_ClusterNode, self).init()
+        #create comclusterRepository Object
+        self.clusterRepository = ClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
+
+        #create comclusterinfo object
+        self.clusterInfo = ClusterInfo(self.clusterRepository)  
+
+        # setup the cashes for clustat for redhat cluster
+        import logging
+        from comoonics import ComSystem
+        ComSystem.setExecMode(ComSystem.SIMULATE)
+        self.clusterInfo.helper.setSimOutput()
+        self.nics=list()
+        for node in self.clusterInfo.getNodes():
+            node.helper.output=self.clusterInfo.helper.output
+            for nic in node.getNics():
+                self.nics.append(nic)
+      
     def testGetname(self):
         _list = self.createNodeList("name")
         _list.reverse()
@@ -35,15 +57,23 @@ class testClusterNode(baseClusterTestClass):
         self.assertEqual(self.clusterInfo.getNodes()[1].getRootvolume(), self.nodeValues[1]["rootvolume"])
     
     def testRootfs(self):
+        self.assertRaises(IndexError, self.clusterInfo.getNodes()[0].getRootFs)
         i = 0
         for node in self.clusterInfo.getNodes():
-            self.assertEqual(node.getRootFs(), self.nodeValues[i]["rootfs"])
+            if i>0:
+                self.assertEqual(node.getRootFs(), self.nodeValues[i]["rootfs"])
+#            else:
+#                self.assertRaises(IndexError, node.getRootFs)
             i = i + 1
             
     def testGetmountopts(self):
+        self.assertRaises(IndexError, self.clusterInfo.getNodes()[0].getMountopts)
         i = 0
         for node in self.clusterInfo.getNodes():
-            self.assertEqual(node.getMountopts(), self.nodeValues[i]["mountopts"])
+            if i>0:
+                self.assertEqual(node.getMountopts(), self.nodeValues[i]["mountopts"])
+#            else:
+#                self.assertRaises(IndexError, node.getMountopts())
             i = i + 1
     
     def testGetsyslog(self):
@@ -90,11 +120,12 @@ class testClusterNode(baseClusterTestClass):
             for attr in node.non_statics.keys():
                 self.assert_(getattr(node, attr) in ["1", "0" ], "testGetnonstatics(node=%s, attr=%s)%s!=%s" %(node.getName(), attr, getattr(node, attr), ["1", "0"]))
 
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(testClusterNode))
-    return suite
+def test_main():
+    try:
+        from test import test_support
+        test_support.run_unittest(test_ClusterNode)
+    except ImportError:
+        unittest.main()
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=3).run(test_suite())
+    test_main()

@@ -5,11 +5,12 @@ import unittest
 
 from comoonics.cluster.helper import RedHatClusterHelper
 
-class RedHatClusterHelperTest(unittest.TestCase):
+class test_RedHatClusterHelper(unittest.TestCase):
     OUTPUT_TEST_FILE="clustat.xml"
     TEST_QUERIES={ "/clustat/@version": "4.1.1",
+                           "/clustat/cluster/@generation": "900",
                            "/clustat/quorum/@quorate": "1",
-                           "/clustat/nodes/node[1]/@name": "generix2.local",
+                           "/clustat/nodes/node[1]/@name": "gfs-node1",
                            "/clustat/groups/group[1]/@name": "service:vmware_ip",
                            "/clustat/nodes/node[1]/@state": "1" }
     def setUp(self):
@@ -26,21 +27,25 @@ class RedHatClusterHelperTest(unittest.TestCase):
         for line in f:
             buf.write(line)
         self.TEST_OUTPUT=buf.getvalue()
+    # tests the cluster helper status command method
     def testClusterStatusCmd(self):
         self.assertEqual("/usr/sbin/clustat -x -f", self.helper.getClusterStatusCmd(True))
         self.assertEqual("/usr/sbin/clustat", self.helper.getClusterStatusCmd(False))
         
+    # tests querying a status element of a cluster helper
     def testQueryStatusElement(self):
         from comoonics import ComSystem
         ComSystem.setExecMode(ComSystem.SIMULATE)
         for _query, _result in self.TEST_QUERIES.items():
             self.assertEqual(self.helper.queryStatusElement(query=_query, output=self.TEST_OUTPUT), _result)
 
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(RedHatClusterHelperTest))
-    return suite
+def test_main():
+    try:
+        from test import test_support
+        test_support.run_unittest(test_RedHatClusterHelper)
+    except ImportError:
+        unittest.main()
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=3).run(test_suite())
+    test_main()
+

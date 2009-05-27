@@ -8,25 +8,23 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.10 2008-08-05 18:28:18 marc Exp $
+# $Id: ComClusterNode.py,v 1.11 2009-05-27 18:31:59 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
 
 from xml import xpath
-from xml.dom.ext.reader import Sax2
 
-import comoonics.cluster
-
+from ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository
 from ComClusterInfo import ClusterObject
 from ComClusterNodeNic import ComoonicsClusterNodeNic
 
 from comoonics import ComLog
-from comoonics.ComDataObject import DataObject
+from comoonics.XmlTools import xpathjoin
 
 class ClusterNode(ClusterObject):
     """
@@ -42,10 +40,10 @@ class ClusterNode(ClusterObject):
         or comoonics) has to be created.
         """
         try:
-            xpath.Evaluate(comoonics.cluster.cominfo_path %"", args[0])
+            xpath.Evaluate(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0])
         except NameError:
             if args[0].getAttribute("name"):
-                cls = RedhatClusterNode
+                cls = RedHatClusterNode
             else:
                 cls = ClusterNode
         else:
@@ -69,17 +67,17 @@ class ClusterNode(ClusterObject):
         """placeholder for isActvie method. Should return True if node is actively joined to the given cluster"""
         return False                
 
-class RedhatClusterNode(ClusterNode):
+class RedHatClusterNode(ClusterNode):
     """
     Extends the generall ClusterNode class 
     by adding special queries for this cluster 
     type.
     """
 
-    clustat_pathroot="/clustat/nodes/node[@name='%s']"
+    clustat_pathroot=xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_clustat_nodes, RedHatClusterRepository.element_clustat_node+'[@'+RedHatClusterRepository.attribute_clustat_node_name+'="%s"]')
     
     def __init__(self, element, doc=None):
-        super(RedhatClusterNode, self).__init__(element, doc)
+        super(RedHatClusterNode, self).__init__(element, doc)
         self.addNonStatic("state")
         self.addNonStatic("local")
         self.addNonStatic("estranged")
@@ -87,10 +85,9 @@ class RedhatClusterNode(ClusterNode):
         self.addNonStatic("rgmanager_master")
         self.addNonStatic("qdisk")
 
-    def query(self, param):
-        import os.path
+    def query(self, param, *params, **keys):
         if self.non_statics.get(param, None) != None:
-            return self.helper.queryStatusElement(query= os.path.join(self.clustat_pathroot %self.getName(), self.non_statics.get(param)))
+            return self.helper.queryStatusElement(query=xpathjoin(self.xpath_clustat, self.element_nodes, self.element_node+'['+self.attribute_node_name+'="'+self.getName()+'"]', self.non_statics.get(param)))
         else:
             return self.helper.queryStatusElement(query=os.path.join(self.clustat_pathroot %self.getName(), "@"+param))
 
@@ -99,33 +96,21 @@ class RedhatClusterNode(ClusterNode):
         @return: nodename
         @rtype: string
         """
-        self.log.debug("get name attribute: " + self.getAttribute("name"))
-        #no try-except construct because name ist an obligatory object
-        return self.getAttribute("name")
+        return self.getAttribute(RedHatClusterRepository.attribute_clusternode_name)
 
     def getId(self):
         """
         @return: nodeid
         @rtype: int
         """
-        try:
-            self.log.debug("get nodeid attribute: " + self.getAttribute("nodeid"))
-            return self.getAttribute("nodeid")
-        except NameError:
-            #if attribute id is not set return empty string (because id is an optional attribute)
-            return ""
+        return self.getAttribute(RedHatClusterRepository.attribute_clusternode_nodeid, "")
 
     def getVotes(self):
         """
         @return: votes for quorum
         @rtype: int
         """
-        try:
-            self.log.debug("get votes attribute: " + self.getAttribute("votes"))
-            return self.getAttribute("votes")
-        except NameError:
-            #if attribute notes does not exist, use default value 1
-            return "1"
+        return self.getAttribute(RedHatClusterRepository.attribute_clusternode_votes, "1")
     
     def isActive(self):
         """
@@ -133,7 +118,7 @@ class RedhatClusterNode(ClusterNode):
         """
         return self.state=='1'
 
-class ComoonicsClusterNode(RedhatClusterNode):
+class ComoonicsClusterNode(RedHatClusterNode):
     """
     Extends the redhat ClusterNode class 
     by adding special queries for this cluster 
@@ -154,10 +139,11 @@ class ComoonicsClusterNode(RedhatClusterNode):
         self.nicDev = {}
         self.nicDevList = []
 
-        _path=comoonics.cluster.netdev_path %("[@name='%s']" %self.getName())
-        _nics = xpath.Evaluate(_path, self.getElement())
-        for i in range(len(_nics)):
-            _nic = ComoonicsClusterNodeNic(_nics[i], doc)
+        #_path=comoonics.cluster.netdev_path %("[@name='%s']" %self.getName())
+        #_nics = xpath.Evaluate(_path, self.getElement())
+        self._elt_com_info=self.getElement().getElementsByTagName(ComoonicsClusterRepository.element_comoonics)[0]
+        for _elt_nic in self._elt_com_info.getElementsByTagName(ComoonicsClusterRepository.element_netdev):
+            _nic = ComoonicsClusterNodeNic(_elt_nic, doc)
             _mac = _nic.getMac()
             _dev = _nic.getName()
 
@@ -203,23 +189,30 @@ class ComoonicsClusterNode(RedhatClusterNode):
             self.log.debug("get clusternodenic corresponding to given devicename: " + value)
             return self.nicDev[value]
 
+    def _getRootvolumeElement(self):
+        _rootvolumeelement=self._elt_com_info.getElementsByTagName(ComoonicsClusterRepository.element_rootvolume)
+        return _rootvolumeelement[0]            
+    
     def getRootvolume(self):
         """
         @return: device belonging to rootvolume
         @rtype: string
         """
-        self.log.debug("get rootvolume attribute: " + comoonics.cluster.rootvolume_path + "/@name")
-        return xpath.Evaluate(comoonics.cluster.rootvolume_path %("[@name='%s']" %self.getName()) + "/@name", self.getElement())[0].value          
+        _element=self._getRootvolumeElement()
+        if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_name):
+            return self._getRootvolumeElement().getAttribute(ComoonicsClusterRepository.attribute_rootvolume_name)
+        else:
+            return ""
 
     def getRootFs(self):
         """
         @return: type of root filesystem
         @rtype: string
         """
-        try:
-            self.log.debug("get rootfs attribute: " + comoonics.cluster.rootvolume_path + "/@fstype")
-            return xpath.Evaluate(comoonics.cluster.rootvolume_path %("[@name='%s']" %self.getName()) + "/@fstype", self.getElement())[0].value
-        except IndexError:
+        _element=self._getRootvolumeElement()
+        if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_fstype):
+            return _element.getAttribute(ComoonicsClusterRepository.attribute_rootvolume_fstype)
+        else:
             return self.defaultRootFs
 
     def getMountopts(self):
@@ -227,10 +220,10 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @return: additional Mountoptions for root filesystem
         @rtype: string
         """
-        try:
-            self.log.debug("get mountopts attribute: " + comoonics.cluster.rootvolume_path + "/@mountopts")
-            return xpath.Evaluate(comoonics.cluster.rootvolume_path %("[@name='%s']" %self.getName()) + "/@mountopts", self.getElement())[0].value
-        except IndexError:
+        _element=self._getRootvolumeElement()
+        if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_mountopts):
+            return _element.getAttribute(ComoonicsClusterRepository.attribute_rootvolume_mountopts)
+        else:
             return self.defaultMountopts
         
     def getSyslog(self):
@@ -238,10 +231,10 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @return: name of node where syslog is running
         @rtype: string
         """
-        try:
-            self.log.debug("get syslog attribute: " + comoonics.cluster.syslog_path + "/@name")
-            return xpath.Evaluate(comoonics.cluster.syslog_path %("[@name='%s']" %self.getName()) + "/@name", self.getElement())[0].value
-        except IndexError:
+        _elements=self._elt_com_info.getElementsByTagName(ComoonicsClusterRepository.element_syslog)
+        if _elements and len(_elements)>0 and _elements[0].hasAttribute(ComoonicsClusterRepository.attribute_syslog_name):
+            return _elements[0].getAttribute(ComoonicsClusterRepository.attribute_syslog_name)
+        else:
             return self.defaultSyslog
     
     def getScsifailover(self):
@@ -249,10 +242,10 @@ class ComoonicsClusterNode(RedhatClusterNode):
         @return: behavior in case of scsifailover
         @rtype: string
         """
-        try:
-            self.log.debug("get scsifailover attribute: " + comoonics.cluster.scsi_path + "/@failover")
-            return xpath.Evaluate(comoonics.cluster.scsi_path %("[@name='%s']" %self.getName()) + "/@failover", self.getElement())[0].value
-        except IndexError:
+        _elements=self._elt_com_info.getElementsByTagName(ComoonicsClusterRepository.element_scsi)
+        if _elements and len(_elements)>0 and _elements[0].hasAttribute(ComoonicsClusterRepository.attribute_scsi_failover):
+            return _elements[0].getAttribute(ComoonicsClusterRepository.attribute_scsi_failover)
+        else:
             return self.defaultScsiFailover
         
     def getNics(self):
@@ -282,65 +275,13 @@ class ComoonicsClusterNode(RedhatClusterNode):
             except:
                 pass
         return _tmp
-    
-def main():
-    """
-    Method to test module. Creates a ClusterNode object and test all defined methods 
-    on an cluster.conf example (use a loop to proceed every node).
-    """
-    # can use only cluster2.conf for test, cluster.conf MUST cause an not 
-    # handled exception (because lack of a device name)
-    cluster_conf = "test/cluster2.conf"
-    
-    # create Reader object
-    reader = Sax2.Reader()
-
-    # parse the document
-    my_file = os.fdopen(os.open(cluster_conf, os.O_RDONLY))
-    doc = reader.fromStream(my_file)
-    my_file.close()
-
-    nodes = xpath.Evaluate(comoonics.cluster.clusternode_path, doc)
-
-    for element in nodes:
-        #create example comnode
-        obj = ClusterNode(element, doc)
-
-        #test functions
-        print "Name: obj.getName(): " + obj.getName() + " - ID: " + obj.getId()
-    
-        #print "\tobj.getVotes(): " + obj.getVotes()
-    
-        nics = obj.getNics()
-        print "\tobj.getNics(): " + str(nics)
-        
-        for nic in nics:
-            print nic.getName()
-            try:
-                mac = nic.getMac()
-                print "\tobj.getNic('" + mac + "'): " + str(obj.getNic(mac))
-            except KeyError:
-                print "Verify if nic " + obj.getName() + " really has got no mac-address."
-            
-        try:
-            print "\tobj.getRootvolume(): " + obj.getRootvolume()
-        except IndexError:
-            print "\tobj.getRootvolume(): Exeption raised, OK"
-        print "\tobj.getRootFs(): " + obj.getRootFs()
-        print "\tobj.getMountopts(): " + obj.getMountopts()
-        print "\tobj.getSyslog(): " + obj.getSyslog()
-        print "\tobj.SCSIFailover(): " + obj.getScsifailover()
-    
-        print "\tobj: " + str(obj)
-        from xml.dom.ext import PrettyPrint
-        PrettyPrint(obj.element)
-    
-    
-if __name__ == '__main__':
-    main()
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.10  2008-08-05 18:28:18  marc
+# Revision 1.11  2009-05-27 18:31:59  marc
+# - prepared and added querymap concept
+# - reviewed and changed code to work with unittests and being more modular
+#
+# Revision 1.10  2008/08/05 18:28:18  marc
 # more bugfixes
 #
 # Revision 1.9  2008/08/05 13:09:23  marc

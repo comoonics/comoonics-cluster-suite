@@ -8,19 +8,15 @@ clusternode instances) as an L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterNodeNic.py,v 1.8 2008-08-05 13:09:31 marc Exp $
+# $Id: ComClusterNodeNic.py,v 1.9 2009-05-27 18:31:59 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
-import os
-
-from xml import xpath
-from xml.dom.ext.reader import Sax2
-
 from ComClusterInfo import ClusterObject
+from ComClusterRepository import ComoonicsClusterRepository
 from comoonics import ComLog
 
 class ComoonicsClusterNodeNic(ClusterObject):
@@ -39,8 +35,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @return: Returns name of interface
         @rtype: string
         """
-        self.log.debug("get devicename attribute: " + self.getAttribute("name"))
-        return self.getAttribute("name")
+        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_name)
     
     def getMac(self):
         """
@@ -48,11 +43,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @rtype: string
         """
         #optional attribute, return empty string if not set
-        try:
-            self.log.debug("get mac attribute: " + self.getAttribute("mac"))
-            return self.getAttribute("mac")
-        except NameError:
-            return ""
+        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_mac, "")
         
     def getIP(self):
         """
@@ -61,7 +52,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         """
         #optional attribute, return empty string if not set
         try:
-            self.log.debug("get ip attribute: " + self.getAttribute("ip"))
+            self.log.debug("get ip attribute: " + self.getAttribute(ComoonicsClusterRepository.attribute_netdev_ip))
             # special case for dhcp we'll return the given ipaddress
             if self.isDHCP():
                 from comoonics import ComSystem
@@ -73,12 +64,12 @@ class ComoonicsClusterNodeNic(ClusterObject):
                     if _mac.upper() == self.getMac().upper():
                         return _ip
                     else:
-                        return self.getAttribute("ip")
+                        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_ip)
                 except:
                     ComLog.debugTraceLog(self.log)
-                    return self.getAttribute("ip")
+                    return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_ip)
             else:
-                return self.getAttribute("ip")
+                return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_ip)
         except NameError:
             return ""
     
@@ -86,7 +77,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         """
         @return: True when NIC is configured via DHCP else False
         """
-        return self.getAttribute("ip")=="dhcp"
+        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_ip)=="dhcp"
     
     def getGateway(self):
         """
@@ -94,11 +85,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @rtype: string
         """
         #optional attribute, return empty string if not set
-        try:
-            self.log.debug("get gateway attribute: " + str(self.getAttribute("gateway")))
-            return self.getAttribute("gateway")
-        except NameError:
-            return ""
+        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_gateway, "")
     
     def getNetmask(self):
         """
@@ -106,74 +93,24 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @rtype: string
         """
         #optional attribute, return empty string if not set
-        try:
-            self.log.debug("get mask attribute: " + self.getAttribute("mask"))
-            return self.getAttribute("mask")
-        except NameError:
-            return ""
+        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_netmask, "")
     
     def getMaster(self):
         """Returns master"""
         #optional attribute, return empty string if not set
-        try:
-            self.log.debug("get master attribute: " + self.getAttribute("master"))
-            return self.getAttribute("master")
-        except NameError:
-            return ""
+        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_master, "")
     
     def getSlave(self):
         """Returns slave"""
         #optional attribute, return empty string if not set
-        try:
-            self.log.debug("get slave attribute: " + self.getAttribute("slave"))
-            return self.getAttribute("slave")
-        except NameError:
-            return ""
-
-def main():
-    """
-    Method to test module. Creates a ClusterNodeNic object and test all defined 
-    methods on an cluster.conf example (use a loop to proceed every nic of every 
-    node).
-    """
-    import comoonics.cluster
-    
-    # create Reader object
-    reader = Sax2.Reader()
-
-    # parse the document
-    my_file = os.fdopen(os.open("test/cluster.conf", os.O_RDONLY))
-    doc = reader.fromStream(my_file)
-    my_file.close()
-
-    nics = xpath.Evaluate(comoonics.cluster.netdev_path, doc)
-
-    for element in nics:
-        # create example comnode
-        obj = ComoonicsClusterNodeNic(element, doc)
-
-        try:
-            name = obj.getName()
-        except NameError:
-            name = "no name, raise exception, OK for test"
-        
-        print "name: " + name + " - mac:" + obj.getMac()
-        
-        # test functions
-        print "\tobj.getName:" + name
-        print "\tobj.getMac():" + obj.getMac()
-        print "\tobj.getIP():" + obj.getIP()
-        print "\tobj.getGateway():" + str(obj.getGateway())
-        print "\tobj.getNetmask():" + obj.getNetmask()
-        print "\tobj.getMaster():" + obj.getMaster()
-        print "\tobj.getSlave():" + obj.getSlave()
-        print "\tobj:" + str(obj)
-
-if __name__ == '__main__':
-    main()
+        return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_slave, "")
 
 # $Log: ComClusterNodeNic.py,v $
-# Revision 1.8  2008-08-05 13:09:31  marc
+# Revision 1.9  2009-05-27 18:31:59  marc
+# - prepared and added querymap concept
+# - reviewed and changed code to work with unittests and being more modular
+#
+# Revision 1.8  2008/08/05 13:09:31  marc
 # - fixed bugs with constants
 # - optimized imports
 # - added nonstatic attributes

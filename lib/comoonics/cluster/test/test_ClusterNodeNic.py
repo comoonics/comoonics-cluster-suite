@@ -1,11 +1,33 @@
-from testClusterNode import testClusterNode
+from BaseClusterTestClass import baseClusterTestClass
 
 import unittest
 
-class testClusterNodeNic(testClusterNode):
+class test_ClusterNodeNic(baseClusterTestClass):
     """
     Methods from ComoonicsClusterNodeNic
     """
+    def init(self):
+        import os.path
+        from comoonics.cluster.ComClusterRepository import ClusterRepository
+        from comoonics.cluster.ComClusterInfo import ClusterInfo
+        super(test_ClusterNodeNic, self).init()
+        #create comclusterRepository Object
+        self.clusterRepository = ClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
+
+        #create comclusterinfo object
+        self.clusterInfo = ClusterInfo(self.clusterRepository)  
+
+        # setup the cashes for clustat for redhat cluster
+        import logging
+        from comoonics import ComSystem
+        ComSystem.setExecMode(ComSystem.SIMULATE)
+        self.clusterInfo.helper.setSimOutput()
+        self.nics=list()
+        for node in self.clusterInfo.getNodes():
+            node.helper.output=self.clusterInfo.helper.output
+            for nic in node.getNics():
+                self.nics.append(nic)
+      
     def testGetname(self):
         i = 0
         for nic in self.nics:
@@ -48,11 +70,12 @@ class testClusterNodeNic(testClusterNode):
             self.assertEqual(nic.getSlave(), self.nicValues[i]["slave"])
             i = i + 1
 
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(testClusterNodeNic))
-    return suite
+def test_main():
+    try:
+        from test import test_support
+        test_support.run_unittest(test_ClusterNodeNic)
+    except ImportError:
+        unittest.main()
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=3).run(test_suite())
+    test_main()

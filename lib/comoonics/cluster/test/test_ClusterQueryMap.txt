@@ -1,0 +1,13 @@
+[DEFAULT]
+clusterpath=/cluster
+clusternodepath=%(clusterpath)s/clusternode
+osrnodepath=%(clusternodepath)s
+
+[osr]
+nodeid=%(osrnodepath)s[hwid=%(param0)s]/@nodeid
+ip=%(osrnodepath)s[nodeid=%(param0)s]/eth/@ip
+
+[redhatcluster]
+osrnodepath=%(clusternodepath)s[nodeid=%(param0)s]/com_info
+nodeid=%(osrnodepath)s/eth[mac=%(param0)s]
+ip=%(osrnodepath)s/eth/@ip

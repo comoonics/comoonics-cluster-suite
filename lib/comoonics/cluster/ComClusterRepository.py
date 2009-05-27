@@ -11,33 +11,46 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.16 2008-08-06 11:18:28 marc Exp $
+# $Id: ComClusterRepository.py,v 1.17 2009-05-27 18:31:59 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
-import os
-
 from xml import xpath
-from xml.dom.ext import PrettyPrint
-from xml.dom.ext.reader import Sax2
-
-import comoonics.cluster
-
-from ComClusterNode import ClusterNode
-from ComClusterInfo import ClusterObject
 
 from comoonics import ComLog
+from comoonics.ComDataObject import  DataObject
 from comoonics.ComExceptions import ComException
-from comoonics.DictTools import searchDict, applyDefaults, createDomFromHash
+from comoonics.DictTools import searchDict, createDomFromHash
+from comoonics.XmlTools import xpathjoin, XPATH_SEP
 
 log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
 
 class ClusterMacNotFoundException(ComException): pass
 class ClusterIdNotFoundException(ComException): pass
 class ClusterRepositoryConverterNotFoundException(ComException): pass
+
+class ClusterObject(DataObject):
+    non_statics=dict()
+    def __init__(self, *params, **kwds):
+        super(ClusterObject, self).__init__(*params, **kwds)
+        self.non_statics=dict()
+    def isstatic(self, _property):
+        if self.non_statics.has_key(_property):
+            return False
+        return True
+    def addNonStatic(self, name, rest=None):
+        path_end=self.non_statics
+        path_end[name]=rest
+    def query(self, _property, *params, **keys):
+        pass
+    def __getattr__(self, value):
+        if not self.isstatic(value):
+            return self.query(value)
+        else:
+            return DataObject.__getattribute__(self, value)
                 
 class ClusterRepository(ClusterObject):
     """
@@ -53,28 +66,29 @@ class ClusterRepository(ClusterObject):
         or comoonics) has to be created.
         args = (element,doc,options)
         """
+        from xml.dom.ext.reader import Sax2
         if len(args) >= 1 and isinstance(args[0], basestring):
             reader = Sax2.Reader()
             _xml=open(args[0])
             doc = reader.fromStream(_xml)
             _xml.close()
-            x=xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", doc.documentElement)
-            if len(xpath.Evaluate("/cluster/clusternodes/clusternode/com_info", doc.documentElement)) > 0:
+            if len(xpath.Evaluate(ComoonicsClusterRepository.getDefaultComoonicsXPath(), doc.documentElement)) > 0:
                 cls = ComoonicsClusterRepository
-            elif len(xpath.Evaluate("/cluster/clusternodes/clusternode", doc.documentElement)) > 0:
-                cls = RedhatClusterRepository
+            elif len(xpath.Evaluate(RedHatClusterRepository.getDefaultClusterNodeXPath(), doc.documentElement)) > 0:
+                cls = RedHatClusterRepository
         if len(args) >= 2:
             if (args[0] != None):                
-                if xpath.Evaluate(comoonics.cluster.cominfo_path %"", args[0]) or len(args[2]) == 0:
+                if xpath.Evaluate(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0]) or len(args[2]) == 0:
                     cls = ComoonicsClusterRepository
-                elif xpath.Evaluate(comoonics.cluster.clusternode_path %"", args[0]):
-                    cls = RedhatClusterRepository
+                elif xpath.Evaluate(RedHatClusterRepository.getDefaultClusterNodeXPath(), args[0]):
+                    cls = RedHatClusterRepository
                     
-            elif type(args[2]) == dict:                
-                if searchDict(args[2],comoonics.cluster.cominfo_name):
+            elif type(args[2]) == dict:
+                from ComClusterInfo.ComoonicsClusterInfo import element_osr, element_clusternode
+                if searchDict(args[2],element_osr):
                     cls = ComoonicsClusterRepository
-                elif searchDict(args[2],comoonics.cluster.clusternode_name):
-                    cls = RedhatClusterRepository
+                elif searchDict(args[2],element_clusternode):
+                    cls = RedHatClusterRepository
                 
         return object.__new__(cls, *args, **kwds)
     
@@ -91,35 +105,87 @@ class ClusterRepository(ClusterObject):
         else:
             raise ClusterRepositoryConverterNotFoundException("Could not find converter of clusterrepository for type %s" %_type)
             
-class RedhatClusterRepository(ClusterRepository):
+class RedHatClusterRepository(ClusterRepository):
     """
     Represents the clusterconfiguration file of an redhat 
     cluster as an L{DataObject}. Extends generall 
     clusterrepository by special queries for this cluster 
     type.
     """
+
+    # xpathes and attribute names
+    element_cluster = "cluster"
+    attribute_cluster_name = "name"
+    attribute_cluster_configversion = "config_version"
+
+    element_cman = "cman"
+    element_cman_expectedvotes_attribute = "expected_votes"
     
-    defaultcluster_conf = "/etc/cluster/cluster.conf"
-    defaultcluster_path = "/cluster"
-    defaultclusternode_path = defaultcluster_path + "/clusternodes/clusternode"
+    element_clusternodes = "clusternodes"
+
+    element_rm = "rm"
+    element_failoverdomains = "failoverdomains"
+    element_failoverdomain = "failoverdomain"
+    attribute_failoverdomain_name = "name"
+    element_failoverdomainnode = "failoverdomainnode"
+    attribute_failoverdomainnode_name = "name"
+    attribute_failoverdomainnode_priority = "priority"
+
+    element_clusternode = "clusternode"
+    attribute_clusternode_name = "name"
+    attribute_clusternode_nodeid = "nodeid"
+    attribute_clusternode_votes = "votes"
+    
+    element_clustat="clustat"
+    element_clustat_cluster="cluster"
+    attribute_clustat_cluster_name="name"
+    attribute_clustat_cluster_generation="generation"
+    element_clustat_nodes="nodes"
+    element_clustat_node="node"
+    attribute_clustat_node_name="name"
+
+    element_quorum="quorum"
+    attribute_quorum_quorate="quorate"
+    attribute_quorum_groupmember="groupmember"
+    
+    xpath_clustat=xpathjoin(element_cluster, element_clustat)
+
+    def getDefaultClusterConf():
+        return "/etc/cluster/cluster.conf"
+    getDefaultClusterConf=staticmethod(getDefaultClusterConf)
+    
+    def getDefaultClusterXPath():
+        return xpathjoin(XPATH_SEP, RedHatClusterRepository.element_cluster)
+    getDefaultClusterXPath=staticmethod(getDefaultClusterXPath)
+
+    def getDefaultClusterNodeXPath():
+        return xpathjoin(RedHatClusterRepository.getDefaultClusterXPath(), RedHatClusterRepository.element_clusternodes, RedHatClusterRepository.element_clusternode)
+    getDefaultClusterNodeXPath=staticmethod(getDefaultClusterNodeXPath)
+    
+    def getDefaultClusterFailoverDomain(domain=""):
+        return xpathjoin(RedHatClusterRepository.getDefaultClusterXPath(), RedHatClusterRepository.element_rm, RedHatClusterRepository.element_failoverdomains, RedHatClusterRepository.element_failoverdomain+'[@'+RedHatClusterRepository.attribute_failoverdomain_name+'="'+domain+'"]')
+    getDefaultClusterFailoverDomain=staticmethod(getDefaultClusterFailoverDomain)
+    
+    def getDefaultClustatXPath():
+        return xpathjoin(XPATH_SEP, RedHatClusterRepository.element_clustat)
+    getDefaultClustatXPath=staticmethod(getDefaultClustatXPath)
     
     def __init__(self, element=None, doc=None, *options):
+        from comoonics.cluster.ComClusterNode import ClusterNode
         if ((element == None) and (len(options) == 0)) or ((element != None) and (len(options) != 0)):
             raise AttributeError("You have to specify element OR options to create a new element")
         elif element == None:
-            """
-            if no element is given create a "default" cluster.conf is generated from given hash
-            """
+            # if no element is given create a "default" cluster.conf is generated from given hash
             if (len(options) == 2) or (len(options) == 3):
                 doc = createDomFromHash(options[0],defaults=options[1])
             else:
                 doc = createDomFromHash(options[0])
-            element = xpath.Evaluate(comoonics.cluster.cluster_path, doc)[0]
+            element = xpath.Evaluate(RedHatClusterRepository.getDefaultClusterXPath(), doc)[0]
 
-        super(RedhatClusterRepository, self).__init__(element, doc)
+        super(RedHatClusterRepository, self).__init__(element, doc)
         
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
-        _nodes = xpath.Evaluate(comoonics.cluster.clusternode_path, self.getElement())
+        _nodes = xpath.Evaluate(RedHatClusterRepository.getDefaultClusterNodeXPath(), self.getElement())
         for i in range(len(_nodes)):
             _node = ClusterNode(_nodes[i], doc)
             self.nodeNameMap[_node.getName()] = _node
@@ -132,15 +198,14 @@ class RedhatClusterRepository(ClusterRepository):
         """
         self.log.debug("set name attribute to: " + str(name))
         #no try-except construct because name ist an obligatory object
-        return self.setAttribute("name",name)
+        return self.setAttribute(RedHatClusterRepository.attribute_cluster_name,name)
 
     def getClusterName(self):
         """
         @return: clustername
         @rtype: string
         """
-        _clustername =  xpath.Evaluate(comoonics.cluster.cluster_path, self.getElement())[0]
-        return _clustername.getAttribute("name")
+        return self.getAttribute(RedHatClusterRepository.attribute_cluster_name)
 
 
     def getNodeName(self, mac):
@@ -181,17 +246,14 @@ class RedhatClusterRepository(ClusterRepository):
         """
         self.log.debug("set version attribute to: " + str(version))
         #no try-except construct because name ist an obligatory object
-        return self.setAttribute("config_version",version)
+        return self.setAttribute(RedHatClusterRepository.attribute_cluster_configversion,version)
 
     def getConfigVersion(self):
         """
         @return: clustername
         @rtype: string
         """
-        #FIXME: config_version hardcoded
-        self.log.debug("get version attribute: " + self.getAttribute("config_version"))
-        #no try-except construct because name is an obligatory object
-        return self.getAttribute("config_version")
+        return self.getAttribute(RedHatClusterRepository.attribute_cluster_configversion)
     
     def getNodeId(self, mac):
         """
@@ -263,11 +325,37 @@ class RedhatClusterRepository(ClusterRepository):
         
         return newelement
 
-class ComoonicsClusterRepository(RedhatClusterRepository):
+class ComoonicsClusterRepository(RedHatClusterRepository):
     """
     Represents the clusterconfiguration file of an 
     comoonics cluster as an L{DataObject}.
     """
+    
+    element_comoonics = "com_info"
+    element_rootvolume = "rootvolume"
+    attribute_rootvolume_name = "name"
+    attribute_rootvolume_fstype = "fstype"
+    attribute_rootvolume_mountopts = "mountopts"
+    element_netdev = "eth"
+    attribute_netdev_name="name"
+    attribute_netdev_mac="mac"
+    attribute_netdev_ip="ip"
+    attribute_netdev_gateway="gateway"
+    attribute_netdev_netmask="mask"
+    attribute_netdev_master="master"
+    attribute_netdev_slave="slave"
+    element_syslog = "syslog"
+    attribute_syslog_name = "name"
+    element_scsi = "scsi"
+    attribute_scsi_failover = "failover"
+
+    def getDefaultComoonicsXPath(_nodename=None):
+        if not _nodename:
+            return xpathjoin(RedHatClusterRepository.getDefaultClusterNodeXPath(), ComoonicsClusterRepository.element_comoonics)
+        else:
+            return xpathjoin(RedHatClusterRepository.getDefaultClusterNodeXPath()+"["+RedHatClusterRepository.attribute_clusternode_name+"=\""+_nodename+"\"]", ComoonicsClusterRepository.element_comoonics)
+    getDefaultComoonicsXPath=staticmethod(getDefaultComoonicsXPath)
+
     def __init__(self, element=None, doc=None, *options):
         if ((element == None) and (len(options) == 0)) or ((element != None) and (len(options) != 0)):
             raise AttributeError("You have to specify element OR filename attribute")
@@ -318,124 +406,13 @@ cluster:
     createOCFS2ClusterConf=staticmethod(createOCFS2ClusterConf)
 
 ClusterRepository.CONVERTERS["ocfs2"]=ComoonicsClusterRepository.createOCFS2ClusterConf
-                    
-def main2():
-    ComLog.setLevel(ComLog.logging.INFO)
-    
-    defaults = {"cluster":{"config_version":"1", "name":"clurhel5",
-                                    "cman":{"expected_votes":"1", "two_node":"0"},
-                                    "clusternodes":
-                                     {"clusternode":[
-                                       {"nodeid":"1", "name":"gfs-node1", "votes":"1",
-                                          "com_info":{
-                                            "syslog":{"name":"gfs-node1"},
-                                            "rootvolume":{"name":"/dev/VG_SHAREDROOT/LV_SHAREDROOT"},
-                                            "eth":[{"ip":"10.0.0.1", "murks":"bla", "gateway":"192.168.1.1", "name":"eth0", "mac":"00:00:00:00:00:00", "mask":"255.255.255.0"}],
-                                            "fenceackserver":{"passwd":"XXX", "user":"root"}},
-                                          "fence":{"method":{"name":"1"}}}]},
-                                    "fencedevices":{},
-                                    "rm":{"failoverdomains":{},"resources":{}}}}
-    
-    hash = {"cluster":{"name":"myCluster",
-                                    "cman":{"expected_votes":"2", "two_node":"0"},
-                                    "clusternodes":
-                                     {"clusternode":[
-                                       {"nodeid":"1", "name":"gfs-node1", "votes":"2",
-                                          "com_info":{
-                                            "syslog":{"name":"gfs-node1"},
-                                            "rootvolume":{"name":"/dev/VG_SHAREDROOT/LV_SHAREDROOT"},
-                                            "eth":[
-                                              {"ip":"10.0.0.1", "gateway":"1.2.3.4", "name":"eth0", "mac":"00:0C:29:3B:XX:XX", "mask":"255.255.255.0"},
-                                              {"ip":"10.0.0.9", "gateway":"", "name":"eth1", "mac":"01:0C:29:3B:XX:XX", "mask":"255.255.255.0"}],
-                                            "fenceackserver":{"passwd":"XXX", "user":"root"}},
-                                          "fence":{"method":{"name":"1"}}},
-                                       {"nodeid":"2", "name":"gfs-node2", "votes":"2",
-                                          "com_info":{
-                                            "syslog":{"name":"gfs-node1"},
-                                            "rootvolume":{"name":"/dev/VG_SHAREDROOT/LV_SHAREDROOT"},
-                                            "eth":[
-                                              {"ip":"10.0.0.2", "gateway":"1.2.3.4", "name":"eth0", "mac":"00:1C:29:3B:XX:XX", "mask":"255.255.255.0"},
-                                              {"ip":"10.0.0.3", "gateway":"", "name":"eth1", "mac":"01:2C:29:3B:XX:XX", "mask":"255.255.255.0"}],
-                                            "fenceackserver":{"passwd":"XXX", "user":"root"}},
-                                          "fence":{"method":{"name":"1"}}}]},
-                                    "fencedevices":{},
-                                    "rm":{"failoverdomains":{},"resources":{}}}}
-    
-    _tmp = ClusterRepository(None,None,hash,defaults)
-    
-    
-    #print str(searchDict(hash,"nodeid"))
-    
-    print "type should be comoonicsClusterRepository: " + str(type(_tmp))
-    PrettyPrint(_tmp.getDocument())
-    
-    import fcntl
-    filename = "test/test.conf"
-    conf = file(filename,"w+")
-    fcntl.lockf(conf,fcntl.LOCK_EX)
-    PrettyPrint(_tmp.getDocument(), conf)
-    fcntl.lockf(conf,fcntl.LOCK_UN)
-    conf.close()
-    
-    _tmp2 = {"cluster":{"config":"1"},"clusternodes":[{"node1":"node1"}],"default":"default"}
-    _tmp1 = {"cluster":{"config":"2","name":"myName"},"clusternodes":[{"mynode1":"mynode1"},{"mynode2":"mynode2"}],"extra":"extra"}
-    
-    print "Test applyDefaults, should contain default and extra: " + str(applyDefaults(_tmp1, _tmp2))
-    print "End of main2()"
-    
-def main():
-    """
-    Method to test module. Creates a ClusterRepository object, prints defined hashmaps 
-    and test getting of nodename and nodeid of nodes defined in a example cluster.conf.
-    """
-    
-    # create Reader object
-    reader = Sax2.Reader()
-
-    #parse the document and create clusterrepository object
-    my_file = os.fdopen(os.open("test/cluster3.conf", os.O_RDONLY))
-    doc = reader.fromStream(my_file)
-    my_file.close()
-    element = xpath.Evaluate(comoonics.cluster.cluster_path, doc)[0]
-
-    #create clusterRepository Object
-    clusterRepository = ClusterRepository(element, doc)
-    nodevalues = {"clusternode":{"name":"mynode","nodeid:":"3","com_info":{"eth":[{"name":"eth5"}]}}}
-    clusterRepository.addClusterNode(nodevalues)
-    PrettyPrint(clusterRepository.element)
-    return
-    
-    print "Dictionary Nodeid:Nodeobject"
-    print clusterRepository.nodeIdMap
-    print "\nDictionary Nodename:Nodeobject"
-    print clusterRepository.nodeNameMap
-    
-    print "\nclusterRepository\n" + str(clusterRepository)
-    print "Repositorytype Comoonics?: " + str(isinstance(clusterRepository, ComoonicsClusterRepository))
-    
-    for node in clusterRepository.nodeNameMap.values():
-        print "Node " + str(node.getName())
-        for nic in node.getNics():
-            try:
-                print "\tNic " + nic.getName() + ", mac " + nic.getMac()
-                mac = nic.getMac()
-                print "\tgetNodeName(mac): " + clusterRepository.getNodeName(mac)
-                print "\tgetNodeId(mac): " + clusterRepository.getNodeId(mac) + "\n"
-            except ClusterMacNotFoundException:
-                print "\tNic " + nic.getName()
-                print "\tVerify that no mac-address is specified for this nic"
-                
-    print "Generating ocfs2 configuration"
-    print clusterRepository.convert("ocfs2")
-
-if __name__ == '__main__':
-    import logging
-    ComLog.setLevel(logging.DEBUG)
-    main2()
-    main()
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.16  2008-08-06 11:18:28  marc
+# Revision 1.17  2009-05-27 18:31:59  marc
+# - prepared and added querymap concept
+# - reviewed and changed code to work with unittests and being more modular
+#
+# Revision 1.16  2008/08/06 11:18:28  marc
 # - fixed more bugs with xpath
 #
 # Revision 1.15  2008/08/05 18:28:18  marc
