@@ -1,78 +1,52 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE cdsls SYSTEM "test/cdsl.dtd">
 <cdsls config_version='1'>
-  <cdsl src='/something' timestamp='1176470424.11' type='hostdependent'>
+  <cdsl src='hostdependent_dir' timestamp='1176470424.11' type='hostdependent'>
     <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
-      <noderef ref='gfs-node7'/>
-      <noderef ref='gfs-node7'/>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
     </nodes>
   </cdsl>
-  <cdsl src='/hostdependent' timestamp='1185971913.72' type='hostdependent'>
+  <cdsl src='hostdependent_dir/shared_dir' timestamp='1185971913.72' type='shared'>
     <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
     </nodes>
   </cdsl>
-  <cdsl src='/something' timestamp='1176470424.11' type='hostdependent'>
+  <cdsl src='hostdependent_dir/shared_dir/hostdependent_dir' timestamp='1176470424.11' type='hostdependent'>
     <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
-      <noderef ref='gfs-node7'/>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
     </nodes>
   </cdsl>
-  <cdsl src='/hostdependent' timestamp='1184919462.58' type='hostdependent'>
+  <cdsl src='hostdependent_dir/shared_dir/hostdependent_dir/shared_dir' timestamp='1184919462.58' type='shared'>
     <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
     </nodes>
   </cdsl>
-  <cdsl src='/hostdependent/shared' timestamp='1185971913.74' type='shared'>
+  <cdsl src='hostdependent_dir/shared_dir/hostdependent_file' timestamp='1185971913.74' type='hostdependent'>
     <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
     </nodes>
   </cdsl>
-  <cdsl src='/hostdependent/shared/hostdependent_subdir' timestamp='1185971913.76' type='hostdependent'>
+  <cdsl src='hostdependent_dir/shared_dir/hostdependent_dir/shared_file' timestamp='1185971913.76' type='shared'>
     <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
     </nodes>
   </cdsl>
-  <cdsl src='/hostdependent/shared/hostdependent_subdir/shared_subdir' timestamp='1185971913.79' type='shared'>
-    <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
-    </nodes>
-  </cdsl>
-  <cdsl src='/hostdependent/shared/hostdependent_file' timestamp='1185969589.23' type='hostdependent'>
-    <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
-    </nodes>
-  </cdsl>
-  <cdsl src='/hostdependent/shared/hostdependent_subdir/shared_file' timestamp='1185969418.8' type='shared'>
-    <nodes>
-      <noderef ref='gfs-node1'/>
-      <noderef ref='gfs-node2'/>
-      <noderef ref='gfs-node4'/>
-    </nodes>
-  </cdsl>
-  <defaults use_nodeids='False' mountpoint='/home/andrea/tmp/cdsl-test4' cdsltree_shared='cluster/shared' cdsl_link='/cdsl.local' maxnodeidnum='0' cdsltree='cluster/cdsl'>
+  <defaults use_nodeids='True' cdsltree_shared='cluster/shared' cdsl_link='cdsl.local' maxnodeidnum='0' cdsltree='cluster/cdsl'>
     <nodesdefault>
-      <nodedefault id='gfs-node1'/>
-      <nodedefault id='gfs-node2'/>
-      <nodedefault id='gfs-node4'/>
-      <nodedefault id='gfs-node7'/>
+      <nodedefault id='id_1'/>
+      <nodedefault id='id_2'/>
+      <nodedefault id='id_3'/>
     </nodesdefault>
   </defaults>
 </cdsls>

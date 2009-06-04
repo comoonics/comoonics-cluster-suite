@@ -9,10 +9,9 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 
 import fcntl # needed for filelocking
-import time  # needed for creation of timestamp
 import logging
 import re
 
@@ -22,8 +21,6 @@ from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
 from xml.dom.ext.reader.Sax2 import implementation
 
-from ComCdsl import Cdsl
-
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
@@ -31,6 +28,7 @@ from comoonics import ComSystem
 
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository
+from comoonics.cdsl import stripleadingsep
 
 import comoonics.pythonosfix as os
 import os.path
@@ -133,10 +131,10 @@ class inventoryfileProcessing:
         self.conf.close()
 
 class CdslRepository(DataObject):
-    DEFAULT_INVENTORY="/var/lib/cdsl/cdsl_inventory.xml"
     """
     Represents cdsl-inventoryfile as L{DataObject}
     """
+    DEFAULT_INVENTORY="/var/lib/cdsl/cdsl_inventory.xml"
     #duplicate definition at __new__, because there self.* could not be used
     cdsls_path = "/cdsls"
     cdslDefaults_path = cdsls_path + "/defaults"
@@ -153,43 +151,10 @@ class CdslRepository(DataObject):
         @return: a new CdslRepository object 
         @rtype: depending on defind defaults of configfile
         """
-        #duplicate definition at beginn of class, because self.* could not be used here
-        cdsls_path = "/cdsls"
-        cdslDefaults_path = cdsls_path + "/defaults"
-        cdsltree = "cdsltree"
-        
-        #concate root & given filename
-        if len(args) >= 7 and args[8] != None:
-            filename = os.path.join(args[8],re.sub('^/','', args[0]))
-        else:
-            filename = args[0]
-        
-        if os.path.exists(filename):
-            reader = Sax2.Reader(validate=False)
-            file = os.fdopen(os.open(filename,os.O_RDONLY))
-            try:
-                _tmp = reader.fromStream(file)
-            except xml.sax._exceptions.SAXParseException, arg:
-                log.critical("Problem while reading XML: " + str(arg))
-                raise
-        
-        #if configfile is set but options is not specified
-        if len(args) >= 1 and len(args) <= 3 and os.path.exists(filename):
-            if xpath.Evaluate("%s[@%s]" %(cdslDefaults_path,cdsltree), _tmp):
-                cls = ComoonicsCdslRepository
-            elif not xpath.Evaluate(cdsls_path , _tmp):
-                raise CdslRepositoryNotConfigfileException("Given file " + filename + " could not be a valid inventory, because xpath " + cdsls_path + " could not be found.")
-        #if options are used it must be a comoonics cdsl
-        elif len(args) >= 4:
-            if os.path.exists(filename):
-                if not xpath.Evaluate("%s[@%s]" %(cdslDefaults_path,cdsltree), _tmp):
-                    raise CdslRepositoryNotConfigfileException("Given file " + filename + " could not be a valid ComoonicsInventory, because xpath " + cdslDefaults_path + "[@" + cdsltree + "] could not be found.")
-            #look for com.oonics specific arguments
-            cls = ComoonicsCdslRepository
-        
+        cls = ComoonicsCdslRepository
         return object.__new__(cls, *args, **kwds)
     
-    def __init__(self, configfile=DEFAULT_INVENTORY, dtd=None, validate=True, *options):
+    def __init__(self, configfile=DEFAULT_INVENTORY, dtd=None, validate=True, *options, **keys):
         """
         Constructs a new CdslRepository from given configfile. Creates 
         a list of cdsls from configfile to provide an easy access to them.
@@ -257,10 +222,13 @@ class ComoonicsCdslRepository(CdslRepository):
     defaults_defaultDir_attribute = "default_dir"
     defaults_nodePrefix_attribute = "node_prefix"
     
+    default_expand_string_attribute="expandstring"
+    default_expand_string=".cdsl"
+    
     #definde defaultvalues
     cdsltree_default = "cluster/cdsl"
     cdsltreeShared_default = "cluster/shared"
-    cdslLink_default = "/cdsl.local"
+    cdslLink_default = "cdsl.local"
     maxnodeidnum_default = "0"
     useNodeids_default = "False"
     
@@ -278,9 +246,10 @@ class ComoonicsCdslRepository(CdslRepository):
     cdsl_path = cdsls_path + "/" + cdsl_element
     defaults_path = cdsls_path + "/" + defaults_element
     noderef_path_part = "nodes/noderef/@ref"
+
+    EXPANSION_PARAMETER="cdsl_expansion"
     
-    
-    def __init__(self, configfile=CdslRepository.DEFAULT_INVENTORY, dtd=None, validate=True, *options):
+    def __init__(self, configfile=CdslRepository.DEFAULT_INVENTORY, dtd=None, validate=True, *options, **keys):
         """
         Constructs a new comoonicsCdslRepository from given configfile. Creates 
         a list of cdsls from configfile to provide an easy access to them.
@@ -296,7 +265,7 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         if len(options) > 4 and options[5] != None:
             self.root = options[5]
-            self.configfile = os.path.join(self.root,re.sub('^/','', os.path.abspath(configfile)))
+            self.configfile = os.path.join(self.root,stripleadingsep(os.path.abspath(configfile)))
         else:
             self.root = "/"
             self.configfile = os.path.abspath(configfile)
@@ -310,36 +279,63 @@ class ComoonicsCdslRepository(CdslRepository):
         from ComCdsl import Cdsl
         #maximum 9 parameters to set
         if not os.path.exists(self.configfile) and len(options) <= 9:
-            if len(options) != 0 and len(options) < 5:
+            if (len(options) != 0 and len(options) < 5) or not keys:
                 raise AttributeError("Need at least none or 5-9 parameters to create inventoryfile")
             else:
                 Lockfile = inventoryfileProcessing(self.configfile,dtd)
                 doc = Lockfile.openLock(self.validate)
                 
                 topelement=doc.documentElement
-                defaults=doc.createElement(self.defaults_element)
+                defaults=topelement.getElementsByTagName(self.defaults_element)
+                if defaults and len(defaults)>0:
+                    defaults=defaults[0]
+                else:
+                    defaults=doc.createElement(self.defaults_element)
+                    topelement.appendChild(defaults)
                 #if len(options) == 0:
-                if True:
-                    defaults.setAttribute(self.defaults_cdsltree_attribute,self.cdsltree_default)
-                    defaults.setAttribute(self.defaults_cdsltreeShared_attribute,self.cdsltreeShared_default)
-                    defaults.setAttribute(self.defaults_cdslLink_attribute,self.cdslLink_default)
-                    defaults.setAttribute(self.defaults_maxnodeidnum_attribute,self.maxnodeidnum_default)
-                    defaults.setAttribute(self.defaults_useNodeids_attribute,self.useNodeids_default)
-                #if len(options) >= 5:
-                    if options[0] != None: defaults.setAttribute(self.defaults_cdsltree_attribute,options[0])
-                    if options[1] != None: defaults.setAttribute(self.defaults_cdsltreeShared_attribute,options[1])
-                    if options[2] != None: defaults.setAttribute(self.defaults_cdslLink_attribute,options[2])
-                    if options[3] != None: defaults.setAttribute(self.defaults_maxnodeidnum_attribute,options[3])
-                    if options[4] != None: defaults.setAttribute(self.defaults_useNodeids_attribute,options[4])
+                defaults.setAttribute(self.defaults_cdsltree_attribute,self.cdsltree_default)
+                defaults.setAttribute(self.defaults_cdsltreeShared_attribute,self.cdsltreeShared_default)
+                defaults.setAttribute(self.defaults_cdslLink_attribute,self.cdslLink_default)
+                defaults.setAttribute(self.defaults_maxnodeidnum_attribute,self.maxnodeidnum_default)
+                defaults.setAttribute(self.defaults_useNodeids_attribute,self.useNodeids_default)
+                defaults.setAttribute(self.default_expand_string_attribute, self.default_expand_string)
+                
+                if keys.has_key("cdsltree"): 
+                    defaults.setAttribute(self.defaults_cdsltree_attribute,stripleadingsep(keys["cdsltree"]))
+                elif options and options[0] != None: 
+                    defaults.setAttribute(self.defaults_cdsltree_attribute,stripleadingsep(options[0]))
+                if keys.has_key("cdsltreeshared"): 
+                    defaults.setAttribute(self.defaults_cdsltreeShared_attribute,stripleadingsep(keys["cdsltreeshared"]))
+                elif options and options[1] != None: 
+                    defaults.setAttribute(self.defaults_cdsltreeShared_attribute,stripleadingsep(options[1]))
+                if keys.has_key("cdsllink"): 
+                    defaults.setAttribute(self.defaults_cdslLink_attribute,stripleadingsep(keys["cdsllink"]))
+                elif options and options[2] != None: 
+                    defaults.setAttribute(self.defaults_cdslLink_attribute,stripleadingsep(options[2]))
+                if keys.has_key("maxnodeidnum"): 
+                    defaults.setAttribute(self.defaults_maxnodeidnum_attribute,keys["maxnodeidnum"])
+                elif options and options[3] != None: 
+                    defaults.setAttribute(self.defaults_maxnodeidnum_attribute,options[3])
+                if keys.has_key("usenodeids"): 
+                    defaults.setAttribute(self.defaults_useNodeids_attribute,keys["usenodeids"])
+                elif options and options[4] != None: 
+                    defaults.setAttribute(self.defaults_useNodeids_attribute,options[4])
                 #if len(options) >= 6 and not (options[5] == "" or options[5] == None):
                 #    defaults.setAttribute(self.defaults_root_attribute,options[5])
-                if len(options) >= 7 and not (options[6] == "" or options[6] == None):
-                    defaults.setAttribute(self.defaults_mountpoint_attribute,options[6])
-                if len(options) >= 8 and not (options[7] == "" or options[7] == None):
-                    defaults.setAttribute(self.defaults_defaultDir_attribute,options[7])
-                if len(options) == 9 and not (options[8] == "" or options[8] == None):
+                if keys.has_key("mountpoint"): 
+                    defaults.setAttribute(self.defaults_mountpoint_attribute,stripleadingsep(keys["mountpoint"]))
+                elif len(options) >= 7 and not (options[6] == "" or options[6] == None):
+                    defaults.setAttribute(self.defaults_mountpoint_attribute,stripleadingsep(options[6]))
+                if keys.has_key("defaultdir"): 
+                    defaults.setAttribute(self.defaults_defaultDir_attribute,stripleadingsep(keys["defaultdir"]))
+                elif len(options) >= 8 and not (options[7] == "" or options[7] == None):
+                    defaults.setAttribute(self.defaults_defaultDir_attribute,stripleadingsep(options[7]))
+                if keys.has_key("nodeprefix"): 
+                    defaults.setAttribute(self.defaults_nodePrefix_attribute,keys["nodeprefix"])
+                elif len(options) == 9 and not (options[8] == "" or options[8] == None):
                     defaults.setAttribute(self.defaults_nodePrefix_attribute,options[8])
-                topelement.appendChild(defaults)
+                if keys.has_key(self.default_expand_string_attribute):
+                    defaults.setAttribute(self.default_expand_string_attribute, keys[self.default_expand_string_attribute])
             
                 #write changes of doc to file, unlock and close it
                 Lockfile.prettyprintUnlockClose(doc)
@@ -348,24 +344,42 @@ class ComoonicsCdslRepository(CdslRepository):
         
         super(ComoonicsCdslRepository,self).__init__(self.configfile,dtd,self.validate)
         
-        _cdsls = xpath.Evaluate(self.cdsl_path, self.getElement())        
-        for i in range(len(_cdsls)):
-            src = xpath.Evaluate("@%s" %(self.cdsl_src_attribute),_cdsls[i])[0].value
-            type = xpath.Evaluate("@%s" %(self.cdsl_type_attribute),_cdsls[i])[0].value
-            timestamp = xpath.Evaluate("@%s" %(self.cdsl_time_attribute),_cdsls[i])[0].value
+        _cdsls = self.getElement().getElementsByTagName(self.cdsl_element)
+        if _cdsls and len(_cdsls) > 0:
+            for _elcdsl in _cdsls:
+                _src = _elcdsl.getAttribute(self.cdsl_src_attribute)
+                _type = _elcdsl.getAttribute(self.cdsl_type_attribute)
+                _timestamp = _elcdsl.getAttribute(self.cdsl_time_attribute)
             
-            #get nodes from cdsl-inventoryfile
-            nodes = []
-            _tmp = xpath.Evaluate(self.noderef_path_part,_cdsls[i])
-            useNodeids = self.getDefaultUseNodeids()
-            nodePrefix = self.getDefaultNodePrefix()
-            for i in range(len(_tmp)):
-                if useNodeids == "True" and nodePrefix == "False":
-                    nodes.append((_tmp[i].value).replace("id_",""))
-                else:
-                    nodes.append(_tmp[i].value)
+                #get nodes from cdsl-inventoryfile
+                nodes = []
+                _tmp1 = _elcdsl.getElementsByTagName(self.nodes_element)
+                if _tmp1 and len(_tmp1) > 0:
+                    _tmp=_tmp1[0].getElementsByTagName(self.noderef_element)
+                    useNodeids = self.getDefaultUseNodeids()
+                    nodePrefix = self.getDefaultNodePrefix()
+                    for _node in _tmp:
+                        if useNodeids == "True" and nodePrefix == "False":
+                            nodes.append(_node.replace("id_",""))
+                        else:
+                            nodes.append(_node)
             
-            self.cdsls.append(Cdsl(src, type, self, nodes=nodes,timestamp=timestamp))
+                self.cdsls.append(Cdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp))
+    
+    def realpath(self, src):
+        """
+        Returns the realpath of a src. What it does it joins root, mountpath and src and gets the realpath
+        from it
+        @param src: the path to resolve to a realpath
+        @type src: string
+        @return: the resolved path of this src 
+        @rtype: string
+        """
+        if self.getDefaultMountpoint().startswith(os.sep):
+            _path=os.path.join(self.root, self.getDefaultMountpoint()[1:], src)
+        else:
+            _path=os.path.join(self.root, self.getDefaultMountpoint(), src)
+        return os.path.realpath(_path)
             
     def getCdsl(self,src):
         """
@@ -392,7 +406,7 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         for i in range(len(self.cdsls)):
             if (self.cdsls[i].src == cdsl.src) and (self.cdsls[i].type == cdsl.type) and (self.cdsls[i].nodes == cdsl.nodes):
-		return True
+                return True
             else:
                 # check next cdsl-entry
                 continue
@@ -523,7 +537,7 @@ class ComoonicsCdslRepository(CdslRepository):
         
         _rootMountpoint = os.path.normpath(os.path.join(root,re.sub('^/','', mountpoint)))
         if not os.path.exists(_rootMountpoint):
-            raise CdslFileHandlingException("Mount point " + _rootMountpoint + " does not exist.")
+            raise IOError(2, "Mount point " + _rootMountpoint + " does not exist.")
             
         cdslDefaultdir = os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),"default")
         if not os.path.exists(cdslDefaultdir):
@@ -550,6 +564,12 @@ class ComoonicsCdslRepository(CdslRepository):
                 #shutil.copytree(os.path.join(cdslDefaultdir,os.path.basename(default_dir)),os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir)),True)
                 ComSystem.execLocalStatusOutput("cp -a " + os.path.join(cdslDefaultdir,os.path.basename(default_dir)) + " " + os.path.basename(default_dir)),os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir))
         
+        # Create the shared directory
+        cdslSharedDir= os.path.join(_rootMountpoint,re.sub('^/','', cdsltree_shared))
+        if not os.path.exists(cdslSharedDir):
+            log.debug("Creating shareddir " + cdslSharedDir)
+            ComSystem.execMethod(os.makedirs, cdslSharedDir)
+        
         #set relpath
         relpath = cdsl_link
                     
@@ -559,17 +579,73 @@ class ComoonicsCdslRepository(CdslRepository):
             #os.makedirs(os.path.join(_rootMountpoint,re.sub('^/','', relpath)))
             ComSystem.execMethod(os.makedirs,os.path.join(_rootMountpoint,re.sub('^/','', relpath)))
 
+    def expandCdsl(self, _cdsl):
+        """
+        expand this cdsl if need be. This is the case when this cdsl is nested. The nested path needs to 
+        be expanded with subdirs in order to allow a hostdependent cdsl of a shared path.
+        Algorithm is roughly as follows:
+          We walk through the path of this cdsl from root to leaf.
+          If subpath is a hostdep cdsl add the expansion_string from cdslrepository to this directory.
+        Examples:
+          hostdep => hostdep (hostdepdepth=_ignoredepth is skipped)
+          hostdep/shared => hostdep/shared (hostdepdepth=1 is skipped)
+          hostdep/shared/hostdep => hostdep.cdsl/shared/hostdep
+          hostdep/shared/hostdep/shared => hostdep.cdsl/shared/hostdep/shared
+          hostdep/shared/hostdep/shared/hostdep => hostdep.cdsl/shared/hostdep/shared/hostdep
+          ..
+        @param _cdsl: the cdsl.
+        @type _cdsl: comoonics.cdsl.ComCdsl.Cdsl|string
+        @return: returns the expanded path of the cdsl without either cdsltreeShared, cdsllink, ..
+        @rtype: string 
+        """ 
+        from comoonics.cdsl import guessType
+        from comoonics.cdsl.ComCdsl import Cdsl
+        if isinstance(_cdsl, basestring):
+            _cdsl=Cdsl(_cdsl, self)
+        _tmppath=""
+        _exp_empty={self.EXPANSION_PARAMETER: ""}
+        _expanded_cdsl=False
+        _expansions=_exp_empty
+        if _cdsl.src.find(os.sep) > 0: 
+            _subpaths=_cdsl.src.split(os.sep)
+            for _subpath in _subpaths[:-1]:
+                _tmppath=os.path.join(_tmppath, _subpath)
+                _tmpcdsl=self.getCdsl(_tmppath %_exp_empty)
+                if not _tmpcdsl:
+                    _nodes=None
+                    if _cdsl.clusterinfo == None:
+                        _nodes=_cdsl.nodes
+                    _tmpcdsl=Cdsl(_tmppath %_exp_empty, guessType(_tmppath, self), self, _cdsl.clusterinfo, _nodes, _cdsl.timestamp)
+                    if _tmpcdsl and _tmpcdsl.exists():
+                        log.warning("The cdsl %s seems not to be in the repository. Please rebuild database.")
+                    else:
+                        _tmpcdsl=None
+                if _tmpcdsl and not _expanded_cdsl:
+                    _expanded_cdsl=_tmpcdsl
+                    _tmppath="%s%%(%s)s" %(_tmppath, self.EXPANSION_PARAMETER)
+                elif _tmpcdsl and _expanded_cdsl:
+                    _expansions={self.EXPANSION_PARAMETER: self.getDefaultExpandString()}
+
+            _tmppath=os.path.join(_tmppath, _subpaths[-1])
+        else:
+            _tmppath=_cdsl.src
+
+        return _tmppath %_expansions          
+
     def getCdsls(self):
         """
         @rtype: ComoonicsCdsl
         """
         return self.cdsls
     
-    def getDefaultCdsltree(self):
+    def getDefaultCdsltree(self, realpath=False):
         """
         @rtype: string
         """
-        return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdsltree_attribute),self.getElement())[0].value
+        if not realpath:
+            return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdsltree_attribute),self.getElement())[0].value
+        else:
+            return self.realpath(self.getDefaultCdsltree(False))
 
     def getDefaultCdsltreeShared(self):
         """
@@ -625,6 +701,15 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_useNodeids_attribute),self.getElement())[0].value
     
+    def getDefaultExpandString(self):
+        """
+        @rtype: string
+        """
+        try:
+            return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.default_expand_string_attribute),self.getElement())[0].value
+        except IndexError:
+            return self.default_expand_string
+    
     def addNode(self,node,cdslfilter=None,addtofilesystem=False,simulate=False):
         """
         Adds node to all defined cdsls in inventoryfile (does not consider directories of cdsl in filesystem) 
@@ -643,12 +728,12 @@ class ComoonicsCdslRepository(CdslRepository):
         
             _rootMountpoint = os.path.normpath(os.path.join(root,re.sub('^/','', mountpoint)))
             if not os.path.exists(_rootMountpoint):
-                raise CdslFileHandlingException("Mount point " + _rootMountpoint + " does not exist.")
+                raise IOError(2, "Mount point " + _rootMountpoint + " does not exist.")
             
             cdslDefaultdir = os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),"default")
             nodedir = os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),node)
             if not os.path.exists(cdslDefaultdir):
-                raise CdslFileHandlingException("Needed default directory " + cdslDefaultdir + " does not exist")
+                raise IOError(2, "Needed default directory " + cdslDefaultdir + " does not exist")
             
             #create needed directories if they are not existing
             if not os.path.exists(os.path.dirname(nodedir)):
@@ -688,7 +773,7 @@ class ComoonicsCdslRepository(CdslRepository):
         #_noderef = xpath.Evaluate("/cdsls/cdsl/nodes/noderef[@ref='%s']" %(node),doc)
         _nodes = xpath.Evaluate("%s/%s/%s[@%s = '%s']" %(self.cdsl_path,self.nodes_element,self.noderef_element,self.noderef_ref_attribute,self.noderef_path_part),doc)
         
-        for _node in _noderef:
+        for _node in _nodes:
             _tmp = _node.parentNode.removeChild(_node)
             
         Lockfile.prettyprintUnlockClose(doc)
