@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 
 import re
 import shutil
@@ -152,8 +152,10 @@ class Cdsl(DataObject):
         Delete cdsl from inventoryfile, Placeholder for deleting method 
         of specialized classes (there it should delete the cdsl to 
         filesystem too)
+        @return: Returns the deleted cdsl
+        @rtype: L{Cdsl}
         """
-        self.cdslRepository.delete(self)
+        return self.cdslRepository.delete(self)
     
     def exists(self):
         """
@@ -254,11 +256,11 @@ class Cdsl(DataObject):
         else:
             # not in repository so try to build one and check then
             log.debug("isNested: cdsl %s is not in cdsl repo guessing." %_subpath)
-            _tmp=Cdsl(_subpath, guessType(_subpath, self.cdslRepository), self.cdslRepository, self.cdslRepository.clusterinfo, self.nodes)
+            _tmp=Cdsl(_subpath, guessType(_subpath, self.cdslRepository), self.cdslRepository, None, self.nodes)
             if _tmp and _tmp.exists():
                 return True
         
-        return self.isNested()
+            return self.isNested(_subpath)
 
     def getBasePath(self):
         """
@@ -525,16 +527,10 @@ class ComoonicsCdsl(Cdsl):
             if isSubPath(self.src, self.cdsltree_shared):
                 log.debug("Given source is already part of a hostdependent CDSL")
                 raise CdslAlreadyExists("Cdsl %s is already a hostdependent cdsl." %self.src)
-#            elif _tmpCdsl.exists():
-#                log.debug("A hostdependent CDSL with given source already exists, chancel commit")
-#                raise CdslAlreadyExists("Cdsl %s is already existant." %self.src)
         elif self.isHostdependent():
             if isSubPath(self.src, self.getCDSLLinkPath()):
                 log.debug("Given source is already part of a hostdependent CDSL")
                 raise CdslAlreadyExists("Cdsl %s is already a shared cdsl." %self.src)
-#            elif _tmpCdsl.exists():
-#                log.debug("A shared CDSL with given source already exists, chancel commit")
-#                raise CdslAlreadyExists("Cdsl %s is already existant." %self.src)
 
         _path=Path(self.getBasePath())
         _path.pushd()
@@ -685,7 +681,7 @@ class ComoonicsCdsl(Cdsl):
         #####
         _path.popd()
         log.debug("Updating cdsl-inventoryfile")
-        ComSystem.execMethod(self.cdslRepository.commit,self)
+        return ComSystem.execMethod(self.cdslRepository.commit,self)
     
     def delete(self,recursive=True,force=True,root=None):
         """
@@ -738,7 +734,7 @@ class ComoonicsCdsl(Cdsl):
         log.debug("Delete CDSL from Inventoryfile")
         #delete cdsl also from xml inventory file
         #self.cdslRepository.delete(self)
-        ComSystem.execMethod(self.cdslRepository.delete,self)
+        return ComSystem.execMethod(self.cdslRepository.delete,self)
         
     def getParent(self, _path=None):
         """

@@ -9,10 +9,9 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 
 import fcntl # needed for filelocking
-import logging
 import re
 
 import xml
@@ -26,8 +25,6 @@ from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
 from comoonics import ComSystem
 
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository
 from comoonics.cdsl import stripleadingsep
 
 import comoonics.pythonosfix as os
@@ -274,7 +271,7 @@ class ComoonicsCdslRepository(CdslRepository):
         if ComSystem.execMethod((lambda n: n),True) != True and not os.path.exists(configfile):
             self.configfile = os.path.join("/tmp",os.path.basename(configfile))
                    
-        self.cdsls = []
+        self.cdsls = list()
         self.validate = validate
         from ComCdsl import Cdsl
         #maximum 9 parameters to set
@@ -410,7 +407,7 @@ class ComoonicsCdslRepository(CdslRepository):
             else:
                 # check next cdsl-entry
                 continue
-	return False
+        return False
     
     def commit(self,cdsl):
         """
@@ -419,7 +416,7 @@ class ComoonicsCdslRepository(CdslRepository):
         @type cdsl: L{ComoonicsCdsl}
         """
         if self.exists(cdsl):
-            """modify cdsl-entry if cdsl already exists and there are changes to commit"""
+            # modify cdsl-entry if cdsl already exists and there are changes to commit"""
             log.debug("cdsl exists")
             #Open and lock XML-file and return DOM
             Lockfile = inventoryfileProcessing(self.configfile)
@@ -441,7 +438,7 @@ class ComoonicsCdslRepository(CdslRepository):
             self.cdsls.append(cdsl)
             
         else:
-            """create new cdsl-entry in inventory-file"""
+            # create new cdsl-entry in inventory-file"""
             log.debug("cdsl does not exists")
             #Open and lock XML-file and return DOM
             Lockfile = inventoryfileProcessing(self.configfile)
@@ -465,6 +462,7 @@ class ComoonicsCdslRepository(CdslRepository):
         #adds nodes to defaults part
         for node in cdsl.nodes:
             self.addDefaultNode(node)
+        return cdsl
     
     def delete(self,cdsl):
         """
@@ -472,8 +470,9 @@ class ComoonicsCdslRepository(CdslRepository):
         @param cdsl: cdsl to delete
         @type cdsl: L{ComoonicsCdsl}
         """
+        _deleted=None
         if self.exists(cdsl):
-            """delete cdsl-entry if existing"""
+            # delete cdsl-entry if existing"""
             #Open and lock XML-file and return DOM
             Lockfile = inventoryfileProcessing(self.configfile)
             doc = Lockfile.openLock(self.validate)
@@ -489,16 +488,14 @@ class ComoonicsCdslRepository(CdslRepository):
             Lockfile.prettyprintUnlockClose(doc)
             
             #delete cdsl from cdslrepository object
-            for i in range(len(self.cdsls) - 1):
-                if (self.cdsls[i].src == cdsl.src) and (self.cdsls[i].type == cdsl.type) and (self.cdsls[i].nodes == cdsl.nodes):
-                    del self.cdsls[i]
-                else:
-                    # check next cdsl-entry
-                    continue
-        
+            for _cdsl in self.cdsls:
+                if (_cdsl.src == cdsl.src) and (_cdsl.type == cdsl.type) and (_cdsl.nodes == cdsl.nodes):
+                    _deleted=_cdsl
+                    self.cdsls.remove(_cdsl)        
         else:
-            """raise exeption if cdsl to delete is not existing"""
+            # raise exeption if cdsl to delete is not existing"""
             raise CdslRepositoryCdslNotFoundException("Cannot find given Cdsl to delete")
+        return _deleted
         
     def buildInfrastructure(self,clusterinfo):
         """
@@ -723,7 +720,6 @@ class ComoonicsCdslRepository(CdslRepository):
         if addtofilesystem == True:
             root = self.root
             mountpoint = self.getDefaultMountpoint()
-            default_dir = self.getDefaultDefaultDir()
             cdsltree = self.getDefaultCdsltree()
         
             _rootMountpoint = os.path.normpath(os.path.join(root,re.sub('^/','', mountpoint)))
@@ -816,43 +812,45 @@ class ComoonicsCdslRepository(CdslRepository):
         Lockfile.prettyprintUnlockClose(doc,simulate=simulate)
 
         
-    def update(self,src,clusterInfo,chroot="/"):
+    def update(self,src,clusterInfo,_onlyvalidate=False,chroot=""):
         """
         Updates inventoryfile for given source. Add entry for associated cdsl to inventoryfile 
         if src is a cdsl on filesystem, but not already listed in inventoryfile. Deletes entry 
         from inventoryfile if cdsl exists in inventoryfile but is not present on filesystem.
-        If cdsl is weather present in inventoryfile nor in filesystem change nothing.
+        If cdsl is neither present in inventoryfile nor in filesystem change nothing.
         @param src: Sourcepath to check (incl. Root/Mountpoint)
         @type src: string
         @param clusterInfo: Clusterinfo object belonging to cdsl infrastructure
         @type clusterInfo: L{ComoonicsClusterInfo}
+        @param _onlyvalidate: returns the lists but does not change the database
+        @type _onlyvalidate: Boolean (default False)  
+        @return: if the cdsl was added the cdsl as first and if it was removed as second return value. 
+                 None either. 
+        @rtype: Cdsl, Cdsl
         """
-        from ComCdsl import Cdsl
+        from comoonics.cdsl.ComCdsl import Cdsl
         
-        _rootMountpoint = os.path.normpath(os.path.join(chroot,re.sub('^/','', self.getDefaultMountpoint())))
-        _rootMountpointCdsllink = os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','',self.getDefaultCdslLink())))
-        _rootMountpointCdslShared =  os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','',self.getDefaultCdsltreeShared())))
+        _deleted=None
+        _added=None
         
-        # needed to become correct realpathes even with relativ symbolic links
-        if _rootMountpoint == "":
-            os.chdir("/")
-        else:
-            os.chdir(_rootMountpoint)       
-            
-        _srcLink = os.path.realpath(os.path.normpath(os.path.join(_rootMountpoint,re.sub('^/','',src))))
-        _srcShared = _srcLink.replace(_rootMountpointCdslShared,'',1)
-        _srcHostdependent = _srcLink.replace(_rootMountpointCdsllink,'',1)
+        if chroot and chroot == "":
+            chroot=self.root
+        if chroot and chroot == "":
+            chroot="/"
+        
         _src = src.replace(self.getDefaultCdslLink(),'',1)
         _cdsl = self.getCdsl(_src)
         
         #check if cdsl exists in cdslrepository
-        if not type(_cdsl).__name__ == "NoneType":
+        if _cdsl:
             #check if cdsl exists also in filesystem
-            if not _cdsl.exists(root=chroot):
-                self.delete(_cdsl)
+            if not _cdsl.exists():
                 log.debug("Deleted entry of not existing cdsl with source " + _src + " from inventoryfile")
+                if not _onlyvalidate:
+                    self.delete(_cdsl)
+                _deleted=_cdsl
             else:
-               log.info("CDSL " + _src + " does already exist in inventoryfile and filesystem")
+                log.debug("CDSL " + _src + " does already exist in inventoryfile and filesystem")
      
         else:
             #create hostdependent and shared cdsl-object and test if one of these is existing
@@ -860,46 +858,15 @@ class ComoonicsCdslRepository(CdslRepository):
             _cdslShared = Cdsl(_src, "shared", self, clusterInfo, root=chroot)
                        
             if _cdslShared.exists():
-                self.commit(_cdslShared)
-                log.debug("Added shared CDSl with source " + _srcShared + " to inventoryfile.")
+                log.debug("Added shared CDSl with source " + _src + " to inventoryfile.")
+                if not _onlyvalidate:
+                    self.commit(_cdslShared)
+                _added=_cdslShared
             elif _cdslHostdependent.exists():
-                self.commit(_cdslHostdependent)
-                log.debug("Added hostdependent CDSL with source " + _srcHostdependent + " to inventoryfile.")
+                log.debug("Added hostdependent CDSL with source " + _src + " to inventoryfile.")
+                if not _onlyvalidate:
+                    self.commit(_cdslHostdependent)
+                _added=_cdslHostdependent
             else:
-                log.info("CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
-   
-def main():
-    """
-    Method to test module with nested cdsls. Does not modify inventoryfile directly, only create needed 
-    infrastructure.
-    """
-    #set behaviour of comsystem, could be ask, simulate or continue
-    ComSystem.__EXEC_REALLY_DO="continue"
-    
-    # create Reader object
-    reader = Sax2.Reader(validate=True)
-
-    #parse the document and create clusterrepository object
-    file = os.fdopen(os.open("test/cluster.conf",os.O_RDONLY))
-    try:
-        doc = reader.fromStream(file)
-    except xml.sax._exceptions.SAXParseException, arg:
-        log.critical("Problem while reading XML: " + str(arg))
-        raise
-    file.close()
-    element = xpath.Evaluate('/cluster', doc)[0]
-    file.close()
-
-    #create cluster objects
-    clusterRepository = ClusterRepository(element,doc)
-    clusterinfo = ClusterInfo(clusterRepository)
-
-    #__init__(self, configfile="/var/lib/cdsl/cdsl_inventory.xml", dtd=None, validate=True, *options):
-    cdslrepository = CdslRepository("test/cdsl5.xml","test/cdsl.dtd",False,"cluster/cdsl","cluster/shared","/cdsl.local","0","False",None,"/tmp")
-    
-    #print cdslrepository (xml) and build infrastructure
-    cdslrepository.buildInfrastructure(clusterinfo)
-
-if __name__ == '__main__':
-    ComLog.setLevel(logging.INFO)
-    main()
+                log.debug("CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
+        return _added, _deleted

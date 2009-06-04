@@ -11,7 +11,7 @@ setupCDSLRepository=setup.SetupCDSLRepository()
 setupCdsls=setup.SetupCDSLs(setupCDSLRepository.cdslRepository2)
 
 class test_Cdsl(unittest.TestCase):
-    def testCdslsCreate(self):
+    def test_A_CdslsCreate(self):
         from comoonics.cdsl.ComCdsl import Cdsl
         for _cdsl in setupCDSLRepository.cdslRepository2.cdsls:
             print "%s\n" %_cdsl.src
@@ -19,7 +19,16 @@ class test_Cdsl(unittest.TestCase):
             _cdsl.commit(force=True)
             self.assertTrue(_cdsl.exists(), "%s CDSL %s does not exist!" %(_cdsl.type, _cdsl))
 
-    def testCdslsDelete(self):
+    def test_B_CdslsValidate(self):
+        from comoonics.cdsl.ComCdslValidate import cdslValidate
+        _added, _removed=cdslValidate(setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo, False, setup.tmppath)
+        self.assertTrue(len(_added)==0 and len(_removed)==0, "Cdslsearch didn't succeed. Added %s, Removed %s" %(_added, _removed))
+        _cdsls=setupCDSLRepository.cdslRepository1.getCdsls()
+        _removed_cdsl=setupCDSLRepository.cdslRepository1.delete(_cdsls[-1])
+        _added, _removed=cdslValidate(setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo, False, setup.tmppath)
+        self.assertEquals(_added[0].src, _removed_cdsl.src, "The removed cdsl %s is different from the added one %s" %(_added[0].src, _removed_cdsl.src))
+
+    def test_Z_CdslsDelete(self):
         _cdslsrev=list()
         _cdslsrev.extend(setupCDSLRepository.cdslRepository1.getCdsls())
         _cdslsrev.reverse()
