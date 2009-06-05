@@ -189,9 +189,43 @@ def dirtrim(_dir):
         _tmp=_tmp[:-1]
     return _tmp    
 
+def setDebug(option, opt, value, parser):
+    from comoonics import ComLog
+    import logging
+    ComLog.setLevel(logging.DEBUG)
+    
+def setQuiet(option, opt, value, parser):
+    from comoonics import ComLog
+    import logging
+    ComLog.setLevel(logging.CRITICAL)
+
+def setNoExecute(option, opt, value, parser):
+    from comoonics import ComSystem
+    ComSystem.__EXEC_REALLY_DO="simulate"
+
+def commonoptparseroptions(parser):
+    """
+    Sets the give optparser to the common options needed by all cdsl commands.
+    """
+    from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
+    from ComCdslRepository import CdslRepository
+    parser.add_option("-n", "--noexecute", action="callback", callback=setNoExecute, help="display what would be done, but not really change filesystem")
+    parser.add_option("-q", "--quiet", action="callback", callback=setQuiet, help="Quiet, does not show any output")
+    parser.add_option("-d", "--verbose", action="callback", callback=setQuiet, help="Quiet, does not show any output")
+
+    parser.add_option("-i", "--inventoryfile", dest="inventoryfile", default=CdslRepository.DEFAULT_INVENTORY, help="path to the cdsl inventory")
+    parser.add_option("-c", "--clusterconf", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf())
+    parser.add_option("-r", "--root", dest="root", default="/", help="set the chroot path")
+    parser.add_option("-m", "--mountpoint", dest="mountpoint", default="", help="set the mountpoint for this fs if any.")
+    return parser
+
 #################
 # $Log: __init__.py,v $
-# Revision 1.4  2009-06-04 13:49:49  marc
+# Revision 1.5  2009-06-05 11:57:10  marc
+# - first version with binaries
+# - regression tests passed.
+#
+# Revision 1.4  2009/06/04 13:49:49  marc
 # code review and rewrite.
 # added unittests.
 #

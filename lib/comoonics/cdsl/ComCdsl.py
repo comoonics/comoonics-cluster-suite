@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 
 import re
 import shutil
@@ -305,7 +305,7 @@ class ComoonicsCdsl(Cdsl):
     
     default_node = "default"
     
-    def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None, root="/"):
+    def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None):
         """
         Constructs a new com.oonics cdsl from given L{ComoonicsCdslRepository} and nodes. 
         The constructor gets the needed nodes either from list (nodes) or from a given 
@@ -335,12 +335,10 @@ class ComoonicsCdsl(Cdsl):
         self.reldir = os.getcwd()
         
         #get needed pathes from cdslrepository and normalize them
-        self.root = root
         self.cdsltree = dirtrim(cdslRepository.getDefaultCdsltree())
         self.cdsltree_shared = dirtrim(cdslRepository.getDefaultCdsltreeShared())    
         self.default_dir = dirtrim(cdslRepository.getDefaultDefaultDir())
         self.cdsl_link = dirtrim(cdslRepository.getDefaultCdslLink())
-        self.mountpoint = dirtrim(cdslRepository.getDefaultMountpoint())
         
         self.cdslRepository = cdslRepository
         self.clusterinfo = clusterinfo
@@ -447,7 +445,7 @@ class ComoonicsCdsl(Cdsl):
         @rtype: string
         @note: This is a virtual method that has to be implemented by the child classes
         """
-        return os.path.realpath(os.path.join(self.root,self.mountpoint))
+        return os.path.realpath(os.path.join(self.cdslRepository.root,self.cdslRepository.getDefaultMountpoint()))
         
     def _pathdepth(self,path):
         """
@@ -683,7 +681,7 @@ class ComoonicsCdsl(Cdsl):
         log.debug("Updating cdsl-inventoryfile")
         return ComSystem.execMethod(self.cdslRepository.commit,self)
     
-    def delete(self,recursive=True,force=True,root=None):
+    def delete(self,recursive=True,force=True):
         """
         Deletes cdsl from filesystem and inventoryfile
         @param force: If not set remove only symbolic links, if set remove content, too
@@ -692,9 +690,7 @@ class ComoonicsCdsl(Cdsl):
         @type recursive: Boolean
         """
         from comoonics.ComPath import Path
-        if root!=None:
-            self.setRoot(root)
-            
+
         if not self.exists():
             raise CdslDoesNotExistException("Cdsl with source " + self.src + " does not exist, cannot delete.")
         if not self.isShared() and not self.isHostdependent():
@@ -781,12 +777,3 @@ class ComoonicsCdsl(Cdsl):
             if ( self.src != cdsl.src ) and ( cdsl.getParent() == self.getParent() ):
                 _tmpcdsls.append(cdsl)
         return _tmpcdsls
-        
-    def setRoot(self,root):
-        """
-        Set chroot of cdsl, needed e.g. when a cdsl is picked out from inventoryfile
-        and you work in an environment which is prepared for chroot
-        @param root: chroot-path to set
-        @type root: string
-        """
-        self.root = root

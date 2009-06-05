@@ -15,7 +15,7 @@ class test_Cdsl(unittest.TestCase):
         from comoonics.cdsl.ComCdsl import Cdsl
         for _cdsl in setupCDSLRepository.cdslRepository2.cdsls:
             print "%s\n" %_cdsl.src
-            _cdsl = Cdsl(_cdsl.src, _cdsl.type, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo, None, None, setup.tmppath)
+            _cdsl = Cdsl(_cdsl.src, _cdsl.type, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo, None, None)
             _cdsl.commit(force=True)
             self.assertTrue(_cdsl.exists(), "%s CDSL %s does not exist!" %(_cdsl.type, _cdsl))
 
@@ -34,7 +34,7 @@ class test_Cdsl(unittest.TestCase):
         _cdslsrev.reverse()
         for _cdsl in _cdslsrev:
             print "%s\n" %_cdsl.src
-            _cdsl.delete(True, True, setup.tmppath)
+            _cdsl.delete(True, True)
             self.assertFalse(_cdsl.exists(), "%s CDSL %s exists although it was removed before." %(_cdsl.type, _cdsl))
 
 if __name__ == "__main__":

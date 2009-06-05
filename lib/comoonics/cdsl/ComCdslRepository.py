@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 
 import fcntl # needed for filelocking
 import re
@@ -189,6 +189,46 @@ class CdslRepository(DataObject):
         @type clusterinfo: L{ComoonicsClusterInfo}
         """
         pass
+    
+    def getCdsl(self,src):
+        """
+        Uses given source to return matching cdsl
+        @param src: Path of searched cdsl
+        @type src: string
+        @return: cdsl-object belonging to given path
+        @rtype: L{ComoonicsCdsl}
+        """
+        return None
+
+    def getCdsls(self):
+        """
+        @rtype: ComoonicsCdsl
+        """
+        return None
+    
+    def delete(self,cdsl):
+        """
+        Deletes cdsl entry in inventoryfile if existing
+        @param cdsl: cdsl to delete
+        @type cdsl: L{ComoonicsCdsl}
+        """
+        pass
+
+    def exists(self,cdsl):
+        """
+        Looks if a given cdsl already exists in inventoryfile
+        @param cdsl: Cdsl to test existenz later 
+        @type cdsl: L{ComoonicsCdsl}
+        @rtype: Boolean
+        """
+        return False
+
+    def commit(self,cdsl):
+        """
+        Adds or modifies cdsl entry in inventoryfile (depending on existing entry with the same src attribute like the given cdsl)
+        @param cdsl: cdsl to commit
+        @type cdsl: L{ComoonicsCdsl}
+        """
         
 class ComoonicsCdslRepository(CdslRepository):
     """
@@ -262,10 +302,11 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         if len(options) > 4 and options[5] != None:
             self.root = options[5]
-            self.configfile = os.path.join(self.root,stripleadingsep(os.path.abspath(configfile)))
+        elif keys and keys.has_key("root"):
+            self.root = keys["root"]
         else:
             self.root = "/"
-            self.configfile = os.path.abspath(configfile)
+        self.configfile = os.path.join(self.root,stripleadingsep(os.path.abspath(configfile)))
         
         #if noexecute mode is set, store inventoryfile at /tmp
         if ComSystem.execMethod((lambda n: n),True) != True and not os.path.exists(configfile):
@@ -317,8 +358,6 @@ class ComoonicsCdslRepository(CdslRepository):
                     defaults.setAttribute(self.defaults_useNodeids_attribute,keys["usenodeids"])
                 elif options and options[4] != None: 
                     defaults.setAttribute(self.defaults_useNodeids_attribute,options[4])
-                #if len(options) >= 6 and not (options[5] == "" or options[5] == None):
-                #    defaults.setAttribute(self.defaults_root_attribute,options[5])
                 if keys.has_key("mountpoint"): 
                     defaults.setAttribute(self.defaults_mountpoint_attribute,stripleadingsep(keys["mountpoint"]))
                 elif len(options) >= 7 and not (options[6] == "" or options[6] == None):
@@ -854,8 +893,8 @@ class ComoonicsCdslRepository(CdslRepository):
      
         else:
             #create hostdependent and shared cdsl-object and test if one of these is existing
-            _cdslHostdependent = Cdsl(_src, "hostdependent", self, clusterInfo, root=chroot)
-            _cdslShared = Cdsl(_src, "shared", self, clusterInfo, root=chroot)
+            _cdslHostdependent = Cdsl(_src, "hostdependent", self, clusterInfo)
+            _cdslShared = Cdsl(_src, "shared", self, clusterInfo)
                        
             if _cdslShared.exists():
                 log.debug("Added shared CDSl with source " + _src + " to inventoryfile.")
@@ -870,3 +909,12 @@ class ComoonicsCdslRepository(CdslRepository):
             else:
                 log.debug("CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
         return _added, _deleted
+        
+    def setRoot(self,root):
+        """
+        Set chroot of cdsl, needed e.g. when a cdsl is picked out from inventoryfile
+        and you work in an environment which is prepared for chroot
+        @param root: chroot-path to set
+        @type root: string
+        """
+        self.root = root

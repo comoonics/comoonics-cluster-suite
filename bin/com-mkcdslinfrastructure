@@ -1,4 +1,7 @@
 #!/usr/bin/python
+"""
+Create the cdsl infrastructure. Mainly build it initially.
+"""
 
 __version__ = "$revision$"
 __description__="""
@@ -11,78 +14,42 @@ import logging
 import xml
 
 from comoonics import ComLog
+import comoonics.cluster
 from comoonics.ComExceptions import ComException
-from comoonics import GetOpts
+from comoonics.cdsl import commonoptparseroptions, dirtrim
+from comoonics.cdsl.ComCdslRepository import CdslRepository
+# from comoonics import GetOpts
 
-from comoonics.cdsl.ComCdslRepository import *
+from optparse import OptionParser
 
-class Config(GetOpts.BaseConfig):
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.quiet=GetOpts.Option("quiet", "Quiet, does not show any output",False,False,"q", self.setQuiet)
-        self.verbose=GetOpts.Option("verbose", "Verbose, add debugging output",False,False,"d", self.setDebug)
-        
-        self.cdsltree=GetOpts.Option("cdsltree", "path for hostdependent","cluster/cdsl",False,"t")
-        self.cdsltreeShared=GetOpts.Option("cdsltreeShared", "path for shared cdsltree","cluster/shared",False,"s")
-        self.cdslLink=GetOpts.Option("cdslLink", "path for cdsl link","/cdsl.local",False,"L")
-        self.maxnodeidnum=GetOpts.Option("maxnodeidnum", "maxnodeidnum","0",False,"m")
-        self.useNodeids=GetOpts.Option("useNodeids", "set use nodeids to True or False",False,False,"i")
-        
-        self.root=GetOpts.Option("root", "set chroot-path","/",False,"r")
-        self.mountpoint=GetOpts.Option("mountpoint", "set mountpoint",None,False,"M")
-        self.defaultDir=GetOpts.Option("defaultDir", "set default directory",None,False,"D")
-        self.nodePrefix=GetOpts.Option("nodePrefix", "set nodeprefix",None,False,"p")
-        
-        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
-        self.clusterconf=GetOpts.Option("clusterconf", "path to used cluster.conf","/etc/cluster/cluster.conf",False,"c")
-        self.inventorydtd="/opt/atix/comoonics-cs/xml/cdsl_inventory.dtd"
-        
-        self.noexecute=GetOpts.Option("noexecute", "display what would be done, but not really change filesystem",False,False,"n")
-        self.defaultvalues=GetOpts.Option("defaultvalues", "use defaultvalues to create infrastructure/inventoryfile, only needed when no other parameter is given",False,False,"V")
-        
-        self.createInventory=GetOpts.Option("createInventory", "only create inventoryfile, don't build infrastructure",False,False,"C")
-
-    def do(self, args_proper):
-        import os.path
-        if len(args_proper) > 0:
-            self.usage()
-            return 1
-        return 0
-
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
-        
-    def setQuiet(self, value):
-        ComLog.setLevel(logging.CRITICAL)
+parser = OptionParser()
+parser=commonoptparseroptions(parser)
+parser.add_option("-t", "--cdsltree", default=None, dest="cdsltree", help="path for hostdependent cdsls")
+parser.add_option("-s", "--cdsltreeshared", default=None, dest="cdsltreeshared", help="path for the reshared cdsls")
+parser.add_option("-L", "--cdsllink", default=None, dest="cdsllink", help="path for the cdsl link.")
+parser.add_option("-M", "--maxnodeidnum", default=0, dest="maxnodeidnum", type="int", help="Up to this nodeid node dirs are created")
+parser.add_option("-N", "--usenodenames", default=False, dest="usenodenames", action="store_true", help="Use nodenames instead of nodeids.")
+parser.add_option("-D", "--defaultdir", default=None, dest="defaultdir", help="set the default node directory.")
+#parser.add_option("-p", "--nodeprefix", default=None, dest="nodeprefix", help="set the nodeprefix if needed")
+parser.add_option("-C", "--onlyinventory", default=False, dest="onlyinventory", action="store_true", help="Only create the inventory file but don't create the filesystem structure.")
 
 ComLog.setLevel(logging.INFO)
-#break if some wrong arguments exist
-Config=Config()
-ret=Config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    sys.exit(ret)
-#show help if no parameter is given
-elif len(sys.argv) == 1:
-    Config.usage()
-    sys.exit(0)
+(options, args) = parser.parse_args()
 
-if Config.noexecute:
-    ComSystem.__EXEC_REALLY_DO="simulate"
+if len(args) != 0:
+    parser.error("No arguments are required. Please remove the arguments %s" %args)
 
-if not Config.useNodeids:
-    Config.useNodeids = "False"
+if not options.usenodenames:
+    _useNodeids = "False"
 else:
-    Config.useNodeids = "True"
+    _useNodeids = "True"
     
-cdslRepository = CdslRepository(Config.inventoryfile,Config.inventorydtd,False,Config.cdsltree,Config.cdsltreeShared,Config.cdslLink,Config.maxnodeidnum,Config.useNodeids,Config.root,Config.mountpoint,Config.defaultDir,Config.nodePrefix)
-
-doc=parseClusterConf(Config.clusterconf)
-
+doc=comoonics.cluster.parseClusterConf(options.clusterconf)
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
+clusterInfo = ClusterInfo(clusterRepository)
 
-if not Config.createInventory:
-    clusterInfo = ClusterInfo(clusterRepository)
+cdslRepository = CdslRepository(options.inventoryfile,None,False,cdsltree=options.cdsltree,cdsltreeshared=options.cdsltreeshared,cdsllink=options.cdsllink,maxnodeidnum=options.maxnodeidnum,usenodeids=_useNodeids,root=options.root,mountpoint=options.mountpoint,defaultdir=options.defaultdir)
+
+if not options.onlyinventory:
     cdslRepository.buildInfrastructure(clusterInfo)

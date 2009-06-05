@@ -29,12 +29,12 @@ class SetupCluster:
 
 class SetupCDSLRepository:
     def __init__(self):
-        from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+        from comoonics.cdsl.ComCdslRepository import CdslRepository
         import shutil
         shutil.copy(os.path.join(testpath, "cdsl5.xml"), tmppath)
         shutil.copy(os.path.join(testpath, "cdsl4.xml"), tmppath)
-        self.cdslRepository1 = ComoonicsCdslRepository(os.path.join(tmppath, "cdsl5.xml"), None, False, mountpoint=tmppath, usenodeids="True")
-        self.cdslRepository2 = ComoonicsCdslRepository(os.path.join(tmppath, "cdsl4.xml"), None, False, mountpoint=tmppath, usenodeids="True")
+        self.cdslRepository1 = CdslRepository(os.path.join(tmppath, "cdsl5.xml"), None, False, mountpoint=tmppath, usenodeids="True")
+        self.cdslRepository2 = CdslRepository(os.path.join(tmppath, "cdsl4.xml"), None, False, mountpoint=tmppath, usenodeids="True")
         self.cdslRepository1.root=tmppath
         self.cdslRepository2.root=tmppath
         

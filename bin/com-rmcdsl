@@ -11,72 +11,41 @@ import logging
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
-from comoonics import GetOpts
+#from comoonics import GetOpts
 
 from comoonics.cluster import parseClusterConf
 from comoonics.cluster.ComClusterRepository import ClusterRepository
-from comoonics.cdsl.ComCdsl import CdslNotExistsException
+from comoonics.cdsl import commonoptparseroptions, dirtrim
+from comoonics.cdsl.ComCdsl import CdslDoesNotExistException
 from comoonics.cdsl.ComCdslRepository import CdslRepository
 
 class CdslNotExistsException(ComException):pass
 
-class Config(GetOpts.BaseConfig):
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.symbolicOnly=GetOpts.Option("symbolicOnly", "Removes only symbolic links", False, False, "s")
-        self.noexecute=GetOpts.Option("noexecute", "display what would be done, but not really change filesystem",False,False,"n")
-        self.quiet=GetOpts.Option("quiet", "Quiet, does not show any output",False,False,"q", self.setQuiet)
-        self.verbose=GetOpts.Option("verbose", "Verbose, add debugging output",False,False,"d", self.setDebug)
-        
-        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile","/var/lib/cdsl/cdsl_inventory.xml",False,"l")
-        self.clusterconf=GetOpts.Option("clusterconf", "path to used cluster.conf","/etc/cluster/cluster.conf",False,"c")
-        
-        self.root=GetOpts.Option("root", "set chroot-path",None,False,"r")
-        
-        self.setAdditionalParams("[sourcename]")
+from optparse import OptionParser
 
-    def do(self, args_proper):
-        import os.path
-        if len(args_proper) > 0:
-            self.src=args_proper[0]
-        else:
-            self.usage()
-            return 1
-        return 0
+usage = "usage: %prog [options] fullpathtofile"
+parser = OptionParser(usage)
+parser=commonoptparseroptions(parser)
 
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
-        
-    def setQuiet(self, value):
-        ComLog.setLevel(logging.CRITICAL)
+parser.add_option("-s", "--symboliconly", dest="symboliconly", default=False, action="store_true", help="Only removes the symbolic links but not the data itself")
 
 ComLog.setLevel(logging.INFO)
-#Bei ungueltigen Argumenten abrechen
-Config=Config()
-ret=Config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    sys.exit(ret)
-    
-if Config.noexecute:
-    ComSystem.__EXEC_REALLY_DO="simulate"
-          
-doc=comoonics.cluster.parseClusterConf(Config.clusterconf)
+(options, args) = parser.parse_args()
 
+
+if len(args) != 1:
+    parser.error("Failure no or more then one file is given as argument.")
+          
+doc=comoonics.cluster.parseClusterConf(options.clusterconf)
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
-    
-#create cdsl objects
-cdslRepository = CdslRepository(Config.inventoryfile,None,False,None,None,None,None,None,Config.root)
 
-cdsl = cdslRepository.getCdsl(Config.src)
+cdslRepository = CdslRepository(options.inventoryfile,None,False,cdsltree=options.cdsltree,cdsltreeshared=options.cdsltreeshared,cdsllink=options.cdsllink,maxnodeidnum=options.maxnodeidnum,usenodeids=_useNodeids,root=options.root,mountpoint=options.mountpoint,defaultdir=options.defaultdir)
 
-if type(cdsl).__name__=="NoneType":
-	raise CdslNotExistsException("Cdsl with source " + Config.src + " does not exist in Inventoryfile.")
+cdsl = cdslRepository.getCdsl(args[0])
 
-if Config.symbolicOnly:
-    cdsl.delete(force=False,root=Config.root)
-else:
-    cdsl.delete(root=Config.root)
+if not cdsl:
+	raise CdslDoesNotExistException("Cdsl with source " + cdsl.src + " does not exist in Inventoryfile.")
+
+cdsl.delete(force=not options.symboliconly)

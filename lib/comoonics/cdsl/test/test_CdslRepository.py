@@ -25,7 +25,7 @@ class test_CdslRepository(unittest.TestCase):
         for _path in _dirs:
             _cdsl=setupCDSLRepository.cdslRepository2.getCdsl(_path)
             if not _cdsl:
-                _cdsl=Cdsl(_path, guessType(_path, setupCDSLRepository.cdslRepository2), setupCDSLRepository.cdslRepository2, setupCluster.clusterinfo, None, None, setup.tmppath)
+                _cdsl=Cdsl(_path, guessType(_path, setupCDSLRepository.cdslRepository2), setupCDSLRepository.cdslRepository2, setupCluster.clusterinfo)
                 
             _expanded=setupCDSLRepository.cdslRepository2.expandCdsl(_cdsl)
             self.assertEquals(_expanded, _results[_path], "Expansion of cdsl %s => %s != %s" %(_cdsl.src, _expanded, _results[_path]))

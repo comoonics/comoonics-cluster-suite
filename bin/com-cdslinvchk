@@ -1,9 +1,8 @@
 #!/usr/bin/python
-
-__version__ = "$revision$"
-__description__="""
-Binary to check if cdsls which are defined in inventoryfile really exists in filesystem
 """
+Binary to check if cdsls which are defined in inventoryfile really exist on filesystem
+"""
+__version__ = "$revision$"
 
 import getopt
 import sys
@@ -11,58 +10,41 @@ import logging
 import re
 
 from comoonics import ComLog
-from comoonics import GetOpts
+#from comoonics import GetOpts
 
+import comoonics.cluster
+from comoonics.cluster.ComClusterInfo import ClusterInfo
+from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
+from comoonics.cdsl.ComCdslRepository import CdslRepository
 from comoonics.cdsl.ComCdslValidate import cdslValidate
+from comoonics.cdsl import dirtrim, commonoptparseroptions
 
 ComLog.setLevel(logging.INFO)
 
-class Config(GetOpts.BaseConfig):
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.help=GetOpts.Option("help", "this help", False, False, "h")
-        self.verbose=GetOpts.Option("verbose", "add debugging output",False,False,"d", self.setDebug)
-        self.logfile=GetOpts.Option("logfile", "path to used logfile", None, False, "l")
-        self.inventoryfile=GetOpts.Option("inventoryfile", "path to used inventoryfile", "/var/lib/cdsl/cdsl_inventory.xml", False, "i")
-        
-        self.root=GetOpts.Option("root", "set chroot-path","/",False,"r")
-        
-        self.defaultvalues=GetOpts.Option("defaultvalues", "use defaultvalues to perform inventorycheck, only needed when no other parameter is given",False,False,"V")
-        
-    def do(self, args_proper):
-        if len(args_proper) > 0:
-            self.usage()
-            sys.exit()
-        return 0
+from optparse import OptionParser
 
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
-        
-    def setQuiet(self, value):
-        ComLog.setLevel(logging.CRITICAL)
+parser = OptionParser()
+parser.add_option("-U", "--update", dest="update", default=False, action="store_true", help="Also updates the repository")
 
-#break if some wrong arguments exist
-Config=Config()
-ret=Config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    sys.exit(ret)
-#show help if no parameter is given
-elif len(sys.argv) == 1:
-    Config.usage()
-    sys.exit(0)
+parser=commonoptparseroptions(parser)
+
+ComLog.setLevel(logging.INFO)
+(options, args) = parser.parse_args()
+
+inventoryfile = os.path.join(options.root,dirtrim(options.inventoryfile))
+clusterconf = os.path.join(options.root, dirtrim(options.clusterconf))
+
+doc=comoonics.cluster.parseClusterConf(os.path.join(testpath, "cluster.conf"))
     
-inventoryfile = os.path.join(Config.root,re.sub('^/','', Config.inventoryfile))
-
-if not Config.help:
-    if Config.inventoryfile != None and Config.logfile != None:
-        cdslValidate(inventoryfile,Config.logfile,Config.root)
-    elif Config.inventoryfile != None:
-        cdslValidate(inventoryfile,root=Config.root)
-    elif Config.logfile != None:
-        cdslValidate(logfile=Config.logfile,root=Config.root)
-    else:
-        cdslValidate(root=Config.root)
-else:
-    Config.usage()
+clusterRepository = ClusterRepository(doc.documentElement,doc)
+clusterinfo = ClusterInfo(self.clusterRepository)
+cdslRepository = CdslRepository(dirtrim(options.inventoryfile), None, False, usenodeids="True", root=options.root)
+_added,_removed=cdslValidate(cdslRepository, clusterinfo, options.update, options.root)
+if _added and len(_added) > 0:
+    for _addedcdsl in _added:
+        print "Added cdsl %s type %s" %(_addedcdsl, _addedcdsl.type)
+if _removed and len(_removed) > 0:
+    for _removedcdsl in _removed:
+        print "Removed cdsl %s type %s" %(_removedcdsl, _removedcdsl.type)
+if (_added and len(_added) > 0) or (_removed and len(_removed) > 0):
+    print >>sys.stderr, "Cdslrepository is inconsistent to the filesystem. Please run this command with -U/--update option to fix this." 
