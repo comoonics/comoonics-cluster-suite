@@ -8,6 +8,7 @@ import getopt
 import sys
 import logging
 import re
+import os.path
 
 from comoonics import ComLog
 #from comoonics import GetOpts
@@ -16,15 +17,20 @@ import comoonics.cluster
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
 from comoonics.cdsl.ComCdslRepository import CdslRepository
-from comoonics.cdsl.ComCdslValidate import cdslValidate
+from comoonics.cdsl.ComCdslValidate import CdslValidate
 from comoonics.cdsl import dirtrim, commonoptparseroptions
 
 ComLog.setLevel(logging.INFO)
+import logging
+
+logging.basicConfig()
 
 from optparse import OptionParser
 
 parser = OptionParser()
 parser.add_option("-U", "--update", dest="update", default=False, action="store_true", help="Also updates the repository")
+parser.add_option("-f", "--filesystem", dest="filesystem", default=False, action="store_true", help="Validates a given path (--path) on the filesystem instead of the repository")
+parser.add_option("-p", "--path", dest="path", default=".", help="Set the path to be searched. Defaults to the base cdslpath.")
 
 parser=commonoptparseroptions(parser)
 
@@ -34,17 +40,23 @@ ComLog.setLevel(logging.INFO)
 inventoryfile = os.path.join(options.root,dirtrim(options.inventoryfile))
 clusterconf = os.path.join(options.root, dirtrim(options.clusterconf))
 
-doc=comoonics.cluster.parseClusterConf(os.path.join(testpath, "cluster.conf"))
-    
+doc=comoonics.cluster.parseClusterConf(options.clusterconf)
+          
+#create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
-clusterinfo = ClusterInfo(self.clusterRepository)
+clusterInfo = ClusterInfo(clusterRepository)
+
 cdslRepository = CdslRepository(dirtrim(options.inventoryfile), None, False, usenodeids="True", root=options.root)
-_added,_removed=cdslValidate(cdslRepository, clusterinfo, options.update, options.root)
+
+validator=CdslValidate(cdslRepository, clusterInfo)
+
+_added, _removed=validator.validate(not options.filesystem, not options.update, options.root, options.path)
 if _added and len(_added) > 0:
     for _addedcdsl in _added:
         print "Added cdsl %s type %s" %(_addedcdsl, _addedcdsl.type)
 if _removed and len(_removed) > 0:
     for _removedcdsl in _removed:
         print "Removed cdsl %s type %s" %(_removedcdsl, _removedcdsl.type)
-if (_added and len(_added) > 0) or (_removed and len(_removed) > 0):
+if ((_added and len(_added) > 0) or (_removed and len(_removed) > 0)) and not options.update:
     print >>sys.stderr, "Cdslrepository is inconsistent to the filesystem. Please run this command with -U/--update option to fix this." 
+    sys.exit(len(_added)+len(_removed))
