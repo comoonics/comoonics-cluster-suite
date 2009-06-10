@@ -5,7 +5,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.11 2008-07-08 07:27:15 andrea2 Exp $
+# $Id: XmlTools.py,v 1.12 2009-06-10 15:19:20 marc Exp $
 
 import warnings
 #import xml.dom.Node
@@ -17,6 +17,8 @@ from xml.parsers.xmlproc import xmldtd
 from comoonics import ComLog
 
 logger=ComLog.getLogger("comoonics.XmlTools")
+
+XPATH_SEP='/'
 
 class ElementFilter(object):
     FILTER_ACCEPT = 1
@@ -245,6 +247,38 @@ def validate_xml(xml_filename, dtd_filename):
     parser.ent = dtd
     parser.parse_resource(xml_filename)
 
+def xpathjoin(path1, *paths):
+    """
+    Joins the given path to an xpath representation. Queries have to be in the paths.
+    @param paths: the paths as an array
+    @type list of paths:
+    @return: a compiled xpath
+    @rtype: xml.xpath.Compile()
+    """
+    path = path1
+    for b in paths:
+        if b.startswith(XPATH_SEP):
+            path = b
+        elif path == '' or path.endswith(XPATH_SEP):
+            path +=  b
+        else:
+            path += XPATH_SEP + b
+    return path
+   
+
+def xpathsplit(_xpath):
+    """
+    Returns a list of pathnames of the given xpath
+    @param _xpath: the xpath as string
+    @type _xpath: string
+    @return: a list of xpath elements
+    @rtype: list
+    """
+    if _xpath.startswith(XPATH_SEP):
+        return _xpath.split(XPATH_SEP)[1:]
+    else:
+        return _xpath.split(XPATH_SEP)
+
 def main():
     xml="""<?xml version="1.0" encoding="UTF-8"?>
 <localclone>
@@ -328,7 +362,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.11  2008-07-08 07:27:15  andrea2
+# Revision 1.12  2009-06-10 15:19:20  marc
+# - added xpathjoin/split
+#
+# Revision 1.11  2008/07/08 07:27:15  andrea2
 # Added validate_xml
 #
 # Revision 1.10  2008/02/27 10:44:31  marc
