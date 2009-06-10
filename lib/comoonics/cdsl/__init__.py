@@ -24,6 +24,10 @@ useNodeids_default = "False"
 noderef_path_part = "nodes/noderef/@ref"
 """
 
+def cmpbysubdirs(path1, path2):
+    import os
+    return str(path1).count(os.sep) - str(path2).count(os.sep)
+
 def stripleadingsep(_path):
     """
     Normalizes a given path as described in os.path.normpath and strips all leading os.sep if existant.
@@ -37,6 +41,25 @@ def stripleadingsep(_path):
     if _tmp[0]==os.sep:
         _tmp=_tmp[1:]
     return _tmp
+
+def ismount(path):
+    """
+    Uses os.path.ismount (see L{os.path} for details) and wrap it to detect 
+    bind mounts.
+    """
+    from comoonics import ComSystem
+    import os.path
+    if os.path.ismount(path):
+        return True
+    _tmp1 = ComSystem.execLocalStatusOutput("mount")[1]
+    if not _tmp1:
+        return False
+    _tmp2 = _tmp1.split("\n")
+    for line in _tmp2:
+        if os.path.realpath(line.split()[2]) == os.path.realpath(path):
+            return True
+    return False
+
 
 def guessType(_cdslpath, _cdslrepository, _exists=True):
     """
@@ -54,16 +77,20 @@ def guessType(_cdslpath, _cdslrepository, _exists=True):
     """
     import os.path
     from ComCdsl import Cdsl
+    from ComCdslRepository import CdslNotFoundException
     _path=dirtrim(_cdslpath)
     if _path.find(os.sep) > 0:
 #        _path=os.path.dirname(_path)
         while _path:
             _path, _tail=os.path.split(_path)
-            _cdsl=_cdslrepository.getCdsl(_path)
-            if _cdsl and _cdsl.isHostdependent():
-                return Cdsl.SHARED_TYPE
-            elif _cdsl and _cdsl.isShared():
-                return Cdsl.HOSTDEPENDENT_TYPE
+            try:
+                _cdsl=_cdslrepository.getCdsl(_path)
+                if _cdsl.isHostdependent():
+                    return Cdsl.SHARED_TYPE
+                elif _cdsl.isShared():
+                    return Cdsl.HOSTDEPENDENT_TYPE
+            except CdslNotFoundException:
+                continue
 
     if isHostdependentPath(os.path.realpath(_cdslpath), _cdslrepository, _exists):
         return Cdsl.SHARED_TYPE
@@ -183,6 +210,8 @@ def isSubPath(_path, _subdir):
 def dirtrim(_dir):
     import os
     _tmp=_dir
+    if _tmp.startswith("."+os.sep):
+        _tmp=_tmp[2:]
     if _dir.startswith(os.sep):
         _tmp=_tmp[1:]
     if _dir.endswith(os.sep):
@@ -193,12 +222,13 @@ def setDebug(option, opt, value, parser):
     from comoonics import ComLog
     import logging
     ComLog.setLevel(logging.DEBUG)
+#    ComLog.getLogger().propagate=1
     
 def setQuiet(option, opt, value, parser):
     from comoonics import ComLog
     import logging
     ComLog.setLevel(logging.CRITICAL)
-
+    
 def setNoExecute(option, opt, value, parser):
     from comoonics import ComSystem
     ComSystem.__EXEC_REALLY_DO="simulate"
@@ -209,9 +239,13 @@ def commonoptparseroptions(parser):
     """
     from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
     from ComCdslRepository import CdslRepository
+    import logging
+    
+    logging.basicConfig()
+    
     parser.add_option("-n", "--noexecute", action="callback", callback=setNoExecute, help="display what would be done, but not really change filesystem")
     parser.add_option("-q", "--quiet", action="callback", callback=setQuiet, help="Quiet, does not show any output")
-    parser.add_option("-d", "--verbose", action="callback", callback=setQuiet, help="Quiet, does not show any output")
+    parser.add_option("-d", "--verbose", action="callback", callback=setDebug, help="Quiet, does not show any output")
 
     parser.add_option("-i", "--inventoryfile", dest="inventoryfile", default=CdslRepository.DEFAULT_INVENTORY, help="path to the cdsl inventory")
     parser.add_option("-c", "--clusterconf", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf())
@@ -221,7 +255,13 @@ def commonoptparseroptions(parser):
 
 #################
 # $Log: __init__.py,v $
-# Revision 1.5  2009-06-05 11:57:10  marc
+# Revision 1.6  2009-06-10 14:53:06  marc
+# - first stable version
+# - fixed many bugs
+# - rewrote nearly everything
+# - extensive tests
+#
+# Revision 1.5  2009/06/05 11:57:10  marc
 # - first version with binaries
 # - regression tests passed.
 #

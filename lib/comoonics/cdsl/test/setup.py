@@ -57,10 +57,13 @@ class SetupCDSLs:
         self.mynodeid=mynodeid
     
     def _createCDSLFiles(self, _tmppath):
-        for _cdsl in self.repository.getCdsls():
-            if _cdsl.src.endswith("dir"):
-                os.mkdir(os.path.join(_tmppath, _cdsl.src))
-            else:
+        from comoonics.cdsl import cmpbysubdirs
+        _cdsls=self.repository.getCdsls()
+        _cdsls.sort(cmpbysubdirs)
+        for _cdsl in _cdsls:
+            if _cdsl.src.endswith("dir") and not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
+                os.makedirs(os.path.join(_tmppath, _cdsl.src))
+            elif not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
                 open(os.path.join(_tmppath, _cdsl.src), "w+")
 
     def setupCDSLInfrastructure(self, path, cdslRepository):
@@ -74,7 +77,10 @@ class SetupCDSLs:
         os.remove(cdslRepository.getDefaultCdslLink())
         for node in clusterinfo.getNodes():
             os.rmdir(os.path.join(cdslRepository.getDefaultCdsltree(), node.getId()))
+        os.rmdir(os.path.join(cdslRepository.getDefaultCdsltree(), cdslRepository.getDefaultDefaultDir()))
+        os.rmdir(cdslRepository.getDefaultCdsltreeShared())
         _path=cdslRepository.getDefaultCdsltree()
+        
         while _path != "":
             os.rmdir(_path)
             _path=os.path.dirname(_path)

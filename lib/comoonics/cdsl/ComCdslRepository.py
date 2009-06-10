@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 
 import fcntl # needed for filelocking
 import re
@@ -25,14 +25,19 @@ from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
 from comoonics import ComSystem
 
-from comoonics.cdsl import stripleadingsep
+from comoonics.cdsl import stripleadingsep, dirtrim
 
 import comoonics.pythonosfix as os
 import os.path
 
 log = ComLog.getLogger("comoonics.cdsl.ComCdslRepository")
 
-class CdslRepositoryCdslNotFoundException(ComException):pass
+class CdslNotFoundException(ComException):
+    def __init__(self, src, repository=None):
+        ComException.__init__(self, src)
+        self.repository=repository
+    def __str__(self):
+        return "Could not find Cdsl \"%s\" in repository %s" %(self.value, self.repository)
 class CdslRepositoryNotConfigfileException(ComException):pass
 
 class inventoryfileProcessing:
@@ -164,23 +169,25 @@ class CdslRepository(DataObject):
         @param options: not used yet
         """       
         self.configfile = configfile
-        self.cdsls = []
+        self.cdsls = dict()
         self.validate = validate
-        import xml
-        reader = Sax2.Reader(self.validate)
+        from comoonics import XmlTools
         if not os.path.exists(configfile):
             raise IOError("Inventoryfile " + configfile + " not found.")
-        file = os.fdopen(os.open(self.configfile,os.O_RDONLY))
+        _file = os.fdopen(os.open(self.configfile,os.O_RDONLY))
         try:
-            doc = reader.fromStream(file)
+            doc=XmlTools.createDOMfromXML(_file, None, self.validate)
         except xml.sax._exceptions.SAXParseException, arg:
             log.critical("Problem while reading XML: " + str(arg))
             raise
         element = xpath.Evaluate(self.cdsls_path, doc)[0]
-        file.close()
+        _file.close()
         
         super(CdslRepository,self).__init__(element, doc)
         
+    def __str__(self):
+        return "%s<%s>(%u cdsls)" %(self.configfile, self.__class__.__name__, len(self.cdsls.keys()))
+                                   
     def buildInfrastructure(self,clusterinfo):
         """
         Placeholder for Method to prepare cluster 
@@ -190,6 +197,19 @@ class CdslRepository(DataObject):
         """
         pass
     
+    def hasCdsl(self, src):
+        """
+        Uses given source to return True if their is a cdsl with that name
+        @param src: Path of searched cdsl
+        @type src: string
+        @return: True if cdsl is found, False otherwise
+        @rtype: Boolean
+        """
+        try:
+            self.getCdsl(src)
+            return True
+        except CdslNotFoundException:
+            return False
     def getCdsl(self,src):
         """
         Uses given source to return matching cdsl
@@ -197,22 +217,52 @@ class CdslRepository(DataObject):
         @type src: string
         @return: cdsl-object belonging to given path
         @rtype: L{ComoonicsCdsl}
+        @raise CdslRepositoryNotFound: if the cdsl could not be found in the repository 
         """
-        return None
+        src = dirtrim(os.path.normpath(src))
+        if self.cdsls.has_key(src):
+            return self.cdsls[src]
+        else:
+            for cdsl in self.cdsls.values():
+                if (cdsl.src == src):
+                    return cdsl
+        raise CdslNotFoundException(src,self)
+            
 
     def getCdsls(self):
         """
         @rtype: ComoonicsCdsl
         """
-        return None
+        return self.cdsls.values()
     
+    def walkCdsls(self, clusterinfo=None, cdsls=None, onerror=None):
+        """
+        Only walks through the repository cdsl by cdsl as generator to be used by for
+        """
+        if not cdsls or len(cdsls)==0:
+            for cdsl in self.getCdsls():
+                yield cdsl
+        else:
+            for cdsl in cdsls:
+                try:
+                    yield self.getCdsl(cdsl)
+                except CdslNotFoundException, e:
+                    self.log.debug("walkCdsls: Skipping %s because it does not exists." %cdsl)
+                    if onerror:
+                        yield onerror(self, e.value, clusterinfo)
+                    else:
+                        raise
+                     
+
     def delete(self,cdsl):
         """
         Deletes cdsl entry in inventoryfile if existing
         @param cdsl: cdsl to delete
         @type cdsl: L{ComoonicsCdsl}
         """
-        pass
+        _tmp=self.getCdsl(cdsl)
+        del self.cdsls[cdsl]
+        return _tmp
 
     def exists(self,cdsl):
         """
@@ -221,7 +271,7 @@ class CdslRepository(DataObject):
         @type cdsl: L{ComoonicsCdsl}
         @rtype: Boolean
         """
-        return False
+        return self.hasCdsl(cdsl.src)
 
     def commit(self,cdsl):
         """
@@ -229,6 +279,27 @@ class CdslRepository(DataObject):
         @param cdsl: cdsl to commit
         @type cdsl: L{ComoonicsCdsl}
         """
+        pass
+    
+    def expandCdsl(self, cdsl):
+        """
+        expand this cdsl if need be.
+        @param _cdsl: the cdsl.
+        @type _cdsl: comoonics.cdsl.ComCdsl.Cdsl|string
+        @return: returns the expanded path of the cdsl without either cdsltreeShared, cdsllink, ..
+        @rtype: string 
+        """
+        from ComCdsl import Cdsl
+        if isinstance(Cdsl, cdsl):
+            return cdsl.src
+        else:
+            return cdsl
+    
+    def isExpandedDir(self, src):
+        """
+        Returns True if this path is and expanded path
+        """
+        return False
         
 class ComoonicsCdslRepository(CdslRepository):
     """
@@ -306,13 +377,12 @@ class ComoonicsCdslRepository(CdslRepository):
             self.root = keys["root"]
         else:
             self.root = "/"
-        self.configfile = os.path.join(self.root,stripleadingsep(os.path.abspath(configfile)))
+        self.configfile = os.path.join(self.root,configfile)
         
         #if noexecute mode is set, store inventoryfile at /tmp
         if ComSystem.execMethod((lambda n: n),True) != True and not os.path.exists(configfile):
             self.configfile = os.path.join("/tmp",os.path.basename(configfile))
                    
-        self.cdsls = list()
         self.validate = validate
         from ComCdsl import Cdsl
         #maximum 9 parameters to set
@@ -383,7 +453,7 @@ class ComoonicsCdslRepository(CdslRepository):
         _cdsls = self.getElement().getElementsByTagName(self.cdsl_element)
         if _cdsls and len(_cdsls) > 0:
             for _elcdsl in _cdsls:
-                _src = _elcdsl.getAttribute(self.cdsl_src_attribute)
+                _src = dirtrim(_elcdsl.getAttribute(self.cdsl_src_attribute))
                 _type = _elcdsl.getAttribute(self.cdsl_type_attribute)
                 _timestamp = _elcdsl.getAttribute(self.cdsl_time_attribute)
             
@@ -395,12 +465,12 @@ class ComoonicsCdslRepository(CdslRepository):
                     useNodeids = self.getDefaultUseNodeids()
                     nodePrefix = self.getDefaultNodePrefix()
                     for _node in _tmp:
-                        if useNodeids == "True" and nodePrefix == "False":
-                            nodes.append(_node.replace("id_",""))
+                        if useNodeids == "True" and (not nodePrefix or nodePrefix == "" or nodePrefix == "False"):
+                            nodes.append(_node.getAttribute(self.noderef_ref_attribute).replace("id_",""))
                         else:
-                            nodes.append(_node)
+                            nodes.append(_node.getAttribute(self.noderef_ref_attribute))
             
-                self.cdsls.append(Cdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp))
+                self.cdsls[_src]=Cdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp)
     
     def realpath(self, src):
         """
@@ -417,37 +487,7 @@ class ComoonicsCdslRepository(CdslRepository):
             _path=os.path.join(self.root, self.getDefaultMountpoint(), src)
         return os.path.realpath(_path)
             
-    def getCdsl(self,src):
-        """
-        Uses given source to return matching cdsl
-        @param src: Path of searched cdsl
-        @type src: string
-        @return: cdsl-object belonging to given path
-        @rtype: L{ComoonicsCdsl}
-        """
-        src = os.path.normpath(src)
-        for i in range(len(self.cdsls)):
-            if (self.cdsls[i].src == src):
-                return self.cdsls[i]
-            else:
-                # check next cdsl-entry
-                continue
             
-    def exists(self,cdsl):
-        """
-        Looks if a given cdsl already exists in inventoryfile
-        @param cdsl: Cdsl to test existenz later 
-        @type cdsl: L{ComoonicsCdsl}
-        @rtype: Boolean
-        """
-        for i in range(len(self.cdsls)):
-            if (self.cdsls[i].src == cdsl.src) and (self.cdsls[i].type == cdsl.type) and (self.cdsls[i].nodes == cdsl.nodes):
-                return True
-            else:
-                # check next cdsl-entry
-                continue
-        return False
-    
     def commit(self,cdsl):
         """
         Adds or modifies cdsl entry in inventoryfile (depending on existing entry with the same src attribute like the given cdsl)
@@ -473,8 +513,8 @@ class ComoonicsCdslRepository(CdslRepository):
             Lockfile.prettyprintUnlockClose(doc)
             
             #modify cdsls of cdslRepository instance
-            self.cdsls.remove(self.getCdsl(cdsl.getAttribute(self.cdsl_src_attribute)))
-            self.cdsls.append(cdsl)
+            self.delete(self.getCdsl(cdsl.src))
+            self.cdsls[cdsl.src] = cdsl
             
         else:
             # create new cdsl-entry in inventory-file"""
@@ -496,7 +536,7 @@ class ComoonicsCdslRepository(CdslRepository):
             Lockfile.prettyprintUnlockClose(doc)
             
             #add new cdsl to instance of cdslRepository
-            self.cdsls.append(cdsl)
+            self.cdsls[cdsl.src]=cdsl
         
         #adds nodes to defaults part
         for node in cdsl.nodes:
@@ -527,13 +567,13 @@ class ComoonicsCdslRepository(CdslRepository):
             Lockfile.prettyprintUnlockClose(doc)
             
             #delete cdsl from cdslrepository object
-            for _cdsl in self.cdsls:
+            for _cdsl in self.getCdsls():
                 if (_cdsl.src == cdsl.src) and (_cdsl.type == cdsl.type) and (_cdsl.nodes == cdsl.nodes):
                     _deleted=_cdsl
-                    self.cdsls.remove(_cdsl)        
+                    del self.cdsls[_cdsl.src]        
         else:
             # raise exeption if cdsl to delete is not existing"""
-            raise CdslRepositoryCdslNotFoundException("Cannot find given Cdsl to delete")
+            raise CdslNotFoundException(cdsl, self)
         return _deleted
         
     def buildInfrastructure(self,clusterinfo):
@@ -615,64 +655,109 @@ class ComoonicsCdslRepository(CdslRepository):
             #os.makedirs(os.path.join(_rootMountpoint,re.sub('^/','', relpath)))
             ComSystem.execMethod(os.makedirs,os.path.join(_rootMountpoint,re.sub('^/','', relpath)))
 
-    def expandCdsl(self, _cdsl):
+    def _getnearestcdsls(self, path, down=True, clusterinfo=None, onerror=None):
+        from comoonics.cdsl import isSubPath
+        foundcdsl=None
+        for cdsl in self.walkCdsls(clusterinfo, None, onerror):
+            if down and isSubPath(path, cdsl.src):
+                if not foundcdsl:
+                    foundcdsl=cdsl
+                elif foundcdsl and isSubPath(cdsl.src, foundcdsl.src):
+                    foundcdsl=cdsl
+            elif not down and isSubPath(cdsl.src, path):
+                if not foundcdsl:
+                    foundcdsl=cdsl
+                elif foundcdsl and isSubPath(cdsl.src, foundcdsl.src):
+                    foundcdsl=cdsl
+        return foundcdsl
+
+    def expandCdsl(self, cdsl):
         """
         expand this cdsl if need be. This is the case when this cdsl is nested. The nested path needs to 
         be expanded with subdirs in order to allow a hostdependent cdsl of a shared path.
         Algorithm is roughly as follows:
           We walk through the path of this cdsl from root to leaf.
-          If subpath is a hostdep cdsl add the expansion_string from cdslrepository to this directory.
+          For the given subpath get the "nearest" cdsl then walk down parent to parent. If a parent is a
+          hostdependent cdsl and a hostdependent cdsl was already found expand its path and follow 
+          recursively.
         Examples:
-          hostdep => hostdep (hostdepdepth=_ignoredepth is skipped)
-          hostdep/shared => hostdep/shared (hostdepdepth=1 is skipped)
-          hostdep/shared/hostdep => hostdep.cdsl/shared/hostdep
-          hostdep/shared/hostdep/shared => hostdep.cdsl/shared/hostdep/shared
-          hostdep/shared/hostdep/shared/hostdep => hostdep.cdsl/shared/hostdep/shared/hostdep
+          h                   => h                         depth<h>=1
+          h/s                 => h/sd                      depth<h>=1
+          h/s/h               => h.cdsl/s/h                depth<h>=2   expandcount=1
+          h/s/h/s             => h.cdsl/s/h/s              depth<h>=2   expandcount=1
+          h/s/h/s/h           => h.cdsl/s/h.cdsl/s/h       depth<h>=2   expandcount=2
+          t/h                 => t/h
+          t/h/t/s             => t/h/t/sd
+          t/h/t/s/t/h         => t/h.cdsl/t/s/t/h
+          t/h/t/s/t/h/t/s     => t/h.cdsl/t/s/t/h/t/s
+          t/h/t/s/t/h/t/s/t/h => t/h.cdsl/t/s/t/h.cdsl/t/s/t/h
           ..
         @param _cdsl: the cdsl.
         @type _cdsl: comoonics.cdsl.ComCdsl.Cdsl|string
         @return: returns the expanded path of the cdsl without either cdsltreeShared, cdsllink, ..
         @rtype: string 
         """ 
-        from comoonics.cdsl import guessType
+
+        from comoonics.cdsl import strippath, guessType
         from comoonics.cdsl.ComCdsl import Cdsl
-        if isinstance(_cdsl, basestring):
-            _cdsl=Cdsl(_cdsl, self)
-        _tmppath=""
+        if isinstance(cdsl, basestring):
+            try:
+                cdsl=self.getCdsl(cdsl)
+            except CdslNotFoundException:
+                cdsl=Cdsl(cdsl, guessType(cdsl, self), self, cdsl.clusterinfo)
+                if cdsl and cdsl.exists():
+                    log.warning("The cdsl %s seems not to be in the repository. Please rebuild database.")
+                    raise
+        tmppath=cdsl.src
         _exp_empty={self.EXPANSION_PARAMETER: ""}
+        firsthostdep=cdsl.isHostdependent()
         _expanded_cdsl=False
         _expansions=_exp_empty
-        if _cdsl.src.find(os.sep) > 0: 
-            _subpaths=_cdsl.src.split(os.sep)
-            for _subpath in _subpaths[:-1]:
-                _tmppath=os.path.join(_tmppath, _subpath)
-                _tmpcdsl=self.getCdsl(_tmppath %_exp_empty)
-                if not _tmpcdsl:
-                    _nodes=None
-                    if _cdsl.clusterinfo == None:
-                        _nodes=_cdsl.nodes
-                    _tmpcdsl=Cdsl(_tmppath %_exp_empty, guessType(_tmppath, self), self, _cdsl.clusterinfo, _nodes, _cdsl.timestamp)
-                    if _tmpcdsl and _tmpcdsl.exists():
-                        log.warning("The cdsl %s seems not to be in the repository. Please rebuild database.")
-                    else:
-                        _tmpcdsl=None
-                if _tmpcdsl and not _expanded_cdsl:
-                    _expanded_cdsl=_tmpcdsl
-                    _tmppath="%s%%(%s)s" %(_tmppath, self.EXPANSION_PARAMETER)
-                elif _tmpcdsl and _expanded_cdsl:
-                    _expansions={self.EXPANSION_PARAMETER: self.getDefaultExpandString()}
 
-            _tmppath=os.path.join(_tmppath, _subpaths[-1])
-        else:
-            _tmppath=_cdsl.src
-
-        return _tmppath %_expansions          
-
-    def getCdsls(self):
+        parent=cdsl.getParent()
+        while parent != None:
+            if parent.isHostdependent() and not firsthostdep:
+                firsthostdep=True
+            elif parent.isHostdependent():
+                tmppath="%s%s%s" %(parent.src, self.getDefaultExpandString(), strippath(tmppath, parent.src))
+            parent=parent.getParent()
+        
+        return tmppath
+#        if _cdsl.src.find(os.sep) > 0: 
+#            _subpaths=_cdsl.src.split(os.sep)
+#            for _subpath in _subpaths[:-1]:
+#                _tmppath=os.path.join(_tmppath, _subpath)
+#                try:
+#                    _tmpcdsl=self.getCdsl(_tmppath %_exp_empty)
+#                except CdslNotFoundException:
+#                    _nodes=None
+#                    if _cdsl.clusterinfo == None:
+#                        _nodes=_cdsl.nodes
+#                    _tmpcdsl=Cdsl(_tmppath %_exp_empty, guessType(_tmppath, self), self, _cdsl.clusterinfo, _nodes, _cdsl.timestamp)
+#                    if _tmpcdsl and _tmpcdsl.exists():
+#                        log.warning("The cdsl %s seems not to be in the repository. Please rebuild database.")
+#                    else:
+#                        _tmpcdsl=None
+#                if _tmpcdsl and not _expanded_cdsl:
+#                    _expanded_cdsl=_tmpcdsl
+#                    _tmppath="%s%%(%s)s" %(_tmppath, self.EXPANSION_PARAMETER)
+#                elif _tmpcdsl and _expanded_cdsl:
+#                    _expansions={self.EXPANSION_PARAMETER: self.getDefaultExpandString()}
+#
+#            _tmppath=os.path.join(_tmppath, _subpaths[-1])
+#        else:
+#            _tmppath=_cdsl.src
+#
+#        return _tmppath %_expansions          
+    
+    def isExpandedDir(self, src):
         """
-        @rtype: ComoonicsCdsl
+        Returns True if this path is and expanded path
         """
-        return self.cdsls
+        from comoonics.cdsl.ComCdsl import Cdsl
+        if isinstance(src, Cdsl):
+            src=src.src
+        return src.split(os.sep)[0].endswith(self.getDefaultExpandString())
     
     def getDefaultCdsltree(self, realpath=False):
         """
@@ -713,7 +798,7 @@ class ComoonicsCdslRepository(CdslRepository):
         try:
             return _tmp[0].value
         except (NameError, IndexError):
-            return ""
+            return "default"
     
     def getDefaultMaxnodeidnum(self):
         """
@@ -851,7 +936,7 @@ class ComoonicsCdslRepository(CdslRepository):
         Lockfile.prettyprintUnlockClose(doc,simulate=simulate)
 
         
-    def update(self,src,clusterInfo,_onlyvalidate=False,chroot=""):
+    def update(self,src,clusterInfo,onlyvalidate=True,chroot=""):
         """
         Updates inventoryfile for given source. Add entry for associated cdsl to inventoryfile 
         if src is a cdsl on filesystem, but not already listed in inventoryfile. Deletes entry 
@@ -867,48 +952,65 @@ class ComoonicsCdslRepository(CdslRepository):
                  None either. 
         @rtype: Cdsl, Cdsl
         """
-        from comoonics.cdsl.ComCdsl import Cdsl
+        from comoonics.cdsl import strippath
         
         _deleted=None
         _added=None
-        
+
         if chroot and chroot == "":
             chroot=self.root
         if chroot and chroot == "":
             chroot="/"
-        
-        _src = src.replace(self.getDefaultCdslLink(),'',1)
-        _cdsl = self.getCdsl(_src)
-        
-        #check if cdsl exists in cdslrepository
-        if _cdsl:
-            #check if cdsl exists also in filesystem
-            if not _cdsl.exists():
-                log.debug("Deleted entry of not existing cdsl with source " + _src + " from inventoryfile")
-                if not _onlyvalidate:
-                    self.delete(_cdsl)
-                _deleted=_cdsl
-            else:
-                log.debug("CDSL " + _src + " does already exist in inventoryfile and filesystem")
-     
+
+        _cdsl=None
+        if isinstance(src, basestring):
+            try:
+                _src = strippath(src, self.getDefaultCdslLink())
+                _cdsl = self.getCdsl(_src)
+            except CdslNotFoundException, e:
+                _added=self.guessonerror(e.value, clusterInfo)
         else:
+            _cdsl=src
+
+        if _cdsl and not self.hasCdsl(_cdsl.src):
+            _added=src
+        elif _cdsl and not _cdsl.exists():
+            _deleted=src 
+     
+        if not onlyvalidate and _added:
+            self.log.debug("update: %s does not exist in repository adding it." %_added)
+            ComSystem.execMethod(self.commit, _added)
+        if not onlyvalidate and _deleted:
+            self.log.debug("update: %s does not exist on filesystem removing it." %_deleted)
+            ComSystem.execMethod(self.delete, _deleted)
+        return _added, _deleted
+
+    def guessonerror(self, src, clusterInfo):
+        from comoonics.cdsl import guessType
+        from comoonics.cdsl.ComCdsl import Cdsl
+        
+        _added=None
+        _deleted=None
+        _type=guessType(src, self, False)
+        if _type != Cdsl.HOSTDEPENDENT_TYPE and type != Cdsl.SHARED_TYPE:
             #create hostdependent and shared cdsl-object and test if one of these is existing
-            _cdslHostdependent = Cdsl(_src, "hostdependent", self, clusterInfo)
-            _cdslShared = Cdsl(_src, "shared", self, clusterInfo)
+            _cdslHostdependent = Cdsl(src, Cdsl.HOSTDEPENDENT_TYPE, self, clusterInfo)
+            _cdslShared = Cdsl(src, Cdsl.SHARED_TYPE, self, clusterInfo)
                        
             if _cdslShared.exists():
-                log.debug("Added shared CDSl with source " + _src + " to inventoryfile.")
-                if not _onlyvalidate:
-                    self.commit(_cdslShared)
+                self.log.debug("update: would add shared CDSl with source " + src + " to inventoryfile.")
                 _added=_cdslShared
             elif _cdslHostdependent.exists():
-                log.debug("Added hostdependent CDSL with source " + _src + " to inventoryfile.")
-                if not _onlyvalidate:
-                    self.commit(_cdslHostdependent)
+                self.log.debug("update: would add hostdependent CDSL with source " + src + " to inventoryfile.")
                 _added=_cdslHostdependent
             else:
-                log.debug("CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
-        return _added, _deleted
+                log.debug("update: CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
+                raise CdslNotFoundException(src, self)
+        else:
+            _added=Cdsl(src, _type, self, clusterInfo)
+        
+        return _added
+
         
     def setRoot(self,root):
         """

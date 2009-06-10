@@ -42,6 +42,20 @@
       <noderef ref='id_3'/>
     </nodes>
   </cdsl>
+  <cdsl src='hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_dir' timestamp='1185971913.76' type='hostdependent'>
+    <nodes>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
+    </nodes>
+  </cdsl>
+  <cdsl src='hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_file' timestamp='1185971913.76' type='hostdependent'>
+    <nodes>
+      <noderef ref='id_1'/>
+      <noderef ref='id_2'/>
+      <noderef ref='id_3'/>
+    </nodes>
+  </cdsl>
   <defaults use_nodeids='True' cdsltree_shared='cluster/shared' cdsl_link='cdsl.local' maxnodeidnum='0' cdsltree='cluster/cdsl'>
     <nodesdefault>
       <nodedefault id='id_1'/>
