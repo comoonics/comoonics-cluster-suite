@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -14,8 +14,10 @@ from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics import GetOpts
 
+import comoonics.cluster
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, ClusterMacNotFoundException
+from comoonics.cluster.ComQueryMap import QueryMap
 
 from xml.dom.ext.reader import Sax2
 
@@ -27,6 +29,7 @@ class Config(GetOpts.BaseConfig):
 query_commands:
     query_xml <xq>           print out the xml_document specified by an XQL query string
     query_value <xql>        print out the value specified by an XQL query string
+    convert type             converts the cluster repository to the given type (supported types are: ocfs2) 
     netdevs <hostname> [<sep>]
                              print out the network device names for given host. Separated by <sep>
     nodename <mac>           print out the nodename for given mac.
@@ -51,12 +54,12 @@ query_commands:
                              the given failoverdomain.
     nodeids [<sep>]          returns all defined nodeids seperated by <sep>.
     scsifailover nodename    returns the scsifailovertype for the given nodename
-    convert type             converts the cluster repository to the given type (supported types are: ocfs2) 
         """
         GetOpts.BaseConfig.__init__(self, sys.argv[0], helptext, __version__)
         self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
         self.query=GetOpts.Option("query", "Query", False, False, "q")
-        self.filename=GetOpts.Option("filename", "Filename", "/etc/cluster/cluster.conf", False, "f")
+        self.clusterconf=GetOpts.Option("filename", "Cluster configuration file location", comoonics.cluster.clusterconf, False, "f")
+        self.mapfile=GetOpts.Option("querymapfile", "External file for query mappings", comoonics.cluster.querymapfile, False, "m")
         self.validate=GetOpts.Option("validate", "Validate clusterconfiguration file",False,False,"n")
         self.setAdditionalParams("query [param]*")
 
@@ -70,39 +73,23 @@ query_commands:
             self.query=args_proper[0]
         else:
             self.usage()
-            return 1
-        if not os.path.isfile(self.filename):
-            print >>self.__stderr__, "Could not find file %s" %(self.filename)
-            return 1
+            raise TypeError, "Wrong number of arguments. At least one is required. None given."
+        if not os.path.isfile(self.clusterconf):
+            raise IOError, "Could not find clusterconfiguration file %s" %(self.clusterconf)
         return 0
 
     def setDebug(self, value):
         ComLog.setLevel(logging.DEBUG)
 
-#Bei ungueltigen Argumenten abrechen
 Config=Config()
-ret=Config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    sys.exit(ret)
-    
-    
-          
-# parse the document and create comclusterinfo object
-if Config.validate:
-    reader = Sax2.Reader(validate=1)
-else:
-    reader = Sax2.Reader(validate=0)
-file = os.fdopen(os.open(Config.filename,os.O_RDONLY))
-doc = reader.fromStream(file)
-file.close()
+Config.getopt(sys.argv[1:])  
+
+doc=comoonics.cluster.parseClusterConf(Config.clusterconf, Config.validate)
 
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
-
-
+clusterQueryMap = QueryMap(Config.mapfile)
 
 #query given file with specified query, returns xml
 if Config.query == "query_xml":
@@ -223,9 +210,12 @@ elif Config.query == "nodeids":
 #print scsifailover of node with given name
 elif Config.query == "scsifailover":
         print clusterInfo.getNode(Config.values[0]).getScsifailover()
-        
+    
 elif Config.query == "convert":
     print clusterInfo.clusterRepository.convert(Config.values[0])
+
+elif clusterQueryMap.has_option(clusterQueryMap.mainsection, Config.query):
+    print clusterInfo.query(clusterQueryMap.get(clusterQueryMap.mainsection, Config.query) % clusterQueryMap.array2params(Config.values))
     
 else:
     raise NameError("Cannot find query named " + Config.query)
