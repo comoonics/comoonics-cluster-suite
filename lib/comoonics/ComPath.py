@@ -14,11 +14,11 @@ hello world2
 """
 
 # here is some internal information
-# $Id: ComPath.py,v 1.2 2008-03-12 09:35:25 marc Exp $
+# $Id: ComPath.py,v 1.3 2009-06-10 15:20:08 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComPath.py,v $
 
 from ComDataObject import DataObject
@@ -89,13 +89,13 @@ class Path(DataObject):
             self.__created[self.getPath()]=False
     def popd(self):
         path=None
-        Path.logger.debug("popd: %s" %self.getOldPaths())
+        #Path.logger.debug("popd: %s" %self.getOldPaths())
         if len(self.getOldPaths()) > 0:
             _path=self.getPath()
             path=self.getOldPaths().pop()
             os.chdir(str(path))
             self.setAttribute("name", path)
-            Path.logger.debug("popd: _created: %s" %self.__created)
+#            Path.logger.debug("popd: _created: %s" %self.__created)
         return path
 
     def remove(self, path=None, force=False):
@@ -122,7 +122,10 @@ class Path(DataObject):
 
 ################
 # $Log: ComPath.py,v $
-# Revision 1.2  2008-03-12 09:35:25  marc
+# Revision 1.3  2009-06-10 15:20:08  marc
+# removed some debugs.
+#
+# Revision 1.2  2008/03/12 09:35:25  marc
 # made Path simulation save and added a comment.
 #
 # Revision 1.1  2007/09/07 14:44:41  marc
