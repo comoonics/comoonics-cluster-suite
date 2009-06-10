@@ -6,10 +6,10 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.13 2008-02-27 10:42:28 marc Exp $
+# $Id: ComLog.py,v 1.14 2009-06-10 15:19:56 marc Exp $
 #
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -284,6 +284,8 @@ def __line(text):
     print "-------------------------- %s --------------------------------------" %(text)
 
 def main():
+    _mylogger=logging.getLogger("comoonics.ComLog")
+    logging.basicConfig()
     _mylogger.setLevel(logging.DEBUG)
     from comoonics.db.ComDBLogger import DBLogger
     registerHandler("DBLogger", DBLogger)
@@ -314,12 +316,16 @@ def main():
             __testLogger(_lname+".test", logging.getLogger(_lname+".test"))
 
 _mylogger=logging.getLogger("comoonics.ComLog")
-logging.basicConfig()
+
 if __name__ == "__main__":
     main()
 
 # $Log: ComLog.py,v $
-# Revision 1.13  2008-02-27 10:42:28  marc
+# Revision 1.14  2009-06-10 15:19:56  marc
+# removed basicConfig.
+# should be called in other programs.
+#
+# Revision 1.13  2008/02/27 10:42:28  marc
 # - change in testing
 #
 # Revision 1.12  2007/07/31 15:14:20  marc
