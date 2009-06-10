@@ -9,7 +9,7 @@ management (modifying, creating, deleting).
 """
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 
 import fcntl # needed for filelocking
 import re
@@ -338,7 +338,7 @@ class ComoonicsCdslRepository(CdslRepository):
     cdsltreeShared_default = "cluster/shared"
     cdslLink_default = "cdsl.local"
     maxnodeidnum_default = "0"
-    useNodeids_default = "False"
+    useNodeids_default = str(True)
     
     nodes_element = "nodes"
     noderef_element = "noderef"
@@ -409,39 +409,39 @@ class ComoonicsCdslRepository(CdslRepository):
                 defaults.setAttribute(self.default_expand_string_attribute, self.default_expand_string)
                 
                 if keys.has_key("cdsltree"): 
-                    defaults.setAttribute(self.defaults_cdsltree_attribute,stripleadingsep(keys["cdsltree"]))
+                    defaults.setAttribute(self.defaults_cdsltree_attribute,stripleadingsep(keys.get("cdsltree", self.getDefaultCdsltree())))
                 elif options and options[0] != None: 
                     defaults.setAttribute(self.defaults_cdsltree_attribute,stripleadingsep(options[0]))
                 if keys.has_key("cdsltreeshared"): 
-                    defaults.setAttribute(self.defaults_cdsltreeShared_attribute,stripleadingsep(keys["cdsltreeshared"]))
+                    defaults.setAttribute(self.defaults_cdsltreeShared_attribute,stripleadingsep(keys.get("cdsltreeshared", self.getDefaultCdsltreeShared())))
                 elif options and options[1] != None: 
                     defaults.setAttribute(self.defaults_cdsltreeShared_attribute,stripleadingsep(options[1]))
                 if keys.has_key("cdsllink"): 
-                    defaults.setAttribute(self.defaults_cdslLink_attribute,stripleadingsep(keys["cdsllink"]))
+                    defaults.setAttribute(self.defaults_cdslLink_attribute,stripleadingsep(keys.get("cdsllink", self.getDefaultCdslLink())))
                 elif options and options[2] != None: 
                     defaults.setAttribute(self.defaults_cdslLink_attribute,stripleadingsep(options[2]))
                 if keys.has_key("maxnodeidnum"): 
-                    defaults.setAttribute(self.defaults_maxnodeidnum_attribute,keys["maxnodeidnum"])
+                    defaults.setAttribute(self.defaults_maxnodeidnum_attribute,keys.get("maxnodeidnum", self.getDefaultMaxnodeidnum()))
                 elif options and options[3] != None: 
                     defaults.setAttribute(self.defaults_maxnodeidnum_attribute,options[3])
                 if keys.has_key("usenodeids"): 
-                    defaults.setAttribute(self.defaults_useNodeids_attribute,keys["usenodeids"])
+                    defaults.setAttribute(self.defaults_useNodeids_attribute,keys.get("usenodeids", self.getDefaultUseNodeids()))
                 elif options and options[4] != None: 
                     defaults.setAttribute(self.defaults_useNodeids_attribute,options[4])
                 if keys.has_key("mountpoint"): 
-                    defaults.setAttribute(self.defaults_mountpoint_attribute,stripleadingsep(keys["mountpoint"]))
+                    defaults.setAttribute(self.defaults_mountpoint_attribute,stripleadingsep(keys.get("mountpoint", self.getDefaultMountpoint())))
                 elif len(options) >= 7 and not (options[6] == "" or options[6] == None):
                     defaults.setAttribute(self.defaults_mountpoint_attribute,stripleadingsep(options[6]))
                 if keys.has_key("defaultdir"): 
-                    defaults.setAttribute(self.defaults_defaultDir_attribute,stripleadingsep(keys["defaultdir"]))
+                    defaults.setAttribute(self.defaults_defaultDir_attribute,stripleadingsep(keys.get("defaultdir", self.getDefaultDefaultDir())))
                 elif len(options) >= 8 and not (options[7] == "" or options[7] == None):
                     defaults.setAttribute(self.defaults_defaultDir_attribute,stripleadingsep(options[7]))
                 if keys.has_key("nodeprefix"): 
-                    defaults.setAttribute(self.defaults_nodePrefix_attribute,keys["nodeprefix"])
+                    defaults.setAttribute(self.defaults_nodePrefix_attribute,keys.get("nodeprefix", self.getDefaultNodePrefix()))
                 elif len(options) == 9 and not (options[8] == "" or options[8] == None):
                     defaults.setAttribute(self.defaults_nodePrefix_attribute,options[8])
                 if keys.has_key(self.default_expand_string_attribute):
-                    defaults.setAttribute(self.default_expand_string_attribute, keys[self.default_expand_string_attribute])
+                    defaults.setAttribute(self.default_expand_string_attribute, keys.get(self.default_expand_string_attribute, self.getDefaultExpandString()))
             
                 #write changes of doc to file, unlock and close it
                 Lockfile.prettyprintUnlockClose(doc)
@@ -615,30 +615,30 @@ class ComoonicsCdslRepository(CdslRepository):
         if not os.path.exists(_rootMountpoint):
             raise IOError(2, "Mount point " + _rootMountpoint + " does not exist.")
             
-        cdslDefaultdir = os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),"default")
+        cdslDefaultdir = os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),default_dir)
         if not os.path.exists(cdslDefaultdir):
             log.debug("Creating default_dir " + cdslDefaultdir)
             #os.makedirs(cdslDefaultdir)
             ComSystem.execMethod(os.makedirs,cdslDefaultdir)
             
         #if default_dir is set, copy it recursively to mountdir/root/cdsltree/default
-        if default_dir:
-            default_dir = os.path.normpath(default_dir)
-            #Cannot use copytree here because of problems when copying sockets
-            #log.debug("Copy files of " + default_dir + " to default directory")
-            #shutil.copytree(os.path.abspath(default_dir), os.path.join(cdslDefaultdir,os.path.basename(default_dir)), True)
-            ComSystem.execLocalStatusOutput("cp -a " + os.path.abspath(default_dir) + " " + os.path.join(cdslDefaultdir,os.path.basename(default_dir)))
+        #if default_dir:
+        #    default_dir = os.path.normpath(default_dir)
+        #    #Cannot use copytree here because of problems when copying sockets
+        #    #log.debug("Copy files of " + default_dir + " to default directory")
+        #    #shutil.copytree(os.path.abspath(default_dir), os.path.join(cdslDefaultdir,os.path.basename(default_dir)), True)
+        #    ComSystem.execLocalStatusOutput("cp -a " + os.path.abspath(default_dir) + " " + os.path.join(cdslDefaultdir,os.path.basename(default_dir)))
         
         #Create basedirectory for every node
         for node in nodes:
             log.debug("Creating hostdirectory " + os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),".."))
             #os.makedirs(os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node)))
             ComSystem.execMethod(os.makedirs,os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node)))
-            if default_dir:
+            #if default_dir:
                 #Cannot use copytree here because of problems when copying sockets
                 #log.debug("Copy content of default_dir to node " + str(os.path.join(cdslDefaultdir,os.path.basename(default_dir))) + " => " + os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir)))
                 #shutil.copytree(os.path.join(cdslDefaultdir,os.path.basename(default_dir)),os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir)),True)
-                ComSystem.execLocalStatusOutput("cp -a " + os.path.join(cdslDefaultdir,os.path.basename(default_dir)) + " " + os.path.basename(default_dir)),os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir))
+            #    ComSystem.execLocalStatusOutput("cp -a " + os.path.join(cdslDefaultdir,os.path.basename(default_dir)) + " " + os.path.basename(default_dir)),os.path.join(_rootMountpoint,re.sub('^/','', cdsltree),str(node),os.path.basename(default_dir))
         
         # Create the shared directory
         cdslSharedDir= os.path.join(_rootMountpoint,re.sub('^/','', cdsltree_shared))
@@ -764,7 +764,11 @@ class ComoonicsCdslRepository(CdslRepository):
         @rtype: string
         """
         if not realpath:
-            return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdsltree_attribute),self.getElement())[0].value
+            _tmp=xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdsltree_attribute),self.getElement())
+            try:
+                return _tmp[0].value
+            except (NameError, IndexError):
+                return self.cdsltree_default
         else:
             return self.realpath(self.getDefaultCdsltree(False))
 
@@ -772,13 +776,22 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         @rtype: string
         """
-        return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdsltreeShared_attribute),self.getElement())[0].value
+        _tmp = xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdsltreeShared_attribute),self.getElement())
+        try:
+            return _tmp[0].value
+        except (NameError, IndexError):
+            return self.cdsltreeShared_default
+
 
     def getDefaultCdslLink(self):
         """
         @rtype: string
         """
-        return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdslLink_attribute),self.getElement())[0].value
+        _tmp = xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_cdslLink_attribute),self.getElement())
+        try:
+            return _tmp[0].value
+        except (NameError, IndexError):
+            return self.cdslLink_default
 
     def getDefaultMountpoint(self):
         """
@@ -804,7 +817,11 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         @rtype: string
         """
-        return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_maxnodeidnum_attribute),self.getElement())[0].value
+        _tmp=xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_maxnodeidnum_attribute),self.getElement())
+        try:
+            return _tmp[0].value
+        except (NameError, IndexError):
+            return self.maxnodeidnum_default
  
     def getDefaultNodePrefix(self):
         """
@@ -820,7 +837,11 @@ class ComoonicsCdslRepository(CdslRepository):
         """
         @rtype: string
         """
-        return xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_useNodeids_attribute),self.getElement())[0].value
+        _tmp=xpath.Evaluate("%s/@%s" %(self.defaults_path,self.defaults_useNodeids_attribute),self.getElement())
+        try:
+            return _tmp[0].value
+        except (NameError, IndexError):
+            return str(True)
     
     def getDefaultExpandString(self):
         """
