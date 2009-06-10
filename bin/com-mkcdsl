@@ -1,6 +1,9 @@
 #!/usr/bin/python
 """
-Program to create cdsls.
+Creates context dependant symbolic links (cdsl). 
+The process includes creating and copying of files and directories and building symbolic links. 
+Needs a working cdsl-infrastructure and a matching inventoryfile. 
+Could create hostdependent and shared cdsls.
 """
 __version__ = "$revision$"
 __description__="""
@@ -20,12 +23,13 @@ from comoonics.cluster import parseClusterConf
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
 from comoonics.cdsl.ComCdslRepository import CdslRepository
+from comoonics.cdsl.ComCdsl import Cdsl
 from comoonics.cdsl import dirtrim, commonoptparseroptions
 
 from optparse import OptionParser
 
 usage = "usage: %prog [options] fullpathtofile"
-parser = OptionParser(usage)
+parser = OptionParser(usage=usage, description=__doc__)
 parser=commonoptparseroptions(parser)
 
 parser.add_option("-a", "--hostdependent", dest="hostdependent", default=False, action="store_true", help="Creates hostdependent cdsl and copy src to all nodes")
@@ -42,8 +46,10 @@ ComLog.setLevel(logging.INFO)
 
 if len(args) != 1:
     parser.error("Failure no ore more then one arguments given.")
-elif not options.shared or not options.hostdependent:
+elif not options.shared and not options.hostdependent:
     parser.error("You must specify the type of the cdsl to be created. Means either hostdendent (-a|--hostdependent) or shared (-s|--shared).")
+else:
+    src=args[0]
 
 doc=parseClusterConf(options.clusterconf)
           
@@ -52,21 +58,18 @@ clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
     
 #create cdsl objects
-cdslRepository = CdslRepository(option.inventoryfile,None,False,root=option.root, mountpoint=option.mountpoint)
-
-_mountpoint = cdslRepository.getDefaultMountpoint()
-src = os.path.normpath(args[0])
+cdslRepository = CdslRepository(options.inventoryfile,None,False,root=options.root, mountpoint=options.mountpoint)
 
 if options.hostdependent:
     #Creates a hostdependent cdsl and copies content to all nodes defined 
     #in clusterrepository or specified by maxnodeidnum in cdslrepository
-    obj = Cdsl(src, "hostdependent", cdslRepository, clusterInfo, None)
+    obj = Cdsl(src, Cdsl.HOSTDEPENDENT_TYPE, cdslRepository, clusterInfo, None)
 elif options.shared:
     #Creates a shared cdsl and copies content to sharedtree defined 
     #in clusterrepository
-    obj = Cdsl(src, "shared", cdslRepository, clusterInfo, None)
+    obj = Cdsl(src, Cdsl.SHARED_TYPE, cdslRepository, clusterInfo, None)
 
 obj.commit(force=options.force)
         
-if options.inventory:
+if options.updateinventory:
     cdslRepository.update(src,clusterInfo, chroot=options.root)

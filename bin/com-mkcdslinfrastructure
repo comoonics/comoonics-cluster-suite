@@ -1,12 +1,14 @@
 #!/usr/bin/python
 """
-Create the cdsl infrastructure. Mainly build it initially.
+Builds needed infrastructure to create cdsls, this contains creating directories and symbolic links. 
+Does not include mounting of needed bindmounts. 
+Uses an inventoryfile to get needed values. 
+If inventoryfile does not exist, create it by using predefined defaultvalues and/or values which are specified via parameters. 
+When using an existing inventoryfile, passing parameters which could be content of a inventoryfile will have no effect. 
+These values would be ignored.
 """
 
 __version__ = "$revision$"
-__description__="""
-Binary to manage cdsls
-"""
 
 import getopt
 import sys
@@ -15,14 +17,15 @@ import xml
 
 from comoonics import ComLog
 import comoonics.cluster
-from comoonics.ComExceptions import ComException
+from comoonics.cluster.ComClusterInfo import ClusterInfo
+from comoonics.cluster.ComClusterRepository import ClusterRepository
 from comoonics.cdsl import commonoptparseroptions, dirtrim
 from comoonics.cdsl.ComCdslRepository import CdslRepository
 # from comoonics import GetOpts
 
 from optparse import OptionParser
 
-parser = OptionParser()
+parser = OptionParser(description=__doc__)
 parser=commonoptparseroptions(parser)
 parser.add_option("-t", "--cdsltree", default=None, dest="cdsltree", help="path for hostdependent cdsls")
 parser.add_option("-s", "--cdsltreeshared", default=None, dest="cdsltreeshared", help="path for the reshared cdsls")

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 """
-Binary to check if cdsls which are defined in inventoryfile really exist on filesystem
+Binary to check if cdsls that are defined in the inventoryfile really exists on filesystem. 
+Outputs a message if check was succesfull or not. 
+In case of failure the tool documents which of the tested cdsls have failed.
 """
 __version__ = "$revision$"
 
@@ -27,10 +29,12 @@ logging.basicConfig()
 
 from optparse import OptionParser
 
-parser = OptionParser()
+parser = OptionParser(description=__doc__)
 parser.add_option("-U", "--update", dest="update", default=False, action="store_true", help="Also updates the repository")
 parser.add_option("-f", "--filesystem", dest="filesystem", default=False, action="store_true", help="Validates a given path (--path) on the filesystem instead of the repository")
 parser.add_option("-p", "--path", dest="path", default=".", help="Set the path to be searched. Defaults to the base cdslpath.")
+parser.add_option("-C", "--cdsl", dest="cdsls", default=[], type="string", action="append", help="Defines the cdsl to be validated. Only available when used not in filesystemmode." )
+parser.add_option("-R", "--norecursive", dest="norecursive", default=False, action="store_true", help="If filesystem selected it will not run recursively")
 
 parser=commonoptparseroptions(parser)
 
@@ -50,7 +54,7 @@ cdslRepository = CdslRepository(dirtrim(options.inventoryfile), None, False, use
 
 validator=CdslValidate(cdslRepository, clusterInfo)
 
-_added, _removed=validator.validate(not options.filesystem, not options.update, options.root, options.path)
+_added, _removed=validator.validate(update=options.update, root=options.root, onfilesystem=options.filesystem, filesystempath=options.path, cdsls=options.cdsls, recursive=not options.norecursive)
 if _added and len(_added) > 0:
     for _addedcdsl in _added:
         print "Added cdsl %s type %s" %(_addedcdsl, _addedcdsl.type)

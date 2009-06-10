@@ -1,9 +1,11 @@
 #!/usr/bin/python
-
-__version__ = "$revision$"
-__description__="""
-Binary to remove cdsls
 """
+Deletes existing cdsl from filesystem and inventoryfile.
+Contains deleting of symbolic links and content of cdsl.
+!!ATTENTION!!
+   You can remove data with that program. Use on your own risk!
+"""
+__version__ = "$Revision: 1.5 $"
 
 import getopt
 import sys
@@ -14,6 +16,7 @@ from comoonics.ComExceptions import ComException
 #from comoonics import GetOpts
 
 from comoonics.cluster import parseClusterConf
+from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository
 from comoonics.cdsl import commonoptparseroptions, dirtrim
 from comoonics.cdsl.ComCdsl import CdslDoesNotExistException
@@ -24,7 +27,7 @@ class CdslNotExistsException(ComException):pass
 from optparse import OptionParser
 
 usage = "usage: %prog [options] fullpathtofile"
-parser = OptionParser(usage)
+parser = OptionParser(usage=usage, description=__doc__)
 parser=commonoptparseroptions(parser)
 
 parser.add_option("-s", "--symboliconly", dest="symboliconly", default=False, action="store_true", help="Only removes the symbolic links but not the data itself")
@@ -36,16 +39,12 @@ ComLog.setLevel(logging.INFO)
 if len(args) != 1:
     parser.error("Failure no or more then one file is given as argument.")
           
-doc=comoonics.cluster.parseClusterConf(options.clusterconf)
+doc=parseClusterConf(options.clusterconf)
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
 
-cdslRepository = CdslRepository(options.inventoryfile,None,False,cdsltree=options.cdsltree,cdsltreeshared=options.cdsltreeshared,cdsllink=options.cdsllink,maxnodeidnum=options.maxnodeidnum,usenodeids=_useNodeids,root=options.root,mountpoint=options.mountpoint,defaultdir=options.defaultdir)
+cdslRepository = CdslRepository(options.inventoryfile,None,False,root=options.root, mountpoint=options.mountpoint)
 
 cdsl = cdslRepository.getCdsl(args[0])
-
-if not cdsl:
-	raise CdslDoesNotExistException("Cdsl with source " + cdsl.src + " does not exist in Inventoryfile.")
-
 cdsl.delete(force=not options.symboliconly)
