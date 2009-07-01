@@ -10,20 +10,28 @@ class RESearchFormat(object):
     """
     logger=ComLog.getLogger("comoonics.search.SearchFormat")
     def __init__(self, _searchfor="", _format=""):
+        super(RESearchFormat, self).__init__()
         self._format=_format
-        self.searchfor=self.createRESearchFor(_searchfor)
+        if _searchfor:
+            self.searchfor=self.createRESearchFor(_searchfor)
         self.match=None
+    def __deepcopy__(self, memo=None):
+        _obj=self.__class__()
+        _obj.__init__()
+        _obj.searchfor=self.searchfor
+        _obj._format=self._format
+        return _obj
     def format(self, _format=None):
         #SearchFormat.logger.debug("format(%s)" %_format)
         if not _format:
             _format=self._format
         return _format
     def createRESearchFor(self, _searchfor, _flags=0):
-        import sre
+        import re
         if isinstance(_searchfor, basestring):
             _searchfor=self.format(_searchfor)
             SearchFormat.logger.debug("createRESearchFor: searchfor<%s>: %s" %(self.__class__.__name__, _searchfor))
-            _searchfor=sre.compile(_searchfor, _flags)
+            _searchfor=re.compile(_searchfor, _flags)
             return _searchfor
         else:
             return _searchfor
@@ -47,7 +55,7 @@ class RESearchFormat(object):
         self.match=None
 
     def __str__(self):
-        return "<%s(format: %s, searchfor: %s)>" %(self.__class__.__name__, self._format, self.searchfor)
+        return "<%s(format: %s, searchfor: %s)>" %(self.__class__.__name__, self._format, self.searchfor.pattern)
 
 class SearchFormat(RESearchFormat):
     """
@@ -58,14 +66,3 @@ class SearchFormat(RESearchFormat):
         _format=_format.replace("*", ".*")
         _format=_format.replace("?", ".")
         return _format
-
-def main():
-    _lines=("afas marc asdfik", "asdkfjlj")
-    _sfs=[ RESearchFormat(".*marc"), SearchFormat("*marc") ]
-    print "lines: %s, searchformats: %s" %(_lines, _sfs)
-    for _line in _lines:
-        for _sf in _sfs:
-            print "line: %s, search: %s" %(_line, _sf.search(_line))
-
-if __name__=="__main__":
-    main()

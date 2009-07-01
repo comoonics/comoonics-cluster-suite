@@ -1,10 +1,13 @@
 #!/usr/bin/python
 """
-searches from stdin for the given format.
-A non dateformat is always interpreted as regular expression as
+searches from stdin for the given format or PATTERN.
+
+It also can filter special timestamps in a standard format if known.
+
+The pattern is always interpreted as regular expression as
 used by python.
 
-Dateformat:
+Dateformats given:
 If a dateformat is used it has always to be formated as
 follows:
 Year/Month/Day Hour:Minute:Second
@@ -27,6 +30,7 @@ from optparse import OptionParser, IndentedHelpFormatter
 from comoonics import ComLog
 
 __version__="$Revision: 1.1 $"
+logging.basicConfig()
 logger=ComLog.getLogger("mgrep")
 ComLog.setLevel(logging.INFO)
 
@@ -75,7 +79,8 @@ def setDebug(option, opt, value, parser):
     ComLog.setLevel(logging.DEBUG)
     setattr(parser.values, option.dest, True)
 
-parser = OptionParser(description=__doc__, version=__version__, formatter=_IndentHelpFormatter())
+usage = "usage: %prog [options] [PATTERN] [FILE]+"
+parser = OptionParser(usage=usage, description=__doc__, version=__version__, formatter=_IndentHelpFormatter())
 default_formaters=list()
 default_formaters.append(SearchFormat())
 parser.add_option("-s", "--search", dest="search", type="str", action="callback", callback=selectFormat, help="the string/regular expression to search for.")
@@ -94,12 +99,16 @@ parser.add_option("-F", "--fixed-string", dest="fixedstring", default=False, act
 (options, args) = parser.parse_args()
 
 # First option might be a pattern let's check
-if not os.path.isfile(args[0]):
-    if options.fixedstring:
-        options.search.append(SearchFormat(args[0]))
-    else:
-        options.search.append(RESearchFormat(args[0]))
-    args=args[1:]
+toremove=list()
+for arg in args:
+    if not os.path.isfile(arg):
+        if options.fixedstring:
+            options.search.append(SearchFormat(arg))
+        else:
+            options.search.append(RESearchFormat(arg))
+        toremove.append(arg)
+for arg in toremove:
+    args.remove(arg)
 #if options.format and isinstance(options.format, DateFormat):
 #    expr=TimeExpression(args[0])
 #else:
@@ -111,7 +120,7 @@ if options.search:
             if options.datestring:
                 logger.debug("setting searchfor: %s" %options.datestring)
                 _search.searchfor=options.datestring
-#        logger.debug("search: %s, format: %s" %(_search, _search.format()))
+        logger.debug("search: %s" %(_search))
 #line="a"
 _lines=dict()
 _lineslock=Lock()
@@ -138,34 +147,49 @@ try:
     for _rthreads in _seqthreads:
         for _rthread in _rthreads:
             _rthread.start()
+        # first wait for all threads to have a timehash (means read a line)
+        allread=list()
+        allread.extend(_rthreads)
+        while len(allread) > 0:
+            for _rthread in allread:
+                if _rthread.readlines:
+                    allread.remove(_rthread)
+        logger.debug("allread begin to write")
         while _rthreads and len(_rthreads)>0:
-            #logger.debug("in while")
-            # Clear old threads
             _mintimehash=None
-            for _rthread in _rthreads:
+            _i=0
+            while _mintimehash==None and len(_rthreads)!=0:
+                _rthread=_rthreads[_i]
                 #_rthread.lock()
                 #if _rthread.getLastTimehash() != None and _mintimehash!=None:
                 #    logger.debug("lasttimehash(%s)<_mintimehash(%s): %s" %(_rthread.getLastTimehash(), _mintimehash, _rthread.getLastTimehash() < _mintimehash))
                 #else:
                 #    logger.debug("lasttimehash(%s)<_mintimehash(%s)" %(_rthread.getLastTimehash(), _mintimehash))
-                if _rthread.getLastTimehash() != None and (_rthread.getLastTimehash() < _mintimehash or _mintimehash==None):
-                    _mintimehash=_rthread.getLastTimehash()
-                elif _rthread.getLastTimehash() == None:
+                if _rthread.getLastTimehash() == None:
                     _mintimehash=None
+                elif _rthread.getLastTimehash() != None and (_rthread.getLastTimehash() < _mintimehash or _mintimehash==None):
+                    _mintimehash=_rthread.getLastTimehash()
+                
                 if not _rthread.isAlive():
                     _rthreads.remove(_rthread)
+                _i+=1
+                if _i >= len(_rthreads):
+                    _i=0
                 #_rthread.release()
-            #logger.debug("mintimehash: %s" %_mintimehash)
-            if _mintimehash:
+            if _mintimehash or len(_rthreads)==0:
                 _lineslock.acquire()
+                logger.debug("mintimehash: %s, threads: %u" %(_mintimehash, len(_rthreads)))
                 _times=_lines.keys()
                 _times.sort()
+#                sys.stdout.write("WRITING!! mintimehash: %s, threads: %u\n" %(_mintimehash, len(_rthreads)))
+                sys.stdout.flush()
                 for _time in _times:
                     #logger.debug("_time(%s)<_mintimehash(%s): %s" %(_time, _mintimehash,  _time < _mintimehash))
                     if _time < _mintimehash or len(_rthreads)==0:
-                        #logger.debug("len(lines): %u, _time: %s, _mintimehash: %s" %(len(_lines[_time]), _time, _mintimehash))
+                        logger.debug("writing: len(lines): %u, _time: %s, _mintimehash: %s" %(len(_lines[_time]), _time, _mintimehash))
                         for _line in _lines[_time]:
                             sys.stdout.write(_line.toString(options.filenames, options.linenumber))
+                        sys.stdout.flush()
                         del _lines[_time]
                 _lineslock.release()
 except KeyboardInterrupt:
