@@ -43,16 +43,16 @@ if len(args) != 0:
     parser.error("No arguments are required. Please remove the arguments %s" %args)
 
 if not options.usenodenames:
-    _useNodeids = "False"
-else:
     _useNodeids = "True"
+else:
+    _useNodeids = "False"
     
 doc=comoonics.cluster.parseClusterConf(options.clusterconf)
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
 
-cdslRepository = CdslRepository(options.inventoryfile,None,False,cdsltree=options.cdsltree,cdsltreeshared=options.cdsltreeshared,cdsllink=options.cdsllink,maxnodeidnum=options.maxnodeidnum,usenodeids=_useNodeids,root=options.root,mountpoint=options.mountpoint,defaultdir=options.defaultdir)
+cdslRepository = CdslRepository(options.inventoryfile,None,False,cdsltree=options.cdsltree,cdsltreeshared=options.cdsltreeshared,cdsllink=options.cdsllink,maxnodeidnum=str(options.maxnodeidnum),usenodeids=_useNodeids,root=options.root,mountpoint=options.mountpoint,defaultdir=options.defaultdir)
 
 if not options.onlyinventory:
     cdslRepository.buildInfrastructure(clusterInfo)
