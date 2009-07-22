@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enterprisecopy name="test">
+	<copyset type="partition">
+		<source type="disk">
+			<disk name="/dev/sdc"/>
+		</source>
+		<destination type="disk">
+			<disk name="/dev/sda">
+				<!--- supported types: "primary"
+					"extended" and "logical" are reserved, but not supported yet
+				-->
+				<!-- supported size:
+					[0-9]+[M,G] size in mega/gigabytes
+					1-100%: size in percentage of the whole disk
+					REMAIN: all remaining space
+					[0-9]+ size in sectors
+				-->
+				<!-- reserved attributes:
+					start: starting point [cylinders]
+					not supported yet
+					by now, all partitions will start at the first possible starting point
+				-->
+				<!-- supported flags:
+					boot
+					root
+					swap
+					hidden
+					raid
+					lvm
+					lba
+				-->
+				<partition name="1" type="primary" size="10G">
+					<flag name="boot"/>
+					<flag name="lvm"/>
+				</partition>
+				<partition name="2" type="primary" size="20%"/>
+				<!-- other posibilities:
+				<partition name="3" type="primary" size="REMAIN"/>
+				<partition name="4" type="primary" size="123456"/>
+				-->
+			</disk>
+		</destination>
+	</copyset>
+	<copyset type="lvm">
+		<source type="lvm">
+			<volumegroup name="centos"/>
+		</source>
+		<destination type="lvm">
+  			<volumegroup name="centos_new">
+  				<logicalvolume name="lv_swap" size="100"/>
+  				<physicalvolume name="/dev/sda2"/>
+  			</volumegroup>
+  		</destination>
+	</copyset>
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/VG_SHAREDROOT/LV_SHAREDROOT">
+    			<filesystem type="gfs"/>
+    			<mountpoint name="/"/>
+    		</device>
+  		</source>
+  		<destination type="filesystem">
+  			<device name="/dev/VG_SHAREDROOT_new/LV_SHAREDROOT" id="rootfs" options="true">
+      			<filesystem type="gfs" clustername="vmwareclusternew"/>
+      			<mountpoint name="/mnt/tmp">
+      				<option name="lockproto" value="lock_nolock"/>
+      			</mountpoint>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="filesystem">
+  		<source type="filesystem">
+  			<device name="/dev/sdd1" id="bootfs">
+    			<filesystem type="ext3"/>
+    			<mountpoint name="/boot"/>
+    		</device>
+  		</source>
+  		<destination type="filesystem">
+    		<device name="/dev/sda1">
+      			<filesystem type="ext3"/>
+      			<mountpoint name="/mnt/tmp"/>
+   			</device>
+   		</destination>
+	</copyset>
+	<copyset type="bootloader">
+		<source type="none"/>
+		<destination type="disk">
+			<disk name="/dev/sda"/>
+			<bootloader type="grub"/>
+		</destination>
+	</copyset>
+	<modificationset type="filesystem">
+		<device refid="rootfs">
+			<modification type="regexp" search="HOSTNAME=.*" replace="HOSTNAME=myhostname">
+				<file name="cluster/cdsl/node1/etc/sysconfig/network"/>
+			</modification>
+			<modification type="copy">
+				<file name="etc/cluster/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+			</modification>
+		</device>
+	</modificationset>
+	<modificationset type="filesystem">
+		<device refid="bootfs">
+			<modification type="copy">
+				<requirement type="archive" format="cpio" name="/home/marc/tmp/initrd-2.6.16-1.2069_FC4.img" dest="/tmp/test"/>
+				<file name="etc/cluster.conf" sourcefile="/etc/copysets/lilr10023/cluster.conf"/>
+			</modification>
+		</device>
+	</modificationset>
+</enterprisecopy>
