@@ -1,25 +1,22 @@
 #!/bin/bash
+INSTALLDIR=install
+NAME=comoonics-cluster-py
+CHANGELOG=$(awk '
+BEGIN { changelogfound=0; }
+/^'${NAME}'/{ changelogfound=1; next };
+/^comoonics/ { changelogfound=0; next };
+{
+  if (changelogfound == 1) {
+     print
+  }
+}
+' < docs/CHANGELOG)
 
-source ./build-lib.sh
+for file in $(find $INSTALLDIR -maxdepth 1 -type f); do
+  cp $file $(basename $file)
+done
 
-RELEASE=17
-REQUIRES="--requires=comoonics-cs-py"
-NOAUTO_REQ="--no-autoreq"
-NAME="comoonics-cluster-py"
-VERSION="0.1"
-DESCRIPTION="Comoonics cluster configuration utilities written in Python"
-LONG_DESCRIPTION="
-Comoonics cluster configuration utilities written in Python
-"
-AUTHOR="ATIX AG - Andrea Offermann"
-AUTHOR_EMAIL="offermann@atix.de"
-URL="http://www.atix.de/comoonics/"
-PACKAGE_DIR='"comoonics.cluster" : "lib/comoonics/cluster", "comoonics.cluster.helper": "lib/comoonics/cluster/helper"'
-PACKAGE_DATA='"comoonics.cdsl": ["man/*.gz"]'
-PACKAGES='"comoonics.cluster", "comoonics.cluster.helper"'
-SCRIPTS='"bin/com-queryclusterconf"'
-DATA_FILES='("share/man/man1",[
-             "man/com-queryclusterconf.1.gz"
-            ])'
-
-setup
+for file in $(find $INSTALLDIR/$NAME -maxdepth 1 -type f); do
+  cp $file $(basename $file)
+done
+PYTHONPATH=./ python setup.py $NAME -v bdist_rpm $@ --changelog="${CHANGELOG}"
