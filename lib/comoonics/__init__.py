@@ -2,6 +2,16 @@
 
 Init this package
 
+Functionality provided here are
+comoonics.ComDataObject: abstract basic DOM-Based class that is base for any other DOM-Based class
+comoonics.ComExceptions: the library provides a base class for all comoonics exceptions.
+comoonics.DictTools:     Tools for helping with dicts.
+comoonics.ComProperties: Property implementation for DataObjects
+comoonics.ComPath:       DataObject class representing a path.
+comoonics.ComLog:        library for some commonly used logging functions
+comoonics.ComSystem:     library for some commonly used functions to execute commands.
+comoonics.XmlTools:      some xml library functions used by other modules.
+
 """
 
 import sys,os.path
@@ -29,7 +39,10 @@ def asConfigParser():
 
 ########
 # $Log: __init__.py,v $
-# Revision 1.4  2009-06-10 15:20:34  marc
+# Revision 1.5  2009-07-22 08:38:41  marc
+# added docu
+#
+# Revision 1.4  2009/06/10 15:20:34  marc
 # - added debian and sles paths.
 #
 # Revision 1.3  2007/06/13 09:15:12  marc
