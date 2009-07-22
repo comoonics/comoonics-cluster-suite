@@ -1,6 +1,8 @@
 #!/usr/bin/python
-
-__version__ = "$Revision: 1.12 $"
+"""
+Binary to query clusterconfiguration
+"""
+__version__ = "$Revision: 1.13 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -9,24 +11,24 @@ import getopt
 import sys
 import logging
 import os
+import os.path
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
-from comoonics import GetOpts
 
 import comoonics.cluster
 from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository, ClusterMacNotFoundException
+from comoonics.cluster.ComClusterRepository import ClusterRepository, ClusterMacNotFoundException, RedHatClusterRepository
 from comoonics.cluster.ComQueryMap import QueryMap
 
 from xml.dom.ext.reader import Sax2
 
-ComLog.setLevel(logging.INFO)
+from optparse import OptionParser
 
-class Config(GetOpts.BaseConfig):
-    def __init__(self):
-        helptext = """
-query_commands:
+ComLog.setLevel(logging.INFO)
+usage = """
+usage: %prog [options] query_command
+query_commands are:
     query_xml <xq>           print out the xml_document specified by an XQL query string
     query_value <xql>        print out the value specified by an XQL query string
     convert type             converts the cluster repository to the given type (supported types are: ocfs2) 
@@ -55,104 +57,99 @@ query_commands:
     nodeids [<sep>]          returns all defined nodeids seperated by <sep>.
     scsifailover nodename    returns the scsifailovertype for the given nodename
         """
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], helptext, __version__)
-        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
-        self.query=GetOpts.Option("query", "Query", False, False, "q")
-        self.clusterconf=GetOpts.Option("filename", "Cluster configuration file location", comoonics.cluster.clusterconf, False, "f")
-        self.mapfile=GetOpts.Option("querymapfile", "External file for query mappings", comoonics.cluster.querymapfile, False, "m")
-        self.validate=GetOpts.Option("validate", "Validate clusterconfiguration file",False,False,"n")
-        self.setAdditionalParams("query [param]*")
+parser = OptionParser(usage=usage, description=__doc__)
+parser=comoonics.cluster.commonoptparseroptions(parser)
+# This is obsolete as it is always true but has to stay because of backwards compatibility
+parser.add_option("-q", "--query", dest="query", default=True, action="store_true", help="Query the cluster")
+# again because of compatibilities
+# -c --clusterconf should be used.
+parser.add_option("-f", "--filename", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf())
+parser.add_option("-m", "--querymapfile", dest="mapfile", default=comoonics.cluster.querymapfile, help="External file for query mappings")
+parser.add_option("-V", "--validate", dest="validate", default=False, action="store_true", help="Validate the cluster configuration if possible")
 
-    def do(self, args_proper):
-        import os.path
-        if len(args_proper) > 1:
-            self.values = args_proper[1:]
-        else:
-            self.values = []
-        if len(args_proper) > 0:
-            self.query=args_proper[0]
-        else:
-            self.usage()
-            raise TypeError, "Wrong number of arguments. At least one is required. None given."
-        if not os.path.isfile(self.clusterconf):
-            raise IOError, "Could not find clusterconfiguration file %s" %(self.clusterconf)
-        return 0
+ComLog.setLevel(logging.INFO)
+(options, args) = parser.parse_args()
 
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
+if len(args) > 1:
+    values = args[1:]
+else:
+    values = []
+if len(args) > 0:
+    query=args[0]
+else:
+    parser.error("Wrong number of arguments. At least one is required. None given.")
+if not os.path.isfile(options.clusterconf):
+    parser.error("Could not find clusterconfiguration file %s" %(options.clusterconf))
 
-Config=Config()
-Config.getopt(sys.argv[1:])  
-
-doc=comoonics.cluster.parseClusterConf(Config.clusterconf, Config.validate)
+doc=comoonics.cluster.parseClusterConf(options.clusterconf, options.validate)
 
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
-clusterQueryMap = QueryMap(Config.mapfile)
+clusterQueryMap = QueryMap(options.mapfile)
 
 #query given file with specified query, returns xml
-if Config.query == "query_xml":
-    print clusterInfo.queryXml(Config.values[0])
+if query == "query_xml":
+    print clusterInfo.queryXml(values[0])
     
 #query given file with specified query, returns value
-elif Config.query == "query_value":
-    print " ".join(clusterInfo.queryValue(Config.values[0]))
+elif query == "query_value":
+    print " ".join(clusterInfo.queryValue(values[0]))
 
-#print clusters network devices by name, separated by value of Config.netdevs    
-elif Config.query == "netdevs":
-    if len(Config.values) < 2:
-        Config.values.append(" ")
+#print clusters network devices by name, separated by value of options.netdevs    
+elif query == "netdevs":
+    if len(values) < 2:
+        values.append(" ")
     _tmp = []
-    for Nic in clusterInfo.getNode(Config.values[0]).getNics():
+    for Nic in clusterInfo.getNode(values[0]).getNics():
         _tmp.append(Nic.getName())
-    print Config.values[1].join(_tmp)
+    print values[1].join(_tmp)
 
 #Query Nodename to given mac, raise exception if mac not found
-elif Config.query == "nodename":
-    print clusterInfo.getNodeName(Config.values[0])
+elif query == "nodename":
+    print clusterInfo.getNodeName(values[0])
     
 #Query Nodename to given id, raise exception if id not found
-elif Config.query == "nodenamebyid":
-    print clusterInfo.getNodeNameById(Config.values[0])
+elif query == "nodenamebyid":
+    print clusterInfo.getNodeNameById(values[0])
 
 #Query Nodeid to given mac, raise exception if mac not found
-elif Config.query == "nodeid":
-    print clusterInfo.getNodeId(Config.values[0])
+elif query == "nodeid":
+    print clusterInfo.getNodeId(values[0])
     
 #print ip of given node and given device
-elif Config.query == "ip":
-    _node = clusterInfo.getNode(Config.values[0])
-    _nic = _node.getNic(Config.values[1])
+elif query == "ip":
+    _node = clusterInfo.getNode(values[0])
+    _nic = _node.getNic(values[1])
     print _nic.getIP()
 
 #print ip of given node and given device
-elif Config.query == "master":
-    _node = clusterInfo.getNode(Config.values[0])
-    _nic = _node.getNic(Config.values[1])
+elif query == "master":
+    _node = clusterInfo.getNode(values[0])
+    _nic = _node.getNic(values[1])
     print _nic.getMaster()
 
 #print ip of given node and given device
-elif Config.query == "slave":
-    _node = clusterInfo.getNode(Config.values[0])
-    _nic = _node.getNic(Config.values[1])
+elif query == "slave":
+    _node = clusterInfo.getNode(values[0])
+    _nic = _node.getNic(values[1])
     print _nic.getSlave()
 
 #print ip of given node and given device
-elif Config.query == "mask":
-    _node = clusterInfo.getNode(Config.values[0])
-    _nic = _node.getNic(Config.values[1])
+elif query == "mask":
+    _node = clusterInfo.getNode(values[0])
+    _nic = _node.getNic(values[1])
     print _nic.getNetmask()
 
 #print ip of given node and given device
-elif Config.query == "gateway":
-    _node = clusterInfo.getNode(Config.values[0])
-    _nic = _node.getNic(Config.values[1])
+elif query == "gateway":
+    _node = clusterInfo.getNode(values[0])
+    _nic = _node.getNic(values[1])
     print _nic.getGateway()
 
 #print list of clusters host with if and name
 #FIXME: Returns only first ip-address<->name pair of every clusternode to avoid duplicate entries for the same hostname
-elif Config.query == "hosts":
+elif query == "hosts":
     for node in clusterInfo.getNodes():
         for Nic in node.getNics():
             if Nic.getIP() != "" and Nic.getIP() != "dhcp":
@@ -160,62 +157,62 @@ elif Config.query == "hosts":
                 break
 
 #print ifconfig for given mac, raise exception if mac not found
-elif Config.query == "ifconfig":
+elif query == "ifconfig":
     _macfound = False
     for node in clusterInfo.getNodes():
-        if node.nicMac.has_key(Config.values[0]):
-            _nic = node.nicMac[Config.values[0]]
+        if node.nicMac.has_key(values[0]):
+            _nic = node.nicMac[values[0]]
             print _nic.getName() + " " + _nic.getIP() + " " + _nic.getNetmask()
             _macfound = True
     if _macfound == False:
-        raise ClusterMacNotFoundException("Cannot find mac " + Config.values[1])
+        raise ClusterMacNotFoundException("Cannot find mac " + values[1])
 
 #print rootvolume of node with given name
-elif Config.query == "rootvolume":
-    print clusterInfo.getNode(Config.values[0]).getRootvolume()
+elif query == "rootvolume":
+    print clusterInfo.getNode(values[0]).getRootvolume()
 
 #print rootfs of node with given name
-elif Config.query == "rootfs":
-    print clusterInfo.getNode(Config.values[0]).getRootFs()
+elif query == "rootfs":
+    print clusterInfo.getNode(values[0]).getRootFs()
     
 #print mount options of node with given name
-elif Config.query == "mountopts":
-    print clusterInfo.getNode(Config.values[0]).getMountopts()
+elif query == "mountopts":
+    print clusterInfo.getNode(values[0]).getMountopts()
 
 #print syslog of node with given name
-elif Config.query == "syslog":
-    print clusterInfo.getNode(Config.values[0]).getSyslog()
+elif query == "syslog":
+    print clusterInfo.getNode(values[0]).getSyslog()
 
 #print failoverdomainnodes belonging to given failoverdomain, seperated by <sep>
-elif Config.query == "failoverdomainnodes":
-    if len(Config.values) < 2:
-        Config.values.append(" ")
-    print Config.values[1].join(clusterInfo.getFailoverdomainNodes(Config.values[0]))
+elif query == "failoverdomainnodes":
+    if len(values) < 2:
+        values.append(" ")
+    print values[1].join(clusterInfo.getFailoverdomainNodes(values[0]))
 
 #prints prefered failover node belonging to given failoverdomain
-elif Config.query == "failoverdomainprefnode":
-    if len(Config.values) < 1:
-        Config.values.append(" ")
-    print clusterInfo.getFailoverdomainPrefNode(Config.values[0])
+elif query == "failoverdomainprefnode":
+    if len(values) < 1:
+        values.append(" ")
+    print clusterInfo.getFailoverdomainPrefNode(values[0])
 
 #print list of nodeids, seperated by given value
-elif Config.query == "nodeids":
-    if len(Config.values) < 1:
-        Config.values.append(" ")
+elif query == "nodeids":
+    if len(values) < 1:
+        values.append(" ")
     _tmp = []
     for node in clusterInfo.getNodes():
         _tmp.append(node.getId())
-    print Config.values[0].join(_tmp)
+    print values[0].join(_tmp)
 
 #print scsifailover of node with given name
-elif Config.query == "scsifailover":
-        print clusterInfo.getNode(Config.values[0]).getScsifailover()
+elif query == "scsifailover":
+        print clusterInfo.getNode(values[0]).getScsifailover()
     
-elif Config.query == "convert":
-    print clusterInfo.clusterRepository.convert(Config.values[0])
+elif query == "convert":
+    print clusterInfo.clusterRepository.convert(values[0])
 
-elif clusterQueryMap.has_option(clusterQueryMap.mainsection, Config.query):
-    print clusterInfo.query(clusterQueryMap.get(clusterQueryMap.mainsection, Config.query) % clusterQueryMap.array2params(Config.values))
+elif clusterQueryMap.has_option(clusterQueryMap.mainsection, query):
+    print clusterInfo.query(clusterQueryMap.get(clusterQueryMap.mainsection, query) % clusterQueryMap.array2params(values))
     
 else:
-    raise NameError("Cannot find query named " + Config.query)
+    raise NameError("Cannot find query named " + query)
