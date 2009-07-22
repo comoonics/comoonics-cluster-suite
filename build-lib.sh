@@ -1,4 +1,4 @@
-# $Id: build-lib.sh,v 1.10 2008-08-14 13:00:51 marc Exp $
+# $Id: build-lib.sh,v 1.11 2009-07-22 08:22:03 marc Exp $
 
 function setup {
   CHANGELOG=$(awk '
@@ -25,29 +25,31 @@ import gzip
 sys.path.append("./lib")
 from comoonics import ComSystem
 
-if not os.path.exists("/usr/bin/db2x_docbook2man"):
+if not os.path.exists("/usr/bin/db2x_docbook2man") and not os.path.exists("/usr/bin/docbook2x-man"):
 	print "ERROR: /usr/bin/db2x_docbook2man not installed !"
 	print "  TIP: use \"yum install docbook2X\" to install the software"
 	sys.exit(1)
-
 
 ComSystem.__EXEC_REALLY_DO="continue"
 manpages = "'${NAME}'.xml"
 olddir=os.path.abspath(os.path.curdir)
 os.chdir("man/")
 if os.path.exists(manpages):
-	ComSystem.execLocalStatusOutput("db2x_docbook2man " + manpages)
-	man = '${DATA_FILES}'[1]
-	for i in man:
-		inF = file("../"+i.replace(".gz","",1),"rb")
-		s = inF.read()
-		inF.close()
+	ComSystem.execLocalStatusOutput("/usr/bin/db2x_docbook2man " + manpages)
+	ComSystem.execLocalStatusOutput("/usr/bin/docbook2x-man " + manpages)
+	data_files='${DATA_FILES}'
+	if data_files:
+		man = '${DATA_FILES}'[1]
+		for i in man:
+			inF = file("../"+i.replace(".gz","",1),"rb")
+			s = inF.read()
+			inF.close()
 
-		outF = gzip.GzipFile("../"+i,"wb")
-		outF.write(s)
-		outF.close()
+			outF = gzip.GzipFile("../"+i,"wb")
+			outF.write(s)
+			outF.close()
 
-		os.remove("../"+i.replace(".gz","",1))
+			os.remove("../"+i.replace(".gz","",1))
 
 os.chdir(olddir)
 
@@ -68,6 +70,7 @@ setup(name="'${NAME}'",
       author_email="'${AUTHOR_EMAIL}'",
       url="'${URL}'",
       package_dir =  { '${PACKAGE_DIR}'},
+      py_modules =   [ '${MODULES}' ],
       packages=      [ '${PACKAGES}' ],
       scripts=       [ '${SCRIPTS}' ],
       data_files=    [ '${DATA_FILES}' ],
@@ -84,7 +87,10 @@ fi
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.10  2008-08-14 13:00:51  marc
+# Revision 1.11  2009-07-22 08:22:03  marc
+# updates
+#
+# Revision 1.10  2008/08/14 13:00:51  marc
 # bugfix
 #
 # Revision 1.9  2008/05/20 15:57:30  marc
