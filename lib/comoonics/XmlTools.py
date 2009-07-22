@@ -1,11 +1,28 @@
-#!/usr/bin/python
 """
 Collection of xml tools
 """
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.12 2009-06-10 15:19:20 marc Exp $
+# $Id: XmlTools.py,v 1.13 2009-07-22 08:37:40 marc Exp $
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import warnings
 #import xml.dom.Node
@@ -279,90 +296,12 @@ def xpathsplit(_xpath):
     else:
         return _xpath.split(XPATH_SEP)
 
-def main():
-    xml="""<?xml version="1.0" encoding="UTF-8"?>
-<localclone>
-  <node name="lilr629"/>
-  <destdisks><disk name="/dev/gnbd/singleclone"/></destdisks>
-  <kernel version="2.6.9-34.0.1.ELsmp"/>
-</localclone>
-    """
-
-    from xml.dom.ext import PrettyPrint
-    from xml.dom.minidom import parseString
-    doc=parseString(xml)
-    xpaths={"node/@name": "myname",
-            "/localclone/destdisks/disk/@name": "/dev/sda1"}
-    print "-----------_Before(overwrite_element_with_xpaths)_-------------"
-    PrettyPrint(doc)
-    overwrite_element_with_xpaths(doc.documentElement, xpaths)
-    print "-----------_After(overwrite_element_with_xpaths)_--------------"
-    PrettyPrint(doc)
-
-    xml2="<xyz>abcd</xyz>"
-    xml3="""<xyz abcd="abs"/>"""
-    doc=parseString(xml2)
-    print "getTextFromElement(%s): %s" %(xml2, getTextFromElement(doc.documentElement))
-    doc=parseString(xml3)
-    print "getTextFromElement(%s): %s" %(xml3, getTextFromElement(doc.documentElement))
-
-    xml1="""
-    <a>
-       <a name="a">
-          <aa/>
-       </a>
-       <b name="a">
-          <ba/>
-       </b>
-       <c name="b">
-          <cb/>
-       </c>
-    </a>
-    """
-    xml2="""
-    <a>
-       <b name="a">
-          <bb/>
-       </b>
-       <c name="b">
-          <ca/>
-       </c>
-       <d name="a">
-         <da/>
-       </d>
-    </a>
-    """
-
-    import xml.dom
-    print "Testing merging of two documents"
-    print "xml1: "
-    _xml1=parseString(xml1)
-    PrettyPrint(_xml1)
-    print "xml2: "
-    _xml2=parseString(xml2)
-    PrettyPrint(_xml2)
-    _result=xml.dom.getDOMImplementation().createDocument(None, "a", None)
-
-    print "Result(onlyone=True): "
-    merge_trees_with_pk(_xml1.documentElement, _xml2.documentElement, _xml2, "name", None, True)
-    PrettyPrint(_xml2)
-    print "Result(onlyone=False): "
-    _xml2=parseString(xml2)
-    merge_trees_with_pk(_xml1.documentElement, _xml2.documentElement, _xml2, "name", None, False)
-    PrettyPrint(_xml2)
-
-    print "Testing clone of element: "
-    print "xml2: "
-    PrettyPrint(_xml2)
-    print "clone_node(xml2)"
-    PrettyPrint(clone_node(_xml2.documentElement))
-
-if __name__ == '__main__':
-    main()
-
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.12  2009-06-10 15:19:20  marc
+# Revision 1.13  2009-07-22 08:37:40  marc
+# fedora compliant
+#
+# Revision 1.12  2009/06/10 15:19:20  marc
 # - added xpathjoin/split
 #
 # Revision 1.11  2008/07/08 07:27:15  andrea2

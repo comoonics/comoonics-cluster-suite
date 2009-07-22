@@ -6,10 +6,28 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.14 2009-06-10 15:19:56 marc Exp $
+# $Id: ComLog.py,v 1.15 2009-07-22 08:37:40 marc Exp $
 #
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -113,23 +131,24 @@ def fileConfig(fname, defaults=None, _vars=None):
     else:
         cp.read(fname)
     #first, do the formatters...
-    flist = cp.get("formatters", "keys")
-    if len(flist):
-        flist = string.split(flist, ",")
-        formatters = {}
-        for form in flist:
-            sectname = "formatter_%s" % form
-            opts = cp.options(sectname)
-            if "format" in opts:
-                fs = cp.get(sectname, "format", 1)
-            else:
-                fs = None
-            if "datefmt" in opts:
-                dfs = cp.get(sectname, "datefmt", 1)
-            else:
-                dfs = None
-            f = logging.Formatter(fs, dfs)
-            formatters[form] = f
+    if cp.has_section("formatters"):
+        flist = cp.get("formatters", "keys")
+        if len(flist):
+            flist = string.split(flist, ",")
+            formatters = {}
+            for form in flist:
+                sectname = "formatter_%s" % form
+                opts = cp.options(sectname)
+                if "format" in opts:
+                    fs = cp.get(sectname, "format", 1)
+                else:
+                    fs = None
+                if "datefmt" in opts:
+                    dfs = cp.get(sectname, "datefmt", 1)
+                else:
+                    dfs = None
+                f = logging.Formatter(fs, dfs)
+                formatters[form] = f
     #next, do the handlers...
     #critical section...
     logging._acquireLock()
@@ -257,71 +276,13 @@ def fileConfig(fname, defaults=None, _vars=None):
     finally:
         logging._releaseLock()
 
-# Implicitly try to import DBLogger and let it register
-#try:
-#    from comoonics.db.ComDBLogger import DBLogger
-#except:
-#    pass
-
-def __testLogger(name, logger):
-    logger.debug("debug")
-    logger.info("info")
-    logger.warning("warning")
-    logger.error("error")
-    logger.critical("critical")
-    __line("Error for "+name)
-    try:
-        from exceptions import IOError
-        raise IOError("testioerror")
-    except:
-#        debugTraceLog(name)
-#        infoTraceLog(name)
-#        warningTraceLog(name)
-        errorTraceLog(name)
-#        criticalTraceLog(name)
-
-def __line(text):
-    print "-------------------------- %s --------------------------------------" %(text)
-
-def main():
-    _mylogger=logging.getLogger("comoonics.ComLog")
-    logging.basicConfig()
-    _mylogger.setLevel(logging.DEBUG)
-    from comoonics.db.ComDBLogger import DBLogger
-    registerHandler("DBLogger", DBLogger)
-    _filenames=("../../test/loggingconfig.ini", "../../test/loggingconfig.xml")
-    getLogger().info("Testing ComLog:")
-    loggers={"test1": logging.DEBUG,
-             "test2": logging.INFO,
-             "test3": logging.WARNING}
-    for loggername in loggers.keys():
-        __line("%s level: %s" %(loggername, logging.getLevelName(loggers[loggername])))
-        setLevel(loggers[loggername], loggername)
-        __testLogger(loggername, getLogger(loggername))
-
-    __line("mylogger without level")
-    __testLogger("mylogger", getLogger("mylogger"))
-    cp=None
-
-    __line("ComLog._classregistry: %s" %_classregistry)
-    for _filename in _filenames:
-        logging.shutdown()
-        __line("Testing configfile %s" %_filename)
-        fileConfig(_filename, None, )
-        rootlogger=getLogger()
-        __testLogger("root", rootlogger)
-        __line("handlernames: %s" %rootlogger.manager.loggerDict.keys())
-        for _lname in [ "atix", "atix", "atix.atix1" ]:
-            __testLogger(_lname, logging.getLogger(_lname))
-            __testLogger(_lname+".test", logging.getLogger(_lname+".test"))
-
 _mylogger=logging.getLogger("comoonics.ComLog")
 
-if __name__ == "__main__":
-    main()
-
 # $Log: ComLog.py,v $
-# Revision 1.14  2009-06-10 15:19:56  marc
+# Revision 1.15  2009-07-22 08:37:40  marc
+# fedora compliant
+#
+# Revision 1.14  2009/06/10 15:19:56  marc
 # removed basicConfig.
 # should be called in other programs.
 #

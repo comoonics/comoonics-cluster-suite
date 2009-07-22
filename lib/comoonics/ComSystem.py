@@ -6,17 +6,34 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.18 2008-08-05 13:06:35 marc Exp $
+# $Id: ComSystem.py,v 1.19 2009-07-22 08:37:40 marc Exp $
 #
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
 import commands
 import os
-import popen2
 
 import ComLog
 
@@ -145,6 +162,10 @@ def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
     exec %__cmd and returns an array ouf output lines (rc, out, err)
     @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
+    if sys.version[:3] < "2.4":
+        import popen2
+    else:
+        import subprocess
     global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == ASK:
@@ -161,14 +182,25 @@ def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
             return __simret(command=__cmd, output=__output, error=__err)
         else:
             return __simret(command=__cmd, output=__output)
-    child=popen2.Popen3(__cmd, err)
-    __rc=child.wait()
-    __rv=child.fromchild.readlines()
-    if err:
-        __err=child.childerr.readlines()
-        return [__rc, __rv, __err]
-    return [__rc, __rv]
-
+    if sys.version[:3] < "2.4":
+        child=popen2.Popen3(__cmd, err)
+        __rc=child.wait()
+        __rv=child.fromchild.readlines()
+        if err:
+            __err=child.childerr.readlines()
+            return [__rc, __rv, __err]
+        return [__rc, __rv]
+    else:
+        p = subprocess.Popen([__cmd], shell=True, 
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                             close_fds=True)
+        p.wait()
+        __rc=p.returncode
+        __rv=p.stdout.readlines()
+        if err:
+            __err=p.stderr.readlines()
+            return [__rc, __rv, __err]
+        return [__rc, __rv]
 
 def execLocal(__cmd, __output=None, __error=None):
     """ 
@@ -214,36 +246,11 @@ def execMethod(cmd, *params):
     else:
         return cmd(*params)
 
-def test(level):
-    global __EXEC_REALLY_DO
-    __EXEC_REALLY_DO=level
-    cmd1='echo "hallo stdout"'
-    cmd2='echo "hallo stderr" >&2'
-
-    print execLocalOutput(cmd1, True, "output cmd1 execLocalOutput")
-    print execLocalStatusOutput(cmd1, "output cmd1 execLocalStatusOutput")
-    print execLocalGetResult(cmd1, False, "output cmd1 execLocalGetResult")
-    print execLocalOutput(cmd2, True, "output cmd2 execLocalOutput")
-    print execLocalStatusOutput(cmd2, "output cmd2 execLocalStatusOutput")
-    print execLocalGetResult(cmd2, True, "output cmd2 execLocalGetResult")
-    print execMethod(execLocalGetResult, cmd2, True)
-
-    print execLocalStatusOutput("/bin/false", "output of /bin/false, execLocalStatusOutput")
-    print execLocal("/bin/false", "output of /bin/false, execLocal")
-
-def __line(text):
-    print("-------------------------- %s --------------------------------------" %(text))
-
-if __name__=="__main__":
-    __line("level: "+SIMULATE)
-    test(SIMULATE)
-    __line("level: "+"")
-    test("")
-    __line("level: "+ASK)
-    test(ASK)
-
 # $Log: ComSystem.py,v $
-# Revision 1.18  2008-08-05 13:06:35  marc
+# Revision 1.19  2009-07-22 08:37:40  marc
+# fedora compliant
+#
+# Revision 1.18  2008/08/05 13:06:35  marc
 # - added simulated output for simulated commands
 #
 # Revision 1.17  2008/08/04 09:17:35  marc

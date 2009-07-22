@@ -7,24 +7,38 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.10 2008-08-05 13:07:20 marc Exp $
+# $Id: ComDataObject.py,v 1.11 2009-07-22 08:37:40 marc Exp $
 #
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
 import exceptions
-import copy
-import string
 from xml.dom import Element, Node
 from xml import xpath
-from xml.dom.ext import PrettyPrint
 
 import ComLog
 import XmlTools
-from ComExceptions import *
+from ComExceptions import ComException
 
 class NotImplementedYetException(ComException): pass
 
@@ -32,14 +46,10 @@ class DataObject(object):
     TAGNAME="DataObject"
     __logStrLevel__ = "DataObject"
 
-    '''
-    static methods
-    '''
+    # static methods
 
-    '''
-    Public methods
-    '''
-    def __init__(self, *params, **kwds):
+    # Public methods
+    def __init__(self, *params):
         element=None
         doc=None
         if len(params) >= 1:
@@ -54,7 +64,7 @@ class DataObject(object):
                 element=params[0]
         if len(params) == 2:
             doc=params[1]
-        if element.hasAttribute("refid"):
+        if element and element.hasAttribute("refid"):
             __newelement=self.searchReference(element, doc)
             element.parentNode.replaceChild(__newelement, element)
             self.element=__newelement
@@ -62,10 +72,11 @@ class DataObject(object):
             self.element=element
         self.document=doc
         self.properties=None
-        from comoonics.ComProperties import Properties as Props
-        properties=element.getElementsByTagName(Props.TAGNAME)
-        if len(properties) > 0:
-            self.properties=Props(properties[0], self.document)
+        if element:
+            from comoonics.ComProperties import Properties as Props
+            properties=element.getElementsByTagName(Props.TAGNAME)
+            if len(properties) > 0:
+                self.properties=Props(properties[0], self.document)
 
     def getProperties(self):
         return self.properties
@@ -164,9 +175,7 @@ class DataObject(object):
             str+="%s = %s, " % (self.getElement().attributes.item(i).name, self.getElement().attributes.item(i).value)
         return str
 
-    """
-    Privat Methods
-    """
+    # Privat Methods
 
     def searchReference(self, element, doc):
         name="unnamed"
@@ -206,88 +215,11 @@ class DataObject(object):
         """
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
-def line(str=None):
-    print
-    print "--------------------"+str+"---------------------------------"
-
-def __test():
-    import sys
-    import os
-    import copy
-    import xml.dom
-    from xml.dom import EMPTY_NAMESPACE
-    from xml.dom.ext import PrettyPrint
-    from xml.dom.ext.reader import Sax2
-    from xml import xpath
-
-    # create Reader object
-    reader = Sax2.Reader()
-
-    #parse the document
-    file=os.fdopen(os.open("../../test/example_config.xml",os.O_RDONLY))
-    doc = reader.fromStream(file)
-
-    print'search for id "rootfs"'
-    element=xpath.Evaluate('//*[@refid="bootfs"]', doc)[0]
-
-    obj=DataObject(element, doc)
-    PrettyPrint(obj.getElement())
-    print obj
-
-    attribute="xyz"
-    line("Testing hasAttribute(%s)" %attribute)
-    if obj.hasAttribute(attribute):
-        print "Found Attribute \"%s\"!! Should not happen!!!" %attribute
-    else:
-        print "No Attribute \"%s\" available. (OK)" % attribute
-
-    attribute="id"
-    line("Testing hasAttribute(%s)" %attribute)
-    if obj.hasAttribute(attribute):
-        print "Found Attribute \"%s\"!! (OK)" %attribute
-    else:
-        print "No Attribute \"%s\"!! Should not happen!!!" %attribute
-
-    attribute="xyz"
-    default=""
-    line("Testing getAttribute(%s, %s)" %(attribute, default))
-    result=obj.getAttribute(attribute, default)
-    print "Found value for Attribute \"%s\"=\"%s\"" %(attribute, result)
-
-    attribute="id"
-    default="12"
-    line("Testing getAttribute(%s, %s)" %(attribute, default))
-    result=obj.getAttribute(attribute, default)
-    print "Found value for Attribute \"%s\"=\"%s\"" %(attribute, result)
-
-    attribute="xyz"
-    line("Testing getAttribute(%s)" %(attribute))
-    try:
-        result=obj.getAttribute(attribute)
-        print "Found value for Attribute \"%s\": %s !!!Should not happen !!!" %(attribute, result)
-    except:
-        print "Exception %s caught (OK)" %sys.exc_value
-
-    attribute="id"
-    line("Testing getAttribute(%s)" %(attribute))
-    try:
-        result=obj.getAttribute(attribute)
-        print "Found value for Attribute \"%s\": %s (OK)" %(attribute, result)
-    except:
-        print "Exception %s caught: !!!!SHould not happen!!!" %sys.exc_value
-
-    line("Testing boolean")
-    path="//device[@id='rootfs']"
-    element=xpath.Evaluate(path, doc)[0]
-    obj=DataObject(element)
-    print "%s.options: %s" %(path, obj.getAttribute("options"))
-    print "%s.optionsAsBoolean: '%s'" %(path, obj.getAttributeBoolean("options"))
-
-if __name__ == "__main__":
-    __test()
-
 # $Log: ComDataObject.py,v $
-# Revision 1.10  2008-08-05 13:07:20  marc
+# Revision 1.11  2009-07-22 08:37:40  marc
+# fedora compliant
+#
+# Revision 1.10  2008/08/05 13:07:20  marc
 # - added a one param constructor that can either be a file (xml) or an element
 #
 # Revision 1.9  2007/06/15 18:59:13  marc

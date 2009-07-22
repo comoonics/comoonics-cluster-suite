@@ -14,11 +14,29 @@ hello world2
 """
 
 # here is some internal information
-# $Id: ComPath.py,v 1.3 2009-06-10 15:20:08 marc Exp $
+# $Id: ComPath.py,v 1.4 2009-07-22 08:38:00 marc Exp $
 #
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComPath.py,v $
 
 from ComDataObject import DataObject
@@ -122,7 +140,10 @@ class Path(DataObject):
 
 ################
 # $Log: ComPath.py,v $
-# Revision 1.3  2009-06-10 15:20:08  marc
+# Revision 1.4  2009-07-22 08:38:00  marc
+# fedora compliant
+#
+# Revision 1.3  2009/06/10 15:20:08  marc
 # removed some debugs.
 #
 # Revision 1.2  2008/03/12 09:35:25  marc
