@@ -48,6 +48,33 @@ class test_Cdsl(unittest.TestCase):
         for cdsl in setupCDSLRepository.cdslRepository2.getCdsls():
             print "sourcepaths(%s): %s" %(cdsl, cdsl.getSourcePaths())
 
+    def test_Y_CdslsDeleteNoForce(self):
+        import shutil
+        from comoonics.cdsl import cmpbysubdirs
+        _cdslsrev=setupCDSLRepository.cdslRepository1.getCdsls()
+        _cdslsrev.sort(cmpbysubdirs)
+        _cdslsrev.reverse()
+        for _cdsl in _cdslsrev:
+            print "- %s\n" %_cdsl.src
+            _cdsl.delete(True, False)
+            _files2remove=list()
+            if _cdsl.isHostdependent():
+                for nodeid in setupCluster.clusterinfo.getNodeIdentifiers('id'):
+                    _file="%s.%s" %(_cdsl.src, nodeid)
+                    _files2remove.append(_file)
+            for _file in _files2remove:
+                print "- %s" %_file
+                if os.path.isdir(_file):
+                    os.removedirs(_file)
+                else:
+                    os.remove(_file)
+            if _cdsl.isHostdependent():
+                shutil.move("%s.%s" %(_cdsl.src, "default"), _cdsl.src)
+            _cdsl.commit()
+            self.assertTrue(_cdsl.exists(), "%s CDSL %s does not exist although it was created before." %(_cdsl.type, _cdsl))
+            for __cdsl in  setupCDSLRepository.cdslRepository1.getCdsls():
+                self.assertTrue(__cdsl.exists(), "The still existant %s cdsl %s does not exist any more." %(__cdsl.type, __cdsl))
+
     def test_Z_CdslsDelete(self):
         from comoonics.cdsl import cmpbysubdirs
         _cdslsrev=setupCDSLRepository.cdslRepository1.getCdsls()

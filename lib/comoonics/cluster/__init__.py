@@ -5,9 +5,29 @@ Comoonics cluster configuration package
 Provides modules to manage and query the cluster configuration. Discovers type 
 of used cluster configuration by parsing given cluster configuration.
 """
+
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 
-__version__='$Revision: 1.7 $'
+__version__='$Revision: 1.8 $'
 
 __all__=['clusterconf', 'querymapfile', 'clusterdtd', 'RedHatClusterConst', 'OSRClusterConst']
 
@@ -41,7 +61,10 @@ def parseClusterConfFP(_clusterconffp, _clusterconf, _validate=False):
 
 ###############
 # $Log: __init__.py,v $
-# Revision 1.7  2009-05-27 18:31:59  marc
+# Revision 1.8  2009-07-22 08:37:09  marc
+# Fedora compliant
+#
+# Revision 1.7  2009/05/27 18:31:59  marc
 # - prepared and added querymap concept
 # - reviewed and changed code to work with unittests and being more modular
 #

@@ -6,8 +6,28 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os
 import re
 import shutil
 import time
@@ -18,7 +38,6 @@ from comoonics import ComSystem
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
-import comoonics.pythonosfix as os
 from comoonics.cdsl import dirtrim
 
 class CdslInitException(ComException):pass
@@ -46,9 +65,9 @@ class Cdsl(DataObject):
         @return: a new cdsl object 
         @rtype: depending on type of repository
         """
-        if type(args[2]).__name__ == "ComoonicsCdslRepository":
-            cls = ComoonicsCdsl
-        return object.__new__(cls, *args, **kwds)
+        # Always default to ComoonicsCdsl
+        cls = ComoonicsCdsl
+        return object.__new__(cls) #, *args, **kwds)
     
     def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None):
         """
@@ -279,7 +298,7 @@ class Cdsl(DataObject):
         @rtype: string
         @note: This is a virtual method that has to be implemented by the child classes
         """
-        pass
+        return ""
 
     def getDestPaths(self):
         """
@@ -288,7 +307,7 @@ class Cdsl(DataObject):
         @rtype: string
         @note: This is a virtual method that has to be implemented by the child classes
         """
-        pass
+        return ""
     
     def getCDSLPath(self):
         """
@@ -297,7 +316,7 @@ class Cdsl(DataObject):
         @rtype: string
         @note: This is a virtual method that has to be implemented by the child classes
         """
-        pass
+        return ""
     
     def getCDSLLinkPath(self):
         """
@@ -529,7 +548,7 @@ class ComoonicsCdsl(Cdsl):
         @type path: string|list<string>
         """
         if isinstance(path, basestring):
-            if os.path.exists(path):
+            if os.path.exists(path) or os.path.islink(path):
                 self.logger.debug("Remove " + path)
                 if not os.path.islink(path) and os.path.isdir(path):
                     ComSystem.execMethod(shutil.rmtree, path)
@@ -737,6 +756,7 @@ class ComoonicsCdsl(Cdsl):
         @type recursive: Boolean
         """
         from comoonics.ComPath import Path
+        from comoonics.cdsl import getNodeFromPath
 
         if not self.exists():
             raise CdslDoesNotExistException("Cdsl with source " + self.src + " does not exist, cannot delete.")
@@ -746,22 +766,30 @@ class ComoonicsCdsl(Cdsl):
         #assume completeness of inventoryfile
         if recursive == True:
             _tmp = self.getChilds()
-            for cdsl in self.getChilds():
+            for cdsl in _tmp:
                 cdsl.delete(recursive)
         
         _cwd=Path(self.getBasePath())
         _cwd.pushd()
         
-        #delete cdsl from filesystem
+        #delete or move cdsl from filesystem first is from second to if second=None it is removed
         _delpaths=list()
+        _movepairs=dict()
         for _path in self.getSourcePaths():
+            # This one is always a link to be removed
             _delpaths.append(_path)
 
         for _path in self.getDestPaths():
             if force:
                 _delpaths.append(_path)
-            else:
+            else:            
                 self.logger.debug(".delete(%s): Skipping path %s" %(self.src, _path))
+                if self.isShared():
+                    _movepairs[_path]=self.src
+                else:
+                    _nodeid=getNodeFromPath(_path, self.cdslRepository)
+                    _movepairs[_path]="%s.%s" %(self.src, _nodeid)
+#                _delpaths[_path]=self.
                 
         # tidy up the rest
         siblings=list()
@@ -770,10 +798,11 @@ class ComoonicsCdsl(Cdsl):
         self.logger.debug("delete(%s): siblings: %s" %(self.src, siblings))
         if len(self.getSiblings()) == 0:
             for _path in self._getSubPathsToParent():
-                if force:
-                    _delpaths.append(_path)
-                else:
-                    self.logger.debug(".delete(%s): Skipping path %s" %(self.src, _path))
+                _delpaths.append(_path)
+#                if force:
+#                    _delpaths.append(_path)
+#                else:
+#                    self.logger.debug(".delete(%s): Skipping path %s" %(self.src, _path))
                 
 #            _parent=self.getParent()
 #            if len(self.getSiblings())==0 and not _parent.isNested():
@@ -781,6 +810,13 @@ class ComoonicsCdsl(Cdsl):
 #                _delpaths.append(_expanded[:-len(self.src[len(_parent.src):])])
         
         self.logger.debug("delete: cwd: %s" %_cwd)
+        for _from, _to in _movepairs.items():
+            if not _to:
+                self._removePath(_from)
+            else:
+                if os.path.islink(_to):
+                    self._removePath(_to)
+                shutil.move(_from, _to)
         self._removePath(_delpaths)
         
         _cwd.popd()
@@ -837,3 +873,9 @@ class ComoonicsCdsl(Cdsl):
             if self.src != cdsl.src and cdsl.getParent() and cdsl.getParent() == self.getParent() :
                 _tmpcdsls.append(cdsl)
         return _tmpcdsls
+
+###############
+# $Log: ComCdsl.py,v $
+# Revision 1.13  2009-07-22 08:37:09  marc
+# Fedora compliant
+#

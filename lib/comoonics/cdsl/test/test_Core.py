@@ -38,6 +38,13 @@ class test_0CoreFunctions(unittest.TestCase):
             _result=isHostdependentPath(_tmp[0], setupCDSLRepository.cdslRepository1, False)
             self.assertEquals(_result, _tmp[1], "%s isHostdependentPath != %s." %(_tmp[0], _tmp[1]))
 
+    def testgetNodeFromPath(self):
+        from comoonics.cdsl import getNodeFromPath
+        self.assertEquals(getNodeFromPath("cluster/cdsl/1/hostdependent/shared", setupCDSLRepository.cdslRepository1, False), "1")
+        self.assertEquals(getNodeFromPath("cluster/cdsl/nodename/hostdependent/shared", setupCDSLRepository.cdslRepository1, False), "nodename")
+        self.assertEquals(getNodeFromPath("cluster/cdsl/default/hostdependent/shared", setupCDSLRepository.cdslRepository1, False), "default")
+        self.assertRaises(ValueError, getNodeFromPath, "/cdsl/default/hostdependent/shared", setupCDSLRepository.cdslRepository1, False)
+
     def test0Ltimdir(self):
         from comoonics.cdsl import ltrimDir
         _resultpairs=[ [ "../../../../cluster/shared/hostdependent/shared", "cluster/shared/hostdependent/shared" ],

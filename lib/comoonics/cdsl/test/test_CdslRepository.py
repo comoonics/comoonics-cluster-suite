@@ -5,6 +5,57 @@ setupCluster=setup.SetupCluster()
 setupCDSLRepository=setup.SetupCDSLRepository()  
 
 class test_CdslRepository(unittest.TestCase):
+    def testDefaultCdsltree(self):
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultCdsltree(), "cluster/cdsl")
+
+    def testDefaultCdsltreeShared(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultCdsltreeShared(), "cluster/shared")
+
+    def testDefaultCdslLink(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultCdslLink(), "cdsl.local")
+
+    def testDefaultMountpoint(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultMountpoint(), "")
+
+    def testDefaultDefaultDir(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultDefaultDir(), "default")
+    
+    def testDefaultMaxnodeidnum(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultMaxnodeidnum(), "0")
+ 
+    def testDefaultNodePrefix(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultNodePrefix(), "")
+    
+    def testDefaultUseNodeids(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultUseNodeids(), "True")
+    
+    def testDefaultExpandString(self):
+        """
+        @rtype: string
+        """
+        self.assertEquals(setupCDSLRepository.cdslRepository2.getDefaultExpandString(), ".cdsl")
+    
     def testExpand(self):
         from comoonics.cdsl import guessType
         from comoonics.cdsl.ComCdsl import Cdsl

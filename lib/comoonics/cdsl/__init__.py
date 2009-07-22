@@ -7,6 +7,24 @@ functionality to create, manipulate and check cdsls on filesystem/in inventoryfi
 Discovers needed cdsl type by looking after type of used cluster configuration.
 """
 
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #Files
 DEFAULT_INVENTORY="/var/lib/cdsl/cdsl_inventory.xml"
@@ -200,6 +218,26 @@ def ltrimDir(_path, _trimdir=".."):
             _retpath=os.path.join(_retpath, _subdir)
     return _retpath
 
+def getNodeFromPath(path, cdslRepository, exists=True):
+    """
+    Returns the node from the given path. If a node is found incl. default it is returned. If not
+    a ValueError is raised.
+    @return: the nodename/id
+    @rtype: String
+    @raise ValueError: if no nodepart is found
+    @param path: full path to the file
+    @type path: String  
+    @param cdslRepository: the cdsl repository
+    @type cdslRepository: CdslRepository
+    """
+    import os
+    if isHostdependentPath(path, cdslRepository, exists):
+        try:
+            return strippath(path, cdslRepository.getDefaultCdsltree()).split(os.sep)[1]
+        except:
+            pass
+    raise ValueError("Could not find nodepart in path %s" %path)
+
 def isSubPath(_path, _subdir):
     import os
     import os.path
@@ -255,7 +293,10 @@ def commonoptparseroptions(parser):
 
 #################
 # $Log: __init__.py,v $
-# Revision 1.6  2009-06-10 14:53:06  marc
+# Revision 1.7  2009-07-22 08:37:09  marc
+# Fedora compliant
+#
+# Revision 1.6  2009/06/10 14:53:06  marc
 # - first stable version
 # - fixed many bugs
 # - rewrote nearly everything

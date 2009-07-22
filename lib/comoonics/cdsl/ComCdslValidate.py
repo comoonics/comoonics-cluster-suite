@@ -6,10 +6,28 @@ for existing cdsls. Append cdsls which are found to cdslRepository. Includes a s
 version of os.walk() (see L{os} for details), which skips submounts but follows symbolic links.
 """
 
+# @(#)$File$
+#
+# Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
+# Einsteinstrasse 10, 85716 Unterschleissheim, Germany
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 
-import comoonics.pythonosfix as os
+import os
 
 class CdslValidate(object):
     """
@@ -131,7 +149,10 @@ class CdslValidate(object):
 
 ##############
 # $Log: ComCdslValidate.py,v $
-# Revision 1.7  2009-06-10 14:53:06  marc
+# Revision 1.8  2009-07-22 08:37:09  marc
+# Fedora compliant
+#
+# Revision 1.7  2009/06/10 14:53:06  marc
 # - first stable version
 # - fixed many bugs
 # - rewrote nearly everything
