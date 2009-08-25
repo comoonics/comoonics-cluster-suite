@@ -107,6 +107,9 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Wed Jul 22 2009 MG <grimme@atix.de>, 0.1-22
+   - fixed bugs in querymap 
+   - moved com-queryclusterconf to getopts
 * Tue Jul 21 2009 MG <grimme@atix.de>, 0.1-21
    - made fedora compliant
 * Tue Jul 14 2009 MG <grimme@atix.de>, 0.1-20

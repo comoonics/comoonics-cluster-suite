@@ -7,7 +7,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.1 2009-07-22 08:36:19 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.2 2009-08-25 12:17:31 marc Exp $"
 
 import sys, os, string
 import glob
@@ -574,7 +574,7 @@ class bdist_rpm_fedora (Command):
                 pathname=os.sep.join(module.split(".")[:-1])
                 if not pathname in pathnames:
                     pathnames.append(pathname)
-        if hasattr(self.distribution, "packages"):
+        if hasattr(self.distribution, "packages") and getattr(self.distribution, "packages") != None:
             for package in self.distribution.packages:
                 pathnames.append(os.sep.join(package.split(".")))
         return pathnames
