@@ -4,7 +4,8 @@ import unittest
 
 class test_ClusterQueryMap(unittest.TestCase):    
     _results={ "osr": { "nodeid": "/cluster/clusternode[hwid=1234]/@nodeid",
-                        "ip": "/cluster/clusternode[nodeid=1234]/eth/@ip" },
+                        "ip": "/cluster/clusternode[nodeid=1234]/eth[@name=eth0]/@ip",
+                        "ipconfig": [ "/cluster/clusternode[nodeid=1234]/eth[@name=eth0]/@ip", "/cluster/clusternode[nodeid=1234]/eth[@name=eth0]/@name" ]},
                "redhatcluster": { "nodeid": "/cluster/clusternode[nodeid=1234]/com_info/eth[mac=1234]",
                                   "ip": "/cluster/clusternode[nodeid=1234]/com_info/eth/@ip" }}
         
@@ -31,10 +32,16 @@ class test_ClusterQueryMap(unittest.TestCase):
         self._test("redhatcluster")
     def _test(self, section):
         self.querymap.mainsection=section
-        params=["1234",]
+        params=["1234", "eth0"]
         for param in self._results[section]:
             _result1=self._results[section][param]
-            _result2=self.querymap.get(None, param) % self.querymap.array2params(params)
+            _result2=self.querymap.get(None, param)
+            if isinstance(_result2, basestring):
+                _result2= _result2 % self.querymap.array2params(params)
+            else:
+                for i in range(len(_result2)):
+                    _result2[i]=_result2[i] % self.querymap.array2params(params)
+                    
             print "%s == %s" %(_result1, _result2)
             self.assertEqual(_result1, _result2)
 
