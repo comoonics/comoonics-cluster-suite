@@ -8,7 +8,7 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.12 2009-07-22 08:37:09 marc Exp $
+# $Id: ComClusterInfo.py,v 1.13 2009-09-28 15:10:04 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,7 +30,7 @@ of clusterrepositories
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 
@@ -147,13 +147,19 @@ class RedHatClusterInfo(ClusterInfo):
             _pathroot=params[0]
         else:
             _pathroot=RedHatClusterRepository.getDefaultClustatXPath()
+            
+        result=""
         if xpathsplit(_pathroot)[0] == RedHatClusterRepository.element_clustat:
             if self.non_statics.get(param, None) != None:
-                return self.helper.queryStatusElement(query= xpathjoin(_pathroot, self.non_statics.get(param)))
+                result=self.helper.queryStatusElement(query= xpathjoin(_pathroot, self.non_statics.get(param)))
             else:
-                return self.helper.queryStatusElement(query= xpathjoin(_pathroot, "@"+param))
+                result=self.helper.queryStatusElement(query= xpathjoin(_pathroot, "@"+param))
         else:
-            return self.queryValue(param)
+            result=self.queryValue(param)
+        if isinstance(result, basestring):
+            return result
+        else:
+            ":".join(result)
 
 
     def queryValue(self, query):
@@ -329,7 +335,10 @@ class ComoonicsClusterInfo(RedHatClusterInfo):
         raise ClusterMacNotFoundException("Cannot find device with given mac: %s" %(str(mac)))
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.12  2009-07-22 08:37:09  marc
+# Revision 1.13  2009-09-28 15:10:04  marc
+# bugfix with queries and interpretation of querymap strings
+#
+# Revision 1.12  2009/07/22 08:37:09  marc
 # Fedora compliant
 #
 # Revision 1.11  2009/05/27 18:31:59  marc

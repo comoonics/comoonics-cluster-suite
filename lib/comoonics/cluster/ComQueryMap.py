@@ -32,6 +32,8 @@ class QueryMap(ConfigParser.ConfigParser):
     classdocs
     '''
 
+    delimitor=" "
+
     def __init__(self, _querymapfile=comoonics.cluster.querymapfile, _clusterinfo=None):
         '''
         Constructor
@@ -41,12 +43,21 @@ class QueryMap(ConfigParser.ConfigParser):
             self.mainsection="redhatcluster"
         else:
             self.mainsection="unknown"
+        self.read(_querymapfile)
         
     def get(self, section, option):
         if not section:
             section=self.mainsection
         self._defaults["param0"]="%(param0)s"
-        return ConfigParser.ConfigParser.get(self, section, option)
+        self._defaults["param1"]="%(param1)s"
+        self._defaults["param2"]="%(param2)s"
+        self._defaults["param3"]="%(param3)s"
+        self._defaults["param4"]="%(param4)s"
+        result=ConfigParser.ConfigParser.get(self, section, option)
+        if result.find(self.delimitor) > 0:
+            return result.split(self.delimitor)
+        else:
+            return result
     def array2params(self, _array, suffix="param%s"):
         _params={}
         for _index in range(len(_array)):
@@ -73,7 +84,10 @@ class QueryMap(ConfigParser.ConfigParser):
         
 ###########
 # $Log: ComQueryMap.py,v $
-# Revision 1.2  2009-07-22 08:37:09  marc
+# Revision 1.3  2009-09-28 15:10:04  marc
+# bugfix with queries and interpretation of querymap strings
+#
+# Revision 1.2  2009/07/22 08:37:09  marc
 # Fedora compliant
 #
 # Revision 1.1  2009/05/27 18:31:59  marc
