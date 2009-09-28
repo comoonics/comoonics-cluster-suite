@@ -4,8 +4,8 @@
 
 source ./build-lib.sh
 
-RELEASE=37
-REQUIRES='libxslt-python,comoonics-cs-py >= 0.1-44'
+RELEASE=38
+REQUIRES='libxslt-python,comoonics-ec-base-py, comoonics-storage-py'
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-ec-py"
 VERSION="0.1"
