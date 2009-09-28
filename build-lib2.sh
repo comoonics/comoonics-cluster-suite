@@ -24,7 +24,7 @@ BEGIN { changelogfound=0; }
 	
 	if [ $# -eq 0 ]; then
 		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --spec-only --changelog="${CHANGELOG}"
-		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --changelog="${CHANGELOG}"
+		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --source-only --changelog="${CHANGELOG}"
 	else
 		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm $@ --changelog="${CHANGELOG}"
 	fi

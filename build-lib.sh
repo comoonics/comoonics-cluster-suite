@@ -1,10 +1,11 @@
-# $Id: build-lib.sh,v 1.11 2009-07-22 08:22:03 marc Exp $
+# $Id: build-lib.sh,v 1.12 2009-09-28 15:28:18 marc Exp $
 
 function setup {
   CHANGELOG=$(awk '
 BEGIN { changelogfound=0; }
 /^'${NAME}'/{ changelogfound=1; next };
 /^comoonics/ { changelogfound=0; next };
+/^mgrep/ { changelogfound=0; next };
 {
   if (changelogfound == 1) {
      print
@@ -16,7 +17,8 @@ BEGIN { changelogfound=0; }
 
 [ -e setup.py ] && rm -f setup.py
 
-echo '#!/usr/bin/python
+if [ -n "${DATA_FILES}" ]; then
+   echo '#!/usr/bin/python
 import sys
 import re
 import os
@@ -54,10 +56,10 @@ if os.path.exists(manpages):
 os.chdir(olddir)
 
 ' > doc2man.py
-if ! python doc2man.py; then
+  if ! python doc2man.py; then
 	exit 1
+  fi
 fi
-
 
 echo '#!/usr/bin/python
 from distutils.core import setup
@@ -78,16 +80,22 @@ setup(name="'${NAME}'",
      )
 ' > setup.py
 
+
 echo ${REQUIRES} | grep "^--requires" 2>&1 > /dev/null
 if [ $? -ne 0 ] && [ -n "$REQUIRES" ]; then
-    python setup.py -v bdist_rpm --release=${RELEASE} --requires="${REQUIRES}" ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
+    python setup.py -v bdist_rpm --release=${RELEASE} --requires="${REQUIRES}" ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES} --spec-only
+    python setup.py -v bdist_rpm --release=${RELEASE} --requires="${REQUIRES}" ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES} --source-only
 else
-    python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES}
+    python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES} --spec-only
+    python setup.py -v bdist_rpm --release=${RELEASE} ${REQUIRES} ${NOAUTO_REQ} --changelog="${CHANGELOG}" --doc-files=${DOCFILES} --source-only
 fi
 }
 ##########
 # $Log: build-lib.sh,v $
-# Revision 1.11  2009-07-22 08:22:03  marc
+# Revision 1.12  2009-09-28 15:28:18  marc
+# update to better build process
+#
+# Revision 1.11  2009/07/22 08:22:03  marc
 # updates
 #
 # Revision 1.10  2008/08/14 13:00:51  marc
