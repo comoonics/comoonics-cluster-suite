@@ -1,10 +1,10 @@
 #!/bin/bash
-# $Id: build_rpm-backup-legato.sh,v 1.6 2007-12-07 14:29:23 reiner Exp $
+# $Id: build_rpm-backup-legato.sh,v 1.7 2009-09-28 15:29:06 marc Exp $
 
 source ./build-lib.sh
 
 RELEASE=5
-REQUIRES="--requires=comoonics-cs-py,comoonics-backup-py"
+REQUIRES="--requires=comoonics-backup-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-backup-legato-py"
 VERSION="0.1"
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-backup-legato.sh,v $
-# Revision 1.6  2007-12-07 14:29:23  reiner
+# Revision 1.7  2009-09-28 15:29:06  marc
+# updated to new build process
+#
+# Revision 1.6  2007/12/07 14:29:23  reiner
 # Added GPL license to and ATIX AG as author name to RPM header.
 #
 # Revision 1.5  2007/08/07 11:22:01  marc

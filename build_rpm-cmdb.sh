@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# $Id: build_rpm-cmdb.sh,v 1.14 2007-12-07 14:29:23 reiner Exp $
+# $Id: build_rpm-cmdb.sh,v 1.15 2009-09-28 15:29:06 marc Exp $
 
 source ./build-lib.sh
 
 RELEASE=23
-REQUIRES="--requires=comoonics-cs-py,comoonics-db-py,MySQL-python"
+REQUIRES="--requires=comoonics-db-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-cmdb-py"
 VERSION="0.1"
@@ -25,7 +25,10 @@ setup
 
 ##############
 # $Log: build_rpm-cmdb.sh,v $
-# Revision 1.14  2007-12-07 14:29:23  reiner
+# Revision 1.15  2009-09-28 15:29:06  marc
+# updated to new build process
+#
+# Revision 1.14  2007/12/07 14:29:23  reiner
 # Added GPL license to and ATIX AG as author name to RPM header.
 #
 # Revision 1.13  2007/05/10 12:44:01  marc

@@ -1,10 +1,10 @@
 #!/bin/bash
-# $Id: build_rpm-backup.sh,v 1.3 2007-12-07 14:29:23 reiner Exp $
+# $Id: build_rpm-backup.sh,v 1.4 2009-09-28 15:29:06 marc Exp $
 
 source ./build-lib.sh
 
 RELEASE=2
-REQUIRES="--requires=comoonics-cs-py"
+REQUIRES="--requires=comoonics-ec-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-backup-py"
 VERSION="0.1"
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-backup.sh,v $
-# Revision 1.3  2007-12-07 14:29:23  reiner
+# Revision 1.4  2009-09-28 15:29:06  marc
+# updated to new build process
+#
+# Revision 1.3  2007/12/07 14:29:23  reiner
 # Added GPL license to and ATIX AG as author name to RPM header.
 #
 # Revision 1.2  2007/06/13 09:00:55  marc

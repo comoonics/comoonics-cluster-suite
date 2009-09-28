@@ -1,10 +1,10 @@
 #!/bin/bash
-# $Id: build_rpm-fenceacksv-plugins.sh,v 1.3 2008-09-10 13:11:06 marc Exp $
+# $Id: build_rpm-fenceacksv-plugins.sh,v 1.4 2009-09-28 15:29:30 marc Exp $
 
 source ./build-lib.sh
 
 RELEASE=2
-REQUIRES="comoonics-cs-py >= 0.1-44,comoonics-ec-py >= 0.1-25,comoonics-bootimage-fenceacksv >= 0.3,comoonics-fenceacksv-py,comoonics-bootimage-listfiles-fenceacksv-plugins"
+REQUIRES="comoonics-ec-py >= 0.1-25,comoonics-fenceacksv-py,comoonics-bootimage-listfiles-fenceacksv-plugins"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-fenceacksv-plugins-py"
 VERSION="0.1"
@@ -21,7 +21,10 @@ setup
 
 ##############
 # $Log: build_rpm-fenceacksv-plugins.sh,v $
-# Revision 1.3  2008-09-10 13:11:06  marc
+# Revision 1.4  2009-09-28 15:29:30  marc
+# updated to new build process
+#
+# Revision 1.3  2008/09/10 13:11:06  marc
 # Fix Bug#262, plugins do not work in fenceacksv because of missing deps. Added the dep to rpmspec.
 #
 # Revision 1.2  2007/12/07 14:29:23  reiner

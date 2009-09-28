@@ -3,7 +3,7 @@
 source ./build-lib.sh
 
 RELEASE=3
-REQUIRES="--requires=comoonics-cs-py,PyXML,comoonics-pythonosfix-py,comoonics-cluster-py,comoonics-ec-py"
+REQUIRES="--requires=comoonics-cluster-py,comoonics-ec-py"
 NOAUTO_REQ="--no-autoreq"
 NAME="comoonics-assistant-py"
 VERSION="0.1"
