@@ -1,4 +1,6 @@
 include *.txt
 recursive-include examples *.txt *.py
 include man/*.gz
+include xml/xml-dr/*.xml
+include xml/xml-ec-admin/*.xml
 prune test/
