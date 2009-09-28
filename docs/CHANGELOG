@@ -20,6 +20,8 @@ comoonics-assistant-py:
   - initial revision
   
 comoonics-base-py:
+* Mon Sep 28 2009 MG <grimmme@atix.de>, 0.1-4
+  - New version for new build system
 * Tue Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-3
   - fedora compliant additional changes.
 * Tue Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-2
@@ -31,12 +33,6 @@ comoonics-dr-py:
 * Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-4
   - minor enhancements
 * Fri Feb 28 2008 MH <hlawatschek@atix.de>, 0.1-1
-  - initial revision
-
-comoonics-ec-admin-py:
-* Thu Nov 13 2008 MH <hlawatschek@atix.de>, 0.1-2
-  - some bug fixes
-* Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-1
   - initial revision
 
 comoonics-backup-py:
@@ -58,6 +54,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.2-17
+   - new upstream version
 * Tue Jul 21 2009 MG <grimme@atix.de>, 0.2-16
    - Made Fedora compliant
 * Tue Jul 14 2009 MG <grimme@atix.de>, 0.2-15
@@ -107,6 +105,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-23
+   - new upstream version
 * Wed Jul 22 2009 MG <grimme@atix.de>, 0.1-22
    - fixed bugs in querymap 
    - moved com-queryclusterconf to getopts
@@ -151,6 +151,12 @@ comoonics-cluster-py:
    - added man pages
 * Fri Aug 03 2007 AO <offermann@atix.de>, 0.1-1
    initial revision
+
+comoonics-cluster-tools-py:
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
+   - new upstream version
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
+   - initial revision
 
 comoonics-cmdb-py:
 * Thu May 10 2007 MG <grimme@atix.de>, 0.1-23
@@ -287,7 +293,7 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
-* Tue Dez 02 2008 MG <grimme@atix.de>, 0.1-13
+* Tue Dec 02 2008 MG <grimme@atix.de>, 0.1-13
    - fixed bug when DBObjects that have been newly created could not be made persistent (Bug #301)
 * Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-11
    - fixed bug in select query (where_clause)
@@ -307,6 +313,8 @@ comoonics-db-py
    initial revision
 
 comoonics-ec-py
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-38
+   - new upstream version
 * Wed Feb 29 2008 MG <grimme@atix.de>, 0.1-37
    - ComPathCopyObject: fix for bz 204
 * Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-34
@@ -375,6 +383,18 @@ comoonics-ec-py
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
   changed that modset and copysets can be mixed not for copysets then modsets.
 
+comoonics-ec-admin-py:
+* Thu Nov 13 2008 MH <hlawatschek@atix.de>, 0.1-2
+  - some bug fixes
+* Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-1
+  - initial revision
+
+comoonics-ec-base-py:
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
+   - new upstream version
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
+   - initial revision
+
 comoonics-fenceacksv-py
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
@@ -403,9 +423,11 @@ comoonics-scsi-py
   initial revision
 
 comoonics-storage-py
-* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2:
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-3
+   - new upstream version
+* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2
   only a cosmetic change in Storage
-* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1 :
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1
   added storage copyset/modset stuff
   initial release
 
@@ -433,6 +455,12 @@ comoonics-storage-hp-py
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1 :
   added implementation for eva
   SSSU simulator for hp-eva-sssu (Storage scripting)
+
+comoonics-tools-py
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
+   - new upstream version
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
+  initial release
 
 mgrep
 * Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1
