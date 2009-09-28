@@ -10,7 +10,7 @@ provides analysis functions and the like for gfs
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComGFS.py,v $
 
 import os
@@ -25,461 +25,11 @@ from exceptions import OSError, IndexError, ValueError
 
 from comoonics import ComSystem
 
-
 class GFSError(OSError):
     def __init__(self, msg):
         self.value=msg
     def __str__(self):
         return "%s: %s" %(self.value, os.strerror(os.error))
-
-class DictWriter(object):
-    logger=logging.getLogger("comoonics.ComGFS.DictWriter")
-    NAME=None
-    def __init__(self, _out=sys.stdout):
-        self.out=_out
-        self.print_only_value=True
-        self.prefix=None
-        self.prefix_delim="."
-        self.writehead=True
-        self.writetail=False
-        self.only_values=False
-        self.filteredKeys=None
-
-    def write(self, _dict, _tabs=0, _head=True, _tail=True, _actkey=None):
-        if self.writehead and _head:
-            self.writeHead(_dict, _tabs)
-        else:
-            _tabs=_tabs-1
-        _keys=None
-        if self.filteredKeys:
-            if not _actkey:
-                _actkey="default"
-            if self.filteredKeys.has_key(_actkey):
-                self.logger.debug("Setting filteredKeys %s" %_actkey)
-                _keys=self.filteredKeys[_actkey]
-        if not _keys:
-            _keys=_dict.keys()
-            _keys.sort()
-        for key in _keys:
-            if not _dict.has_key(key):
-                self.filterDictValue(key)
-                continue
-            value=_dict[key]
-            if key.startswith("__") and key.endswith("__"):
-                continue
-            if isinstance(value, basestring) or type(value)==int or type(value)==float or type(value)==long:
-                if not self.only_values:
-                    self._write(self.formatPrefix(_dict))
-                self.writeKeyValue(key, value, _tabs+1)
-            elif type(value)==dict:
-                if not self.only_values:
-                    self._write(self.formatPrefix(_dict))
-                self.writeDictValue(key, value, _tabs+1)
-            elif type(value)==list or type(value)==tuple:
-                if not self.only_values:
-                    self._write(self.formatPrefix(_dict))
-                self.writeTupleValue(key, value, _tabs+1)
-        if self.writetail and _tail:
-            self.writeTail(_dict, _tabs)
-
-    def formatPrefix(self, _dict):
-        buf=""
-        if self.prefix:
-            buf="%s%s" %(self.getPrefix(_dict), self.prefix_delim)
-        return buf
-
-    # Methods to be overwritten defaults to just output
-
-    def filterDictValue(self, key):
-        pass
-
-    def getPrefix(self, _dict):
-        if _dict.has_key(self.prefix):
-            return _dict[self.prefix]
-        else:
-            return self.prefix
-
-    def writeHead(self, _dict, _tabs=0):
-        if type(_dict)==dict and not self.only_values:
-            if _dict.has_key("__name__") and _dict.has_key("__info__"):
-                self._write("%s(%s)\n" %(_dict["__name__"], _dict["__info__"]), _tabs)
-            elif _dict.has_key("__name__"):
-                self._write("%s\n" %(_dict["__name__"]), _tabs)
-
-    def writeKeyValue(self, _key, _value, _tabs=0):
-        if not self.only_values and (not self.print_only_value or _value):
-            self._write("%s = %s\n" %(_key, str(_value)), _tabs)
-        elif self.only_values:
-            self._write("%s\n" %(str(_value)))
-
-    def writeDictValue(self, _key, _dict, _tabs=0):
-        #self._write("dict<%s>\n" %_key, _tabs)
-        self.write(_dict, _tabs)
-
-    def writeTupleValue(self, _key, _tuple, _tabs=0):
-        self.writeKeyValue(_key, ",".join(_tuple), _tabs)
-
-    def writeTail(self, _dict, _tabs=0):
-        pass
-
-    def _write(self, _str, _tabs=0):
-        self.out.write("\t"*_tabs+_str.expandtabs())
-
-_countersWriterRegistry=dict()
-def getCountersWriterRegistry():
-    return _countersWriterRegistry
-
-def addCountersWriter(_writer):
-    if isinstance(_writer, DictWriter):
-        getCountersWriterRegistry()[_writer.NAME]=_writer
-
-def getCountersWriter(_name=None):
-    if not _name:
-        _name="__default__"
-    if getCountersWriterRegistry().has_key(_name):
-        return getCountersWriterRegistry()[_name]
-    else:
-        return None
-
-_lockdumpWriterRegistry=dict()
-def getLockdumpWriterRegistry():
-    return _lockdumpWriterRegistry
-
-def addLockdumpWriter(_writer):
-    if isinstance(_writer, DictWriter):
-        getLockdumpWriterRegistry()[_writer.NAME]=_writer
-
-def getLockdumpWriter(_name=None):
-    if not _name:
-        _name="__default__"
-    if getLockdumpWriterRegistry().has_key(_name):
-        return getLockdumpWriterRegistry()[_name]
-    else:
-        return None
-
-class GLockWriter(DictWriter):
-    def __init__(self, _out=sys.stdout):
-        DictWriter.__init__(self, _out)
-
-    def write(self, _dict, _tabs=0, _head=True, _tail=True, _actKey=None):
-        self.decipherGlock(_dict)
-        DictWriter.write(self, _dict, _tabs, _head, _tail, _actKey)
-
-    def writePids(self, pids):
-        pass
-
-    def writeLocks(self, locks):
-        pass
-
-    def decipherGlock(self, _glock):
-        return 1
-
-class DefaultCountersWriter(DictWriter):
-    NAME="__default__"
-    logger=logging.getLogger("comoonics.ComGFS.DefaultCountersWriter")
-    FILTERED_COLS={ "default": ["locks",
-                       "locks held",
-                       "incore inodes",
-                       "metadata buffers",
-                       "unlinked inodes",
-                       "quota IDs",
-                       "incore log buffers",
-                       "log space used",
-                       "meta header cache entries",
-                       "glock dependencies",
-                       "glocks on reclaim list",
-                       "log wraps",
-                       "outstanding LM calls",
-                       "outstanding BIO calls",
-                       "fh2dentry misses",
-                       "glocks reclaimed",
-                       "glock nq calls",
-                       "glock dq calls",
-                       "glock prefetch calls",
-                       "lm_lock calls",
-                       "lm_unlock calls",
-                       "lm callbacks"
-                       "address operations",
-                       "dentry operations",
-                       "export operations",
-                       "file operations",
-                       "inode operations",
-                       "super operations",
-                       "vm operations",
-                       "block I/O reads",
-                       "block I/O writes"]}
-
-    def __init__(self, _out=sys.stdout):
-        DictWriter.__init__(self, _out)
-        self.print_only_value=False
-        self.writehead=False
-        self.filteredKeys=self.FILTERED_COLS
-addCountersWriter(DefaultCountersWriter())
-
-class CountersValueWriter(DefaultCountersWriter):
-    NAME="values"
-    def __init__(self, _out=sys.stdout):
-        DefaultCountersWriter.__init__(self, _out)
-        self.print_only_value=False
-        self.writehead=False
-        self.only_values=True
-addCountersWriter(CountersValueWriter())
-
-class DefaultGLockWriter(GLockWriter):
-    NAME="__default__"
-    logger=logging.getLogger("comoonics.ComGFS.DefaultGLockWriter")
-
-    def __init__(self, _out=sys.stdout):
-        GLockWriter.__init__(self, _out)
-        self.print_only_value=True
-
-    # Methods to be overwritten defaults to just output
-
-    def writePids(self, _pids):
-        _keys=_pids.keys()
-        _keys.sort()
-        self._write("Pids:\nlock: pids\n")
-        for _key in _keys:
-            self._write("%s: %s\n" %(_key, ",".join(_pids[_key])))
-
-    def writeLocks(self, _locks):
-        self._write("Locks: %u\n" %_locks)
-
-    def decipherGlock(self, _glock):
-        if _glock.has_key("glock"):
-            _type=int(_glock["glock"])
-            _glock["glocktype"]=GFS.GLOCKTYPES[_type]
-            if _type==1:
-                # nondisk
-                _glock["nondisk"]=int(_glock["glockid"])
-                _glock["nondisk_type"]=self._maparray(_glock, "nondisk", GFS.GLOCK_NONDISK_TYPES)
-                del _glock["glockid"]
-            elif _type==4:
-                # meta
-                _glock["metadata"]=int(_glock["glockid"])
-                _glock["metadata_type"]=self._maparray(_glock, "metadata", GFS.GLOCK_METADATA_TYPES)
-                del _glock["glockid"]
-            elif _type==8:
-                # meta
-                _glock["quota"]=int(_glock["glockid"])%2
-                _glock["quota_type"]=self._maparray(_glock, "quota", GFS.GLOCK_QUOTA_TYPES)
-                del _glock["glockid"]
-
-        if _glock.has_key("gl_flags"):
-            _glock["gl_flags_name"]=self._maparray(_glock, "gl_flags", GFS.GLOCK_GLFLAGS)
-        if _glock.has_key("gh_state"):
-            _glock["gh_state_name"]=self._maparray(_glock, "gh_state", GFS.GLOCK_STATE)
-        if _glock.has_key("gh_flags"):
-            _glock["gh_flags_name"]=self._maparray(_glock, "gh_flags", GFS.GLOCK_GHFLAGS)
-        if _glock.has_key("gh_iflags"):
-            _glock["gh_iflags_name"]=self._maparray(_glock, "gh_iflags", GFS.GLOCK_GHIFLAGS)
-        if _glock.has_key("type"):
-            _glock["type_name"]=self._maparray(_glock, "type", GFS.GLOCK_TYPE)
-        if _glock.has_key("iflags"):
-            _glock["iflags"]=self._maparray(_glock, "iflags", GFS.GLOCK_IFLAGS)
-
-    def _maparray(self, _dict, _key, _array):
-        try:
-            _str=_dict[_key]
-            _ret=None
-            if isinstance(_str, basestring) and len(_str.split(" "))>1:
-                _ret=list()
-                for _id in _str.split(" "):
-                    _ret.append(_array[int(_id)])
-            else:
-                _ret=_array[int(_dict[_key])]
-            return _ret
-        except IndexError:
-            self.logger.warn("Unkown %s type %s" %(_key, _dict[_key]))
-        except ValueError:
-            self.logger.debug("Cannot convert \"%s\" to int" %(_dict[_key]))
-addLockdumpWriter(DefaultGLockWriter())
-
-class CSVGlockWriter(GLockWriter):
-    NAME="csv"
-
-    VALID_COLS={ "default": ["glockid", "glock", "ail_bufs", "aspace", "gl_count", "gl_state", "gl_flags",
-                             "incore_le", "lvb_count", "new_le", "object", "reclaim", "req_bh", "req_gh",
-                             "Inode", "Holder"],
-                 "Glock": ["glockid", "glock", "ail_bufs", "aspace", "gl_count", "gl_state", "gl_flags",
-                             "incore_le", "lvb_count", "new_le", "object", "reclaim", "req_bh", "req_gh"],
-                 "Inode": ["i_count", "num", "type", "vnode", "i_flags" ],
-                 "Holder": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
-                 "Request": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
-                 "Waiter1": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
-                 "Waiter2": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ],
-                 "Waiter3": ["error", "gh_flags", "gh_iflags", "gh_state", "owner", ]
-                 }
-
-    VALID_COLNAMES= [ "glockid", "glock", "ail_bufs", "aspace", "gl_count", "gl_flags", "gl_state", "incore_le",
-                     "lvb_count", "new_le", "object", "reclaim", "req_bh", "req_gh",
-                      "Inode.i_count", "Inode.num", "Inode.type", "Inode.vnode", "Inode.i_flags",
-                      "Request.error", "Request.gh_flags", "Request.gh_iflags", "Request.gh_state", "Request.owner",
-                      "Holder.error", "Holder.gh_flags", "Holder.gh_iflags", "Holder.gh_state", "Holder.owner",
-                      "Waiter1.error", "Waiter1.gh_flags", "Waiter1.gh_iflags", "Waiter1.gh_state", "Waiter1.owner",
-                      "Waiter2.error", "Waiter2.gh_flags", "Waiter2.gh_iflags", "Waiter2.gh_state", "Waiter2.owner",
-                      "Waiter3.error", "Waiter3.gh_flags", "Waiter3.gh_iflags", "Waiter3.gh_state", "Waiter3.owner",
-                       ]
-
-    def __init__(self, _out=sys.stdout, _delimiter=";", _dictdelimiter="\n", _head=True):
-        GLockWriter.__init__(self, _out)
-        self.writehead=_head
-        self.delimiter=_delimiter
-        self.dictdelimiter=_dictdelimiter
-        self.writetail=True
-        self._firstLine=False
-        self.filteredKeys=self.VALID_COLS
-
-    def writeHead(self, _dict, _tabs=0):
-        _buf=""
-        if self.writehead and not self._firstLine:
-            _buf=self.delimiter.join(self.VALID_COLNAMES)
-            _buf+=self.dictdelimiter
-            self._write(_buf)
-            self._firstLine=True
-        return _buf
-
-    def filterDictValue(self, key):
-        if self.filteredKeys.has_key(key):
-            self._write(self.delimiter * len(self.filteredKeys[key]))
-        else:
-            self._write(self.delimiter)
-
-    def writeTail(self, _dict, _tabs=0):
-        self._write(self.dictdelimiter)
-
-    def writeKeyValue(self, _key, _value, _tabs=0):
-        self._write(_value+self.delimiter, 0)
-
-    def writeDictValue(self, _key, _dict, _tabs=0):
-        #self._write("dict<%s>\n" %_key, _tabs)
-        self.logger.debug("writeDictValue %s, %s, %s" %(_key, _dict, self.filteredKeys))
-        if self.filteredKeys.has_key(_key):
-            self.write(_dict, _tabs, False, False, _key)
-
-    def writeTupleValue(self, _key, _tuple, _tabs=0):
-        self.writeKeyValue(_key, " ".join(_tuple), _tabs)
-addLockdumpWriter(CSVGlockWriter())
-
-class SQLGlockWriter(CSVGlockWriter):
-    NAME="sql"
-    TABLES={ "Glock": "Glocks%s",
-             "default": "Glocks%s",
-             "Inode": "Inodes%s",
-             "Holder": "Holders%s",
-             "Request": "Holders%s",
-             "Waiter1": "Holders%s",
-             "Waiter2": "Holders%s",
-             "Waiter3": "Holders%s" }
-    BITLISTS=["gh_flags", "gh_iflags", "i_flags", "gl_flags"]
-    CREATE_TABLES_STATEMENT="""
-    CREATE TABLE IF NOT EXISTS %s (
-       glockid int(64) NOT NULL,
-       glock int(8) NOT NULL,
-       ail_bufs ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       aspace int(64) DEFAULT NULL,
-       gl_count int(64),
-       gl_state int(8) NOT NULL,
-       gl_flags int(64),
-       lvb_count int(64),
-       incore_le  ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       new_le ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       object ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       reclaim ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       req_bh ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       req_gh ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       PRIMARY KEY (glockid)
-    ) TYPE=InnoDB COMMENT="Table to hold all locks.";
-    CREATE TABLE IF NOT EXISTS %s (
-       glockid int(64) NOT NULL,
-       type ENUM ("Request", "Holder", "Waiters1", "Waiters2", "Waiters3"),
-       owner int(64) NOT NULL,
-       gh_state int(64),
-       gh_flags int(64),
-       gh_iflags int(64),
-       error int(64),
-       PRIMARY KEY (glockid, owner)
-    ) TYPE=InnoDB COMMENT="Table holding all holders, waiters and requests";
-    CREATE TABLE IF NOT EXISTS %s (
-       glockid int(64) NOT NULL,
-       i_count int(64) NOT NULL,
-       num int(64) NOT NULL,
-       type int(32) NOT NULL,
-       vnode ENUM ('yes', 'no') NOT NULL DEFAULT "no",
-       i_flags int(64),
-       PRIMARY KEY (glockid)
-    ) TYPE=InnoDB COMMENT="Table holding all inodes referenced by glocks";
-    """
-
-    def __init__(self, _glocks_table="Glocks", _name=None, _out=sys.stdout):
-        CSVGlockWriter.__init__(self, _out)
-        self.writehead=False
-        self.writetail=True
-        if not _name:
-            _name="analysis"
-        self._name=_name
-
-    def decipherGlock(self, _glock):
-        self.logger.debug("decipherGlock %s" %_glock["__name__"])
-        if _glock.has_key("glockid"):
-            self._baseglockid=_glock["glockid"]
-        for _bitlist in self.BITLISTS:
-            if _glock.has_key(_bitlist) and _glock[_bitlist] != "":
-                self.logger.debug("decipherGlock bitlist<%s>: %s" %(_bitlist, _glock[_bitlist]))
-                _glock[_bitlist]=int(self._resolvebitlist(_glock[_bitlist]))
-                self.logger.debug("decipherGlock bitlist<%s>: %u" %(_bitlist, _glock[_bitlist]))
-        if _glock.has_key("num"):
-            _glock["num"]=int(_glock["num"].split("/")[0])
-
-    def _resolvebitlist(self, _bitlist):
-        _res=0
-        for _bit in _bitlist.split(" "):
-            _res|=1<<int(_bit)
-        return _res
-
-
-    def filterDictValue(self, key):
-        pass
-
-    def createTables(self):
-         self.logger.debug("createTables")
-         return self.CREATE_TABLES_STATEMENT %(self.TABLES["Glock"] %self._name, self.TABLES["Holder"] %self._name,
-                                               self.TABLES["Inode"] %self._name)
-
-    def writeKeyValue(self, _key, _value, _tabs=0):
-        pass
-
-    def writeTupleValue(self, _key, _tuple, _tabs=0):
-        pass
-
-    def writeDictValue(self, _key, _dict, _tabs=0):
-        self.decipherGlock(_dict)
-        _tableskey=_key
-        _values=list()
-        for _key in self.VALID_COLS[_tableskey]:
-            _val=_dict[_key]
-            _resval=None
-            try:
-                if type(_val) == int or int(_val):
-                    _resval=str(_val)
-            except ValueError:
-                pass
-            if isinstance(_val, basestring) and not _resval:
-                _resval="\"%s\"" %(_val)
-            _values.append(_resval)
-
-        if _dict.has_key("__name__") and _dict["__name__"]=="Glock":
-            _sqlquery="INSERT INTO %s (%s) VALUES (%s);\n" %(self.TABLES[_tableskey] %self._name, ",".join(self.VALID_COLS[_tableskey]),
-                                                                          ",".join(_values))
-        else:
-            _sqlquery="INSERT INTO %s (glockid, %s) VALUES (%s, %s);\n" %(self.TABLES[_tableskey] %str(self._name), ",".join(self.VALID_COLS[_tableskey]),
-                                                                          str(self._baseglockid), ",".join(_values))
-        self._write(_sqlquery)
-
-    def writeTail(self, _dict, _tabs=0):
-        self.writeDictValue(_dict["__name__"], _dict, _tabs)
-
-addLockdumpWriter(SQLGlockWriter())
 
 class GFS(object):
     """
@@ -487,18 +37,6 @@ class GFS(object):
     """
 
     logger=logging.getLogger("comoonics.ComGFS.GFS")
-
-    GLOCKTYPES= [ "reserved", "nondisk", "inode", "rgrp", "meta", "iopen", "flock", "jid", "quota" ]
-
-    GLOCK_NONDISK_TYPES = [ "mount", "live", "trans", "rename" ]
-    GLOCK_METADATA_TYPES = [ "super", "crap" ]
-    GLOCK_QUOTA_TYPES = [ "user", "group" ]
-    GLOCK_GLFLAGS = ["plug", "lock", "sticky", "prefetch", "sync", "dirty", "skip_waiters", "greedy" ]
-    GLOCK_STATE = [ "unlocked", "exclusive", "deferred", "shared" ]
-    GLOCK_GHFLAGS = [ "try", "try_1cb", "noexp", "any", "priority", "local_excl", "async", "exact", "skip", "atime", "nocache", "sync", "nocancel" ]
-    GLOCK_GHIFLAGS= [ "mutex", "promote", "demote", "greedy", "allocated", "dealloc", "holder", "first", "recurse", "aborted" ]
-    GLOCK_TYPE = [ "none", "regular", "directory", "symbolic link", "block device", "char device", "fifo", "socket" ]
-    GLOCK_IFLAGS = [ "qd_locked", "paged", "sw_paged" ]
 
     DEV_PATH="/dev"
 
@@ -514,10 +52,6 @@ class GFS(object):
 
     GFS_TYPE="gfs"
 
-    GLOCK_MATCH=re.compile(r"Glock \((?P<glock>\d+), (?P<glockid>\d+)\)")
-    GLOCK_KEYVALUE_MATCH=re.compile(r"^\s*(?P<key>\S+)\s+=\s*(?P<value>.*)$")
-    GLOCK_SUBTREE_MATCH =re.compile(r"^\s*(?P<key>\w+)\W*$")
-
     GFS_SUPER_IOCTL=18221
 
     GFS_TOOL="/sbin/gfs_tool"
@@ -529,6 +63,9 @@ class GFS(object):
         self.glockwriter=getLockdumpWriter()
         self.counterswriter=getCountersWriter()
         self.pids=dict()
+        self.cookie=None
+        self.filename=None
+        self.device=None
         _mountpoint=None
         if _keys.has_key("filename"):
             self.filename=_keys["filename"]
@@ -543,7 +80,7 @@ class GFS(object):
         elif _keys.has_key("dev"):
             _mountpoint=_keys["dev"]
 
-        if len(_params)>0:
+        if len(_params)>0 and _params[0]:
             if os.path.isfile(_params[0]):
                 self.filename=_params[0]
             else:
@@ -673,10 +210,14 @@ class GFS(object):
         return self._cmdPROC_FS(GFS.LOCKDUMP_CMD %(self.cookie), GFS.LOCKDUMP_SIZE)
 
     def lockdumpFormat(self, size=LOCKDUMP_SIZE):
-        if not hasattr(self, "filename") or not self.filename:
+        if self.cookie:
             _fd=GFS._cmdPROC_FS(GFS.LOCKDUMP_CMD %(self.cookie), size, True)
-        else:
+        elif self.filename:
             _fd=os.open(self.filename, os.O_RDONLY)
+            if size == GFS.LOCKDUMP_SIZE:
+                size=1024
+        else:
+            _fd=sys.stdin.fileno()
             if size == GFS.LOCKDUMP_SIZE:
                 size=1024
         _glock=None
@@ -704,26 +245,46 @@ class GFS(object):
                             if _glock:
                                 self.locks+=1
                                 self.glockwriter.write(_glock)
-                            _glock=_re.groupdict()
-                            _glock["__name__"]="Glock"
-                            _glock["__info__"]=",".join(_re.groupdict().values())
+                            _glock=GLock()
+                            for _name, _value in _re.groupdict().items():
+                                setattr(_glock, _name, _value)
+                            _glock.__name__="Glock"
+                            _glock.__info__=",".join(_re.groupdict().values())
                             _actdict=_glock
 
                         _re=GFS.GLOCK_KEYVALUE_MATCH.match(_line)
                         if not _matched and _re:
                             _matched=True
                             if _re.group("key")=="owner" and int(_re.group("value")) > 0:
-                                if not self.pids.has_key(_glock['glockid']):
-                                    self.pids[_glock['glockid']]=list()
-                                self.pids[_glock['glockid']].append(_re.group("value"))
-                            _actdict[_re.group("key").strip()]=_re.group("value").strip()
+                                if not self.pids.has_key(_glock.glockid):
+                                    self.pids[_glock.glockid]=list()
+                                self.pids[_glock.glockid].append(_re.group("value"))
+                            if isinstance(_actdict, GLock) or isinstance(_actdict, Holder):
+                                setattr(_actdict, _re.group("key").strip(), _re.group("value").strip())
+                            else:
+                                _actdict[_re.group("key").strip()]=_re.group("value").strip()
 
                         _re=GFS.GLOCK_SUBTREE_MATCH.match(_line)
                         if not _matched and _re:
                             _matched=True
+                            if _re.group("key").strip()=="Holder":
+                                _subtree=Holder()
+                            else:
+                                _subtree=Waiter()
+                            if not hasattr(_glock, _re.group("key").strip()):
+                                setattr(_glock, _re.group("key").strip(), list())
+                            getattr(_glock, _re.group("key").strip()).append(_subtree)
+                            setattr(_subtree, "__name__", _re.group("key").strip())
+                            _actdict=_subtree
+                        _re=GFS.GLOCK_SUBTREE_MATCH_ONELINE.match(_line)
+                        if not _matched and _re:
+                            _matched=True
                             _subtree=dict()
-                            _glock[_re.group("key").strip()]=_subtree
+                            if not hasattr(_glock, _re.group("key").strip()):
+                                setattr(_glock, _re.group("key").strip(), list())
+                            getattr(_glock, _re.group("key").strip()).append(_subtree)
                             _subtree["__name__"]=_re.group("key").strip()
+                            _subtree[_re.group("value")]=_re.group("value").strip()
                             _actdict=_subtree
                         if not _matched:
                             print("Could not match line: %s" %(_line))
@@ -750,8 +311,9 @@ def main():
    #GFS.logger.setLevel(logging.DEBUG)
    ComSystem.__EXEC_REALLY_DO=None
    _gfs=GFS(sys.argv[2])
+   _gfs.glockwriter=GraphvizGLockWriter()
 
-   print getattr(_gfs, sys.argv[1])()
+   getattr(_gfs, sys.argv[1])()
 
 if __name__ == "__main__":
     main()

@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComExceptions.py,v 1.6 2009-07-22 08:37:40 marc Exp $
+# $Id: ComExceptions.py,v 1.7 2009-09-28 15:12:42 marc Exp $
 #
 # @(#)$File$
 #
@@ -34,7 +34,7 @@ __version__ = "$$"
 
 class ComException(Exception):
     def __init__(self, value=""):
-        super(ComException, self).__init__()
+        ComException.__init__(self)
         if value != "":
             self.value = value
         else:
@@ -50,7 +50,10 @@ class ComException(Exception):
             return repr(self.value)
 
 # $Log: ComExceptions.py,v $
-# Revision 1.6  2009-07-22 08:37:40  marc
+# Revision 1.7  2009-09-28 15:12:42  marc
+# moved to storage and scsi packages
+#
+# Revision 1.6  2009/07/22 08:37:40  marc
 # fedora compliant
 #
 # Revision 1.5  2008/02/28 14:20:11  marc
