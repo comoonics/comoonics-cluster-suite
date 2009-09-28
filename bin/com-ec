@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.23 2008-08-14 13:01:20 marc Exp $
+# $Id: com-ec,v 1.24 2009-09-28 15:20:00 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.23 $"
+__version__ = "$Revision: 1.24 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -139,7 +139,12 @@ try:
     import StringIO
     _buf=StringIO.StringIO()
     for _line in file:
-        _line=_line %config.values
+        try:
+            _line=_line %config.values
+        except KeyError:
+            pass
+        except ValueError:
+            pass
         _buf.write(_line)
     file.close()
     if config.xslt:
@@ -239,7 +244,11 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.23  2008-08-14 13:01:20  marc
+# Revision 1.24  2009-09-28 15:20:00  marc
+# com-searchcdsls removed
+# typos in com-ec and com-queryclusterconf and querymapsupport
+#
+# Revision 1.23  2008/08/14 13:01:20  marc
 # - removed applyValues
 #
 # Revision 1.22  2008/08/14 12:20:09  marc

@@ -7,7 +7,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.2 2009-08-25 12:17:31 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.3 2009-09-28 15:20:00 marc Exp $"
 
 import sys, os, string
 import glob
@@ -23,6 +23,7 @@ from distutils import log
 class bdist_rpm_fedora (Command):
 
     description = "create an RPM distribution"
+    slesinconsistentrpms={"PyXML": "pyxml"}
 
     user_options = [
         ('bdist-base=', None,
@@ -385,6 +386,28 @@ class bdist_rpm_fedora (Command):
     def _dist_path(self, path):
         return os.path.join(self.dist_dir, os.path.basename(path))
 
+    def _filterdistdepField(self, field, val):
+        _filteredvalssles=list()
+        _filteredvalselse=list()
+        _vals=list()
+        # quickhack to detect sles and rhel
+        if type(val) is ListType:
+            values=list()
+            for value in val:
+                if value in self.slesinconsistentrpms:
+                    _filteredvalssles.append(self.slesinconsistentrpms[value])
+                    _filteredvalselse.append(value)
+                else:
+                    _vals.append(value)
+        elif val is not None:
+            if val in self.slesinconsistentrpms:
+                _filteredvalssles.append(self.slesinconsistentrpms[val])
+                _filteredvalselse.append(val)
+        else:
+                _vals.append(val)
+                
+        return _filteredvalssles, _filteredvalselse, _vals
+
     def _make_spec_file(self):
         """Generate the text of an RPM spec file and return it as a
         list of strings (one per line).
@@ -393,9 +416,17 @@ class bdist_rpm_fedora (Command):
         name=self.distribution.get_name()
         version=self.distribution.get_version().replace('-','_')
         release=self.release.replace('-','_')
+        pythonversion26=int(sys.version[0])>2 or (int(sys.version[0])==2 and int(sys.version[2])>5)
+        if pythonversion26:
+            withegginfo="%{!?withegginfo: %define withegginfo 1}"
+        else:
+            withegginfo="%{!?withegginfo: %define withegginfo 0}"
+
         spec_file = [
             '%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}',
+            '%{!?sles: %global sles 0}',
             '%define modulename '+'comoonics',
+            withegginfo,
             '',
             'Summary: ' + self.distribution.get_description(),
             ]
@@ -433,6 +464,7 @@ class bdist_rpm_fedora (Command):
         else:
             spec_file.append( 'BuildArch: %s' % self.force_arch )
 
+        # This is really ugly!
         for field in ('Packager',
                       'Provides',
                       'Requires',
@@ -440,10 +472,21 @@ class bdist_rpm_fedora (Command):
                       'Obsoletes',
                       ):
             val = getattr(self, string.lower(field))
+            
+            filteredvalssles=None
+            if string.lower(field) == "requires":
+                filteredvalssles, filteredvalselse, val = self._filterdistdepField(string.lower(field), val)
             if type(val) is ListType:
                 spec_file.append('%s: %s' % (field, string.join(val)))
             elif val is not None:
                 spec_file.append('%s: %s' % (field, val))
+                
+            if filteredvalssles:
+                spec_file.append("%if %{sles}")
+                spec_file.append("Requires: %s" %string.join(filteredvalssles))
+                spec_file.append("%else")
+                spec_file.append("Requires: %s" %string.join(filteredvalselse))
+                spec_file.append("%endif")
 
 
         if self.distribution.get_url() != 'UNKNOWN':
@@ -497,7 +540,7 @@ class bdist_rpm_fedora (Command):
             ('install', 'install_script',
              ("rm -rf $RPM_BUILD_ROOT\n"
               "%s %%{name} install "
-              "--root=$RPM_BUILD_ROOT ") %(def_setup_call)),
+              "--root=$RPM_BUILD_ROOT --prefix=/usr") %(def_setup_call)),
             ('clean', 'clean_script', "rm -rf $RPM_BUILD_ROOT"),
             ('verifyscript', 'verify_script', None),
             ('pre', 'pre_install', None),
@@ -526,7 +569,9 @@ class bdist_rpm_fedora (Command):
             '',
             '%files',
             '%defattr(-,root,root,-)',
+            '%if %{withegginfo}',
             '%{python_sitelib}/*.egg-info',
+            '%endif'
         ])
         print "modulepaths: %s" %modulepaths
         for modulepath in modulepaths:
@@ -546,8 +591,11 @@ class bdist_rpm_fedora (Command):
         if hasattr(self.distribution, "data_files") and getattr(self.distribution, "data_files") != None:
             for dir, files in self.distribution.data_files:
                 for file in files:
-                    # should be changed to check if this is a man
-                    spec_file.append(os.path.join(prefix, "share/man", os.path.basename(dir), os.path.basename(file)))
+                    if dir.startswith(os.sep.join(["share", "man"])):
+                        # should be changed to check if this is a man
+                        spec_file.append(os.path.join(prefix, dir, os.path.basename(file)))
+                    else:
+                        spec_file.append(os.path.join(os.path.join(prefix, dir), os.path.basename(file)))
 
         if hasattr(self.distribution, "scripts") and getattr(self.distribution, "scripts") != None:
             for bin in self.distribution.scripts:
@@ -696,6 +744,81 @@ Those are classes used by more other packages.
       "packages":      [ "comoonics.cdsl" ],
       "scripts":       [ "bin/com-mkcdsl", "bin/com-mkcdslinfrastructure", "bin/com-cdslinvchk", "bin/com-rmcdsl" ],
       "data_files":    [ ("share/man/man1",[ "man/com-mkcdslinfrastructure.1.gz", "man/com-mkcdsl.1.gz", "man/com-cdslinvchk.1.gz", "man/com-rmcdsl.1.gz" ]) ],
+    },
+    "comoonics-tools-py": {
+      "name":"comoonics-tools-py",
+      "version":"0.1",
+      "description":"Comoonics base tools",
+      "long_description":""" 
+Comoonics basic tools written in Python
+
+Those are classes used by more other packages.
+""",
+#      "author":"ATIX AG - Mark Hlawatschek",
+#      "author_email":"hlawatschek@atix.de",
+      "url":"http://www.open-sharedroot.org/development/comoonics-tools-py",
+      "package_dir" :  { "": "lib/"},
+      "py_modules" :   [ "comoonics.AutoDelegator", 
+                       "comoonics.lockfile",
+                       "comoonics.odict",
+                       "comoonics.stabilized",
+                       "comoonics.XMLConfigParser" ],
+      "scripts":       [ "bin/stabilized" ],
+    },
+    "comoonics-cluster-tools-py": {
+      "name":"comoonics-cluster-tools-py",
+      "version":"0.1",
+      "description":"Comoonics cluster tools",
+      "long_description":""" 
+Comoonics cluster tools written in Python
+
+Those are tools to help using OSR clusters.
+""",
+#      "author":"ATIX AG - Mark Hlawatschek",
+#      "author_email":"hlawatschek@atix.de",
+      "url":"http://www.open-sharedroot.org/development/comoonics-cluster-tools-py",
+      "package_dir" :  { "": "lib/"},
+      "py_modules" :   [ "comoonics.pexpect", 
+                       "comoonics.pxssh" ],
+      "scripts":       [ "bin/com-dsh" ],
+    },
+    "comoonics-ec-base-py": {
+      "name":"comoonics-ec-base-py",
+      "version":"0.1",
+      "description":"Comoonics Enterprise Copy base libraries",
+      "long_description":""" 
+Comoonics Enterprise Copy base libraries
+
+Base libraries used for comoonics enterprise copy.
+""",
+#      "author":"ATIX AG - Mark Hlawatschek",
+#      "author_email":"hlawatschek@atix.de",
+      "url":"http://www.open-sharedroot.org/development/comoonics-ec-base-py",
+      "package_dir" :  { "": "lib/"},
+      "py_modules" :   [ "comoonics.ComJournaled", 
+                       "comoonics.ComMetadataSerializer",
+                       "comoonics.ComUtils" ],
+    },
+    "comoonics-dr-py": {
+      "name":"comoonics-dr-py",
+      "version":"0.1",
+      "description":"Comoonics desaster recovery assistant written in Python",
+      "long_description":""" 
+Comoonics desaster recovery assistant written in Python
+""",
+#      "author":"ATIX AG - Mark Hlawatschek",
+#      "author_email":"hlawatschek@atix.de",
+      "url":"http://www.open-sharedroot.org/development/comoonics-dr-py",
+      "package_dir" :  { "": "lib/"},
+      "scripts":       [ "bin/comoonics-create-restoreimage", "bin/comoonics-restore-system" ],
+      "data_files":    [ ("/etc/comoonics/enterprisecopy/xml-dr",[
+             "xml/xml-dr/drbackup.xml",
+             "xml/xml-dr/createlivecd.xml",
+             "xml/xml-dr/drbackup.infodef.xml",
+             "xml/xml-dr/createlivecd.infodef.xml",
+             "xml/xml-dr/drrestore.template.xml",
+             "xml/xml-dr/drrestore.infodef.xml"
+            ]),]
     },
 }
 

@@ -2,7 +2,7 @@
 """
 Binary to query clusterconfiguration
 """
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -86,7 +86,7 @@ doc=comoonics.cluster.parseClusterConf(options.clusterconf, options.validate)
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
-clusterQueryMap = QueryMap(options.mapfile)
+clusterQueryMap = QueryMap(options.mapfile, clusterInfo)
 
 #query given file with specified query, returns xml
 if query == "query_xml":
@@ -212,7 +212,7 @@ elif query == "convert":
     print clusterInfo.clusterRepository.convert(values[0])
 
 elif clusterQueryMap.has_option(clusterQueryMap.mainsection, query):
-    print clusterInfo.query(clusterQueryMap.get(clusterQueryMap.mainsection, query) % clusterQueryMap.array2params(values))
+    print " ".join(clusterInfo.queryValue(clusterQueryMap.get(clusterQueryMap.mainsection, query) % clusterQueryMap.array2params(values)))
     
 else:
     raise NameError("Cannot find query named " + query)
