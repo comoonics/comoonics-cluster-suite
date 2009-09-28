@@ -1,0 +1,50 @@
+Glock (2, 26)
+  gl_flags = 5
+  gl_count = 14
+  gl_state = 1
+  req_gh = no
+  req_bh = no
+  lvb_count = 0
+  object = yes
+  new_le = no
+  incore_le = no
+  reclaim = no
+  aspace = 26
+  ail_bufs = no
+  Holder
+    owner = 11184
+    gh_state = 1
+    gh_flags = 5
+    error = 0
+    gh_iflags = 1 6 7
+  Waiter3
+    owner = 28008
+    gh_state = 3
+    gh_flags = 3
+    error = 0
+    gh_iflags = 1
+  Waiter3
+    owner = 11174
+    gh_state = 3
+    gh_flags = 3
+    error = 0
+    gh_iflags = 1
+  Waiter3
+    owner = 28009
+    gh_state = 3
+    gh_flags = 3
+    error = 0
+    gh_iflags = 1
+  Waiter3
+    owner = 11176
+    gh_state = 3
+    gh_flags = 3
+    error = 0
+    gh_iflags = 1
+  Waiter3
+    owner = 25441
+    gh_state = 3
+    gh_flags = 3
+    error = 0
+    gh_iflags = 1
+  Inode: busy

@@ -1,0 +1,50 @@
+Glock (2, 23)
+  gl_flags = 2
+  gl_count = 18
+  gl_state = 3
+  req_gh = no
+  req_bh = no
+  lvb_count = 0
+  object = yes
+  new_le = no
+  incore_le = no
+  reclaim = no
+  aspace = 0
+  ail_bufs = no
+  Holder
+    owner = 11182
+    gh_state = 3
+    gh_flags =
+    error = 0
+    gh_iflags = 1 6
+  Holder
+    owner = 27484
+    gh_state = 3
+    gh_flags =
+    error = 0
+    gh_iflags = 1 6
+  Holder
+    owner = 2446
+    gh_state = 3
+    gh_flags =
+    error = 0
+    gh_iflags = 1 6
+  Holder
+    owner = 2883
+    gh_state = 3
+    gh_flags =
+    error = 0
+    gh_iflags = 1 6
+  Holder
+    owner = 9515
+    gh_state = 3
+    gh_flags =
+    error = 0
+    gh_iflags = 1 6
+  Holder
+    owner = 19449
+    gh_state = 3
+    gh_flags =
+    error = 0
+    gh_iflags = 1 6
+

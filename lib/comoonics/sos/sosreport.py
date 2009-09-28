@@ -15,7 +15,7 @@ from threading import Semaphore
 
 from xmlreport import XmlReport
 
-import sos
+#import sos
 import sos.helpers
 
 __version__ = 1.8
@@ -705,7 +705,7 @@ No changes will be made to your system.
             raise SosReportException(_('sosreport requires root permissions to run.'))
 
         # we don't need to keep in memory plugins we are not going to use
-        del self.skippedplugins
+        # del self.skippedplugins
 
         if not len(self.loadedplugins):
             self.soslog.error(_("no valid plugins were enabled"))
