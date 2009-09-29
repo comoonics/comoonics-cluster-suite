@@ -5,11 +5,8 @@ echo "We suppose that all src.rpms are already installed."
 [ -z "$defines" ] && defines=""
 [ -z "$RPMBUILDDIR" ] && RPMBUILDDIR=$(rpmbuild --showrc | grep ": _topdir" | awk '{print $3}')
 
-define3="ignore 1"
-
 if [ -e /etc/SuSE-release ]; then
 	define1="sles 1"
-    define3=$(python -c 'from distutils.sysconfig import get_python_lib; import sys; sys.lib="lib"; print get_python_lib(0)')
 else
     define1="sles 0"
 fi
@@ -35,7 +32,7 @@ for file in $files; do
     echo "Cleaning old builds of package $package"
     find $RPMBUILDDIR -name "${package}*.rpm" -delete
 	echo "Building $package"
-	rpmbuild -bb --define "$define1" --define "$define2" --define "$define3" --define "_topdir $RPMBUILDDIR" $file
+	rpmbuild -bb --define "$define1" --define "$define2" --define "_topdir $RPMBUILDDIR" $file
    if [ $? -ne 0 ]; then
    	 failedbuilds="$failedbuilds $package"
 #   	 echo "Failed to build $buildfile"
