@@ -7,6 +7,7 @@ function build_rpms {
 BEGIN { changelogfound=0; }
 /^'${NAME}'/{ changelogfound=1; next };
 /^comoonics/ { changelogfound=0; next };
+/^mgrep/ { changelogfound=0; next };
 {
   if (changelogfound == 1) {
      print

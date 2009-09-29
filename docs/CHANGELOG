@@ -424,7 +424,7 @@ comoonics-scsi-py
 
 comoonics-storage-py
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-3
-   - new upstream version
+  - new upstream version
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2
   only a cosmetic change in Storage
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1
