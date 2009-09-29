@@ -12,6 +12,12 @@ Compares installbase of two clusters/sources with each other
 # $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/getRPMDiffs.py,v $
 import sys
 
+from distutils.sysconfig import get_python_lib
+oldlib=sys.lib
+sys.lib="lib"
+sys.path.append(get_python_lib(0))
+sys.lib=oldlib
+
 from comoonics import ComSystem, ComLog, ComExceptions
 from comoonics import GetOpts
 from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB

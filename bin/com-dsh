@@ -52,6 +52,14 @@ version = "0.5.3"
 #                                                                            }}}
 # ------------------------------------------------------------------------------
 # Import modules                                                             {{{
+import sys
+
+from distutils.sysconfig import get_python_lib
+oldlib=sys.lib
+sys.lib="lib"
+sys.path.append(get_python_lib(0))
+sys.lib=oldlib
+
 from comoonics import pexpect
 import fileinput, fcntl, getpass, os, re
 import socket, struct, sys, termios, threading, time

@@ -5,10 +5,10 @@
 """
 
 # here is some internal information
-# $Id: com-livecd-admin.py,v 1.1 2008-02-21 16:11:20 mark Exp $
+# $Id: com-livecd-admin.py,v 1.2 2009-09-29 15:55:33 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __description__="""
 Comoonics LiveCD administrators utility
 """
@@ -20,6 +20,12 @@ from optparse import OptionParser, IndentedHelpFormatter
 
 sys.path.append("../lib")
 
+
+from distutils.sysconfig import get_python_lib
+oldlib=sys.lib
+sys.lib="lib"
+sys.path.append(get_python_lib(0))
+sys.lib=oldlib
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException

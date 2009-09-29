@@ -8,11 +8,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.24 2009-09-28 15:20:00 marc Exp $
+# $Id: com-ec,v 1.25 2009-09-29 15:55:33 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.24 $"
+__version__ = "$Revision: 1.25 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -28,6 +28,13 @@ from xml.dom.ext.reader import Sax2
 import getopt
 import logging
 import warnings
+
+from distutils.sysconfig import get_python_lib
+oldlib=sys.lib
+sys.lib="lib"
+sys.path.append(get_python_lib(0))
+sys.lib=oldlib
+
 from comoonics import GetOpts
 
 from comoonics import ComLVM, ComSystem, ComLog
@@ -244,7 +251,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.24  2009-09-28 15:20:00  marc
+# Revision 1.25  2009-09-29 15:55:33  marc
+# added autopath update
+#
+# Revision 1.24  2009/09/28 15:20:00  marc
 # com-searchcdsls removed
 # typos in com-ec and com-queryclusterconf and querymapsupport
 #

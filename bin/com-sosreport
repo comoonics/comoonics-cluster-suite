@@ -22,11 +22,17 @@ supplied for application-specific information
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+import sys
+
+from distutils.sysconfig import get_python_lib
+oldlib=sys.lib
+sys.lib="lib"
+sys.path.append(get_python_lib(0))
+sys.lib=oldlib
 
 from comoonics.sos.ComSOSReport import sosreport, SosreportException
 from optparse import OptionParser, Option
 import signal
-import sys
 from threading import activeCount
 
 # RHEL3 doesn't have a logging module

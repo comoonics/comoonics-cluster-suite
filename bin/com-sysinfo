@@ -13,6 +13,12 @@ Programm to retrieve systeminformation from the database
 import sys
 sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
 
+from distutils.sysconfig import get_python_lib
+oldlib=sys.lib
+sys.lib="lib"
+sys.path.append(get_python_lib(0))
+sys.lib=oldlib
+
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics.ComSystemInformation import SystemInformation
