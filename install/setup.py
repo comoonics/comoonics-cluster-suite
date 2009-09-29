@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from distutils.core import setup
 """distutils.command.bdist_rpm
 
 Implements the Distutils 'bdist_rpm' command (create RPM source and binary
@@ -7,8 +6,9 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.3 2009-09-28 15:20:00 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.4 2009-09-29 16:13:37 marc Exp $"
 
+from distutils.core import setup
 import sys, os, string
 import glob
 from types import *
@@ -423,8 +423,12 @@ class bdist_rpm_fedora (Command):
             withegginfo="%{!?withegginfo: %define withegginfo 0}"
 
         spec_file = [
-            '%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}',
             '%{!?sles: %global sles 0}',
+            '%if %{sles}',
+            '%{!?python_sitelib: %global python_sitelib %(%{__python} -c \'from distutils.sysconfig import get_python_lib; import sys; sys.lib="lib"; print get_python_lib(0)\')}',
+            '%else',
+            '%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}',
+            '%endif',
             '%define modulename '+'comoonics',
             withegginfo,
             '',
@@ -540,7 +544,8 @@ class bdist_rpm_fedora (Command):
             ('install', 'install_script',
              ("rm -rf $RPM_BUILD_ROOT\n"
               "%s %%{name} install "
-              "--root=$RPM_BUILD_ROOT --prefix=/usr") %(def_setup_call)),
+              "--root=$RPM_BUILD_ROOT --prefix=/usr "
+              "--install-purelib=%%{python_sitelib}") %(def_setup_call)),
             ('clean', 'clean_script', "rm -rf $RPM_BUILD_ROOT"),
             ('verifyscript', 'verify_script', None),
             ('pre', 'pre_install', None),
