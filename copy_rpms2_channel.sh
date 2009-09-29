@@ -1,7 +1,7 @@
 #!/bin/bash
 
 detectDistribution() {
-  head -q -n1 /etc/*-release | sed -e s/release// -e 's/ //g' -e 's/(.*)//g' -e 's/\.[0-9]*$//' | tr [A-Z] [a-z] | sed -e 's/centos/redhat/' -e 's/redhat/redhat-el/' -e 's/suselinuxenterpriseserver/suse-linux-es/' | sort -u
+  head -q -n1 /etc/*-release | awk '/^LSB_VERSION=/ { next; } { print; }' | sed -e s/release// -e 's/ //g' -e 's/(.*)//g' -e 's/\.[0-9]*$//' | tr [A-Z] [a-z] | sed -e 's/centos/redhat/' -e 's/redhat/redhat-el/' -e 's/suselinuxenterpriseserver/suse-linux-es/' | sort -u
 }
 
 [ -z "$SOURCEDIR" ] && SOURCEDIR=dist
