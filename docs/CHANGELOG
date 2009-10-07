@@ -11,6 +11,8 @@ WARNING:
 CHANGES:
 
 comoonics-assistant-py:
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-4
+  - added autopath update to also work with SLES
 * Fri Nov 14 2008 MH <hlawatschek@atix.de>, 0.1-3
   - added support for multiple xpath entries with same names
 * Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-2
@@ -27,12 +29,6 @@ comoonics-base-py:
 * Tue Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-2
   - fedora compliant
 * Mon Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-1
-  - initial revision
-  
-comoonics-dr-py:
-* Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-4
-  - minor enhancements
-* Fri Feb 28 2008 MH <hlawatschek@atix.de>, 0.1-1
   - initial revision
 
 comoonics-backup-py:
@@ -54,6 +50,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.2-18
+  - added autopath update to also work with SLES
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.2-17
    - new upstream version
 * Tue Jul 21 2009 MG <grimme@atix.de>, 0.2-16
@@ -153,12 +151,16 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
+  - added autopath update to also work with SLES
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
    - new upstream version
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
    - initial revision
 
 comoonics-cmdb-py:
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-24
+  - added autopath update to also work with SLES
 * Thu May 10 2007 MG <grimme@atix.de>, 0.1-23
     - Fixed bug in whereclause of getDiffs
 * Thu May 10 2007 MG <grimme@atix.de>, 0.1-22
@@ -311,8 +313,18 @@ comoonics-db-py
    - added support for exception logging (exc_info param)
 * Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-4:
    initial revision
+  
+comoonics-dr-py:
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-5
+  - added autopath update to also work with SLES
+* Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-4
+  - minor enhancements
+* Fri Feb 28 2008 MH <hlawatschek@atix.de>, 0.1-1
+  - initial revision
 
 comoonics-ec-py
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-39
+  - added autopath update to also work with SLES
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-38
    - new upstream version
 * Wed Feb 29 2008 MG <grimme@atix.de>, 0.1-37
@@ -384,6 +396,8 @@ comoonics-ec-py
   changed that modset and copysets can be mixed not for copysets then modsets.
 
 comoonics-ec-admin-py:
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
+  - added autopath update to also work with SLES
 * Thu Nov 13 2008 MH <hlawatschek@atix.de>, 0.1-2
   - some bug fixes
 * Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-1
@@ -396,6 +410,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-fenceacksv-py
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
+  Fixed deps
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
 
@@ -419,6 +435,8 @@ comoonics-search-py
   initial revision
 
 comoonics-scsi-py
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
+  - added autopath update to also work with SLES
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
 
@@ -457,12 +475,18 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-tools-py
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-4
+  - added autopath update to also work with SLES
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
+  - added obsoletes comoonics-cs-py
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
    - new upstream version
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
   initial release
 
 mgrep
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
+  - added autopath update to also work with SLES
 * Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1
   initial revision
 

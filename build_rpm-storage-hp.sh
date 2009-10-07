@@ -1,28 +1,19 @@
 #!/bin/bash
-# $Id: build_rpm-storage-hp.sh,v 1.10 2009-09-28 15:29:30 marc Exp $
+# $Id: build_rpm-storage-hp.sh,v 1.11 2009-10-07 12:12:38 marc Exp $
 
-source ./build-lib.sh
 
-RELEASE=8
-REQUIRES="--requires=comoonics-storage-py"
-NOAUTO_REQ="--no-autoreq"
-NAME="comoonics-storage-hp-py"
-VERSION="0.1"
-DESCRIPTION="Comoonics Enterprisecopy HP Storage utilities and libraries written in Python"
-LONG_DESCRIPTION="
-Comoonics Enterprisecopy HP Storage utilities and libraries written in Python
-"
-AUTHOR="ATIX AG - Marc Grimme"
-AUTHOR_EMAIL="grimme@atix.de"
-URL="http://www.atix.de/comoonics/"
-PACKAGE_DIR='"comoonics.storage.hp" : "lib/comoonics/storage/hp"'
-PACKAGES='"comoonics.storage.hp"'
+source ./build-lib2.sh
 
-setup
+NAME=comoonics-storage-hp-py
+
+build_rpms $NAME $*
 
 ##############
 # $Log: build_rpm-storage-hp.sh,v $
-# Revision 1.10  2009-09-28 15:29:30  marc
+# Revision 1.11  2009-10-07 12:12:38  marc
+# new versions
+#
+# Revision 1.10  2009/09/28 15:29:30  marc
 # updated to new build process
 #
 # Revision 1.9  2007/12/07 14:29:23  reiner

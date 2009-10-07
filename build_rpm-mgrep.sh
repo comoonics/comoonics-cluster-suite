@@ -1,32 +1,20 @@
 #!/bin/bash
 
-# $Id: build_rpm-mgrep.sh,v 1.2 2007-12-07 14:29:23 reiner Exp $
-
-source ./build-lib.sh
-
-RELEASE=1
-REQUIRES="--requires=comoonics-search-py"
-NOAUTO_REQ="--no-autoreq"
-NAME="mgrep"
-VERSION="0.1"
-DESCRIPTION="MGrep tool that gives ability to search logfiles and files in parallel"
-LONG_DESCRIPTION="
-MGrep tool that gives ability to search logfiles and files in parallel
-"
-AUTHOR="ATIX AG - Marc Grimme"
-AUTHOR_EMAIL="grimme@atix.de"
-URL="http://www.atix.de/comoonics/"
-SCRIPTS='"bin/mgrep"'
-DATA_FILES='("share/man/man1",[
-             "man/mgrep.1.gz"
-            ])'
+# $Id: build_rpm-mgrep.sh,v 1.3 2009-10-07 12:12:38 marc Exp $
 
 
-setup
+source ./build-lib2.sh
+
+NAME=mgrep
+
+build_rpms $NAME $*
 
 ##############
 # $Log: build_rpm-mgrep.sh,v $
-# Revision 1.2  2007-12-07 14:29:23  reiner
+# Revision 1.3  2009-10-07 12:12:38  marc
+# new versions
+#
+# Revision 1.2  2007/12/07 14:29:23  reiner
 # Added GPL license to and ATIX AG as author name to RPM header.
 #
 # Revision 1.1  2007/10/02 12:18:44  marc

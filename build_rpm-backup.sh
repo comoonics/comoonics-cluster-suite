@@ -1,27 +1,19 @@
 #!/bin/bash
-# $Id: build_rpm-backup.sh,v 1.4 2009-09-28 15:29:06 marc Exp $
+# $Id: build_rpm-backup.sh,v 1.5 2009-10-07 12:12:38 marc Exp $
 
-source ./build-lib.sh
 
-RELEASE=2
-REQUIRES="--requires=comoonics-ec-py"
-NOAUTO_REQ="--no-autoreq"
-NAME="comoonics-backup-py"
-VERSION="0.1"
-DESCRIPTION="Comoonics Backup utilities and libraries written in Python"
-LONG_DESCRIPTION="
-Comoonics Backup utilities and libraries written in Python
-"
-AUTHOR="ATIX AG - Marc Grimme"
-AUTHOR_EMAIL="grimme@atix.de"
-URL="http://www.atix.de/comoonics/"
-PACKAGE_DIR='"comoonics.backup" : "lib/comoonics/backup"'
-PACKAGES='"comoonics.backup"'
-setup
+source ./build-lib2.sh
+
+NAME=comoonics-backup-py
+
+build_rpms $NAME $*
 
 ##############
 # $Log: build_rpm-backup.sh,v $
-# Revision 1.4  2009-09-28 15:29:06  marc
+# Revision 1.5  2009-10-07 12:12:38  marc
+# new versions
+#
+# Revision 1.4  2009/09/28 15:29:06  marc
 # updated to new build process
 #
 # Revision 1.3  2007/12/07 14:29:23  reiner

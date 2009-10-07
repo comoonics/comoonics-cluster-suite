@@ -1,27 +1,18 @@
 #!/bin/bash
-# $Id: build_rpm-backup-legato.sh,v 1.7 2009-09-28 15:29:06 marc Exp $
+# $Id: build_rpm-backup-legato.sh,v 1.8 2009-10-07 12:12:38 marc Exp $
 
-source ./build-lib.sh
+source ./build-lib2.sh
 
-RELEASE=5
-REQUIRES="--requires=comoonics-backup-py"
-NOAUTO_REQ="--no-autoreq"
-NAME="comoonics-backup-legato-py"
-VERSION="0.1"
-DESCRIPTION="Comoonics Legato Backup utilities and libraries written in Python"
-LONG_DESCRIPTION="
-Comoonics Legato Backup utilities and libraries written in Python
-"
-AUTHOR="ATIX AG - Marc Grimme"
-AUTHOR_EMAIL="grimme@atix.de"
-URL="http://www.atix.de/comoonics/"
-PACKAGE_DIR='"comoonics.backup.EMCLegato" : "lib/comoonics/backup/EMCLegato"'
-PACKAGES='"comoonics.backup.EMCLegato"'
-setup
+NAME=comoonics-backup-legato-py
+
+build_rpms $NAME $*
 
 ##############
 # $Log: build_rpm-backup-legato.sh,v $
-# Revision 1.7  2009-09-28 15:29:06  marc
+# Revision 1.8  2009-10-07 12:12:38  marc
+# new versions
+#
+# Revision 1.7  2009/09/28 15:29:06  marc
 # updated to new build process
 #
 # Revision 1.6  2007/12/07 14:29:23  reiner

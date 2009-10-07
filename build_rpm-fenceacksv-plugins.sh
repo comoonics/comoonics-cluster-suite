@@ -1,27 +1,19 @@
 #!/bin/bash
-# $Id: build_rpm-fenceacksv-plugins.sh,v 1.4 2009-09-28 15:29:30 marc Exp $
+# $Id: build_rpm-fenceacksv-plugins.sh,v 1.5 2009-10-07 12:12:38 marc Exp $
 
-source ./build-lib.sh
 
-RELEASE=2
-REQUIRES="comoonics-ec-py >= 0.1-25,comoonics-fenceacksv-py,comoonics-bootimage-listfiles-fenceacksv-plugins"
-NOAUTO_REQ="--no-autoreq"
-NAME="comoonics-fenceacksv-plugins-py"
-VERSION="0.1"
-DESCRIPTION="Comoonics Fenceacksv plugins written in Python"
-LONG_DESCRIPTION="
-Comoonics Fenceacksv plugins written in Python
-"
-AUTHOR="ATIX AG - Marc Grimme"
-AUTHOR_EMAIL="grimme@atix.de"
-URL="http://www.atix.de/comoonics/"
-PACKAGE_DIR='"comoonics.fenceacksv.plugins" : "lib/comoonics/fenceacksv/plugins"'
-PACKAGES='"comoonics.fenceacksv.plugins"'
-setup
+source ./build-lib2.sh
+
+NAME=comoonics-fenceacksv-py
+
+build_rpms $NAME $*
 
 ##############
 # $Log: build_rpm-fenceacksv-plugins.sh,v $
-# Revision 1.4  2009-09-28 15:29:30  marc
+# Revision 1.5  2009-10-07 12:12:38  marc
+# new versions
+#
+# Revision 1.4  2009/09/28 15:29:30  marc
 # updated to new build process
 #
 # Revision 1.3  2008/09/10 13:11:06  marc
