@@ -6,10 +6,10 @@ Tool for gfs lockdump analysis
 """
 
 # here is some internal information
-# $Id: gfs_lockdump_tool.py,v 1.2 2009-09-29 15:55:33 marc Exp $
+# $Id: gfs_lockdump_tool.py,v 1.3 2009-10-08 09:34:49 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/bin/gfs_lockdump_tool.py,v $
 
 from exceptions import Exception
@@ -20,11 +20,8 @@ import warnings
 import os
 import re
 
-from distutils.sysconfig import get_python_lib
-oldlib=sys.lib
-sys.lib="lib"
-sys.path.append(get_python_lib(0))
-sys.lib=oldlib
+import os.path
+sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
 sys.path.append("../lib")
 

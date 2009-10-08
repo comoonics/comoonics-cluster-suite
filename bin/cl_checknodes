@@ -21,12 +21,8 @@ import getopt
 import logging
 import warnings
 
-from distutils.sysconfig import get_python_lib
-oldlib=sys.lib
-sys.lib="lib"
-sys.path.append(get_python_lib(0))
-sys.lib=oldlib
-
+import os.path
+sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 sys.path.append("../lib")
 
 from comoonics import ComSystem, ComLog, GetOpts
