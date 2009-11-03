@@ -8,7 +8,7 @@ echo "We suppose that all src.rpms are already installed."
 if [ -e /etc/SuSE-release ]; then
 	define1="sles 1"
 else
-    define1="sles 0"
+    define1="redhat 1"
 fi
 python -c 'import sys; sys.exit(int(sys.version[0])>2 or (int(sys.version[0])==2 and int(sys.version[2])>5))'
 if [ $? -eq 0 ]; then
