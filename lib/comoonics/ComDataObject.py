@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.11 2009-07-22 08:37:40 marc Exp $
+# $Id: ComDataObject.py,v 1.12 2010-02-05 12:20:29 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,7 +28,7 @@ here should be some more information about the module, that finds its way inot t
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -50,6 +50,16 @@ class DataObject(object):
 
     # Public methods
     def __init__(self, *params):
+        """
+        __init__(xmlasstring|node, [doc])
+        Creates a new DataObject.
+        @param xmlasstring: the xml to be parsed as DataObject as string
+        @type xmlasstring: string
+        @param node: node as xml.dom.Element to be taken as base element
+        @type node: xml.dom.Element
+        @param doc: the document to be taken as basedocument for the given element
+        @type doc: xml.dom.DocuementElement 
+        """
         element=None
         doc=None
         if len(params) >= 1:
@@ -91,7 +101,7 @@ class DataObject(object):
         return self.document
 
     def setDocument(self, doc):
-        self.__dict__['document']=doc
+        self.document=doc
 
     def getAttribute(self,name,default=None):
         if (not self.__dict__.has_key('element') or not self.element.hasAttribute(name)) and default!=None:
@@ -216,7 +226,10 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.11  2009-07-22 08:37:40  marc
+# Revision 1.12  2010-02-05 12:20:29  marc
+# more documentation
+#
+# Revision 1.11  2009/07/22 08:37:40  marc
 # fedora compliant
 #
 # Revision 1.10  2008/08/05 13:07:20  marc
