@@ -27,7 +27,7 @@ of used cluster configuration by parsing given cluster configuration.
 
 import os
 
-__version__='$Revision: 1.9 $'
+__version__='$Revision: 1.10 $'
 
 __all__=['clusterconf', 'querymapfile', 'clusterdtd', 'RedHatClusterConst', 'OSRClusterConst']
 
@@ -42,6 +42,8 @@ except:
     querymapfile="/etc/comoonics/cluster_query_mappings.txt"
 
 def parseClusterConf(_clusterconf=clusterconf, _validate=False):
+    if not _clusterconf:
+        _clusterconf=clusterconf
     # parse the document and create comclusterinfo object
     file = os.fdopen(os.open(_clusterconf,os.O_RDONLY))
     doc= parseClusterConfFP(file, _clusterconf, _validate)
@@ -80,7 +82,10 @@ def commonoptparseroptions(parser):
 
 ###############
 # $Log: __init__.py,v $
-# Revision 1.9  2009-07-22 13:01:58  marc
+# Revision 1.10  2010-02-05 12:13:08  marc
+# - take default clusterconf if none given
+#
+# Revision 1.9  2009/07/22 13:01:58  marc
 # ported to getopts
 #
 # Revision 1.8  2009/07/22 08:37:09  marc
