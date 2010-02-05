@@ -9,8 +9,7 @@ if __name__ == '__main__':
 
     stabilized.logger.setLevel(logging.DEBUG)
     class testStabilized(unittest.TestCase):
-        files=[ "/proc/scsi/scsi",
-                "/proc/bus/usb/devices"]
+        files=[ "/proc/scsi/scsi"]
         hash_results=[ True, True ]
         mtime_results=[ False, True ]
         def testHash(self):
