@@ -4,7 +4,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.13 2009-07-22 08:37:40 marc Exp $
+# $Id: XmlTools.py,v 1.14 2010-02-05 12:24:15 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -163,7 +163,10 @@ def clone_node(node, doc=None):
     """
     import xml.dom
     if not doc:
-        _impl=xml.dom.getDOMImplementation()
+        try:
+            _impl=xml.dom.getDOMImplementation("4DOM")
+        except:
+            _impl=xml.dom.getDOMImplementation()
         doc=_impl.createDocument(None, node.tagName, None)
     if node.nodeType==Node.ELEMENT_NODE:
         newnode=doc.createElement(node.tagName)
@@ -188,7 +191,10 @@ def add_element_to_node(child, element, doc=None):
     """
     import xml.dom
     if not doc:
-        _impl=xml.dom.getDOMImplementation()
+        try:
+            _impl=xml.dom.getDOMImplementation("4DOM")
+        except:
+            _impl=xml.dom.getDOMImplementation()
         doc=_impl.createDocument(None, doc.documentElement.tagName, None)
     if child.nodeType==Node.ELEMENT_NODE:
         newchild=doc.createElement(child.tagName)
@@ -296,9 +302,35 @@ def xpathsplit(_xpath):
     else:
         return _xpath.split(XPATH_SEP)
 
+def parseXMLFile(xmlfile, validate=False):
+    """
+    Parses the given XML file and returns a xml.dom.Document as result.
+    @param xmlfile: the path to the file to be parsed.
+    @type  xmlfile: L{String}
+    @param validate: If it should also be validated (Default: False)
+    @type  validate: L{Boolean}
+    @return: the document element.
+    @rtype: L{xml.dom.Document} 
+    """
+    import os
+    filep = os.fdopen(os.open(xmlfile, os.O_RDONLY))
+    doc= parseXMLFP(filep, validate)
+    filep.close()
+    return doc
+
+def parseXMLFP(filep, validate=False):
+    from xml.dom.ext.reader import Sax2
+    reader = Sax2.Reader(validate=validate)
+    doc = reader.fromStream(filep)
+    return doc
+
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.13  2009-07-22 08:37:40  marc
+# Revision 1.14  2010-02-05 12:24:15  marc
+# - added parseXMLFile
+# - changed implementation to default 4DOM then fall back
+#
+# Revision 1.13  2009/07/22 08:37:40  marc
 # fedora compliant
 #
 # Revision 1.12  2009/06/10 15:19:20  marc
