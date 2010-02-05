@@ -53,7 +53,7 @@ class QueryMap(ConfigParser.ConfigParser):
         self._defaults["param2"]="%(param2)s"
         self._defaults["param3"]="%(param3)s"
         self._defaults["param4"]="%(param4)s"
-        result=ConfigParser.ConfigParser.get(self, section, option)
+        result=ConfigParser.ConfigParser.get(self, section, option, True)
         if result.find(self.delimitor) > 0:
             return result.split(self.delimitor)
         else:
@@ -84,7 +84,10 @@ class QueryMap(ConfigParser.ConfigParser):
         
 ###########
 # $Log: ComQueryMap.py,v $
-# Revision 1.3  2009-09-28 15:10:04  marc
+# Revision 1.4  2010-02-05 12:15:37  marc
+# - removed support for references in querymap to support outscope references.
+#
+# Revision 1.3  2009/09/28 15:10:04  marc
 # bugfix with queries and interpretation of querymap strings
 #
 # Revision 1.2  2009/07/22 08:37:09  marc
