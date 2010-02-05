@@ -14,7 +14,7 @@ hello world2
 """
 
 # here is some internal information
-# $Id: ComPath.py,v 1.4 2009-07-22 08:38:00 marc Exp $
+# $Id: ComPath.py,v 1.5 2010-02-05 12:23:04 marc Exp $
 #
 # @(#)$File$
 #
@@ -36,7 +36,7 @@ hello world2
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComPath.py,v $
 
 from ComDataObject import DataObject
@@ -48,7 +48,6 @@ import os
 createddirs=dict()
 
 class Path(DataObject):
-    oldpaths=list()
     logger=ComLog.getLogger("comoonics.ComPath.Path")
     TAGNAME="path"
     def _createElement(self, path):
@@ -66,13 +65,16 @@ class Path(DataObject):
         __init__(element=.., doc=..)
         __init__(path=..)
         """
+        self.oldpaths=list()
+
         # Case path is given
         if params and len(params)==1:
             (element, doc)=self._createElement(params[0])
         elif params and len(params)==2:
             (element, doc)=params
-        elif kwds and kwds.has_key("element", "doc"):
+        elif kwds and kwds.has_key("element"):
             element=kwds["element"]
+        elif kwds and kwds.has_key("doc"):
             doc=kwds["doc"]
         elif kwds and kwds.has_key("path"):
             (element, doc)=self._createElement(kwds["path"])
@@ -97,11 +99,13 @@ class Path(DataObject):
     def getOldPaths(self):
         return self.oldpaths
     def pushd(self, path=None):
+        _cwd=os.getcwd()
         if not path:
             path=self.getPath()
-        _cwd=os.getcwd()
+            if str(path) == _cwd:
+                return 
         os.chdir(str(path))
-        self.oldpaths.append(_cwd)
+        self.getOldPaths().append(_cwd)
         self.setAttribute("name", path)
         if not self.__created.has_key(self.getPath()):
             self.__created[self.getPath()]=False
@@ -112,7 +116,9 @@ class Path(DataObject):
             _path=self.getPath()
             path=self.getOldPaths().pop()
             os.chdir(str(path))
-            self.setAttribute("name", path)
+            # we don't want the old cwd to be the path as it was not specified like this.
+            if len(self.getOldPaths()) > 0:
+                self.setAttribute("name", path)
 #            Path.logger.debug("popd: _created: %s" %self.__created)
         return path
 
@@ -129,18 +135,24 @@ class Path(DataObject):
         if not path:
             path=self.getPath()
         return os.path.exists(str(path)) and os.path.isdir(str(path))
-    def mkdir(self, path=None):
+    def mkdir(self, path=None, mode=0777):
         if not path:
             path=self.getPath()
         if not self.exists(path):
-            os.mkdir(str(path))
+            os.makedirs(str(path), mode)
             self.__created[path]=True
     def __str__(self):
         return "currentpath: %s, oldpaths: %s" %(self.getPath(), self.getOldPaths())
 
 ################
 # $Log: ComPath.py,v $
-# Revision 1.4  2009-07-22 08:38:00  marc
+# Revision 1.5  2010-02-05 12:23:04  marc
+# - moved oldpaths to constructor in order to not have it globally initiated
+# - better constructor with more params
+# - mkdir works better now
+# - popd and pushd will not change properties when changing to original dir.
+#
+# Revision 1.4  2009/07/22 08:38:00  marc
 # fedora compliant
 #
 # Revision 1.3  2009/06/10 15:20:08  marc
