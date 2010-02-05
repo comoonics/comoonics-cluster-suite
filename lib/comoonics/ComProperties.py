@@ -4,7 +4,7 @@ Implementation of properties as DataObject
 
 __version__= "$Revision $"
 
-# $Id: ComProperties.py,v 1.7 2009-07-22 08:37:40 marc Exp $
+# $Id: ComProperties.py,v 1.8 2010-02-05 12:23:30 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -122,59 +122,18 @@ class Properties(DataObject):
             return self.getProperty(name).getAttribute("value")
         else:
             raise KeyError(name)
-
+    def list(self, _pairsdelim="\n", _pairdelim="=", ):
+        buf=list()
+        for _property in self.iter():
+            buf.append("%s%s%s" %(_property.getAttribute("name"), _pairdelim, _property.getValue()))
+        return _pairsdelim.join(buf)
+            
 mylogger=ComLog.getLogger(Properties.__logStrLevel__)
-
-def main():
-    test_str="""
-<!DOCTYPE properties SYSTEM "file:/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
-<properties>
-  <property name="testname1">testvalue1</property>
-  <property name="testname2" value="testvalue2"/>
-  <property name="testflag"/>
-</properties>
-"""
-    print "Reading xml.."
-    from xml.dom.ext.reader import Sax2
-    from xml.dom.ext import PrettyPrint
-    reader=Sax2.Reader(validate=1)
-    document=reader.fromString(test_str)
-    print "OK"
-    PrettyPrint(document.documentElement)
-    print "Setting properties.."
-    properties=Properties(document.documentElement, document)
-    print "OK"
-    print properties
-    property_name="testname2"
-    print "Getting property %s: %s" %(property_name, properties[property_name].getValue())
-    property_name="testflag"
-    print "Getting property %s: '%s'" %(property_name, properties[property_name].getValue())
-    print "Setting property %s: %s" %("test123", "test213")
-    properties["test123"]="test213"
-    print "Getting property %s: %s" %("test123", properties["test123"].getValue())
-    print "Setting property %s: %s" %("test1234", True)
-    properties["test1234"]=True
-    print "Setting property %s: %s" %("test1235", "")
-    properties["test1235"]=""
-    print "Getting property %s: %s, %s" %("test1234", properties["test1234"].getValue(), type(properties["test1234"].getValue()))
-    print "Getting property %s: %s, %s" %("test1235", properties["test1235"].getValue(), type(properties["test1235"].getValue()))
-
-    try:
-        print "Getting nonproprty: %s" %(properties.getAttribute("test123"))
-    except KeyError, e:
-        print "KeyError %s" %(e)
-    print "Walking through properties"
-    for property in properties.iter():
-        print "%s" %(property)
-
-    for propertyname in properties.keys():
-        print "%s->%s(%s)" %(propertyname, properties[propertyname].getValue(), type(properties[propertyname].getValue()))
-
-
-if __name__ == '__main__':
-    main()
 # $Log: ComProperties.py,v $
-# Revision 1.7  2009-07-22 08:37:40  marc
+# Revision 1.8  2010-02-05 12:23:30  marc
+# - added list method
+#
+# Revision 1.7  2009/07/22 08:37:40  marc
 # fedora compliant
 #
 # Revision 1.6  2008/01/25 13:04:50  marc
