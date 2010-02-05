@@ -55,8 +55,24 @@ class test_ClusterInfo(baseClusterTestClass):
         self.assertEqual(self.createNodeList("name"), self.clusterInfo.queryValue("/cluster/clusternodes/clusternode/@name"))
         
     def testQueryxml(self):
-        _tmp = " name='gfs-node1'\n"
-        self.assertEqual(_tmp, str(self.clusterInfo.queryXml('/cluster/clusternodes/clusternode/@name')))
+        _tmp1 = "name"
+        _tmp2 = "gfs-node1"
+        _query='/cluster/clusternodes/clusternode[@'+_tmp1+'="'+_tmp2+'"]'
+        node=self.clusterInfo.queryXml(_query)[0]
+        self.assertEquals(node.getAttribute(_tmp1), _tmp2, "%s==%s->%s != %s->%s" %(_query, node.getAttribute("name"), node.getAttribute("value"), _tmp1, _tmp2))
+        
+    def testQueryProperties(self):
+        from comoonics.ComDataObject import DataObject
+        _tmp1 = "name"
+        _tmp2 = "gfs-node1"
+        _tmp3 = "name"
+        _tmp4 = "eth1"
+        result=[ "MASTER=yes", "SLAVE=no", "DELAY=0" ]
+        result.sort()
+        _query='/cluster/clusternodes/clusternode[@'+_tmp1+'="'+_tmp2+'"]/com_info/eth[@'+_tmp3+'="'+_tmp4+'"]'
+        properties=DataObject(self.clusterInfo.queryXml(_query)[0]).getProperties().list().split("\n")
+        properties.sort()
+        self.assertEquals(properties, result, "%s==%s != %s" %(_query, properties, result))
         
     def testGetnode(self):
         """
