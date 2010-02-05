@@ -8,7 +8,7 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.13 2009-09-28 15:10:04 marc Exp $
+# $Id: ComClusterInfo.py,v 1.14 2010-02-05 12:12:29 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,7 +30,7 @@ of clusterrepositories
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 
@@ -189,24 +189,24 @@ class RedHatClusterInfo(ClusterInfo):
         @param query: xpath to query clusterinfo instance
         @type query: string
         @return: answer of proceeded query as xml
-        @rtype: string
+        @rtype: list(xml.dom.Node)
         """
-        import StringIO
         self.log.debug("queryXml: %s" %(query))
         _tmp1 = xpath.Evaluate(query, self.clusterRepository.getElement())
-        _tmp2 = StringIO.StringIO()
-        PrettyPrint(_tmp1[0], stream=_tmp2)
-        return _tmp2.getvalue()
+        return _tmp1
                 
     def getNode(self, name):
         """
-        @param name: name of clusternode
+        @param name: name or id of clusternode
         @type name: string
         @return: Clusternodeinstance belonging to given clusternodename
         @rtype: L{ClusterNode}
         """
         self.log.debug("get node with given name from clusterrepository: %s" %(name))
-        return self.clusterRepository.nodeNameMap[name]
+        if self.clusterRepository.nodeNameMap.has_key(name):
+            return self.clusterRepository.nodeNameMap[name]
+        else:
+            return self.getNodeFromId(name)
         
     def getNodeFromId(self, _id):
         """
@@ -335,7 +335,11 @@ class ComoonicsClusterInfo(RedHatClusterInfo):
         raise ClusterMacNotFoundException("Cannot find device with given mac: %s" %(str(mac)))
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.13  2009-09-28 15:10:04  marc
+# Revision 1.14  2010-02-05 12:12:29  marc
+# - fix that getNode will also return right node when queried with id
+# - fixes with querymap
+#
+# Revision 1.13  2009/09/28 15:10:04  marc
 # bugfix with queries and interpretation of querymap strings
 #
 # Revision 1.12  2009/07/22 08:37:09  marc
