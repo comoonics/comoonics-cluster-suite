@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComExceptions.py,v 1.7 2009-09-28 15:12:42 marc Exp $
+# $Id: ComExceptions.py,v 1.8 2010-02-05 12:20:57 marc Exp $
 #
 # @(#)$File$
 #
@@ -34,7 +34,7 @@ __version__ = "$$"
 
 class ComException(Exception):
     def __init__(self, value=""):
-        ComException.__init__(self)
+        Exception.__init__(self)
         if value != "":
             self.value = value
         else:
@@ -50,7 +50,10 @@ class ComException(Exception):
             return repr(self.value)
 
 # $Log: ComExceptions.py,v $
-# Revision 1.7  2009-09-28 15:12:42  marc
+# Revision 1.8  2010-02-05 12:20:57  marc
+# - bugfix for recursive instantiation
+#
+# Revision 1.7  2009/09/28 15:12:42  marc
 # moved to storage and scsi packages
 #
 # Revision 1.6  2009/07/22 08:37:40  marc
