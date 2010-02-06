@@ -5,7 +5,7 @@ Contains deleting of symbolic links and content of cdsl.
 !!ATTENTION!!
    You can remove data with that program. Use on your own risk!
 """
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 
 import getopt
 import sys
@@ -23,7 +23,7 @@ from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository
 from comoonics.cdsl import commonoptparseroptions, dirtrim
 from comoonics.cdsl.ComCdsl import CdslDoesNotExistException
-from comoonics.cdsl.ComCdslRepository import CdslRepository
+from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 
 class CdslNotExistsException(ComException):pass
 
@@ -33,7 +33,7 @@ usage = "usage: %prog [options] fullpathtofile"
 parser = OptionParser(usage=usage, description=__doc__)
 parser=commonoptparseroptions(parser)
 
-parser.add_option("-s", "--symboliconly", dest="symboliconly", default=False, action="store_true", help="Only removes the symbolic links but not the data itself")
+parser.add_option("-s", "--symboliconly", dest="symboliconly", default=True, action="store_true", help="Only removes the symbolic links but not the data itself")
 
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()
@@ -47,7 +47,7 @@ doc=parseClusterConf(options.clusterconf)
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
 
-cdslRepository = CdslRepository(options.inventoryfile,None,False,root=options.root, mountpoint=options.mountpoint)
+cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
 
 cdsl = cdslRepository.getCdsl(args[0])
 cdsl.delete(force=not options.symboliconly)
