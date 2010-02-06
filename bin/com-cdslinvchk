@@ -21,7 +21,7 @@ from comoonics import ComLog
 import comoonics.cluster
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
-from comoonics.cdsl.ComCdslRepository import CdslRepository
+from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 from comoonics.cdsl.ComCdslValidate import CdslValidate
 from comoonics.cdsl import dirtrim, commonoptparseroptions
 
@@ -44,20 +44,17 @@ parser=commonoptparseroptions(parser)
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()
 
-inventoryfile = os.path.join(options.root,dirtrim(options.inventoryfile))
-clusterconf = os.path.join(options.root, dirtrim(options.clusterconf))
-
 doc=comoonics.cluster.parseClusterConf(options.clusterconf)
           
 #create needed cluster objects
 clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
 
-cdslRepository = CdslRepository(dirtrim(options.inventoryfile), None, False, usenodeids="True", root=options.root)
+cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
 
 validator=CdslValidate(cdslRepository, clusterInfo)
 
-_added, _removed=validator.validate(update=options.update, root=options.root, onfilesystem=options.filesystem, filesystempath=options.path, cdsls=options.cdsls, recursive=not options.norecursive)
+_added, _removed=validator.validate(update=options.update, onfilesystem=options.filesystem, filesystempath=options.path, cdsls=options.cdsls, recursive=not options.norecursive)
 if _added and len(_added) > 0:
     for _addedcdsl in _added:
         print "Added cdsl %s type %s" %(_addedcdsl, _addedcdsl.type)
