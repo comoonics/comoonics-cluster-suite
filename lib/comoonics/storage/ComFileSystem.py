@@ -7,27 +7,24 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.1 2009-09-28 15:13:36 marc Exp $
+# $Id: ComFileSystem.py,v 1.2 2010-02-07 20:32:17 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
 import os
 import os.path
 import exceptions
-import xml.dom
 
-import ComSystem
-import ComUtils
-from ComExceptions import *
-from ComDevice import Device
-from ComDataObject import *
-from ComMountpoint import MountPoint
+from comoonics import ComLog
+from comoonics import ComSystem
+from comoonics import ComUtils
+from comoonics.ComExceptions import ComException
+from comoonics.ComDataObject import DataObject, NotImplementedYetException
 
 log=ComLog.getLogger("ComFileSystem")
-
 
 CMD_MKFS="/sbin/mkfs"
 CMD_GFS_MKFS="/sbin/gfs_mkfs"
@@ -37,6 +34,7 @@ CMD_MOUNT="/bin/mount"
 CMD_UMOUNT="/bin/umount"
 CMD_E2LABEL="/sbin/e2label"
 CMD_E2FSCK="/sbin/e2fsck"
+CMD_TUNEFSOCFS="tunefs.ocfs2 -L"
 
 def getFileSystem(element, doc):
     """factory method to ceate a FileSystem object
@@ -80,6 +78,7 @@ class FileSystem(DataObject):
         self.maxLabelChars = 16
         self.partedFileSystemType = None
         self.cmd_fsck=None
+        self.cmd_mkfs=None
 
 
     def mount(self, device, mountpoint):
@@ -208,7 +207,6 @@ class FileSystem(DataObject):
         """
         pass
 
-    """ private """
     def unlinkLockfile(self):
         if self.hasAttribute("exlock"):
             __lockfile=self.getAttribute("exlock")
@@ -224,10 +222,11 @@ class extFileSystem(FileSystem):
         self.linuxnativefs = 1
         self.maxSizeMB = 8 * 1024 * 1024
         self.setFsckCmd(CMD_E2FSCK+" -y")
+        self.labelCmd=CMD_E2LABEL
 
     def labelDevice(self, label, device):
         __devicePath = device.getDevicePath()
-        __cmd = CMD_E2LABEL + " " + __devicePath + " " + label
+        __cmd = self.labelCmd + " " + __devicePath + " " + label
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("labelDevice: " +  __cmd + ": " + __ret)
         if __rc:
@@ -236,7 +235,7 @@ class extFileSystem(FileSystem):
     def getLabel(self, device):
         # BUG: Cannot function!!!!
         __devicePath=""
-        __cmd = CMD_E2LABEL + " " + __devicePath
+        __cmd = self.labelCmd + " " + __devicePath
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("getLabel: " + __cmd + ": " + __ret)
         if __rc:
@@ -278,6 +277,14 @@ class ext3FileSystem(extFileSystem):
         self.name = "ext3"
         self.setMkfsCmd(CMD_MKFS + " -t ext3 ")
 
+
+class ocfs2FileSystem(extFileSystem):
+    """ The ocfs2 filesystem """
+    def __init__(self,element, doc):
+        extFileSystem.__init__(self,element, doc)
+        self.name = "ocfs2"
+        self.setMkfsCmd(CMD_MKFS + " -t ocfs2 ")
+        self.labelCmd = CMD_TUNEFSOCFS
 
 class gfsFileSystem(FileSystem):
     """ The Global Filesystem - gfs """
@@ -370,7 +377,11 @@ class gfsFileSystem(FileSystem):
 
 
 # $Log: ComFileSystem.py,v $
-# Revision 1.1  2009-09-28 15:13:36  marc
+# Revision 1.2  2010-02-07 20:32:17  marc
+# - added OCFS2 Filesystem
+# - new imports
+#
+# Revision 1.1  2009/09/28 15:13:36  marc
 # moved from comoonics here
 #
 # Revision 1.6  2008/02/19 14:13:16  mark
