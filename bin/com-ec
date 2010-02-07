@@ -1,6 +1,5 @@
 #!/usr/bin/python
-"""Com.oonics Enterprisecopy
-
+"""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
 
@@ -8,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.26 2009-10-08 09:34:49 marc Exp $
+# $Id: com-ec,v 1.27 2010-02-07 19:59:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.26 $"
+__version__ = "$Revision: 1.27 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -32,9 +31,10 @@ import warnings
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
-from comoonics import GetOpts
+#from comoonics import GetOpts
 
-from comoonics import ComLVM, ComSystem, ComLog
+from comoonics.storage import ComLVM
+from comoonics import ComSystem, ComLog
 from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset
 
 import os.path
@@ -54,55 +54,6 @@ logger.addHandler(console)
 def line(str=None):
     logger.info(str)
 
-class Config(GetOpts.BaseConfig):
-    DELIMITER=','
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.xslt="%s/%s" %(XSLT_PATH, DEFAULT_XSLT)
-        if not os.path.exists(self.xslt):
-            self.xslt=None
-        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "d", self.setDebug)
-        self.novalidate=GetOpts.Option("novalidate", "novalidate don't validate the xml. Handle with care!!!", False, False, "n")
-        self.ask=GetOpts.Option("ask", "ask before any command is executed", False, False, "a")
-        self.copyset=GetOpts.Option("copyset", "<name>|all only do all or the given modification set", None, False, "c")
-        self.modificationset=GetOpts.Option("modificationset", "<name>|all only do all or the given modification set", None, False, "m")
-        self.noundo=GetOpts.Option("noundo", "don't do the undoing if anything goes wrong", False, False, "U")
-        self.xslt=GetOpts.Option("xslt", "preconvert xmlfile with given xsltfile.", self.xslt, False, "x")
-        self.onlydisplay=GetOpts.Option("onlydisplay", "only display the resulting dom as xml", False, False, "X")
-        self.simulate=GetOpts.Option("simulate", "don't execute anything just simulate. Only valid for developer. It might not do what you expect!", False, False, "S")
-        self.sets=GetOpts.Option("sets", "Execute the given sets (serperated by %s), regular exception are also accepted" %self.DELIMITER, None, False, "s")
-        self.setAdditionalParams("file [valuepath=value]*")
-        self.values=dict()
-    def do(self, args_proper):
-        import os.path
-        i=0
-        self.values["args%u" %i]=args_proper[i]
-        self.values["%u" %i]=args_proper[i]
-        i+=1
-        if len(args_proper) > 1:
-            for arg in args_proper[1:]:
-                if arg.find("=")>0:
-                    (name, value)=arg.split("=")
-                    self.values[name]=value
-                self.values["args%u" %i]=args_proper[i]
-                self.values["%u" %i]=args_proper[i]
-                i+=1
-        if len(args_proper) > 0 and os.path.isfile(args_proper[0]):
-            self.filename=args_proper[0]
-        elif len(args_proper) == 0:
-            logger.critical("No file given to execute.")
-            self.usage()
-            return 1
-        else:
-            logger.critical("Could not find file %s" %(args_proper[0]))
-            return 1
-        return 0
-
-    def setDebug(self, value):
-        ComLog.getLogger().propagate=1
-        ComLog.setLevel(logging.DEBUG)
-        self.debug=value
-
 def setWarnings():
     warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning)
     warnings.filterwarnings(action = 'ignore', message='.*SCSIWWIDResolver.*', category=UserWarning)
@@ -111,40 +62,79 @@ def applyValues(element, values):
     from comoonics import XmlTools
     return XmlTools.overwrite_element_with_xpaths(element, values)
 
-ComLog.setLevel(logging.INFO)
-config=Config()
-ret=config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    sys.exit(ret)
+from optparse import OptionParser
 
+parser = OptionParser(description=__doc__, usage="usage: %prog [options] xmlfilename [name=value]*")
+# Flags
+parser.add_option("-d", "--debug",      dest="debug",      default=False, action="store_true", help="toggle debugmode and be more helpful")
+parser.add_option("-n", "--novalidate", dest="novalidate", default=False, action="store_true", help="novalidate don't validate the xml. Handle with care!!!")
+parser.add_option("-a", "--ask",        dest="ask",        default=False, action="store_true", help="ask before any being command executed")
+parser.add_option("-U", "--noundo",     dest="noundo",     default=False, action="store_true", help="don't do the undoing if anything goes wrong")
+parser.add_option("-X", "--onlydisplay",dest="onlydisplay",default=False, action="store_true", help="only display the resulting dom as xml")
+parser.add_option("-S", "--simulate",   dest="simulate",   default=False, action="store_true", help="don't execute anything just simulate. Only valid for developer. It might not do what you expect!")
+
+# Options
+parser.add_option("-c", "--copyset",         dest="copyset",         action="append", type="str", help="<name>|all: only do all or the given copy set")
+parser.add_option("-m", "--modificationset", dest="modificationset", action="append", type="str", help="<name>|all: only do all or the given modification set")
+parser.add_option("-s", "--set",             dest="set",             action="append", type="str", help="Execute the given sets. Multiple allowed")
+
+parser.add_option("-x", "--xslt",            dest="xslt",            type="str", help="preconvert xmlfile with given xsltfile.")
+
+(options, args) = parser.parse_args()
+
+if options.debug:
+    ComLog.getLogger().propagate=1
+    ComLog.setLevel(logging.DEBUG)
+
+import os.path
+i=0
+self.values["args%u" %i]=args[i]
+self.values["%u" %i]=args[i]
+i+=1
+if len(args) > 1:
+    for arg in args[1:]:
+        if arg.find("=")>0:
+            (name, value)=arg.split("=")
+            self.values[name]=value
+        self.values["args%u" %i]=args[i]
+        self.values["%u" %i]=args[i]
+        i+=1
+if len(args) > 0 and os.path.isfile(args[0]):
+    self.filename=args[0]
+elif len(args) == 0:
+    logger.critical("No file given to execute.")
+    sys.exit(1)
+else:
+    logger.critical("Could not find file %s" %(args[0]))
+    sys.exit(1)
+
+ComLog.setLevel(logging.INFO)
 
 # filter warnings
-if not config.debug:
+if not options.debug:
     setWarnings()
 
 # create Reader object
 # FIXME: validation with xslt transformation does not work
 # BUG #33
-if config.novalidate or config.xslt:
+if options.novalidate or options.xslt:
     reader = Sax2.Reader(validate=0)
 else:
     reader = Sax2.Reader(validate=1)
 
-if not config.filename:
+if not options.filename:
     print "No file as input given exiting."
-    usage(sys.argv)
+    parser.usage()
     sys.exit(1)
 
 try:
-    file=open(config.filename,"r")
-    line("Parsing document %s " % config.filename)
+    file=open(options.filename,"r")
+    line("Parsing document %s " % options.filename)
     import StringIO
     _buf=StringIO.StringIO()
     for _line in file:
         try:
-            _line=_line %config.values
+            _line=_line %options.values
         except KeyError:
             pass
         except ValueError:
@@ -157,9 +147,9 @@ try:
            import libxml2
            _buf2=_buf.getvalue()
            n_doc = libxml2.parseMemory(_buf2, len(_buf2))
-#           if config.values:
-#               applyValues(n_doc, config.values)
-           style = libxml2.parseFile(config.xslt)
+#           if options.values:
+#               applyValues(n_doc, options.values)
+           style = libxml2.parseFile(options.xslt)
            xslt_style = libxslt.parseStylesheetDoc(style)
            params={}
            res = xslt_style.applyStylesheet(n_doc, params)
@@ -176,21 +166,19 @@ try:
         libxslt.cleanup()
     else:
         doc = reader.fromStream(_buf)
-        if config.values:
-            applyValues(doc, config.values)
+        if options.values:
+            applyValues(doc, options.values)
     _buf.close()
 
-    if config.onlydisplay:
+    if options.onlydisplay:
         PrettyPrint(doc)
         sys.exit(0)
 
     ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
-    if config.debug:
-        config.setDebug(True)
     logger=ComLog.getLogger(__logStrLevel__)
-    if config.ask:
+    if options.ask:
         ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
-    if config.simulate:
+    if options.simulate:
         ComSystem.__EXEC_REALLY_DO=ComSystem.SIMULATE
 except KeyboardInterrupt:
     logger.warn("Leaving because of user signal")
@@ -205,27 +193,26 @@ except Exception, e:
 if ecopy.hasAttribute("name"):
     _name=ecopy.getAttribute("name")
 else:
-    _name=config.filename
+    _name=options.filename
 
 line("Start of enterprisecopy %s" % (_name))
 
 try:
-    if not config.copyset and not config.modificationset and not config.sets:
+    if not options.copyset and not options.modificationset and not options.sets:
         line("Executing all sets %u" % (len(ecopy.allsets)))
         ecopy.doAllsets()
     else:
-        if config.copyset:
-            line("Executing copyset %s" % (config.copyset))
-            ecopy.doCopysets(config.copyset)
+        if options.copyset:
+            line("Executing copyset %s" % (options.copyset))
+            ecopy.doCopysets(options.copyset)
 
-        if config.modificationset:
-            line("Executing modificationset %s" % (config.modificationset))
-            ecopy.doModificationsets(config.modificationset)
+        if options.modificationset:
+            line("Executing modificationset %s" % (options.modificationset))
+            ecopy.doModificationsets(options.modificationset)
 
-        if config.sets:
-            _sets=config.sets.split(config.DELIMITER)
-            line("Executing sets %s" %(config.sets))
-            ecopy.doAllsets(_sets)
+        if options.sets:
+            line("Executing sets %s" %(options.sets))
+            ecopy.doAllsets(options.sets)
 
     line("Finished execution of enterprisecopy %s successfully" % (_name))
 except KeyboardInterrupt:
@@ -237,7 +224,7 @@ except Exception, e:
     else:
         logger.error("Error occured during execution of enterprisecopy %s. Errormessage: %s." %(_name, e))
     ComLog.debugTraceLog()
-    if config.noundo:
+    if options.noundo:
         line("Finished execution of enterprisecopy with errors. Skipping undo on request")
     elif len(ecopy.donesets)>0:
         line("Undoing %u sets" % (len(ecopy.donesets)))
@@ -248,7 +235,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.26  2009-10-08 09:34:49  marc
+# Revision 1.27  2010-02-07 19:59:47  marc
+# first RC
+#
+# Revision 1.26  2009/10/08 09:34:49  marc
 # changed the libpath so that always /usr/lib/python[version:3]/site-packages is included
 #
 # Revision 1.25  2009/09/29 15:55:33  marc
