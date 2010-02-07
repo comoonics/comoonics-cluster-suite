@@ -8,17 +8,17 @@ Thanks to Red Hat Anaconda development
 # $Id $
 #
 
-import parted
 import math
-import string
 
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
+from ComPartition import Partition, PartitionFlag
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComParted.py,v $
 
 class PartitioningError(ComException): pass
+
 
 class PartedHelper:
     __logStrLevel__="PartedHelper"
@@ -27,7 +27,10 @@ class PartedHelper:
     """
     Utility class to work with pyparted
     """
-
+    
+    DEVICE_DAC960=3
+    DEVICE_CPQARRAY=4
+    DEVICE_SX8=None    
 
     def __init__(self):
         pass
@@ -36,21 +39,35 @@ class PartedHelper:
 
     def get_flags_as_string (self, part):
         """Retrieve a list of strings representing the flags on the partition."""
+        import parted
         strings=[]
         for flag in self.get_flags(part):
-            strings.append(parted.partition_flag_get_name (flag))
+            strings.append(parted.partition_flag_get_name(flag))
         return strings
 
     def get_flags(self, part):
+        import parted
         flags=[]
-        if not part.is_active ():
+        if not part.is_active():
             return flags
-        flag = parted.partition_flag_next (0)
+        flag = parted.partition_flag_next(0)
         while flag:
             if part.get_flag (flag):
                 flags.append(flag)
             flag = parted.partition_flag_next (flag)
         return flags
+
+#    def get_max_logical_partitions(self, disk):
+#        import parted
+#        if not disk.type.check_feature(parted.DISK_TYPE_EXTENDED):
+#            return 0
+#        dev = disk.dev.path[5:]
+#        for key in max_logical_partition_count.keys():
+#            if dev.startswith(key):
+#                return max_logical_partition_count[key]
+#        # FIXME: if we don't know about it, should we pretend it can't have
+#        # logicals?  probably safer to just use something reasonable
+#        return 11
 
     def start_sector_to_cyl(self, device, sector):
         """Return the closest cylinder (round down) to sector on device."""
@@ -112,14 +129,14 @@ class PartedHelper:
 
     def get_partition_name(self, partition):
         """Return the device name for the PedPartition partition."""
-        if (partition.geom.dev.type == parted.DEVICE_DAC960
-            or partition.geom.dev.type == parted.DEVICE_CPQARRAY):
+        if (partition.geom.dev.type == self.DEVICE_DAC960
+            or partition.geom.dev.type == self.DEVICE_CPQARRAY):
             return "%sp%d" % (partition.geom.dev.path[5:],
                               partition.num)
-        if (parted.__dict__.has_key("DEVICE_SX8") and
-            partition.geom.dev.type == parted.DEVICE_SX8):
-            return "%sp%d" % (partition.geom.dev.path[5:],
-                              partition.num)
+        #if (parted.__dict__.has_key("DEVICE_SX8") and
+        #    partition.geom.dev.type == self.DEVICE_SX8):
+        #    return "%sp%d" % (partition.geom.dev.path[5:],
+        #                      partition.num)
 
         return "%s%d" % (partition.geom.dev.path[5:],
                          partition.num)
@@ -136,17 +153,6 @@ class PartedHelper:
     def get_partition_drive(self, partition):
         """Return the device name for disk that PedPartition partition is on."""
         return "%s" %(partition.geom.dev.path[5:])
-
-    def get_max_logical_partitions(self, disk):
-        if not disk.type.check_feature(parted.DISK_TYPE_EXTENDED):
-            return 0
-        dev = disk.dev.path[5:]
-        for key in max_logical_partition_count.keys():
-            if dev.startswith(key):
-                return max_logical_partition_count[key]
-        # FIXME: if we don't know about it, should we pretend it can't have
-        # logicals?  probably safer to just use something reasonable
-        return 11
 
     def map_foreign_to_fsname(self, type):
         """Return the partition type associated with the numeric type."""
@@ -171,24 +177,24 @@ class PartedHelper:
     def get_logical_partitions(self, disk):
         """Return a list of logical PedPartition objects on disk."""
         func = lambda part: (part.is_active()
-                             and part.type & parted.PARTITION_LOGICAL)
+                             and part.type & Partition.PARTITION_TYPES["logical"])
         return self.filter_partitions(disk, func)
 
     def get_primary_partitions(self, disk):
         """Return a list of primary PedPartition objects on disk."""
-        func = lambda part: part.type == parted.PARTITION_PRIMARY
+        func = lambda part: part.type == Partition.PARTITION_TYPES["primary"]
         return self.filter_partitions(disk, func)
 
     def get_raid_partitions(self, disk):
         """Return a list of RAID-type PedPartition objects on disk."""
         func = lambda part: (part.is_active()
-                             and part.get_flag(parted.PARTITION_RAID) == 1)
+                             and part.get_flag(PartitionFlag.ALLFLAGS["raid"]) == 1)
         return self.filter_partitions(disk, func)
 
     def get_lvm_partitions(self, disk):
         """Return a list of physical volume-type PedPartition objects on disk."""
         func = lambda part: (part.is_active()
-                             and part.get_flag(parted.PARTITION_LVM) == 1)
+                             and part.get_flag(PartitionFlag.ALLFLAGS["lvm"]) == 1)
         return self.filter_partitions(disk, func)
 
     def getDefaultDiskType(self):
@@ -200,11 +206,10 @@ class PartedHelper:
         """Add a new partition to the device.
             size of 0 means rest of remaining disk space
         """
-
         part = disk.next_partition ()
         status = 0
         while part:
-            if (part.type == parted.PARTITION_FREESPACE
+            if (part.type == Partition.PARTITION_TYPES["freespace"]
                 and part.geom.length >= size):
                 if size == 0:
                     newp = disk.partition_new (type, None, part.geom.start,
@@ -220,7 +225,7 @@ class PartedHelper:
                     disk.add_partition (newp, constraint)
                     status = 1
                     break
-                except parted.error, msg:
+                except Exception, msg:
                     raise PartitioningError, msg
             part = disk.next_partition (part)
         if not status:
