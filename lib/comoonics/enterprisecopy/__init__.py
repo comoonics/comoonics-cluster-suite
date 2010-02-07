@@ -12,11 +12,9 @@ from ComModificationset import registerModificationset
 from ComMessage import MessageRequirement, MessageModification
 from ComPathModificationset import PathModificationset
 from ComPathCopyObject import PathCopyObject
-from ComSysrqModification import SysrqModification
 from ComISOFSModificationset import ISOFSModificationset
 
 registerModification("message", MessageModification)
-registerModification("sysrq", SysrqModification)
 
 registerRequirement("message", MessageRequirement)
 
@@ -25,9 +23,18 @@ registerModificationset("isofs", ISOFSModificationset)
 
 registerCopyObject("path", PathCopyObject)
 
+try:
+   from ComSysrqModification import SysrqModification
+   registerModification("sysrq", SysrqModification)
+except ImportError:
+   pass
+
 ########
 # $Log: __init__.py,v $
-# Revision 1.3  2008-02-19 17:32:41  mark
+# Revision 1.4  2010-02-07 20:02:29  marc
+# SysRq will only be loaded if available
+#
+# Revision 1.3  2008/02/19 17:32:41  mark
 # added ComISOFSModificationset
 #
 # Revision 1.2  2007/09/07 14:34:45  marc
