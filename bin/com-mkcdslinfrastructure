@@ -66,17 +66,24 @@ clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
 
 try:
-    cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
+    parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root)
+    if options.mountpoint != "" or options.mountpoint != "/":
+        childcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
+    else:
+        childcdslRepository=parentcdslRepository
     if options.create and not options.onlyinventory:
-        cdslRepository.buildInfrastructure(clusterInfo)
+        childcdslRepository.buildInfrastructure(clusterInfo)
+        if parentcdslRepository != childcdslRepository:
+            parentcdslRepository.addRepository(childcdslRepository, options.mountpoint)
     elif options.delete:
         if not options.onlyinventory:
-            cdslRepository.removeInfrastructure(clusterinfo, options.recursive, options.force, True)
-        cdslRepository.removeRepository()
+            childcdslRepository.removeInfrastructure(clusterinfo, options.recursive, options.force, True)
+        if parentcdslRepository != childcdslRepository:
+            parentcdslRepository.removeRepository(childcdslRepository)
     elif options.get:
-        print cdslRepository.getAttribute(options.get)
+        print childcdslRepository.getAttribute(options.get)
     elif options.list:
-        for attribute in cdslRepository.getElement().attributes:
+        for attribute in childcdslRepository.getElement().attributes:
             print "%s: %s" %(attribute.name, attribute.value)
     else:
         parser.error("Wrong option or no option given. Please either specify create, list, get or delete as action.")
