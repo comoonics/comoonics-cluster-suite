@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComLVM.py,v $
 
 import os
@@ -18,10 +18,10 @@ import math
 import xml.dom
 from xml.dom import Element, Node
 
-import ComSystem
-from ComDataObject import DataObject
-import ComLog
-from ComExceptions import ComException
+from comoonics import ComSystem
+from comoonics.ComDataObject import DataObject
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
 
 CMD_LVM="/usr/sbin/lvm"
 
@@ -1006,7 +1006,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.1  2009-09-28 15:13:36  marc
+# Revision 1.2  2010-02-07 20:32:42  marc
+# - new imports
+#
+# Revision 1.1  2009/09/28 15:13:36  marc
 # moved from comoonics here
 #
 # Revision 1.15  2008/06/24 20:01:20  mark
