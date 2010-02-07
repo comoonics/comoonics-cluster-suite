@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.9 2007-07-31 15:15:29 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.10 2010-02-07 20:30:36 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 import re
@@ -123,90 +123,99 @@ class EnterpriseCopy(ComDataObject.DataObject):
             raise CouldNotFindCopyset(sets)
 
 
-    def undo(self, name=None):
+    def undo(self, names=None):
         if len(self.donesets)>0:
-            self.undoDonesets(name)
+            self.undoDonesets(names)
 
-    def undoDonesets(self, name=None):
-        self._logger.debug("name: %s, donesets: sets: %s " %(name, self.donesets))
+    def undoDonesets(self, names=None):
+        self._logger.debug("name: %s, donesets: sets: %s " %(names, self.donesets))
         self.donesets.reverse()
         for set in self.donesets:
             self.currentset=set
-            if isinstance(set, ComCopyset.Copyset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                self._logger.info("Undoing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
-                set.undoRequirements()
-                set.undoCopy()
-            elif isinstance(set, ComModificationset.Modificationset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                self._logger.info("Undoing Modificationset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
-                set.undoRequirements()
-                set.undoModifications()
+            for name in names:
+                if isinstance(set, ComCopyset.Copyset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
+                    self._logger.info("Undoing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                    set.undoRequirements()
+                    set.undoCopy()
+                elif isinstance(set, ComModificationset.Modificationset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
+                    self._logger.info("Undoing Modificationset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                    set.undoRequirements()
+                    set.undoModifications()
 
-    def undoAllsets(self, name=None):
-        self._logger.debug("name: %s, allsets: %s " %(name, self.allsets))
+    def undoAllsets(self, names=None):
+        self._logger.debug("name: %s, allsets: %s " %(names, self.allsets))
         self.allsets.reverse()
         for set in self.allsets:
             self.currentset=set
-            if isinstance(set, ComCopyset.Copyset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                self._logger.info("Undoing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
-                set.undoRequirements()
-                set.undoCopy()
-            elif isinstance(set, ComModificationset.Modificationset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
-                self._logger.info("Undoing modificationset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
-                set.undoRequirements()
-                set.undoModifications()
+            for name in names:
+                if isinstance(set, ComCopyset.Copyset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
+                    self._logger.info("Undoing copyset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                    set.undoRequirements()
+                    set.undoCopy()
+                elif isinstance(set, ComModificationset.Modificationset) and (not name or name == "all" or (set.hasAttribute("name") and name == set.getAttribute("name", None))):
+                    self._logger.info("Undoing modificationset %s(%s:%s)" % (set.__class__.__name__, set.getAttribute("name", "unknown"), set.getAttribute("type")))
+                    set.undoRequirements()
+                    set.undoModifications()
 
-    def doCopysets(self, name=None):
+    def doCopysets(self, names=None):
         _found=False
         for copyset in self.copysets:
             self.currentset=copyset
-            if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
-                self._logger.info("Executing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
-                _found=True
-                self.donesets.append(copyset)
-                copyset.doPre()
-                copyset.doCopy()
-                copyset.doPost()
+            for name in names:
+                if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
+                    self._logger.info("Executing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
+                    _found=True
+                    self.donesets.append(copyset)
+                    copyset.doPre()
+                    copyset.doCopy()
+                    copyset.doPost()
         if not _found:
             raise CouldNotFindCopyset(name)
 
 
-    def undoCopysets(self, name=None):
-        self._logger.debug("name %s, copysets: %s " %(name, self.copysets))
+    def undoCopysets(self, names=None):
+        self._logger.debug("name %s, copysets: %s " %(names, self.copysets))
         self.copysets.reverse()
         for copyset in self.copysets:
             self.currentset=copyset
-            if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
-                self._logger.info("Undoing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
-                copyset.undoRequirements()
-                copyset.undoCopy()
+            for name in names:
+                if not name or name == "all" or (copyset.hasAttribute("name") and name == copyset.getAttribute("name", None)):
+                    self._logger.info("Undoing copyset %s(%s:%s)" % (copyset.__class__.__name__, copyset.getAttribute("name", "unknown"), copyset.getAttribute("type")))
+                    copyset.undoRequirements()
+                    copyset.undoCopy()
 
-    def doModificationsets(self, name=None):
+    def doModificationsets(self, names=None):
         _found=False
         for modset in self.modificationsets:
             self.currentset=modset
-            if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", "")):
-                self._logger.info("Executing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
-                _found=True
-                self.donesets.append(modset)
-                modset.doPre()
-                modset.doModifications()
-                modset.doPost()
+            for name in names:
+                if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", "")):
+                    self._logger.info("Executing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
+                    _found=True
+                    self.donesets.append(modset)
+                    modset.doPre()
+                    modset.doModifications()
+                    modset.doPost()
         if not _found:
             raise CouldNotFindModset(name)
 
-    def undoModificationsets(self, name=None):
-        self._logger.debug("name %s, modificationsets: %s " %(name, self.modificationsets))
+    def undoModificationsets(self, names=None):
+        self._logger.debug("name %s, modificationsets: %s " %(names, self.modificationsets))
         self.modificationsets.reverse()
         for modset in self.modificationsets:
             self.currentset=modset
-            if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", None)):
-                self._logger.info("Undoing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
-                modset.undoRequirements()
-                modset.undoModifications()
+            for name in names:
+                if not name or name == "all" or (modset.hasAttribute("name") and name == modset.getAttribute("name", None)):
+                    self._logger.info("Undoing modificationset %s(%s:%s)" % (modset.__class__.__name__, modset.getAttribute("name", "unknown"), modset.getAttribute("type")))
+                    modset.undoRequirements()
+                    modset.undoModifications()
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.9  2007-07-31 15:15:29  marc
+# Revision 1.10  2010-02-07 20:30:36  marc
+# - support for only selected sets.
+#
+# Revision 1.9  2007/07/31 15:15:29  marc
 # - removed unneeded logging
 #
 # Revision 1.8  2007/06/19 12:50:25  marc
