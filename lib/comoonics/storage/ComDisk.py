@@ -7,26 +7,24 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.1 2009-09-28 15:13:36 marc Exp $
+# $Id: ComDisk.py,v 1.2 2010-02-07 20:31:23 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
 import exceptions
-import parted
 import time
-from xml.dom import Document, DOMImplementation
+import xml.dom
 
-import ComSystem
-from ComDataObject import DataObject
-from ComExceptions import ComException
+from comoonics import ComSystem
+from comoonics.ComDataObject import DataObject
+from comoonics.ComExceptions import ComException
 from comoonics import ComLog
-import ComParted
 from ComPartition import Partition
-from comoonics.ComLVM import LogicalVolume, LinuxVolumeManager, VolumeGroup
+from ComLVM import LogicalVolume, VolumeGroup
 
 CMD_SFDISK = "/sbin/sfdisk"
 CMD_DD="/bin/dd"
@@ -99,7 +97,7 @@ class HostDisk(Disk):
         """ creates a Disk object
         """
         if len(params)==1:
-            doc=DOMImplementation.createDocument(None, self.TAGNAME, None)
+            doc=xml.dom.getDOMImplementation().createDocument(None, self.TAGNAME, None)
         elif len(params)==2:
             doc=params[1]
         else:
@@ -146,7 +144,7 @@ class HostDisk(Disk):
 
     def getSize(self):
         """ returns the size of the disk in sectors"""
-        phelper=ComParted.PartedHelper()
+        pass
 
     def refByLabel(self):
         """
@@ -194,18 +192,31 @@ class HostDisk(Disk):
         self.logicalvolume.init_from_disk()
 
     def initFromDisk(self):
-        """ reads partition informatbbion from the disk and fills up DOM
+        """ reads partition information from the disk and fills up DOM
         with new information
         """
         HostDisk.log.debug("initFromDisk()")
 
-        phelper=ComParted.PartedHelper()
         #FIXME: create LabelResolver
         if self.refByLabel():
             pass
         if not self.exists():
             raise ComException("Device %s not found or no valid device!" % self.getDeviceName())
+        try:
+            import parted
+            self.initFromDiskParted()
+        except ImportError:
+            self.initFromDiskPartedCmd()
+            
+    def initFromDiskPartedCmd(self):
+        if self.refByLabel():
+            pass        
 
+    def initFromDiskParted(self):
+        import parted
+        import ComParted
+
+        phelper=ComParted.PartedHelper()
         dev=parted.PedDevice.get(self.getDeviceName())
         try:
             disk=parted.PedDisk.new(dev)
@@ -221,6 +232,18 @@ class HostDisk(Disk):
 
     def createPartitions(self):
         """ creates new partition table """
+        try:
+            import parted
+            self.createPartitionsParted()
+        except ImportError:
+            self.createPartitionsPartedCmd()
+
+    def createPartitionsPartedCmd(self):
+        pass
+
+    def createPartitionsParted(self):
+        import parted
+        import ComParted
         if not self.exists():
             raise ComException("Device %s not found" % self.getDeviceName())
 
@@ -391,7 +414,6 @@ def testDiskDump(dump):
     print "Parsing dump..."
     print dump
     from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
     reader=Sax2.Reader(validate=0)
     doc=reader.fromString(dump)
     print "Creating disk..."
@@ -402,7 +424,11 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.1  2009-09-28 15:13:36  marc
+# Revision 1.2  2010-02-07 20:31:23  marc
+# - seperated parted functionality
+# - new imports
+#
+# Revision 1.1  2009/09/28 15:13:36  marc
 # moved from comoonics here
 #
 # Revision 1.18  2007/09/13 14:16:21  marc

@@ -6,22 +6,22 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartition.py,v 1.1 2009-09-28 15:13:36 marc Exp $
+# $Id: ComPartition.py,v 1.2 2010-02-07 20:33:30 marc Exp $
 #
 
-import parted
+#import parted
 import re
 
-import xml.dom.Document
-from xml.dom import Element, Node
+from xml.dom import Node
 from xml import xpath
 
 import ComParted
 
-from ComDataObject import DataObject
-from ComExceptions import *
+from comoonics.ComDataObject import DataObject
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComPartition.py,v $
 
 class Partition(DataObject):
@@ -30,12 +30,12 @@ class Partition(DataObject):
     __logStrLevel__ = "Partition"
 
 
-    PARTITION_TYPES={"primary":parted.PARTITION_PRIMARY, \
-                     "logical":parted.PARTITION_LOGICAL, \
-                     "extended":parted.PARTITION_EXTENDED, \
-                     "freespace":parted.PARTITION_FREESPACE, \
-                     "metadata":parted.PARTITION_METADATA, \
-                     "protected":parted.PARTITION_PROTECTED}
+    PARTITION_TYPES={"primary":   0,  # parted.PARTITION_PRIMARY, \
+                     "logical":   1,  # parted.PARTITION_LOGICAL, \
+                     "extended":  2,  #parted.PARTITION_EXTENDED, \
+                     "freespace": 4,  #parted.PARTITION_FREESPACE, \
+                     "metadata":  8,  #parted.PARTITION_METADATA, \
+                     "protected":16 } #parted.PARTITION_PROTECTED}
 
 
     def __init__(self, *args):
@@ -72,9 +72,9 @@ class Partition(DataObject):
         return element
 
 
-    def __name_of_part_type(self, type):
+    def __name_of_part_type(self, _type):
         for t in self.PARTITION_TYPES.iteritems():
-            if t[1]==type:
+            if t[1]==_type:
                 return t[0]
         return None
 
@@ -161,7 +161,7 @@ class Partition(DataObject):
     def setFlag(self, name):
         if self.hasFlag(name):
             return True
-        flag=PartitionFlag(self.doc.createElement("flag"), self.doc)
+        flag=PartitionFlag(self.getDocument().createElement("flag"), self.getDocument())
         flag.setAttribute("name", name)
         self.appendChild(flag)
 
@@ -175,13 +175,13 @@ class Partition(DataObject):
 
 class PartitionFlag(DataObject):
     TAGNAME="flag"
-    ALLFLAGS={"boot":parted.PARTITION_BOOT, \
-              "root":parted.PARTITION_ROOT, \
-              "swap":parted.PARTITION_SWAP, \
-              "hidden":parted.PARTITION_HIDDEN, \
-              "raid":parted.PARTITION_RAID, \
-              "lvm":parted.PARTITION_LVM, \
-              "lba": parted.PARTITION_LBA}
+    ALLFLAGS={"boot":   1, # parted.PARTITION_BOOT, \
+              "root":   2, #parted.PARTITION_ROOT, \
+              "swap":   3, #parted.PARTITION_SWAP, \
+              "hidden": 4, #parted.PARTITION_HIDDEN, \
+              "raid":   5, #parted.PARTITION_RAID, \
+              "lvm":    6, #parted.PARTITION_LVM, \
+              "lba":    7 } # parted.PARTITION_LBA}
 
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
