@@ -1,0 +1,2 @@
+ query=query_xml /cluster/clusternodes/clusternode[@nodeid=1]/com_info/eth 
+ query=query_xml /cluster/clusternodes/clusternode[@nodeid=2]/com_info/eth
