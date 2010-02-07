@@ -27,21 +27,6 @@ Discovers needed cdsl type by looking after type of used cluster configuration.
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #Files
-DEFAULT_INVENTORY="/var/lib/cdsl/cdsl_inventory.xml"
-
-#xpathes for elements
-
-"""
-#define defaultvalues
-cdsltree_default = "cluster/cdsl"
-cdsltreeShared_default = "cluster/shared"
-cdslLink_default = "/cdsl.local"
-maxnodeidnum_default = "0"
-useNodeids_default = "False"
-
-noderef_path_part = "nodes/noderef/@ref"
-"""
-
 def cmpbysubdirs(path1, path2):
     import os
     return str(path1).count(os.sep) - str(path2).count(os.sep)
@@ -55,6 +40,8 @@ def stripleadingsep(_path):
     @rtype : string 
     """
     import os.path
+    if not _path or _path=="":
+        return _path
     _tmp=os.path.normpath(_path)
     if _tmp[0]==os.sep:
         _tmp=_tmp[1:]
@@ -148,9 +135,9 @@ def isCDSLPath(path, cdslRepository, root="/"):
     """
     import os.path
     _tmp=os.path.realpath(path)
-    _tmp2=os.path.join(root, cdslRepository.getDefaultMountpoint(), cdslRepository.getDefaultCdsltree())
-    _tmp3=os.path.join(root, cdslRepository.getDefaultMountpoint(), cdslRepository.getDefaultCdsltreeShared())
-    _tmp4=os.path.join(root, cdslRepository.getDefaultMountpoint(), cdslRepository.getDefaultCdslLink())
+    _tmp2=os.path.join(root, cdslRepository.getMountpoint(), cdslRepository.getTreePath())
+    _tmp3=os.path.join(root, cdslRepository.getMountpoint(), cdslRepository.getSharedtreePath())
+    _tmp4=os.path.join(root, cdslRepository.getMountpoint(), cdslRepository.getLinkPath())
     return os.path.commonprefix([ _tmp, _tmp2 ]) == _tmp2 or \
            os.path.commonprefix([ _tmp, _tmp3 ]) == _tmp3 or \
            os.path.commonprefix([ _tmp, _tmp4 ]) == _tmp4
@@ -172,9 +159,9 @@ def isSharedPath(_path, _cdslRepository, _exists=True):
     __exists2=True
     if _exists:
         _tpath=ltrimDir(_path)
-        __exists1=os.path.exists(os.path.join(_cdslRepository.getDefaultCdsltreeShared(), _tpath))
+        __exists1=os.path.exists(os.path.join(_cdslRepository.getSharedTreepath(), _tpath))
         __exists2=os.path.exists(_tpath)
-    return __exists1 or ( __exists2 and isSubPath(_path, _cdslRepository.getDefaultCdsltreeShared()))
+    return __exists1 or ( __exists2 and isSubPath(_path, _cdslRepository.getSharedTreepath()))
 
 def isHostdependentPath(_path, _cdslRepository, _exists=True):
     """
@@ -193,9 +180,9 @@ def isHostdependentPath(_path, _cdslRepository, _exists=True):
     __exists2=True
     if _exists:
         _tpath=ltrimDir(_path)
-        __exists1=os.path.exists(os.path.join(_cdslRepository.getDefaultCdslLink(), _tpath))
+        __exists1=os.path.exists(os.path.join(_cdslRepository.getLinkPath(), _tpath))
         __exists2=os.path.exists(_tpath)
-    return __exists1 or (__exists2 and (isSubPath(_path, _cdslRepository.getDefaultCdslLink()) or isSubPath(_path, _cdslRepository.getDefaultCdsltree())))
+    return __exists1 or (__exists2 and (isSubPath(_path, _cdslRepository.getLinkPath()) or isSubPath(_path, _cdslRepository.getTreePath())))
 
 def ltrimDir(_path, _trimdir=".."):
     """
@@ -233,7 +220,7 @@ def getNodeFromPath(path, cdslRepository, exists=True):
     import os
     if isHostdependentPath(path, cdslRepository, exists):
         try:
-            return strippath(path, cdslRepository.getDefaultCdsltree()).split(os.sep)[1]
+            return strippath(path, cdslRepository.getTreePath()).split(os.sep)[1]
         except:
             pass
     raise ValueError("Could not find nodepart in path %s" %path)
@@ -275,8 +262,6 @@ def commonoptparseroptions(parser):
     """
     Sets the give optparser to the common options needed by all cdsl commands.
     """
-    from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
-    from ComCdslRepository import CdslRepository
     import logging
     
     logging.basicConfig()
@@ -285,15 +270,18 @@ def commonoptparseroptions(parser):
     parser.add_option("-q", "--quiet", action="callback", callback=setQuiet, help="Quiet, does not show any output")
     parser.add_option("-d", "--verbose", action="callback", callback=setDebug, help="Quiet, does not show any output")
 
-    parser.add_option("-i", "--inventoryfile", dest="inventoryfile", default=CdslRepository.DEFAULT_INVENTORY, help="path to the cdsl inventory")
-    parser.add_option("-c", "--clusterconf", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf())
+    parser.add_option("-i", "--inventoryfile", dest="inventoryfile", default=None, help="path to the cdsl inventory")
+    parser.add_option("-c", "--clusterconf", dest="clusterconf", default=None)
     parser.add_option("-r", "--root", dest="root", default="/", help="set the chroot path")
     parser.add_option("-m", "--mountpoint", dest="mountpoint", default="", help="set the mountpoint for this fs if any.")
     return parser
 
 #################
 # $Log: __init__.py,v $
-# Revision 1.7  2009-07-22 08:37:09  marc
+# Revision 1.8  2010-02-07 20:01:26  marc
+# First candidate for new version.
+#
+# Revision 1.7  2009/07/22 08:37:09  marc
 # Fedora compliant
 #
 # Revision 1.6  2009/06/10 14:53:06  marc

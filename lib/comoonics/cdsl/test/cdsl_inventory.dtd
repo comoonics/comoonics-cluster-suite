@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT cdsls (cdsl*, repositories)>
+<!ATTLIST cdsls 
+  config_version CDATA #REQUIRED
+  cdsltree CDATA #REQUIRED
+  cdsltree_shared CDATA #REQUIRED
+  cdsl_link CDATA #REQUIRED
+  root CDATA #IMPLIED
+  mountpoint CDATA #IMPLIED
+  default_dir CDATA #IMPLIED
+  maxnodeidnum CDATA #REQUIRED
+  node_prefix CDATA #IMPLIED
+  use_nodeids CDATA #REQUIRED>
+
+<!ELEMENT cdsl (nodes)>
+<!ATTLIST cdsl
+  src CDATA #REQUIRED
+  type CDATA #REQUIRED
+  timestamp CDATA #REQUIRED>
+
+<!ELEMENT nodes (noderef*)>
+
+<!ELEMENT noderef EMPTY>
+<!ATTLIST noderef
+  ref CDATA #REQUIRED>
+
+<!ELEMENT repositories (repository*)>
+
+<!ELEMENT repository EMPTY>
+<!ATTLIST repository
+  path CDATA #REQUIRED
+  resource CDATA #REQUIRED>

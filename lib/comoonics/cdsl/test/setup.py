@@ -28,19 +28,44 @@ class SetupCluster:
         self.clusterinfo = ClusterInfo(self.clusterRepository)
 
 class SetupCDSLRepository:
-    def __init__(self):
-        from comoonics.cdsl.ComCdslRepository import CdslRepository
+    def __init__(self, clusterinfo):
+        from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         import shutil
-        shutil.copy(os.path.join(testpath, "cdsl5.xml"), tmppath)
-        shutil.copy(os.path.join(testpath, "cdsl4.xml"), tmppath)
-        self.cdslRepository1 = CdslRepository(os.path.join(tmppath, "cdsl5.xml"), None, False, mountpoint=tmppath, usenodeids="True")
-        self.cdslRepository2 = CdslRepository(os.path.join(tmppath, "cdsl4.xml"), None, False, mountpoint=tmppath, usenodeids="True")
-        self.cdslRepository1.root=tmppath
-        self.cdslRepository2.root=tmppath
+        os.mkdir(os.path.join(tmppath, "repo2"))
+        os.mkdir(os.path.join(tmppath, "repo2/repo3"))
+        os.mkdir(os.path.join(tmppath, "repo4"))
+        os.mkdir(os.path.join(tmppath, "repo4/repo5"))
+        os.mkdir(os.path.join(tmppath, "repo4/repo5/repo6"))
+        os.mkdir(os.path.join(tmppath, "repo7"))
+        os.mkdir(os.path.join(tmppath, "repo8"))
+        os.makedirs(os.path.join(tmppath, "repo7", "var/lib/cdsl"))
+        shutil.copyfile("cdsl4.xml", os.path.join(tmppath, "repo7", ComoonicsCdslRepository.default_resources[1]))
         
+        self.cdslRepository1 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=tmppath, usenodeids="True")
+        self.cdslRepository2 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=tmppath, mountpoint="repo2", usenodeids="True")
+        self.cdslRepository1.addRepository(self.cdslRepository2)
+        self.cdslRepository3 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=os.path.join(tmppath,"repo2"), mountpoint="repo3", usenodeids="True")
+        self.cdslRepository2.addRepository(self.cdslRepository3)
+        
+        self.cdslRepository4 = ComoonicsCdslRepository(root=tmppath, mountpoint="repo4", usenodeids="True", maxnodeidnum="4")
+        self.cdslRepository5 = ComoonicsCdslRepository(root=os.path.join(tmppath, "repo4"), mountpoint="repo5", usenodeids="True", maxnodeidnum="4")
+        self.cdslRepository4.addRepository(self.cdslRepository5)
+        self.cdslRepository6 = ComoonicsCdslRepository(root=os.path.join(tmppath, "repo4", "repo5"), mountpoint="repo6", usenodeids="True", maxnodeidnum="4")
+        self.cdslRepository5.addRepository(self.cdslRepository6)
+        
+        #self.cdslRepository7 = ComoonicsCdslRepository(root=os.path.join(tmppath, "repo7"))
+
     def cleanUpInfrastructure(self, path):
-        os.remove(os.path.join(path, "cdsl5.xml"))        
-        os.remove(os.path.join(path, "cdsl4.xml"))
+        import shutil
+        from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+        os.rmdir(os.path.join(self.cdslRepository6.root, self.cdslRepository6.getMountpoint())) 
+        os.rmdir(os.path.join(self.cdslRepository5.root, self.cdslRepository5.getMountpoint())) 
+        os.rmdir(os.path.join(self.cdslRepository4.root, self.cdslRepository4.getMountpoint())) 
+        os.rmdir(os.path.join(self.cdslRepository3.root, self.cdslRepository3.getMountpoint())) 
+        os.rmdir(os.path.join(self.cdslRepository2.root, self.cdslRepository2.getMountpoint()))
+        os.remove(os.path.join(tmppath, "repo7", ComoonicsCdslRepository.default_resources[1]))
+        shutil.rmtree(os.path.join(tmppath, "repo7"))
+        os.rmdir(os.path.join(tmppath, "repo8"))
             
 class SetupCDSLs:
     def __init__(self, repository, mynodeid="1"):
@@ -66,22 +91,62 @@ class SetupCDSLs:
             elif not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
                 open(os.path.join(_tmppath, _cdsl.src), "w+")
 
-    def setupCDSLInfrastructure(self, path, cdslRepository):
-        os.chdir(path)
-        if os.path.isdir(cdslRepository.getDefaultCdslLink()):
-            os.rmdir(cdslRepository.getDefaultCdslLink())
-            os.symlink(os.path.join(cdslRepository.getDefaultCdsltree(), self.mynodeid), cdslRepository.getDefaultCdslLink())
+    def setupCDSLInfrastructure(self, path, cdslRepository, clusterinfo):
+        from comoonics.cdsl.ComCdsl import Cdsl
+        from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
+        _results={ "hostdependent_dir": ("hostdependent_dir", True),
+                   "hostdependent_dir/shared_dir": ("hostdependent_dir/shared_dir", False), 
+                   "hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
+                   "hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),}
+#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_dir", False),
+#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_file", False),
+#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),
+#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
+#                   "not_existent": ("not_existent", None),
+#                   "hostdependent_dir/not_existent": ("hostdependent_dir/not_existent", None),
+#                   "hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/not_existent", None),
+#                   "hostdependent_dir/shared_dir/hostdependent_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/not_existent", None),
+#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/not_existent", None),
+#                    }
+        self.repository.buildInfrastructure(clusterinfo)
+        _dirs=_results.keys()
+        _dirs.sort()
+        for _path in _dirs:
+            _cdsl=None
+            try:
+                _cdsl=self.repository.getCdsl(_path)
+            except CdslNotFoundException:
+                if _results[_path][1] == True:
+                    _cdsl=Cdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, self.repository, clusterinfo)
+                elif _results[_path][1] == False:
+                    _cdsl=Cdsl(_path, Cdsl.SHARED_TYPE, self.repository, clusterinfo)
+            
+            if _cdsl:
+                self.repository.commit(_cdsl)
+        
+        self.repository.workingdir.pushd()
+        if os.path.isdir(cdslRepository.getLinkPath()):
+            os.rmdir(cdslRepository.getLinkPath())
+            os.symlink(os.path.join(cdslRepository.getTreePath(), self.mynodeid), cdslRepository.getLinkPath())
+        self._createCDSLFiles(path)
+        self.repository.workingdir.popd()
 
     def cleanUpInfrastructure(self, path, cdslRepository, clusterinfo):
-        os.chdir(path)
-        os.remove(cdslRepository.getDefaultCdslLink())
-        for node in clusterinfo.getNodes():
-            os.rmdir(os.path.join(cdslRepository.getDefaultCdsltree(), node.getId()))
-        os.rmdir(os.path.join(cdslRepository.getDefaultCdsltree(), cdslRepository.getDefaultDefaultDir()))
-        os.rmdir(cdslRepository.getDefaultCdsltreeShared())
-        _path=cdslRepository.getDefaultCdsltree()
-        
-        while _path != "":
-            os.rmdir(_path)
-            _path=os.path.dirname(_path)
+        self.repository.workingdir.pushd()
+        if os.path.islink(cdslRepository.getLinkPath()):
+            os.remove(cdslRepository.getLinkPath())
+            os.mkdir(cdslRepository.getLinkPath())
+        cdslRepository.removeInfrastructure(clusterinfo)
 
+from unittest import TestProgram, TextTestRunner
+
+class MyTestProgram(TestProgram):
+    def runTests(self):
+        if self.testRunner is None:
+            self.testRunner = TextTestRunner(verbosity=self.verbosity)
+        result = self.testRunner.run(self.test)
+        self.result=result
+
+def cleanup():
+    if os.path.exists(tmppath):
+        os.rmdir(tmppath)

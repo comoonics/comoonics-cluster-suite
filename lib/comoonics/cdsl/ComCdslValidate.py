@@ -25,7 +25,7 @@ version of os.walk() (see L{os} for details), which skips submounts but follows 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 
 import os
 
@@ -91,13 +91,11 @@ class CdslValidate(object):
             return
 
     def walk(self, **keys):
-        from comoonics.cdsl import dirtrim
         from comoonics.ComPath import Path
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
-        top=dirtrim(self.cdslrepository.getDefaultCdslLink())
         # Note that listdir and error are globals in this module due
         # to earlier import-*.
-        cwd=Path(top)
+        cwd=Path(os.path.join(self.cdslrepository.workingdir.getPath(), self.cdslrepository.getLinkPath()))
         cwd.pushd()
         if not keys.get("onfilesystem", False):
             for cdsl in self.cdslrepository.walkCdsls(keys.get("clusterinfo"), keys.get("cdsls", []), ComoonicsCdslRepository.guessonerror):
@@ -109,6 +107,7 @@ class CdslValidate(object):
                 _pathtail=None
             for cdsl in self.walkdir(_pathhead, _pathtail, keys.get("recursive", True)):
                 yield cdsl
+        self.cdslrepository.workingdir.popd()
         cwd.popd()
                                   
     def validate(self, **keys):
@@ -130,26 +129,23 @@ class CdslValidate(object):
         _added=list()
         _removed=list()
     
-        from comoonics.ComPath import Path
-        root=keys.get("root", self.cdslrepository.getDefaultMountpoint())
-        cwd=Path(root)
-        cwd.pushd()
-
         for _cdsl in self.walk(path=keys.get("filesystempath", "."), clusterinfo=self.clusterinfo, onfilesystem=keys.get("onfilesystem", False), cdsls=keys.get("cdsls", []), recursive=keys.get("recursive", True)):
             self.logger.info("validate %s." %_cdsl)
-            __added, __removed = self.cdslrepository.update(_cdsl, self.clusterinfo, not keys.get("update", False), root)
+            __added, __removed = self.cdslrepository.update(_cdsl, self.clusterinfo, not keys.get("update", False))
             if __added:
                 self.logger.info("+ %s" %__added)
                 _added.append(__added)
             if __removed:
                 self.logger.info("- %s" %__removed)
                 _removed.append(__removed)
-        cwd.popd()
         return _added, _removed
 
 ##############
 # $Log: ComCdslValidate.py,v $
-# Revision 1.8  2009-07-22 08:37:09  marc
+# Revision 1.9  2010-02-07 20:01:26  marc
+# First candidate for new version.
+#
+# Revision 1.8  2009/07/22 08:37:09  marc
 # Fedora compliant
 #
 # Revision 1.7  2009/06/10 14:53:06  marc

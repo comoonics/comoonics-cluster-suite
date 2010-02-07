@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 
 # @(#)$File$
 #
@@ -31,8 +31,6 @@ import os
 import re
 import shutil
 import time
-
-from xml.dom.ext.reader.Sax2 import implementation
 
 from comoonics import ComSystem
 from comoonics import ComLog
@@ -87,6 +85,7 @@ class Cdsl(DataObject):
         @param timestamp: Timestamp to set to cdsl (Default: None), if not set create timestamp from systemtime
         @type timestamp: string
         """
+        import xml.dom
         self.src = dirtrim(src)
         self.type = _type
         self.cdslRepository = cdslRepository
@@ -100,9 +99,9 @@ class Cdsl(DataObject):
         
         #get nodes from clusterinfo if nodelist is not setgiven
         if (nodes == None) and (clusterinfo != None):
-            self.node_prefix = cdslRepository.getDefaultNodePrefix()
-            self.use_nodeids = cdslRepository.getDefaultUseNodeids()
-            self.maxnodeidnum = cdslRepository.getDefaultMaxnodeidnum()
+            self.node_prefix = cdslRepository.getNodePrefix()
+            self.use_nodeids = cdslRepository.getUseNodeids()
+            self.maxnodeidnum = cdslRepository.getMaxnodeidnum()
         
             if ((self.use_nodeids == "True") and (self.maxnodeidnum == "0")): #maxnodidnum is not set but use_nodeid is set
                 self.nodes = clusterinfo.getNodeIdentifiers("id")
@@ -124,34 +123,45 @@ class Cdsl(DataObject):
             self.nodes = nodes
             
         #no nodelist or clusterinfo is given OR both is given
+        elif cdslRepository:
+            self.nodes=[]
+            for node in range(1, int(cdslRepository.getMaxnodeidnum())+1): self.nodes.append(str(node))
         else:
-            raise CdslInitException("Cannot use nodeslist and clusterinfo object together or none of these.")
+            raise TypeError("Cdsl constructor called with wrong parameters. Propably no cdslrepository given.")
         
         #create DOM-Element
-        doc = implementation.createDocument(None,"cdsl",None)
-        topelement=doc.documentElement
-        topelement.setAttribute("src",self.src)
-        topelement.setAttribute("type",self.type)
-        topelement.setAttribute("timestamp",str(self.timestamp))
+        doc = cdslRepository.getDocument()
+        topelement=None
+        child = doc.documentElement.firstChild
+        while child:
+            # Do we care about the timestamp?? I think no!
+            if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.getAttribute("src") == self.src and child.getAttribute("type") == self.type:
+                topelement=child
+                break
+            child = child.nextSibling
+        if not topelement:
+            topelement=cdslRepository.getDocument().createElement("cdsl")
+            topelement.setAttribute("src",self.src)
+            topelement.setAttribute("type",self.type)
+            topelement.setAttribute("timestamp",str(self.timestamp))
         
-        nodes=doc.createElement("nodes")
-        topelement.appendChild(nodes)
+            nodes=doc.createElement("nodes")
+            topelement.appendChild(nodes)
         
-        for node in self.nodes:
-            node1=doc.createElement("noderef")
-            #If nodeids without prefix are used, use prefix id_ to get a valid xml-file
-            _isDigit=re.match('^[0-9]*$',str(node))
-            if _isDigit != None:
-                node = "id_" + str(node)
-            node1.setAttribute("ref",str(node))
-            nodes.appendChild(node1)
+            for node in self.nodes:
+                node1=doc.createElement("noderef")
+                #If nodeids without prefix are used, use prefix id_ to get a valid xml-file
+#            _isDigit=re.match('^[0-9]*$',str(node))
+#            if _isDigit != None:
+#                node = "id_" + str(node)
+                node1.setAttribute("ref",str(node))
+                nodes.appendChild(node1)
         
         #self.XmlElement = doc
         #element = xpath.Evaluate('/cdsl', self.XmlElement)[0]
-        element = doc.documentElement
         
         #super(Cdsl,self).__init__(element,self.XmlElement)
-        super(Cdsl,self).__init__(element,doc)
+        super(Cdsl,self).__init__(topelement,doc)
 
     def __str__(self):
         return self.src
@@ -333,7 +343,7 @@ class ComoonicsCdsl(Cdsl):
     """
     
     default_node = "default"
-    
+
     def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None):
         """
         Constructs a new com.oonics cdsl from given L{ComoonicsCdslRepository} and nodes. 
@@ -358,6 +368,10 @@ class ComoonicsCdsl(Cdsl):
         @param timestamp: Timestamp to set to cdsl (Default: None), if not set create timestamp from systemtime
         @type timestamp: string
         """
+        from comoonics.cdsl import stripleadingsep, strippath
+        cdslRepository=cdslRepository.getRepositoryForCdsl(src)
+        if src.startswith(os.sep):
+            src=stripleadingsep(strippath(strippath(stripleadingsep(src), cdslRepository.root), cdslRepository.getMountpoint()))
         super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp)
         
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdsl")
@@ -365,17 +379,17 @@ class ComoonicsCdsl(Cdsl):
         self.reldir = os.getcwd()
         
         #get needed pathes from cdslrepository and normalize them
-        self.cdsltree = dirtrim(cdslRepository.getDefaultCdsltree())
-        self.cdsltree_shared = dirtrim(cdslRepository.getDefaultCdsltreeShared())    
-        self.default_dir = dirtrim(cdslRepository.getDefaultDefaultDir())
-        self.cdsl_link = dirtrim(cdslRepository.getDefaultCdslLink())
-        
-        self.cdslRepository = cdslRepository
-        self.clusterinfo = clusterinfo
+        self.cdsltree = dirtrim(cdslRepository.getTreePath())
+        self.cdsltree_shared = dirtrim(cdslRepository.getSharedTreepath())    
+        self.default_dir = dirtrim(cdslRepository.getDefaultDir())
+        self.cdsl_link = dirtrim(cdslRepository.getLinkPath())
 
         #add default node to a special nodelist
         self.nodesWithDefaultdir = self.nodes[:]
         self.nodesWithDefaultdir.append(self.default_node)
+
+    def __str__(self):
+        return self.src
 
     def getNodenames(self):
         """
@@ -386,7 +400,7 @@ class ComoonicsCdsl(Cdsl):
         """
         _nodes=list()
         for _node in self.nodesWithDefaultdir:
-            if self.cdslRepository.getDefaultUseNodeids() == "True":
+            if self.cdslRepository.getUseNodeids() == "True":
                 _node=str(_node).replace("id_", "", 1)
             _nodes.append(str(_node))
         return _nodes
@@ -405,9 +419,9 @@ class ComoonicsCdsl(Cdsl):
         cdsldirs=list()
         if self.isHostdependent():
             for node in self.nodesWithDefaultdir:
-                cdsldirs.append(os.path.join(self.cdslRepository.getDefaultCdsltree(), node))
+                cdsldirs.append(os.path.join(self.cdslRepository.getTreePath(), node))
         elif self.isShared():
-            cdsldirs.append(self.cdslRepository.getDefaultCdsltreeShared())
+            cdsldirs.append(self.cdslRepository.getSharedTreepath())
         if parent:
             parent=parent.src
             expanded=self.cdslRepository.expandCdsl(self)
@@ -500,7 +514,7 @@ class ComoonicsCdsl(Cdsl):
         @rtype: string
         @note: This is a virtual method that has to be implemented by the child classes
         """
-        return os.path.realpath(os.path.join(self.cdslRepository.root,self.cdslRepository.getDefaultMountpoint()))
+        return os.path.realpath(os.path.join(self.cdslRepository.root,self.cdslRepository.getMountpoint()))
         
     def _pathdepth(self,path):
         """
@@ -572,7 +586,7 @@ class ComoonicsCdsl(Cdsl):
         from comoonics.ComPath import Path
         from comoonics.cdsl import isSubPath
         #important pathes to work with cdsls
-	    #####
+        #####
         # Chancel creation of cdsl if it already exists
         # or a cdsl of another type with same src exists
         # or creation is insane because underlying structure 
@@ -673,7 +687,7 @@ class ComoonicsCdsl(Cdsl):
                     ComSystem.execMethod(os.makedirs,os.path.dirname(_nodesrc))
                           
 #                _path.pushd(os.path.dirname(self.src))
-                self.logger.debug("Creating needed symbolic link...")
+                self.logger.debug("Creating needed symbolic link %s -> %s" %(_relsharedsrc, _nodesrc))
                 ComSystem.execMethod(os.symlink, _relsharedsrc, _nodesrc)
 #                _path.popd()
                 
@@ -725,11 +739,11 @@ class ComoonicsCdsl(Cdsl):
             #####
             # Update needed symbolic links
             #####
-            self.logger.debug("Creating needed symbolic links...")
             
 #            _path.pushd(os.path.dirname(self.src))            
             _linkpath = os.path.join(_relativepath, self.cdsl_link,_expanded)
-                
+
+            self.logger.debug("Creating needed symbolic links %s->%s workingdir: %s" %(os.path.normpath(_linkpath), self.src, self.cdslRepository.workingdir))
             ComSystem.execMethod(os.symlink, os.path.normpath(_linkpath), self.src)
 #            _path.popd()
         #####_
@@ -767,7 +781,7 @@ class ComoonicsCdsl(Cdsl):
         if recursive == True:
             _tmp = self.getChilds()
             for cdsl in _tmp:
-                cdsl.delete(recursive)
+                cdsl.delete(recursive, force)
         
         _cwd=Path(self.getBasePath())
         _cwd.pushd()
@@ -810,14 +824,21 @@ class ComoonicsCdsl(Cdsl):
 #                _delpaths.append(_expanded[:-len(self.src[len(_parent.src):])])
         
         self.logger.debug("delete: cwd: %s" %_cwd)
+        self._removePath(_delpaths)
         for _from, _to in _movepairs.items():
             if not _to:
                 self._removePath(_from)
             else:
+#                for _delpath in _delpaths:
+#                    if os.path.samefile(_delpath, _to):
+#                        _delpaths.remove(_delpath)
                 if os.path.islink(_to):
                     self._removePath(_to)
                 shutil.move(_from, _to)
-        self._removePath(_delpaths)
+                # We must remove paths from the delpaths that have been moved to as they are
+#                for _delpath in _delpaths:
+#                    if os.path.samefile(_to, _delpath):
+#                        _delpaths.remove(_delpath)
         
         _cwd.popd()
         self.logger.debug("Delete CDSL from Inventoryfile")
@@ -857,7 +878,8 @@ class ComoonicsCdsl(Cdsl):
         #_parent=self.getParent()
         #compare which other cdsl sources contain the whole source of this cdsl
         for cdsl in self.cdslRepository.getCdsls():
-            if cdsl.src != self.src and self == cdsl.getParent() and isSubPath(cdsl.src, self.src):
+            cdslparent=cdsl.getParent()
+            if cdsl.src != self.src and cdslparent and self.src == cdslparent.src and isSubPath(cdsl.src, self.src):
                 self.logger.debug("getChilds: + %s" %cdsl)
                 _tmpcdsls.append(cdsl)
         return _tmpcdsls
@@ -876,6 +898,9 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.13  2009-07-22 08:37:09  marc
+# Revision 1.14  2010-02-07 20:01:26  marc
+# First candidate for new version.
+#
+# Revision 1.13  2009/07/22 08:37:09  marc
 # Fedora compliant
 #
