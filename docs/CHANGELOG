@@ -50,6 +50,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Mon Feb 08 2010 MG <grimme@atix.de>, 0.2-19
+  - fixed bug with missing migration package.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.2-18
   - added autopath update to also work with SLES
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.2-17
@@ -325,6 +327,8 @@ comoonics-dr-py:
   - initial revision
 
 comoonics-ec-py
+* Mon Feb 08 2010 MG <grimme@atix.de>, 0.1-40
+  - Remove type="str" in com-ec for downward compatibility with python2.3
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-39
   - added autopath update to also work with SLES
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-38

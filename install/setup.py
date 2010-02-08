@@ -6,7 +6,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.6 2009-10-09 09:46:04 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.7 2010-02-08 21:26:52 marc Exp $"
 
 from distutils.core import setup
 import sys, os, string
@@ -771,8 +771,8 @@ Those are classes used by more other packages.
 #      author="ATIX AG - Marc Grimme",
 #      author_email="grimme@atix.de",
       "url": "http://www.open-sharedroot.org/development/comoonics-cdsl-py",
-      "package_dir": { "comoonics.cdsl" : "lib/comoonics/cdsl"},
-      "packages":      [ "comoonics.cdsl" ],
+      "package_dir": { "comoonics.cdsl" : "lib/comoonics/cdsl", "comoonics.cdsl.migration": "lib/comoonics/cdsl/migration" },
+      "packages":      [ "comoonics.cdsl", "comoonics.cdsl.migration" ],
       "scripts":       [ "bin/com-mkcdsl", "bin/com-mkcdslinfrastructure", "bin/com-cdslinvchk", "bin/com-rmcdsl" ],
       "data_files":    [ ("share/man/man1",[ "man/com-mkcdslinfrastructure.1.gz", "man/com-mkcdsl.1.gz", "man/com-cdslinvchk.1.gz", "man/com-rmcdsl.1.gz" ]) ],
     },
