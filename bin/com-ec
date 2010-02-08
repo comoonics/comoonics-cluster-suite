@@ -7,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.28 2010-02-08 19:47:14 marc Exp $
+# $Id: com-ec,v 1.29 2010-02-08 21:25:34 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.28 $"
+__version__ = "$Revision: 1.29 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -88,19 +88,19 @@ if options.debug:
 
 import os.path
 i=0
-self.values["args%u" %i]=args[i]
-self.values["%u" %i]=args[i]
+values["args%u" %i]=args[i]
+values["%u" %i]=args[i]
 i+=1
 if len(args) > 1:
     for arg in args[1:]:
         if arg.find("=")>0:
             (name, value)=arg.split("=")
-            self.values[name]=value
-        self.values["args%u" %i]=args[i]
-        self.values["%u" %i]=args[i]
+            values[name]=value
+        values["args%u" %i]=args[i]
+        values["%u" %i]=args[i]
         i+=1
 if len(args) > 0 and os.path.isfile(args[0]):
-    self.filename=args[0]
+    filename=args[0]
 elif len(args) == 0:
     logger.critical("No file given to execute.")
     sys.exit(1)
@@ -122,14 +122,14 @@ if options.novalidate or options.xslt:
 else:
     reader = Sax2.Reader(validate=1)
 
-if not options.filename:
+if not filename:
     print "No file as input given exiting."
     parser.usage()
     sys.exit(1)
 
 try:
-    file=open(options.filename,"r")
-    line("Parsing document %s " % options.filename)
+    file=open(filename,"r")
+    line("Parsing document %s " % filename)
     import StringIO
     _buf=StringIO.StringIO()
     for _line in file:
@@ -141,7 +141,7 @@ try:
             pass
         _buf.write(_line)
     file.close()
-    if config.xslt:
+    if options.xslt:
         try:
            import libxslt
            import libxml2
@@ -166,8 +166,8 @@ try:
         libxslt.cleanup()
     else:
         doc = reader.fromStream(_buf)
-        if options.values:
-            applyValues(doc, options.values)
+        if values:
+            applyValues(doc, values)
     _buf.close()
 
     if options.onlydisplay:
@@ -193,7 +193,7 @@ except Exception, e:
 if ecopy.hasAttribute("name"):
     _name=ecopy.getAttribute("name")
 else:
-    _name=options.filename
+    _name=filename
 
 line("Start of enterprisecopy %s" % (_name))
 
@@ -235,7 +235,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.28  2010-02-08 19:47:14  marc
+# Revision 1.29  2010-02-08 21:25:34  marc
+# - fixed simple bugs in com-ec, com-mkcdslinfrastructure
+#
+# Revision 1.28  2010/02/08 19:47:14  marc
 # fixed bug with type="str" which is not available on python2.3
 #
 # Revision 1.27  2010/02/07 19:59:47  marc

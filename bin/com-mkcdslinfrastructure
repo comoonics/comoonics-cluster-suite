@@ -73,7 +73,7 @@ try:
         childcdslRepository=parentcdslRepository
     if options.create and not options.onlyinventory:
         childcdslRepository.buildInfrastructure(clusterInfo)
-        if parentcdslRepository != childcdslRepository:
+        if parentcdslRepository.root != childcdslRepository.root and parentcdslRepository.getMountpoint() != childcdslRepository.getMountpoint():
             parentcdslRepository.addRepository(childcdslRepository, options.mountpoint)
     elif options.delete:
         if not options.onlyinventory:
