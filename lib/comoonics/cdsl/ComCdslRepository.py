@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 
 import fcntl # needed for filelocking
 import re
@@ -336,6 +336,7 @@ class ComoonicsCdslRepository(CdslRepository):
         @param expandstring: How should reshared or rehostdeps be suffixed. Default: ".cdsl"
         @type  expandstring: L{String}
         """
+        self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdslRepository")
         self.cdsls=dict()
         self.repositories=dict()
         self.parent=None
@@ -650,7 +651,9 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         """
         from comoonics.cdsl import strippath, stripleadingsep
         repository=self.getRepositoryForCdsl(src)
-        src=stripleadingsep(strippath(strippath(stripleadingsep(src), repository.root), repository.getMountpoint()))
+        if src.startswith(os.sep):
+            src=stripleadingsep(strippath(strippath(src, self.root), self.getMountpoint()))
+            self.logger.debug("cdsl stripped to %s" %src)
         if repository.cdsls.has_key(src):
             return repository.cdsls[src]
         else:
@@ -905,16 +908,16 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
           hostdependent cdsl and a hostdependent cdsl was already found expand its path and follow 
           recursively.
         Examples:
-          h                   => h                         depth<h>=1
-          h/s                 => h/sd                      depth<h>=1
-          h/s/h               => h.cdsl/s/h                depth<h>=2   expandcount=1
-          h/s/h/s             => h.cdsl/s/h/s              depth<h>=2   expandcount=1
-          h/s/h/s/h           => h.cdsl/s/h.cdsl/s/h       depth<h>=2   expandcount=2
-          t/h                 => t/h
-          t/h/t/s             => t/h/t/sd
-          t/h/t/s/t/h         => t/h.cdsl/t/s/t/h
-          t/h/t/s/t/h/t/s     => t/h.cdsl/t/s/t/h/t/s
-          t/h/t/s/t/h/t/s/t/h => t/h.cdsl/t/s/t/h.cdsl/t/s/t/h
+          h                   => l/h                      depth<h>=1
+          h/s                 => st/h/s                   depth<h>=1
+          h/s/h               => l/h/s.c/h                depth<h>=2   expandcount=1
+          h/s/h/s             => st/h/s/h.c/s             depth<h>=2   expandcount=1
+          h/s/h/s/h           => l/h/s.c/h/s.c/h          depth<h>=2   expandcount=2
+          t/h                 => l/t/h
+          t/h/t/s             => st/t/h/t/s
+          t/h/t/s/t/h         => l/t/h/t/s.c/t/h
+          t/h/t/s/t/h/t/s     => s/t/h/t/s/t/h.c/t/s
+          t/h/t/s/t/h/t/s/t/h => l/t/h/t/s.c/t/h/t/s.c/t/h
           ..
         @param _cdsl: the cdsl.
         @type _cdsl: comoonics.cdsl.ComCdsl.Cdsl|string
@@ -924,6 +927,8 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
 
         from comoonics.cdsl import strippath, guessType
         from comoonics.cdsl.ComCdsl import Cdsl
+
+        # let's get the cdsl
         if isinstance(cdsl, basestring):
             try:
                 cdsl=self.getCdsl(cdsl)
@@ -932,56 +937,24 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
                 if cdsl and cdsl.exists():
                     log.warning("The cdsl %s seems not to be in the repository. Please rebuild database.")
                     raise
+        
+        # store path
         tmppath=cdsl.src
-        _exp_empty={self.EXPANSION_PARAMETER: ""}
-        firsthostdep=cdsl.isHostdependent()
-        _expanded_cdsl=False
-        _expansions=_exp_empty
 
+        # Let's walk to the root and expand
         parent=cdsl.getParent()
         while parent != None:
-            if parent.isHostdependent() and not firsthostdep:
-                firsthostdep=True
-            elif parent.isHostdependent():
+            if parent != None and parent.getParent() != None and cdsl.type != parent.type:
                 tmppath="%s%s%s" %(parent.src, self.getExpandString(), strippath(tmppath, parent.src))
             parent=parent.getParent()
         
         return tmppath
-#        if _cdsl.src.find(os.sep) > 0: 
-#            _subpaths=_cdsl.src.split(os.sep)
-#            for _subpath in _subpaths[:-1]:
-#                _tmppath=os.path.join(_tmppath, _subpath)
-#                try:
-#                    _tmpcdsl=self.getCdsl(_tmppath %_exp_empty)
-#                except CdslNotFoundException:
-#                    _nodes=None
-#                    if _cdsl.clusterinfo == None:
-#                        _nodes=_cdsl.nodes
-#                    _tmpcdsl=Cdsl(_tmppath %_exp_empty, guessType(_tmppath, self), self, _cdsl.clusterinfo, _nodes, _cdsl.timestamp)
-#                    if _tmpcdsl and _tmpcdsl.exists():
-#                        log.warning("The cdsl %s seems not to be in the repository. Please rebuild database.")
-#                    else:
-#                        _tmpcdsl=None
-#                if _tmpcdsl and not _expanded_cdsl:
-#                    _expanded_cdsl=_tmpcdsl
-#                    _tmppath="%s%%(%s)s" %(_tmppath, self.EXPANSION_PARAMETER)
-#                elif _tmpcdsl and _expanded_cdsl:
-#                    _expansions={self.EXPANSION_PARAMETER: self.getDefaultExpandString()}
-#
-#            _tmppath=os.path.join(_tmppath, _subpaths[-1])
-#        else:
-#            _tmppath=_cdsl.src
-#
-#        return _tmppath %_expansions          
     
-    def isExpandedDir(self, src):
+    def isExpandedDir(self, _expanded):
         """
         Returns True if this path is and expanded path
         """
-        from comoonics.cdsl.ComCdsl import Cdsl
-        if isinstance(src, Cdsl):
-            src=src.src
-        return src.split(os.sep)[0].endswith(self.getExpandString())
+        return _expanded.find(self.getExpandString()) > 0 and self.hasCdsl(_expanded.replace(self.getExpandString(), ""))
 
     def setTreePath(self, value):
         self.setAttribute(self.cdsls_tree_attribute, value)

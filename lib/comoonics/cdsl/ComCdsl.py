@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 
 # @(#)$File$
 #
@@ -28,7 +28,6 @@ __version__ = "$Revision: 1.14 $"
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import re
 import shutil
 import time
 
@@ -369,12 +368,14 @@ class ComoonicsCdsl(Cdsl):
         @type timestamp: string
         """
         from comoonics.cdsl import stripleadingsep, strippath
-        cdslRepository=cdslRepository.getRepositoryForCdsl(src)
-        if src.startswith(os.sep):
-            src=stripleadingsep(strippath(strippath(stripleadingsep(src), cdslRepository.root), cdslRepository.getMountpoint()))
-        super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp)
         
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdsl")
+        cdslRepository=cdslRepository.getRepositoryForCdsl(src)
+        if src.startswith(os.sep):
+            src=stripleadingsep(strippath(strippath(src, cdslRepository.root), cdslRepository.getMountpoint()))
+            self.logger.debug("cdsl stripped to %s" %src)
+
+        super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp)
         #set reldir to current path
         self.reldir = os.getcwd()
         
@@ -789,6 +790,7 @@ class ComoonicsCdsl(Cdsl):
         #delete or move cdsl from filesystem first is from second to if second=None it is removed
         _delpaths=list()
         _movepairs=dict()
+        _delpaths2=list()
         for _path in self.getSourcePaths():
             # This one is always a link to be removed
             _delpaths.append(_path)
@@ -812,17 +814,8 @@ class ComoonicsCdsl(Cdsl):
         self.logger.debug("delete(%s): siblings: %s" %(self.src, siblings))
         if len(self.getSiblings()) == 0:
             for _path in self._getSubPathsToParent():
-                _delpaths.append(_path)
-#                if force:
-#                    _delpaths.append(_path)
-#                else:
-#                    self.logger.debug(".delete(%s): Skipping path %s" %(self.src, _path))
-                
-#            _parent=self.getParent()
-#            if len(self.getSiblings())==0 and not _parent.isNested():
-#                _expanded=self.cdslRepository.expandCdsl(self)
-#                _delpaths.append(_expanded[:-len(self.src[len(_parent.src):])])
-        
+                _delpaths2.append(_path)
+                        
         self.logger.debug("delete: cwd: %s" %_cwd)
         self._removePath(_delpaths)
         for _from, _to in _movepairs.items():
@@ -839,7 +832,7 @@ class ComoonicsCdsl(Cdsl):
 #                for _delpath in _delpaths:
 #                    if os.path.samefile(_to, _delpath):
 #                        _delpaths.remove(_delpath)
-        
+        self._removePath(_delpaths2)
         _cwd.popd()
         self.logger.debug("Delete CDSL from Inventoryfile")
         #delete cdsl also from xml inventory file
@@ -855,11 +848,13 @@ class ComoonicsCdsl(Cdsl):
         @return: eReturns the parent CDSL
         @rtype: ComoonicsCdsl
         """
+        import os.path
+        from comoonics.cdsl import stripleadingsep
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
         if _path == None:
             _path=os.path.dirname(self.src)
         self.logger.debug("getParent(%s)" %_path)
-        if not _path or _path.strip() == "":
+        if not _path or _path.strip() == "" or os.path.normpath(stripleadingsep(os.path.join(self.cdslRepository.root, self.cdslRepository.getMountpoint()))) == _path:
             return None
         
         try:
@@ -898,7 +893,11 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.14  2010-02-07 20:01:26  marc
+# Revision 1.15  2010-02-08 21:25:05  marc
+# - fixed bugs
+# - added sub repos to commands.
+#
+# Revision 1.14  2010/02/07 20:01:26  marc
 # First candidate for new version.
 #
 # Revision 1.13  2009/07/22 08:37:09  marc
