@@ -92,21 +92,7 @@ class test_CdslRepository(unittest.TestCase):
     def testExpand1(self):
         from comoonics.cdsl.ComCdsl import Cdsl
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
-        _results={ "hostdependent_dir": ("hostdependent_dir", True),
-                   "hostdependent_dir/shared_dir": ("hostdependent_dir/shared_dir", False), 
-                   "hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),
-                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_dir", False),
-                   "hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
-                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_file", False),
-                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),
-                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
-                   "not_existent": ("not_existent", None),
-                   "hostdependent_dir/not_existent": ("hostdependent_dir/not_existent", None),
-                   "hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/not_existent", None),
-                   "hostdependent_dir/shared_dir/hostdependent_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/not_existent", None),
-                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/not_existent", None),
-                    }
-        _dirs=_results.keys()
+        _dirs=setupCDSLRepository.results.keys()
         _dirs.sort()
         setupCDSLRepository.cdslRepository1.buildInfrastructure(setupCluster.clusterinfo)
         for _path in _dirs:
@@ -114,9 +100,9 @@ class test_CdslRepository(unittest.TestCase):
             try:
                 _cdsl=setupCDSLRepository.cdslRepository1.getCdsl(_path)
             except CdslNotFoundException:
-                if _results[_path][1] == True:
+                if setupCDSLRepository.results[_path][1] == True:
                     _cdsl=Cdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo)
-                elif _results[_path][1] == False:
+                elif setupCDSLRepository.results[_path][1] == False:
                     _cdsl=Cdsl(_path, Cdsl.SHARED_TYPE, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo)
             
             if _cdsl:
@@ -124,7 +110,7 @@ class test_CdslRepository(unittest.TestCase):
                 _expanded=setupCDSLRepository.cdslRepository1.expandCdsl(_cdsl)
                 _isexpanded=setupCDSLRepository.cdslRepository1.isExpandedDir(_expanded)
                 _shouldnotbeexpanded=_expanded==_cdsl.src
-                self.assertEquals(_expanded, _results[_path][0], "Expansion of cdsl \"%s\" => \"%s\" != \"%s\"" %(_cdsl.src, _expanded, _results[_path][0]))
+                self.assertEquals(_expanded, setupCDSLRepository.results[_path][0], "Expansion of cdsl \"%s\" => \"%s\" != \"%s\"" %(_cdsl.src, _expanded, setupCDSLRepository.results[_path][0]))
                 self.assertTrue(_isexpanded or _shouldnotbeexpanded, "Path %s=>%s should be detected as expanded but is not %s!!!" %(_cdsl.src, _expanded, _isexpanded))
 
         setupCDSLRepository.cdslRepository1.removeInfrastructure(setupCluster.clusterinfo)
@@ -135,21 +121,7 @@ class test_CdslRepository(unittest.TestCase):
         """
         from comoonics.cdsl.ComCdsl import Cdsl
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
-        _results={ "hostdependent_dir": ("hostdependent_dir", True),
-                   "hostdependent_dir/shared_dir": ("hostdependent_dir/shared_dir", False), 
-                   "hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
-                   "hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),}
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_dir", False),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_file", False),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
-#                   "not_existent": ("not_existent", None),
-#                   "hostdependent_dir/not_existent": ("hostdependent_dir/not_existent", None),
-#                   "hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/not_existent", None),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/not_existent", None),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/not_existent", None),
-#                    }
-        _dirs=_results.keys()
+        _dirs=setupCDSLRepository.results.keys()
         _dirs.sort()
         setupCDSLRepository.cdslRepository4.buildInfrastructure()
         for _path in _dirs:
@@ -157,9 +129,9 @@ class test_CdslRepository(unittest.TestCase):
             try:
                 _cdsl=setupCDSLRepository.cdslRepository4.getCdsl(_path)
             except CdslNotFoundException:
-                if _results[_path][1] == True:
+                if setupCDSLRepository.results[_path][1] == True:
                     _cdsl=Cdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, setupCDSLRepository.cdslRepository4)
-                elif _results[_path][1] == False:
+                elif setupCDSLRepository.results[_path][1] == False:
                     _cdsl=Cdsl(_path, Cdsl.SHARED_TYPE, setupCDSLRepository.cdslRepository4)
             
             if _cdsl:
@@ -167,7 +139,7 @@ class test_CdslRepository(unittest.TestCase):
                 _expanded=setupCDSLRepository.cdslRepository4.expandCdsl(_cdsl)
                 _isexpanded=setupCDSLRepository.cdslRepository4.isExpandedDir(_expanded)
                 _shouldnotbeexpanded=_expanded==_cdsl.src
-                self.assertEquals(_expanded, _results[_path][0], "Expansion of cdsl \"%s\" => \"%s\" != \"%s\"" %(_cdsl.src, _expanded, _results[_path][0]))
+                self.assertEquals(_expanded, setupCDSLRepository.results[_path][0], "Expansion of cdsl \"%s\" => \"%s\" != \"%s\"" %(_cdsl.src, _expanded, setupCDSLRepository.results[_path][0]))
                 self.assertTrue(_isexpanded or _shouldnotbeexpanded, "Path %s=>%s should be detected as expanded but is not %s!!!" %(_cdsl.src, _expanded, _isexpanded))
 
         setupCDSLRepository.cdslRepository4.removeInfrastructure()

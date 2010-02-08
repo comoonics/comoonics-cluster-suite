@@ -11,7 +11,6 @@ import setup
 class test_Cdsl(unittest.TestCase):
     def test_A_CdslsCreate(self):
         from comoonics.cdsl import cmpbysubdirs
-        from comoonics.cdsl.ComCdsl import Cdsl
         _cdsls=repository.getCdsls()
         _cdsls.sort(cmpbysubdirs)
         for _cdsl in _cdsls:
@@ -70,6 +69,12 @@ class test_Cdsl(unittest.TestCase):
                 for nodeid in setupCluster.clusterinfo.getNodeIdentifiers('id'):
                     _file="%s.%s" %(_cdsl.src, nodeid)
                     _files2remove.append(_file)
+            _files2remove.append("%s.%s" %(_cdsl.src, "orig"))
+            setupCdsls.repository.workingdir.pushd()
+            if _cdsl.isHostdependent():
+                shutil.move("%s.%s" %(_cdsl.src, "default"), _cdsl.src)
+            setupCdsls.repository.workingdir.popd()
+            _cdsl.commit()
             setupCdsls.repository.workingdir.pushd()
             for _file in _files2remove:
                 print "- %s" %_file
@@ -78,10 +83,7 @@ class test_Cdsl(unittest.TestCase):
 #                    os.removedirs(_file)
                 else:
                     os.remove(_file)
-            if _cdsl.isHostdependent():
-                shutil.move("%s.%s" %(_cdsl.src, "default"), _cdsl.src)
             setupCdsls.repository.workingdir.popd()
-            _cdsl.commit()
             self.assertTrue(_cdsl.exists(), "%s CDSL %s does not exist although it was created before." %(_cdsl.type, _cdsl))
             for __cdsl in setupCdsls.repository.getCdsls():
                 self.assertTrue(__cdsl.exists(), "The still existant %s cdsl %s does not exist any more." %(__cdsl.type, __cdsl))

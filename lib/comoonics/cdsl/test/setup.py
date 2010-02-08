@@ -31,6 +31,20 @@ class SetupCDSLRepository:
     def __init__(self, clusterinfo):
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         import shutil
+        self.results={ "hd": ("hd", True),
+                      "hd/sd": ("hd/sd", False), 
+                      "hd/sd/hf": ("hd/sd.cdsl/hf", True),
+                      "hd/sd/hd": ("hd/sd.cdsl/hd", True),
+                      "hd/sd/hd/sd": ("hd/sd/hd.cdsl/sd", False),
+                      "hd/sd/hd/sf": ("hd/sd/hd.cdsl/sf", False),
+                      "hd/sd/hd/sd/hd": ("hd/sd.cdsl/hd/sd.cdsl/hd", True),
+                      "hd/sd/hd/sd/hf": ("hd/sd.cdsl/hd/sd.cdsl/hf", True),
+                      "ne": ("ne", None),
+                      "hd/ne": ("hd/ne", None),
+                      "hd/sd/ne": ("hd/sd/ne", None),
+                      "hd/sd/hd/ne": ("hd/sd.cdsl/hd/ne", None),
+                      "hd/sd/hd/sd/ne": ("hd/sd/hd.cdsl/sd/ne", None),
+                     }
         os.mkdir(os.path.join(tmppath, "repo2"))
         os.mkdir(os.path.join(tmppath, "repo2/repo3"))
         os.mkdir(os.path.join(tmppath, "repo4"))
@@ -80,13 +94,27 @@ class SetupCDSLs:
         self.repository=repository
         self._createCDSLFiles(tmppath)
         self.mynodeid=mynodeid
+        self.results={ "hd": ("hd", True),
+                      "hd/sd": ("hd/sd", False), 
+                      "hd/sd/hf": ("hd/sd.cdsl/hf", True),
+                      "hd/sd/hd": ("hd/sd.cdsl/hd", True),
+#                      "hd/sd/hd/sd": ("hd/sd/hd.cdsl/sd", False),
+#                      "hd/sd/hd/sf": ("hd/sd/hd.cdsl/sf", False),
+#                      "hd/sd/hd/sd/hd": ("hd/sd.cdsl/hd/sd.cdsl/hd", True),
+#                      "hd/sd/hd/sd/hf": ("hd/sd.cdsl/hd/sd.cdsl/hf", True),
+#                      "ne": ("ne", None),
+#                      "hd/ne": ("hd/ne", None),
+#                      "hd/sd/ne": ("hd/sd/ne", None),
+#                      "hd/sd/hd/ne": ("hd/sd.cdsl/hd/ne", None),
+#                      "hd/sd/hd/sd/ne": ("hd/sd/hd.cdsl/sd/ne", None),
+                     }
     
     def _createCDSLFiles(self, _tmppath):
         from comoonics.cdsl import cmpbysubdirs
         _cdsls=self.repository.getCdsls()
         _cdsls.sort(cmpbysubdirs)
         for _cdsl in _cdsls:
-            if _cdsl.src.endswith("dir") and not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
+            if _cdsl.src.endswith("d") and not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
                 os.makedirs(os.path.join(_tmppath, _cdsl.src))
             elif not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
                 open(os.path.join(_tmppath, _cdsl.src), "w+")
@@ -94,31 +122,17 @@ class SetupCDSLs:
     def setupCDSLInfrastructure(self, path, cdslRepository, clusterinfo):
         from comoonics.cdsl.ComCdsl import Cdsl
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
-        _results={ "hostdependent_dir": ("hostdependent_dir", True),
-                   "hostdependent_dir/shared_dir": ("hostdependent_dir/shared_dir", False), 
-                   "hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
-                   "hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),}
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_dir", False),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/shared_file", False),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_dir": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_dir", True),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/hostdependent_file": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/hostdependent_file", True),
-#                   "not_existent": ("not_existent", None),
-#                   "hostdependent_dir/not_existent": ("hostdependent_dir/not_existent", None),
-#                   "hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/not_existent", None),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir/not_existent", None),
-#                   "hostdependent_dir/shared_dir/hostdependent_dir/shared_dir/not_existent": ("hostdependent_dir.cdsl/shared_dir/hostdependent_dir.cdsl/shared_dir/not_existent", None),
-#                    }
         self.repository.buildInfrastructure(clusterinfo)
-        _dirs=_results.keys()
+        _dirs=self.results.keys()
         _dirs.sort()
         for _path in _dirs:
             _cdsl=None
             try:
                 _cdsl=self.repository.getCdsl(_path)
             except CdslNotFoundException:
-                if _results[_path][1] == True:
+                if self.results[_path][1] == True:
                     _cdsl=Cdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, self.repository, clusterinfo)
-                elif _results[_path][1] == False:
+                elif self.results[_path][1] == False:
                     _cdsl=Cdsl(_path, Cdsl.SHARED_TYPE, self.repository, clusterinfo)
             
             if _cdsl:
@@ -132,6 +146,8 @@ class SetupCDSLs:
         self.repository.workingdir.popd()
 
     def cleanUpInfrastructure(self, path, cdslRepository, clusterinfo):
+        for cdsl in self.repository.getCdsls():
+            cdsl.delete(True, True)
         self.repository.workingdir.pushd()
         if os.path.islink(cdslRepository.getLinkPath()):
             os.remove(cdslRepository.getLinkPath())
