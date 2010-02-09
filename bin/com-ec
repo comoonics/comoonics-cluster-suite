@@ -7,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.29 2010-02-08 21:25:34 marc Exp $
+# $Id: com-ec,v 1.30 2010-02-09 21:47:22 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.29 $"
+__version__ = "$Revision: 1.30 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -38,6 +38,9 @@ from comoonics import ComSystem, ComLog
 from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset
 
 import os.path
+#define some variables
+values=dict()
+
 XSLT_PATH="/opt/atix/comoonics-cs/xsl"
 DEFAULT_XSLT="comoonics-enterprise-copy.xsl"
 
@@ -67,7 +70,7 @@ from optparse import OptionParser
 parser = OptionParser(description=__doc__, usage="usage: %prog [options] xmlfilename [name=value]*")
 # Flags
 parser.add_option("-d", "--debug",      dest="debug",      default=False, action="store_true", help="toggle debugmode and be more helpful")
-parser.add_option("-n", "--novalidate", dest="novalidate", default=False, action="store_true", help="novalidate don't validate the xml. Handle with care!!!")
+parser.add_option("-n", "--novalidate", dest="novalidate", default=True, action="store_true", help="novalidate don't validate the xml. Handle with care!!!")
 parser.add_option("-a", "--ask",        dest="ask",        default=False, action="store_true", help="ask before any being command executed")
 parser.add_option("-U", "--noundo",     dest="noundo",     default=False, action="store_true", help="don't do the undoing if anything goes wrong")
 parser.add_option("-X", "--onlydisplay",dest="onlydisplay",default=False, action="store_true", help="only display the resulting dom as xml")
@@ -76,7 +79,7 @@ parser.add_option("-S", "--simulate",   dest="simulate",   default=False, action
 # Options
 parser.add_option("-c", "--copyset",         dest="copyset",         action="append", help="<name>|all: only do all or the given copy set")
 parser.add_option("-m", "--modificationset", dest="modificationset", action="append", help="<name>|all: only do all or the given modification set")
-parser.add_option("-s", "--set",             dest="set",             action="append", help="Execute the given sets. Multiple allowed")
+parser.add_option("-s", "--set",             dest="sets",             action="append", help="Execute the given sets. Multiple allowed")
 
 parser.add_option("-x", "--xslt",            dest="xslt",            help="preconvert xmlfile with given xsltfile.")
 
@@ -134,7 +137,7 @@ try:
     _buf=StringIO.StringIO()
     for _line in file:
         try:
-            _line=_line %options.values
+            _line=_line %values
         except KeyError:
             pass
         except ValueError:
@@ -165,9 +168,9 @@ try:
             raise e
         libxslt.cleanup()
     else:
-        doc = reader.fromStream(_buf)
+	doc = reader.fromString(_buf.getvalue())
         if values:
-            applyValues(doc, values)
+	    print values
     _buf.close()
 
     if options.onlydisplay:
@@ -196,7 +199,7 @@ else:
     _name=filename
 
 line("Start of enterprisecopy %s" % (_name))
-
+print options
 try:
     if not options.copyset and not options.modificationset and not options.sets:
         line("Executing all sets %u" % (len(ecopy.allsets)))
@@ -235,8 +238,8 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.29  2010-02-08 21:25:34  marc
-# - fixed simple bugs in com-ec, com-mkcdslinfrastructure
+# Revision 1.30  2010-02-09 21:47:22  mark
+# bug fixes
 #
 # Revision 1.28  2010/02/08 19:47:14  marc
 # fixed bug with type="str" which is not available on python2.3
