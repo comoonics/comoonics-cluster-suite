@@ -50,6 +50,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Tue Feb 09 2010 MG <grimme@atix.de>, 0.2-20
+  - fixed bug that two cdsls of the same type cannot be created underneath each other.
 * Mon Feb 08 2010 MG <grimme@atix.de>, 0.2-19
   - fixed bug with missing migration package.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.2-18
@@ -153,6 +155,8 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Thu Feb 09 2010 MG <grimme@atix.de>, 0.1-5
+  - Moved cl_checknodes to optparse
 * Fri Oct 09 2009 MG <grimme@atix.de>, 0.1-4
   - added cl_checknodes
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
