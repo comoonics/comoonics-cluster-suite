@@ -55,6 +55,11 @@ class test_Cdsl(unittest.TestCase):
         except CdslNotFoundException:
             self.assert_("Could not find cdsl under \"hostdependent_dir/shared_dir/hostdependent_dir\".")
 
+    def test_CdslOfSameType(self):
+        from comoonics.cdsl.ComCdsl import CdslOfSameType, Cdsl
+        
+        self.assertRaises(CdslOfSameType, Cdsl, "hostdependent_dir/hd", Cdsl.SHARED_TYPE, repository, setupCluster.clusterinfo)
+    
     def test_Y_CdslsDeleteNoForce(self):
         import shutil
         from comoonics.cdsl import cmpbysubdirs

@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 
 # @(#)$File$
 #
@@ -45,6 +45,7 @@ class CdslDoesNotExistException(ComException):pass
 class CdslSourcePathIsAlreadyCdsl(ComException): pass
 class CdslAlreadyExists(ComException): pass
 class CdslIsNoCdsl(ComException): pass
+class CdslOfSameType(ComException): pass
 
 class Cdsl(DataObject):
     """
@@ -161,6 +162,9 @@ class Cdsl(DataObject):
         
         #super(Cdsl,self).__init__(element,self.XmlElement)
         super(Cdsl,self).__init__(topelement,doc)
+        parent=self.getParent()
+        if parent and parent.type == self.type:
+            raise CdslOfSameType("Cannot create the cdsl %s of the same type then the already existing cdsl %s." %(self.src, parent.src))
 
     def __str__(self):
         return self.src
@@ -893,7 +897,11 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.15  2010-02-08 21:25:05  marc
+# Revision 1.16  2010-02-09 21:45:58  marc
+# fixed bug 370 and 371.
+# Where cdsl on cdsl of same type could not be created.
+#
+# Revision 1.15  2010/02/08 21:25:05  marc
 # - fixed bugs
 # - added sub repos to commands.
 #
