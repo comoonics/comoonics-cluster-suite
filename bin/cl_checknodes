@@ -21,70 +21,52 @@ import getopt
 import logging
 import warnings
 
+from optparse import OptionParser
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 sys.path.append("../lib")
 
-from comoonics import ComSystem, ComLog, GetOpts
+from comoonics.cluster import parseClusterConf
+from comoonics import ComSystem, ComLog
 from xml import xpath
+from comoonics.cluster import commonoptparseroptions
 
 ComSystem.__EXEC_REALLY_DO=""
 
-class Config(GetOpts.BaseConfig):
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], "Checks if all nodes in this cluster are reachable until a given timeout occures.", __version__)
-        self.debug=GetOpts.Option("debug", "toggle debugmode", False, False, "d", self.setDebug)
-        self.verbose=GetOpts.Option("verbose", "toggle verbosemode", False, False, "V")
-        self.times=GetOpts.Option("times", "checks the whole cluster for n times. If not  all nodes are reachable it returns with an errorcode", "5", False, "T")
-        self.pingtimeout=GetOpts.Option("pingtimeout", "the pingtimeout", "2", False, "t")
-        self.pingcount=GetOpts.Option("pingcount", "the pingcount", "1", False, "c")
-        self.pingcmd=GetOpts.Option("pingcmd", "which command is used for pings", "ping -c %s -t %s %s", False, "C")
-        self.clusterconf=GetOpts.Option("clusterconf", "Where is the cluster configuration to be found", "/etc/cluster/cluster.conf", False, "x")
-        self.validate=GetOpts.Option("validate", "should we validate the clusterconfig ", False, False, "X")
-        self.pathnodes=GetOpts.Option("pathnodes", "How can we know the names of the nodes", "cluster/clusternodes/clusternode/@name", False, "p")
-        self.pathclustername=GetOpts.Option("pathclustername", "How can we know the name of the cluster", "cluster/@name", False, "p")
+usage = "usage: %prog [options]"
+parser = OptionParser(usage=usage, description=__doc__)
+parser=commonoptparseroptions(parser)
 
-    def do(self, args_proper):
-        if len(args_proper) > 0:
-            print >>self.__stderr__, "Wrong syntax."
-            self.usage(sys.argv)
-            return 1
-        return 0
-
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
-
-def verbose(config, text):
-    if config.verbose:
-        print text,
+parser.add_option("-T", "--times", dest="times", default="5", help="checks the whole cluster for n times. If not  all nodes are reachable it returns with an errorcode")
+parser.add_option("-t", "--pingtimeout", dest="pingtimeout", default="2", help="the ping timeout")
+parser.add_option("-n", "--pingcount", dest="pingcount", default="1", help="the ping counts.")
+parser.add_option("-C", "--pingcmd", dest="pingcmd", default="ping -c %s -t %s %s", help="Which command is used for pings.")
+parser.add_option("-p", "--pathnodes", dest="pathnodes", default="cluster/clusternodes/clusternode/@name", help="How can we know the names of the nodes")
+parser.add_option("-P", "--pathclustername", dest="pathclustername", default="cluster/@name", help="How can we know the name of the cluster")
 
 ComLog.setLevel(logging.INFO)
-config=Config()
-ret=config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    sys.exit(ret)
+(options, args) = parser.parse_args()
 
-reader = Sax2.Reader(validate=config.validate)
-conf=open(config.clusterconf)
-doc=reader.fromStream(conf)
-ComLog.getLogger().debug("Parsing path %s" % config.pathnodes)
-nodeelements = xpath.Evaluate(config.pathnodes, doc)
-if len(nodeelements) == 1:
-    quorum=1
-else:
+doc=parseClusterConf(options.clusterconf)
+ComLog.getLogger().debug("Parsing path %s" % options.pathnodes)
+clustername = xpath.Evaluate(options.pathclustername, doc)[0]
+nodeelements = xpath.Evaluate(options.pathnodes, doc)
+if len(nodeelements) == 2:
     quorum=len(nodeelements)/2+1
-clustername = xpath.Evaluate(config.pathclustername, doc)[0]
+else:
+    print "Skipping because cluster %s has less or more the two nodes." %clustername.value
+    sys.exit(0)
 ComLog.getLogger().debug("Found nodes %u/%u" % (len(nodeelements),quorum))
-verbose(config, "Checking cluster %s" % clustername)
-for times in range(int(config.times)):
+sys.stdout.write("Checking cluster %s" % clustername.value)
+sys.stdout.flush()
+for times in range(int(options.times)):
     reached=0 # Have already reached myself
     for node in nodeelements:
-        verbose(config,".",)
+        sys.stdout.write(".")
+        sys.stdout.flush()
         nodename=node.nodeValue
         ComLog.getLogger().debug("Found node %s, reached: %u" % (nodename, reached))
-        (rc, out) = ComSystem.execLocalStatusOutput(config.pingcmd %(config.pingcount, config.pingtimeout, nodename))
+        (rc, out) = ComSystem.execLocalStatusOutput(options.pingcmd %(options.pingcount, options.pingtimeout, nodename))
         if rc >> 8 == 0:
             reached=reached+1
         if reached>=quorum:
@@ -93,10 +75,10 @@ for times in range(int(config.times)):
         break
 
 if reached>=quorum:
-    verbose(config, "OK")
+    print("OK")
     sys.exit(0)
 else:
-    verbose(config, "FAILED")
+    print("FAILED")
     sys.exit(1)
 
 ##################
