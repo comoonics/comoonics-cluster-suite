@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComArchive.py,v $
 
 import os
@@ -24,10 +24,10 @@ from xml.dom.ext.reader import Sax2
 import tarfile
 from tarfile import TarInfo
 
-import ComSystem
-from ComDataObject import DataObject
-import ComLog
-from ComExceptions import ComException
+from comoonics import ComSystem
+from comoonics.ComDataObject import DataObject
+from comoonics import ComLog
+from comoonics.ComExceptions import ComException
 
 from exceptions import ImportError
 
@@ -530,7 +530,10 @@ if __name__ == '__main__':
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.1  2009-09-28 15:13:36  marc
+# Revision 1.2  2010-02-09 21:48:51  mark
+# added .storage path in includes
+#
+# Revision 1.1  2009/09/28 15:13:36  marc
 # moved from comoonics here
 #
 # Revision 1.15  2008/03/14 10:39:17  marc

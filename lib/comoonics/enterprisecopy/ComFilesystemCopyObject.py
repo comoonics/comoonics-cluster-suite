@@ -7,22 +7,22 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.9 2007-10-16 15:26:24 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.10 2010-02-09 21:48:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from xml import xpath
 
-from comoonics.ComDevice import Device
-from comoonics import ComFileSystem
-from comoonics.ComFileSystem import FileSystem
-from comoonics.ComMountpoint import MountPoint
+from comoonics.storage.ComDevice import Device
+from comoonics.storage import ComFileSystem
+from comoonics.storage.ComFileSystem import FileSystem
+from comoonics.storage.ComMountpoint import MountPoint
 from ComCopyObject import CopyObjectJournaled
 from comoonics.ComExceptions import *
-
+from comoonics import ComLog
 
 class FilesystemCopyObject(CopyObjectJournaled):
     __logStrLevel__="FilesystemCopyObject"
@@ -148,7 +148,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.9  2007-10-16 15:26:24  marc
+# Revision 1.10  2010-02-09 21:48:24  mark
+# added .storage path in includes
+#
+# Revision 1.9  2007/10/16 15:26:24  marc
 # - fixed BUG 27, break or warn when rsync error
 #
 # Revision 1.8  2007/09/13 09:35:55  marc

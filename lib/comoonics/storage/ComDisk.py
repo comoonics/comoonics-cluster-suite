@@ -7,17 +7,20 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.2 2010-02-07 20:31:23 marc Exp $
+# $Id: ComDisk.py,v 1.3 2010-02-09 21:48:51 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
 import exceptions
 import time
 import xml.dom
+
+import comoonics.storage.ComParted
+import comoonics.storage.ComPartition
 
 from comoonics import ComSystem
 from comoonics.ComDataObject import DataObject
@@ -424,7 +427,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComDisk.py,v $
-# Revision 1.2  2010-02-07 20:31:23  marc
+# Revision 1.3  2010-02-09 21:48:51  mark
+# added .storage path in includes
+#
+# Revision 1.2  2010/02/07 20:31:23  marc
 # - seperated parted functionality
 # - new imports
 #

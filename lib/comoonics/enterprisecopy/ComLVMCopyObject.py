@@ -7,16 +7,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLVMCopyObject.py,v 1.7 2008-02-27 10:50:04 marc Exp $
+# $Id: ComLVMCopyObject.py,v 1.8 2010-02-09 21:48:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyObject.py,v $
 
 from ComCopyObject import CopyObject
 from comoonics.ComDataObject import DataObject
-from comoonics.ComLVM import VolumeGroup, LinuxVolumeManager
+from comoonics.storage.ComLVM import VolumeGroup, LinuxVolumeManager
 from comoonics import ComLog
 from comoonics import XmlTools
 
@@ -119,7 +119,10 @@ if __name__ == '__main__':
 
 #################
 # $Log: ComLVMCopyObject.py,v $
-# Revision 1.7  2008-02-27 10:50:04  marc
+# Revision 1.8  2010-02-09 21:48:24  mark
+# added .storage path in includes
+#
+# Revision 1.7  2008/02/27 10:50:04  marc
 # - better testing
 #
 # Revision 1.6  2007/04/04 12:52:20  marc

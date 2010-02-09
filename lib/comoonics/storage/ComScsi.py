@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComScsi.py,v 1.1 2009-09-28 15:13:36 marc Exp $
+# $Id: ComScsi.py,v 1.2 2010-02-09 21:48:51 mark Exp $
 #
 
 
@@ -18,10 +18,10 @@ import sys
 from types import *
 from exceptions import *
 
-import ComLog
-import ComSystem
-import ComUtils
-from ComExceptions import *
+import comoonics.ComLog
+import comoonics.ComSystem
+import comoonics.ComUtils
+from comoonics.ComExceptions import *
 
 class SCSI:
     def __init__(self):
@@ -71,7 +71,10 @@ class SCSI:
             ComSystem.execLocal( "echo \""+__bus+"\" \""+ __target+"\" \""+ __lun+ "\" > "+__syspath+"/"+__host+"/scan")
 
 # $Log: ComScsi.py,v $
-# Revision 1.1  2009-09-28 15:13:36  marc
+# Revision 1.2  2010-02-09 21:48:51  mark
+# added .storage path in includes
+#
+# Revision 1.1  2009/09/28 15:13:36  marc
 # moved from comoonics here
 #
 # Revision 1.1  2006/07/19 14:29:15  marc

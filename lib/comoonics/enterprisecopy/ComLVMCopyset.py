@@ -18,16 +18,16 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.6 2007-07-31 10:00:30 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.7 2010-02-09 21:48:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
 from comoonics import ComLog
-from comoonics.ComLVM import VolumeGroup, LinuxVolumeManager, LogicalVolume, PhysicalVolume
+from comoonics.storage.ComLVM import VolumeGroup, LinuxVolumeManager, LogicalVolume, PhysicalVolume
 
 from ComCopyObject import CopyObject
 from ComCopyset import CopysetJournaled
@@ -144,7 +144,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.6  2007-07-31 10:00:30  marc
+# Revision 1.7  2010-02-09 21:48:24  mark
+# added .storage path in includes
+#
+# Revision 1.6  2007/07/31 10:00:30  marc
 # better error handling
 #
 # Revision 1.5  2007/04/02 11:49:57  marc

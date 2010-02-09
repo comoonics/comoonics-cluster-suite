@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.4 2007-07-25 11:10:23 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.5 2010-02-09 21:48:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemModificationset.py,v $
 
 import xml.dom
@@ -22,10 +22,10 @@ import os
 
 from comoonics.ComExceptions import *
 from ComModificationset import ModificationsetJournaled
-from comoonics.ComDevice import Device
-from comoonics import ComFileSystem
-from comoonics.ComFileSystem import FileSystem
-from comoonics.ComMountpoint import MountPoint
+from comoonics.storage.ComDevice import Device
+from comoonics.storage import ComFileSystem
+from comoonics.storage.ComFileSystem import FileSystem
+from comoonics.storage.ComMountpoint import MountPoint
 from comoonics import ComLog
 
 log=ComLog.getLogger("comoonics.enterprisecopy.ComFilesystemModificationset.FilesystemModificationset")
@@ -85,7 +85,10 @@ class FilesystemModificationset(ModificationsetJournaled):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.4  2007-07-25 11:10:23  marc
+# Revision 1.5  2010-02-09 21:48:24  mark
+# added .storage path in includes
+#
+# Revision 1.4  2007/07/25 11:10:23  marc
 # - better errormessages
 # - loglevel
 #

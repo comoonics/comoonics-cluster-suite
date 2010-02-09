@@ -7,14 +7,14 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFile.py,v 1.1 2009-09-28 15:13:36 marc Exp $
+# $Id: ComFile.py,v 1.2 2010-02-09 21:48:51 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFile.py,v $
 
-from ComDataObject import DataObject
+from comoonics.ComDataObject import DataObject
 
 
 class File(DataObject):
@@ -23,7 +23,10 @@ class File(DataObject):
         DataObject.__init__(self, element, doc)
         
 # $Log: ComFile.py,v $
-# Revision 1.1  2009-09-28 15:13:36  marc
+# Revision 1.2  2010-02-09 21:48:51  mark
+# added .storage path in includes
+#
+# Revision 1.1  2009/09/28 15:13:36  marc
 # moved from comoonics here
 #
 # Revision 1.1  2006/07/19 14:29:15  marc

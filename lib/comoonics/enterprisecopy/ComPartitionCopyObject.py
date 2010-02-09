@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.7 2007-09-07 14:39:41 marc Exp $
+# $Id: ComPartitionCopyObject.py,v 1.8 2010-02-09 21:48:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -21,8 +21,9 @@ from xml.dom.ext import PrettyPrint
 
 from ComCopyObject import CopyObjectJournaled
 
-from comoonics.ComDisk import HostDisk
+from comoonics.storage.ComDisk import HostDisk
 from comoonics.ComExceptions import *
+from comoonics import ComLog
 
 
 class PartitionCopyObject(CopyObjectJournaled):
@@ -73,7 +74,10 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.7  2007-09-07 14:39:41  marc
+# Revision 1.8  2010-02-09 21:48:24  mark
+# added .storage path in includes
+#
+# Revision 1.7  2007/09/07 14:39:41  marc
 # -logging
 #
 # Revision 1.6  2007/04/11 14:34:29  mark

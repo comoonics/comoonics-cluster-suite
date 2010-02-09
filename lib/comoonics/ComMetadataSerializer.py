@@ -15,10 +15,10 @@ These are represented by the class ArchiveMetadata.
 
 
 # here is some internal information
-# $Id: ComMetadataSerializer.py,v 1.4 2007-04-02 11:47:38 marc Exp $
+# $Id: ComMetadataSerializer.py,v 1.5 2010-02-09 21:49:13 mark Exp $
 #
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComMetadataSerializer.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -67,7 +67,7 @@ class ArchiveMetadataSerializer(MetadataSerializer):
 
     def resolve(self):
 #        print "ArchiveMetadata.resolve"
-        from ComArchive import Archive
+        from comoonics.storage.ComArchive import Archive
         earchive=self.getElement().getElementsByTagName("archive")[0]
         archive=Archive(earchive, self.getDocument())
 #        print "Created archive: %s" %(archive)
@@ -76,7 +76,7 @@ class ArchiveMetadataSerializer(MetadataSerializer):
         return element
 
     def serialize(self, element):
-        from ComArchive import Archive
+        from comoonics.storage.ComArchive import Archive
         earchive=self.getElement().getElementsByTagName("archive")[0]
         archive=Archive(earchive, self.getDocument())
 #        print "Created archive: %s" %(archive)
@@ -85,7 +85,10 @@ class ArchiveMetadataSerializer(MetadataSerializer):
         ComLog.getLogger(self.__logStrLevel__).debug("Saved element %s to archive element" %(element.tagName))
 
 # $Log: ComMetadataSerializer.py,v $
-# Revision 1.4  2007-04-02 11:47:38  marc
+# Revision 1.5  2010-02-09 21:49:13  mark
+# added .storage path in includes
+#
+# Revision 1.4  2007/04/02 11:47:38  marc
 # MMG Backup Legato Integration:
 # - resolve returns None instead of pass
 #

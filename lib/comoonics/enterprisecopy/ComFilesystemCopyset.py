@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.15 2008-03-12 12:27:41 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.16 2010-02-09 21:48:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -21,7 +21,7 @@ from xml import xpath
 
 from ComCopyObject import CopyObject
 from ComCopyset import *
-from comoonics.ComDisk import Disk
+from comoonics.storage.ComDisk import Disk
 from comoonics.ComExceptions import *
 from comoonics import ComSystem
 from comoonics import ComLog
@@ -319,7 +319,10 @@ if __name__ == "__main__":
     main()
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.15  2008-03-12 12:27:41  marc
+# Revision 1.16  2010-02-09 21:48:24  mark
+# added .storage path in includes
+#
+# Revision 1.15  2008/03/12 12:27:41  marc
 # - added a constructor that also would take copyobjects as is
 # - introduced static variable for DEFAULT_OPTIONS to be overwritten if needed
 # - added tests.

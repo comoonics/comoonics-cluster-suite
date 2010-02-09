@@ -12,9 +12,10 @@ import math
 
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
+
 from ComPartition import Partition, PartitionFlag
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComParted.py,v $
 
 class PartitioningError(ComException): pass

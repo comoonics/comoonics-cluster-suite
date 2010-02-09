@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.8 2008-03-12 12:26:19 marc Exp $
+# $Id: ComArchiveCopyObject.py,v 1.9 2010-02-09 21:48:24 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from xml import xpath
@@ -20,7 +20,7 @@ from ComCopyObject import CopyObjectJournaled
 from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
 from comoonics.ComMetadataSerializer import MetadataSerializer
-from comoonics.ComArchive import Archive
+from comoonics.storage.ComArchive import Archive
 
 class ArchiveCopyObject(CopyObjectJournaled):
     """ Class for all source and destination objects"""
@@ -75,7 +75,10 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.8  2008-03-12 12:26:19  marc
+# Revision 1.9  2010-02-09 21:48:24  mark
+# added .storage path in includes
+#
+# Revision 1.8  2008/03/12 12:26:19  marc
 # added support for empty metadata. Needed for ComPathCopyObjects as dest.
 #
 # Revision 1.7  2008/03/12 09:40:18  marc
