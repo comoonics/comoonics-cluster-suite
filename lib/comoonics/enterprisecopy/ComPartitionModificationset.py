@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionModificationset.py,v 1.2 2007-03-26 08:02:23 marc Exp $
+# $Id: ComPartitionModificationset.py,v 1.3 2010-02-10 12:48:46 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionModificationset.py,v $
 
 import xml.dom
@@ -22,7 +22,7 @@ import os
 
 from comoonics.ComExceptions import *
 from ComModificationset import ModificationsetJournaled
-from comoonics.ComDisk import HostDisk
+from comoonics.storage.ComDisk import HostDisk
 from comoonics import ComLog
 
 log=ComLog.getLogger("Modificationset")
@@ -54,7 +54,10 @@ class PartitionModificationset(ModificationsetJournaled):
 
 
 # $Log: ComPartitionModificationset.py,v $
-# Revision 1.2  2007-03-26 08:02:23  marc
+# Revision 1.3  2010-02-10 12:48:46  mark
+# added .storage path in includes
+#
+# Revision 1.2  2007/03/26 08:02:23  marc
 # - added support for resolvDeviceName()
 # - changed Disk to HostDisk just for better understanding
 #

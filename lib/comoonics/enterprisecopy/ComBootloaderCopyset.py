@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComBootloaderCopyset.py,v 1.2 2007-06-19 12:51:15 marc Exp $
+# $Id: ComBootloaderCopyset.py,v 1.3 2010-02-10 12:48:46 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComBootloaderCopyset.py,v $
 
 import xml.dom
@@ -19,7 +19,7 @@ import exceptions
 from xml import xpath
 
 from ComCopyset import *
-from comoonics.ComBootDisk import BootDisk
+from comoonics.storage.ComBootDisk import BootDisk
 from comoonics.ComExceptions import *
 from comoonics import ComSystem
 
@@ -39,7 +39,10 @@ class BootloaderCopyset(Copyset):
 
 
 # $Log: ComBootloaderCopyset.py,v $
-# Revision 1.2  2007-06-19 12:51:15  marc
+# Revision 1.3  2010-02-10 12:48:46  mark
+# added .storage path in includes
+#
+# Revision 1.2  2007/06/19 12:51:15  marc
 # - Compatibility with resolvable Devicenames introduced.
 #
 # Revision 1.1  2006/07/19 14:29:15  marc

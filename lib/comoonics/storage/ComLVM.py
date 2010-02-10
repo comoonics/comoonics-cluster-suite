@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComLVM.py,v $
 
 import os
@@ -553,7 +553,7 @@ class PhysicalVolume(LinuxVolumeManager):
         Will automatically try to detect the specified device. Implicitly the same functionality as in
         HostDisk.resolve() is used.
         """
-        from comoonics.ComDevice import Device
+        from comoonics.storage.ComDevice import Device
         device=Device(self.getAttribute("name"), self.getDocument())
         cmds=device.resolveDeviceName()
         self.log.debug("resolveName: setting name from %s => %s." %(str(self.getAttribute("name")), str(device.getDeviceName())))
@@ -1006,7 +1006,10 @@ if __name__=="__main__":
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.2  2010-02-07 20:32:42  marc
+# Revision 1.3  2010-02-10 12:49:07  mark
+# added .storage path in includes
+#
+# Revision 1.2  2010/02/07 20:32:42  marc
 # - new imports
 #
 # Revision 1.1  2009/09/28 15:13:36  marc

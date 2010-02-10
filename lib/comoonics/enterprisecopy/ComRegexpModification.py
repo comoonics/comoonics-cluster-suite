@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComRegexpModification.py,v 1.4 2007-09-07 14:41:24 marc Exp $
+# $Id: ComRegexpModification.py,v 1.5 2010-02-10 12:48:46 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRegexpModification.py,v $
 
 import exceptions
@@ -21,7 +21,7 @@ import re
 import os
 
 from ComFileModification import FileModification
-from comoonics.ComFile import File
+from comoonics.storage.ComFile import File
 from comoonics import ComSystem
 from comoonics import ComLog
 
@@ -108,7 +108,10 @@ if __name__ == '__main__':
     main()
 
 # $Log: ComRegexpModification.py,v $
-# Revision 1.4  2007-09-07 14:41:24  marc
+# Revision 1.5  2010-02-10 12:48:46  mark
+# added .storage path in includes
+#
+# Revision 1.4  2007/09/07 14:41:24  marc
 # - added catching of IOExceptino
 # - logging
 #
