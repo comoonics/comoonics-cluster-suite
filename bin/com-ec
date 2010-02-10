@@ -7,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.30 2010-02-09 21:47:22 mark Exp $
+# $Id: com-ec,v 1.31 2010-02-10 13:17:51 mark Exp $
 #
 
 
-__version__ = "$Revision: 1.30 $"
+__version__ = "$Revision: 1.31 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -169,8 +169,8 @@ try:
         libxslt.cleanup()
     else:
 	doc = reader.fromString(_buf.getvalue())
-        if values:
-	    print values
+	#if values:
+		#applyValues(n_doc, values)
     _buf.close()
 
     if options.onlydisplay:
@@ -199,7 +199,6 @@ else:
     _name=filename
 
 line("Start of enterprisecopy %s" % (_name))
-print options
 try:
     if not options.copyset and not options.modificationset and not options.sets:
         line("Executing all sets %u" % (len(ecopy.allsets)))
@@ -238,7 +237,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.30  2010-02-09 21:47:22  mark
+# Revision 1.31  2010-02-10 13:17:51  mark
+# removed some debug messages
+#
+# Revision 1.30  2010/02/09 21:47:22  mark
 # bug fixes
 #
 # Revision 1.28  2010/02/08 19:47:14  marc
