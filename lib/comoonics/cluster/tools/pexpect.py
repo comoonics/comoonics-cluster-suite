@@ -59,8 +59,8 @@ SOFTWARE.
 Pexpect Copyright (c) 2006 Noah Spurrier
 http://pexpect.sourceforge.net/
 
-$Revision: 1.1 $
-$Date: 2010-02-12 08:55:07 $
+$Revision: 1.2 $
+$Date: 2010-02-12 10:09:28 $
 """
 try:
     import os, sys, time
@@ -77,14 +77,14 @@ try:
     import errno
     import traceback
     import signal
-    import ComLog
+    from comoonics import ComLog
 except ImportError, e:
     raise ImportError (str(e) + """
 A critical module was not found. Probably this operating system does not support it.
 Pexpect is intended for UNIX-like operating systems.""")
 
 __version__ = '2.1'
-__revision__ = '$Revision: 1.1 $'
+__revision__ = '$Revision: 1.2 $'
 __all__ = ['ExceptionPexpect', 'EOF', 'TIMEOUT', 'spawn', 'run', 'which', 'split_command_line',
     '__version__', '__revision__']
 

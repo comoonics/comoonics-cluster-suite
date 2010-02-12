@@ -57,7 +57,7 @@ import sys
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
-from comoonics import pexpect
+from comoonics.cluster.tools import pexpect
 import fileinput, fcntl, getpass, os, re
 import socket, struct, sys, termios, threading, time
 from optparse import OptionParser, OptionGroup, make_option
@@ -448,7 +448,7 @@ def host_loop (command, options, hostlist, password, pass_root, win_width):
                             error_list[self.host] = "remote_cmd failure " + \
                                              "(Timeout): %s" % (remote.after)
                             remote.sendline ('exit')
-                            remote.expect(pexpect.EOF, timeout=None)
+                            remote.expect(pexpect.EOF, timeout=self.timeout)
                             print remote.before
                             mutex.release()
                             remote.close()
@@ -496,9 +496,17 @@ def host_loop (command, options, hostlist, password, pass_root, win_width):
                         mutex.release()
                     sess_suexit(remote)
                 if remote.isalive():
+                    if self.verbose >= 3:
+                        mutex.acquire()
+                        print '(%s) Sending exit to connection' % (self.host.capitalize())
+                        mutex.release()
                     remote.sendline ('exit')
-                    remote.expect(pexpect.EOF, timeout=None)
+                    remote.expect(pexpect.EOF, timeout=self.timeout)
                     time.sleep(0.1)
+                if self.verbose >= 3:
+                    mutex.acquire()
+                    print '(%s) Closing connection' % (self.host.capitalize())
+                    mutex.release()
                 remote.close()
                 if self.verbose >= 3:
                     mutex.acquire()
@@ -1167,7 +1175,7 @@ def sess_suexit (session):
     Exit SU session.
     """
     session.sendline ('exit')
-    session. expect (CMD_PRMPT, timeout=None)
+    session. expect (CMD_PRMPT, timeout=self.timeout)
 
 def test_connectivity (hlist, options):
     """
@@ -1239,7 +1247,7 @@ def test_connectivity (hlist, options):
             port_exception = re.search(r'(\b\d+\.\d+\.\d+\.\d+):(\d+)', host)
         if port_exception == None:
             if options.proto.lower() == "rsh"    :
-                port = 514
+                port = 543
             if options.proto.lower() == "ssh"    :
                 port = 22
             if options.proto.lower() == "telnet" :
@@ -1281,7 +1289,7 @@ def ssh_keygen (options):
     Generate SSH keys
     """
     keygen = pexpect.spawn('bash')
-    keygen.expect (CMD_PRMPT, timeout=None)
+    keygen.expect (CMD_PRMPT, timeout=self.timeout)
     keygen.sendline('keygen -t %s' % (
                      options.ssh_keytype.lower()) + ' && exit')
     keygen.interact()
