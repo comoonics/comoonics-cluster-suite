@@ -2,13 +2,13 @@
 Class for the EMC-Legator BackupHandlerImplementation.
 """
 # here is some internal information
-# $Id: ComEMCLegatoNetworker.py,v 1.5 2007-08-07 15:15:21 marc Exp $
+# $Id: ComEMCLegatoNetworker.py,v 1.6 2010-02-12 10:08:06 marc Exp $
 #
 
 import os.path
 from logging import DEBUG
-from comoonics import ComLog, ComSystem, pexpect
-from comoonics.ComSystem import execLocalOutput
+from comoonics import ComLog, ComSystem
+from comoonics.cluster.tools import pexpect
 from comoonics.ComExceptions import ComException
 
 class LegatoBackupLevel(object):
@@ -95,7 +95,10 @@ class LegatoNetworker(object):
 
 #######################
 # $Log: ComEMCLegatoNetworker.py,v $
-# Revision 1.5  2007-08-07 15:15:21  marc
+# Revision 1.6  2010-02-12 10:08:06  marc
+# new version that fixed import problemes
+#
+# Revision 1.5  2007/08/07 15:15:21  marc
 # - Fix Bug BZ #77 that the restore command is likely to timeout. This is ignored now. 2nd attempt (validated)
 #
 # Revision 1.4  2007/08/07 11:18:35  marc
