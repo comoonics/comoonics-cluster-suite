@@ -4,18 +4,18 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.8 2007-07-31 10:02:04 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.9 2010-02-12 10:11:45 marc Exp $
 #
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
 import logging
 from comoonics.ComDataObject import DataObject
-from comoonics import pexpect, ComLog, ComSystem
+from comoonics import ComLog, ComSystem
 from comoonics import ComExceptions
-from xml.dom import Node
+from comoonics.cluster.tools import pexpect
 from ComHP_EVA import HP_EVA_Object
 
 class CouldNotParseSSSU(ComExceptions.ComException): pass
@@ -281,7 +281,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.8  2007-07-31 10:02:04  marc
+# Revision 1.9  2010-02-12 10:11:45  marc
+# fixed pexpect imports
+#
+# Revision 1.8  2007/07/31 10:02:04  marc
 # reissue cmd if swma is already managed.
 #
 # Revision 1.7  2007/06/26 07:31:14  marc

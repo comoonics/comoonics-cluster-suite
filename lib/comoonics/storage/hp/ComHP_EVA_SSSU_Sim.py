@@ -4,19 +4,18 @@ Python implementation of an HP SSSU utility simulator to emulate the output gene
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU_Sim.py,v 1.1 2007-02-09 11:36:16 marc Exp $
+# $Id: ComHP_EVA_SSSU_Sim.py,v 1.2 2010-02-12 10:11:45 marc Exp $
 #
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py,v $
 
-import logging
 import cmd
 import sys
 import re
-from comoonics import pexpect, ComLog
+from comoonics import ComLog
 from comoonics import ComExceptions
-from ComHP_EVA import HP_EVA_Object, HP_EVA_Storagecell, HP_EVA_Storagecells, HP_EVA_Container
+from ComHP_EVA import HP_EVA_Object, HP_EVA_Storagecells, HP_EVA_Container
 
 # Errors
 class SSSUError(ComExceptions.ComException):
@@ -836,6 +835,9 @@ if __name__ == '__test__':
 
 #######################
 # $Log: ComHP_EVA_SSSU_Sim.py,v $
-# Revision 1.1  2007-02-09 11:36:16  marc
+# Revision 1.2  2010-02-12 10:11:45  marc
+# fixed pexpect imports
+#
+# Revision 1.1  2007/02/09 11:36:16  marc
 # initial revision
 #

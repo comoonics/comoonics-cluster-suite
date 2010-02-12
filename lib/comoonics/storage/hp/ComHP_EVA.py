@@ -4,14 +4,13 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA.py,v 1.3 2007-04-04 12:37:07 marc Exp $
+# $Id: ComHP_EVA.py,v 1.4 2010-02-12 10:11:45 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA.py,v $
 
-import re
-from comoonics import pexpect, ComLog
+from comoonics import ComLog
 from comoonics import ComExceptions
 
 class HP_EVA_ObjectNotInitialized(ComExceptions.ComException): pass
@@ -604,7 +603,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA.py,v $
-# Revision 1.3  2007-04-04 12:37:07  marc
+# Revision 1.4  2010-02-12 10:11:45  marc
+# fixed pexpect imports
+#
+# Revision 1.3  2007/04/04 12:37:07  marc
 # MMG Backup Legato Integration :
 # - extended testing
 #

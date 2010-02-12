@@ -4,18 +4,16 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_Storage.py,v 1.6 2007-07-10 11:35:43 marc Exp $
+# $Id: ComHP_EVA_Storage.py,v 1.7 2010-02-12 10:11:45 marc Exp $
 #
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_Storage.py,v $
 
-from exceptions import TypeError
-from comoonics.pexpect import TIMEOUT
-from comoonics.ComExceptions import ComException
+from comoonics.cluster.tools.pexpect import TIMEOUT
 from comoonics import ComLog
 from comoonics.storage.hp.ComHP_EVA_SSSU import HP_EVA_SSSU, CommandError
-from comoonics.storage.ComStorage import Storage, NotImplementedYet, ErrorDuringExecution
+from comoonics.storage.ComStorage import Storage, ErrorDuringExecution
 from comoonics.storage.hp.ComHP_EVA import HP_EVA_Object
 
 class HP_EVA_Storage(Storage):
@@ -359,7 +357,10 @@ if __name__ == '__main__':
 
 ########################
 # $Log: ComHP_EVA_Storage.py,v $
-# Revision 1.6  2007-07-10 11:35:43  marc
+# Revision 1.7  2010-02-12 10:11:45  marc
+# fixed pexpect imports
+#
+# Revision 1.6  2007/07/10 11:35:43  marc
 # - fixed a bug in mapping luns. It could happen that the validation would fail if new lun was created.
 #
 # Revision 1.5  2007/06/19 12:59:53  marc
