@@ -7,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.31 2010-02-10 13:17:51 mark Exp $
+# $Id: com-ec,v 1.32 2010-02-12 10:13:38 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.31 $"
+__version__ = "$Revision: 1.32 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -91,8 +91,9 @@ if options.debug:
 
 import os.path
 i=0
-values["args%u" %i]=args[i]
-values["%u" %i]=args[i]
+if len(args):
+    values["args%u" %i]=args[i]
+    values["%u" %i]=args[i]
 i+=1
 if len(args) > 1:
     for arg in args[1:]:
@@ -237,7 +238,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.31  2010-02-10 13:17:51  mark
+# Revision 1.32  2010-02-12 10:13:38  marc
+# synchronized
+#
+# Revision 1.31  2010/02/10 13:17:51  mark
 # removed some debug messages
 #
 # Revision 1.30  2010/02/09 21:47:22  mark
