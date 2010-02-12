@@ -6,7 +6,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.7 2010-02-08 21:26:52 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.8 2010-02-12 10:13:09 marc Exp $"
 
 from distutils.core import setup
 import sys, os, string
@@ -789,8 +789,7 @@ Those are tools to help using OSR clusters.
 #      "author_email":"hlawatschek@atix.de",
       "url":"http://www.open-sharedroot.org/development/comoonics-cluster-tools-py",
       "package_dir" :  { "": "lib/"},
-      "py_modules" :   [ "comoonics.pexpect", 
-                       "comoonics.pxssh" ],
+      "packages":      [ "comoonics.cluster.tools" ],
       "scripts":       [ "bin/com-dsh", "bin/cl_checknodes" ],
     },
     "comoonics-cluster-py": {
