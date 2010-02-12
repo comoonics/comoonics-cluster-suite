@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComCatifModification.py,v 1.1 2007-09-07 14:35:09 marc Exp $
+# $Id: ComCatifModification.py,v 1.2 2010-02-12 10:10:26 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCatifModification.py,v $
 
 import os.path
@@ -19,7 +19,8 @@ import re
 
 from ComModification import Modification
 import ComModification
-from comoonics import ComSystem, pexpect
+from comoonics import ComSystem
+from comoonics.cluster.tools import pexpect
 from comoonics.ComSystem import ExecLocalException
 from comoonics import ComLog
 
@@ -310,7 +311,10 @@ if __name__=="__main__":
     __test()
 
 # $Log: ComCatifModification.py,v $
-# Revision 1.1  2007-09-07 14:35:09  marc
+# Revision 1.2  2010-02-12 10:10:26  marc
+# fixed pexpect import
+#
+# Revision 1.1  2007/09/07 14:35:09  marc
 # initial revision
 #
 # Revision 1.1  2006/07/19 14:29:15  marc
