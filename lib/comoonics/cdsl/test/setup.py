@@ -94,12 +94,49 @@ class SetupCDSLs:
         self.repository=repository
         self._createCDSLFiles(tmppath)
         self.mynodeid=mynodeid
-        self.results={ "hd": ("hd", True),
-                      "hd/sd": ("hd/sd", False), 
-                      "hd/sd/hf": ("hd/sd.cdsl/hf", True),
-                      "hd/sd/hd": ("hd/sd.cdsl/hd", True),
-#                      "hd/sd/hd/sd": ("hd/sd/hd.cdsl/sd", False),
-#                      "hd/sd/hd/sf": ("hd/sd/hd.cdsl/sf", False),
+        # cdslname: { expanded, HD/Shareed, sourcepaths, destpaths, subpaths
+        self.results={ "hd": (
+                              "hd", 
+                              True, 
+                              [u'hd'],  # sourcepath
+                              [u'.cluster/cdsl/1/hd', u'.cluster/cdsl/3/hd', u'.cluster/cdsl/2/hd', u'.cluster/cdsl/default/hd'], 
+                              []
+                              ),
+                      "hd/sd": (
+                                "hd/sd", 
+                                False, 
+                                [u'.cluster/cdsl/1/hd/sd', u'.cluster/cdsl/3/hd/sd', u'.cluster/cdsl/2/hd/sd', u'.cluster/cdsl/default/hd/sd'],
+                                [u'.cluster/shared/hd/sd'], 
+                                [u'.cluster/shared/hd']
+                                 ), 
+                      "hd/sd/hf": (
+                                   "hd/sd.cdsl/hf", 
+                                   True, 
+                                   [u'.cluster/shared/hd/sd/hf'], # sourcepath 
+                                   [u'.cluster/cdsl/1/hd/sd.cdsl/hf', u'.cluster/cdsl/3/hd/sd.cdsl/hf', u'.cluster/cdsl/2/hd/sd.cdsl/hf', u'.cluster/cdsl/default/hd/sd.cdsl/hf'], 
+                                   [u'.cluster/cdsl/1/hd/sd.cdsl', u'.cluster/cdsl/3/hd/sd.cdsl', u'.cluster/cdsl/2/hd/sd.cdsl', u'.cluster/cdsl/default/hd/sd.cdsl']
+                                   ),
+                      "hd/sd/hd": (
+                                   "hd/sd.cdsl/hd", 
+                                   True, 
+                                   [u'.cluster/shared/hd/sd/hd'], # sourcepath 
+                                   [u'.cluster/cdsl/1/hd/sd.cdsl/hd', u'.cluster/cdsl/3/hd/sd.cdsl/hd', u'.cluster/cdsl/2/hd/sd.cdsl/hd', u'.cluster/cdsl/default/hd/sd.cdsl/hd'], 
+                                   [u'.cluster/cdsl/1/hd/sd.cdsl', u'.cluster/cdsl/3/hd/sd.cdsl', u'.cluster/cdsl/2/hd/sd.cdsl', u'.cluster/cdsl/default/hd/sd.cdsl']
+                                   ),
+                      "hd/sd/hd/sd": (
+                                      "hd/sd/hd.cdsl/sd", 
+                                      False, 
+                                      [u'.cluster/cdsl/1/hd/sd.cdsl/hd/sd', u'.cluster/cdsl/3/hd/sd.cdsl/hd/sd', u'.cluster/cdsl/2/hd/sd.cdsl/hd/sd', u'.cluster/cdsl/default/hd/sd.cdsl/hd/sd'], 
+                                      [u'.cluster/shared/hd/sd/hd.cdsl/sd'], 
+                                      [u'.cluster/shared/hd/sd/hd.cdsl']
+                                      ),
+                      "hd/sd/hd/sf": (
+                                      "hd/sd/hd.cdsl/sf", 
+                                      False, 
+                                      [u'.cluster/cdsl/1/hd/sd.cdsl/hd/sf', u'.cluster/cdsl/3/hd/sd.cdsl/hd/sf', u'.cluster/cdsl/2/hd/sd.cdsl/hd/sf', u'.cluster/cdsl/default/hd/sd.cdsl/hd/sf'], 
+                                      [u'.cluster/shared/hd/sd/hd.cdsl/sf'], 
+                                      [u'.cluster/shared/hd/sd/hd.cdsl']
+                                      ),
 #                      "hd/sd/hd/sd/hd": ("hd/sd.cdsl/hd/sd.cdsl/hd", True),
 #                      "hd/sd/hd/sd/hf": ("hd/sd.cdsl/hd/sd.cdsl/hf", True),
 #                      "ne": ("ne", None),
@@ -147,7 +184,8 @@ class SetupCDSLs:
 
     def cleanUpInfrastructure(self, path, cdslRepository, clusterinfo):
         for cdsl in self.repository.getCdsls():
-            cdsl.delete(True, True)
+            if cdsl.exists():
+                cdsl.delete(True, True)
         self.repository.workingdir.pushd()
         if os.path.islink(cdslRepository.getLinkPath()):
             os.remove(cdslRepository.getLinkPath())

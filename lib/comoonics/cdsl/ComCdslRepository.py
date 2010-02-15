@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 
 import fcntl # needed for filelocking
 import re
@@ -380,7 +380,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         return buf
 
     def _updateFromElement(self, element, document):
-        self._readCdslsElement(element)
+        self._readCdslsElement(element, True)
 
     def lockresourceRO(self):
         self.lockresource()
@@ -463,20 +463,20 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         
         return doc
         
-    def _readCdslsElement(self, element):
+    def _readCdslsElement(self, element, ignoreerrors=False):
         import xml.dom
         self.cdsls=dict()
         self.repositories=dict()
         child=element.firstChild
         while child:
             if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.tagName == self.cdsl_element:
-                self._readCdslElement(child)
+                self._readCdslElement(child, ignoreerrors)
             elif child.nodeType == xml.dom.Node.ELEMENT_NODE and child.tagName == self.repositories_element:
-                self._readRepositoriesElement(child)
+                self._readRepositoriesElement(child, ignoreerrors)
                     
             child=child.nextSibling
             
-    def _readCdslElement(self, element):
+    def _readCdslElement(self, element, ignoreerrors=False):
         from ComCdsl import Cdsl
         _src = dirtrim(element.getAttribute(self.cdsl_src_attribute))
         _type = element.getAttribute(self.cdsl_type_attribute)
@@ -487,12 +487,12 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         child = element.firstChild
         while child:
             if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.tagName == self.nodes_element:
-                nodes=self._readNodesElement(child)
+                nodes=self._readNodesElement(child, ignoreerrors)
             child=child.nextSibling
             
-        self.cdsls[_src]=Cdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp)
+        self.cdsls[_src]=Cdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp, ignoreerrors=ignoreerrors)
 
-    def _readNodesElement(self, element):
+    def _readNodesElement(self, element, ignoreerrors=False):
         child = element.firstChild
         nodes = []
         while child:
@@ -506,7 +506,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
             child=child.nextSibling
         return nodes
 
-    def _readRepositoriesElement(self, element):
+    def _readRepositoriesElement(self, element, ignoreerrors=False):
         child = element.firstChild
         while child:
             if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.tagName == self.repository_element:
@@ -657,9 +657,12 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         if repository.cdsls.has_key(src):
             return repository.cdsls[src]
         else:
+            repository.workingdir.pushd()
             for cdsl in repository.cdsls.values():
-                if (cdsl.src == src):
+                if cdsl.src == src or (os.path.exists(cdsl.src) and os.path.exists(src) and os.path.samefile(cdsl.src, src)):
+                    repository.workingdir.popd()
                     return cdsl
+            repository.workingdir.popd()
         raise CdslNotFoundException(src,repository)
         
             
@@ -954,7 +957,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         """
         Returns True if this path is and expanded path
         """
-        return _expanded.find(self.getExpandString()) > 0 and self.hasCdsl(_expanded.replace(self.getExpandString(), ""))
+        return _expanded.find(self.getExpandString()) > 0 # and self.hasCdsl(_expanded.replace(self.getExpandString(), ""))
 
     def setTreePath(self, value):
         self.setAttribute(self.cdsls_tree_attribute, value)
@@ -1186,7 +1189,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         _added=None
         _deleted=None
         _type=guessType(src, self, False)
-        if _type != Cdsl.HOSTDEPENDENT_TYPE and type != Cdsl.SHARED_TYPE:
+        if _type != Cdsl.HOSTDEPENDENT_TYPE and _type != Cdsl.SHARED_TYPE:
             #create hostdependent and shared cdsl-object and test if one of these is existing
             _cdslHostdependent = Cdsl(src, Cdsl.HOSTDEPENDENT_TYPE, self, clusterInfo)
             _cdslShared = Cdsl(src, Cdsl.SHARED_TYPE, self, clusterInfo)

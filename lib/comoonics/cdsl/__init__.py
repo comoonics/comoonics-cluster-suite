@@ -69,7 +69,7 @@ def ismount(path):
 def guessType(_cdslpath, _cdslrepository, _exists=True):
     """
     Returns the guessed type of this cdsl.
-    First it searches the repository of the last cdsl in path and takes the negative. If it does not
+    First it searches the repository of the last cdsl in path and takes the opposite. If it does not
     find the cdsl in the repo it tries to guess from the realpath of the cdslpath if it is 
     either a hostdependent or shared cdsl path and then takes the opposite. 
     Those paths are got from the cdslrepository.
@@ -278,7 +278,10 @@ def commonoptparseroptions(parser):
 
 #################
 # $Log: __init__.py,v $
-# Revision 1.8  2010-02-07 20:01:26  marc
+# Revision 1.9  2010-02-15 12:54:06  marc
+# - fixed bugs with nested cdsls not being working
+#
+# Revision 1.8  2010/02/07 20:01:26  marc
 # First candidate for new version.
 #
 # Revision 1.7  2009/07/22 08:37:09  marc

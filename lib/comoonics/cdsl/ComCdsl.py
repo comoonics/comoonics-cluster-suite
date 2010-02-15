@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 
 # @(#)$File$
 #
@@ -67,7 +67,7 @@ class Cdsl(DataObject):
         cls = ComoonicsCdsl
         return object.__new__(cls) #, *args, **kwds)
     
-    def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None):
+    def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None, ignoreerrors=False):
         """
         Constructs a new cdsl-xml-object from given L{CdslRepository} and nodes. The constructor 
         gets the needed nodes either from list (nodes) or from a given L{ClusterInfo} but never 
@@ -163,7 +163,7 @@ class Cdsl(DataObject):
         #super(Cdsl,self).__init__(element,self.XmlElement)
         super(Cdsl,self).__init__(topelement,doc)
         parent=self.getParent()
-        if parent and parent.type == self.type:
+        if parent and parent.type == self.type and not ignoreerrors:
             raise CdslOfSameType("Cannot create the cdsl %s of the same type then the already existing cdsl %s." %(self.src, parent.src))
 
     def __str__(self):
@@ -347,7 +347,7 @@ class ComoonicsCdsl(Cdsl):
     
     default_node = "default"
 
-    def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None):
+    def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None, ignoreerrors=False):
         """
         Constructs a new com.oonics cdsl from given L{ComoonicsCdslRepository} and nodes. 
         The constructor gets the needed nodes either from list (nodes) or from a given 
@@ -379,7 +379,7 @@ class ComoonicsCdsl(Cdsl):
             src=stripleadingsep(strippath(strippath(src, cdslRepository.root), cdslRepository.getMountpoint()))
             self.logger.debug("cdsl stripped to %s" %src)
 
-        super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp)
+        super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp, ignoreerrors=ignoreerrors)
         #set reldir to current path
         self.reldir = os.getcwd()
         
@@ -482,15 +482,23 @@ class ComoonicsCdsl(Cdsl):
         @return: a list of paths (relative)
         @rtype: list<string> 
         """
+        from comoonics.cdsl import strippath, stripleadingsep
         _paths=list()
-        _path=self.cdslRepository.expandCdsl(self)
+        _parent=self.getParent()
+        if not _parent:
+            _tail=self.src
+            _path=self.src
+        else:
+            _tail=stripleadingsep(strippath(self.src, _parent.src))
+            _path=os.path.join(self.cdslRepository.expandCdsl(_parent), _tail)
         if self.isShared():
             for _node in self.getNodenames():
                 _paths.append(os.path.join(self.cdsltree, _node, _path))
         elif self.isHostdependent():
             if self.isNested():
                 _paths.append(os.path.join(self.cdsltree_shared, _path))
-            _paths.append(self.src)
+            else:
+                _paths.append(self.src)
         return _paths                  
     
     def getCDSLPath(self):
@@ -589,7 +597,7 @@ class ComoonicsCdsl(Cdsl):
         @type force: Boolean
         """
         from comoonics.ComPath import Path
-        from comoonics.cdsl import isSubPath
+        from comoonics.cdsl import isSubPath, strippath
         #important pathes to work with cdsls
         #####
         # Chancel creation of cdsl if it already exists
@@ -612,7 +620,13 @@ class ComoonicsCdsl(Cdsl):
         _path=Path(self.getBasePath())
         _path.pushd()
                 
-        _expanded=self.cdslRepository.expandCdsl(self)
+#        _expanded=self.cdslRepository.expandCdsl(self)
+#        parent=self.getParent()
+#        if parent:
+#            _tail=strippath(self.src, parent.src)
+#            _expandedforparent=os.path.join(parent.cdslRepository.expandCdsl(parent), _tail)
+#        else:
+#            _expandedforparent=_expanded
         _depth = self._pathdepth(self.src) -1
         if _depth > 0:
             if self.isShared():
@@ -622,148 +636,65 @@ class ComoonicsCdsl(Cdsl):
             _relativepath = _depth * "../"
         else:
             _relativepath = ""
-        if self.isShared():
-            #####
-            # Check if cdsl structure is nested (e.g. /hostdependent/shared/hostdependent/shared)
-            # and check for value of /root/mountpoint/cdsltree_shared/src
-            ##### 
-
-            #####
-            # If force is set: moves content of first node in array self.node[] to shared tree
-            # If force is not set: copy content of first node
-            # If src does not exist, create a file with this path
-            #####
+        
+        # flag to indicate if data has been backuped ignore if force is True
+        once=False
+        # First copy or move the files to the destpaths...
+        for destpath in self.getDestPaths():
             
-            # create unterlying directorystructure for cdsltree_shared/src (if not existing)
-            _sharedsrc=os.path.join(self.cdsltree_shared, _expanded)
-            _nodesrc=os.path.join(self.cdsltree, str(self.nodes[0]), _expanded)
-            if not os.path.exists(os.path.dirname(_sharedsrc)):
-                self.logger.debug("Create Directory " + os.path.dirname(_sharedsrc))
-                ComSystem.execMethod(os.makedirs,os.path.dirname(_sharedsrc))
-             
-            if os.path.exists(_nodesrc) and force == True:
-                self.logger.debug("Move Files to shared tree: " + self.src + " => " + os.path.dirname(_sharedsrc))
-                #remove file if it is already existing (and force is set)
-                if force:
-                    try:
-                        ComSystem.execMethod(self._removePath,_sharedsrc)
-                    except IOError:
-                        pass
-                ComSystem.execMethod(shutil.move,self.src,_sharedsrc)      
-            elif os.path.exists(_nodesrc) and force == False:
-                self.logger.debug("Copy Files to shared tree: " + self.src + " => " + os.path.dirname(_sharedsrc))
-                if os.path.isdir(self.src):
-                    #Cannot use copytree here because of problems when copying sockets
-                    #self.logger.debug("copytree " + _rootMountpointSrc + ".orig => " + _rootMountpointCdsltreesharedSrc)
-                    #shutil.copytree(_rootMountpointSrc + ".orig", _rootMountpointCdsltreesharedSrc,True)
-                    ComSystem.execLocalStatusOutput("cp -a " + self.src + " " + _sharedsrc)
-                elif os.path.isfile(self.src):
-                    self.logger.debug("copyfile " + self.src + _sharedsrc)
-                    ComSystem.execMethod(shutil.copy2,self.src, _sharedsrc)
-                        
+            # Create the parentdir if it does not already exist
+            parentdir=os.path.dirname(destpath)
+            if not os.path.exists(parentdir):
+                self.logger.debug("Create Directory " + parentdir)
+                os.makedirs(parentdir)
+            
+            # Let's copy the data
+            if self.isHostdependent():
+                # In case of hd we need to copy for each node
+                self.logger.debug("Copy Files: " + self.src + " => " + destpath)
+                ComSystem.execLocalStatusOutput("cp -a " + self.src + " " + destpath)
             else:
-                #if force is set and file is already existing, remove it
-                if force:
-                    ComSystem.execMethod(self._removePath,_sharedsrc)
-                #if given src is not a existing file/directory, create empty file with given path
-                ComSystem.execMethod(self._createEmptyFile,_sharedsrc,force)
-            
-            #####
-            # move (yet) hostdepedent directories to source.orig for every node if force is not set (create a backup)
-            # remove (yet) hostdepedent directories of every node if force is set (skip backup)
-            # if given source does not exist, skip both, because there is nothing to move or remove
-            #####
-            _relsharedsrc = os.path.join(_relativepath, _sharedsrc)
-            
-            for node in self.nodesWithDefaultdir:
-                _nodesrc = os.path.join(self.cdsltree,str(node),_expanded)
-                
-                #if given source exists and force isn't set, move source to source.orig
-                if os.path.exists(_nodesrc) and force == False:
-                    self.logger.debug("Backing up " + _nodesrc + " => " + _nodesrc + ".orig ...")
-                    ComSystem.execMethod(shutil.move,_nodesrc , _nodesrc + ".orig")
-                    
-                #if given source exists and force is set, remove source from hostdependent cdsltree
-                elif os.path.exists(_nodesrc) and force == True:
-                    ComSystem.execMethod(self._removePath,_nodesrc)
-                 
-                #if given src does not exist, create underlying directories        
-                elif  not os.path.exists(os.path.dirname(_nodesrc)):
-                    ComSystem.execMethod(os.makedirs,os.path.dirname(_nodesrc))
-                          
-#                _path.pushd(os.path.dirname(self.src))
-                self.logger.debug("Creating needed symbolic link %s -> %s" %(_relsharedsrc, _nodesrc))
-                ComSystem.execMethod(os.symlink, _relsharedsrc, _nodesrc)
-#                _path.popd()
-                
-        elif self.isHostdependent():
-            #####
-            # Copy source to hostdependent directory of every node
-            # Use dummyfile is source does not exist
-            #####
-            self.logger.debug("Creating/Copying the file to all hosts...")
-            for node in self.nodesWithDefaultdir:
-                _nodesrc = os.path.join(self.cdsltree,str(node), _expanded)
-                
-                if os.path.exists(self.src):
-                    self.logger.debug("Copying " + self.src + " => " + _nodesrc + "...")
-                    #if force is set and target directory already exists, remove it
-                    if force:
-                        try:
-                            ComSystem.execMethod(self._removePath,_nodesrc)
-                        except IOError:
-                            pass
-                    if not os.path.exists(os.path.dirname(_nodesrc)):
-                        ComSystem.execMethod(os.makedirs,os.path.dirname(_nodesrc))
-                    if os.path.isdir(self.src):
-                        #Cannot use copytree here because of problems when copying sockets
-                        #self.logger.debug("copytree " + _rootMountpointSrc + " => " + _rootMountpointCdsltreeNodeSrc)
-                        #shutil.copytree(_rootMountpointSrc,_rootMountpointCdsltreeNodeSrc,True)
-                        ComSystem.execLocalStatusOutput("cp -a " + self.src + " " + _nodesrc)
-                        
-                    elif os.path.isfile(self.src):                  
-                        #copy given source to cdsl-directories
-                        ComSystem.execMethod(shutil.copy2,self.src,_nodesrc)
-                else:
-                    #if given src is not a existing file/directory, create empty file with given path
-                    ComSystem.execMethod(self._createEmptyFile,_nodesrc,force)
-            
-            #####
-            # Backup source to source.orig
-            # if force is not set and no dummyfile was created
-            # remove source
-            #####
-            if os.path.exists(self.src):
-                if force == False:
-                    self.logger.debug("Moving " + self.src + " => " + self.src + ".orig...")
-                    ComSystem.execMethod(shutil.move,self.src,self.src + ".orig")
-                else:
-                    if force:
-                        ComSystem.execMethod(self._removePath,self.src)
-        
-            #####
-            # Update needed symbolic links
-            #####
-            
-#            _path.pushd(os.path.dirname(self.src))            
-            _linkpath = os.path.join(_relativepath, self.cdsl_link,_expanded)
+                # in case of shared we need to move or remove the files which are changed from hd to shared.
+                if not once:
+                    self.logger.debug("Copying hd files once from " + self.src + " =>" + destpath)
+                    ComSystem.execLocalStatusOutput("cp -a %s %s" %(self.src, destpath))
+                    once=True
 
-            self.logger.debug("Creating needed symbolic links %s->%s workingdir: %s" %(os.path.normpath(_linkpath), self.src, self.cdslRepository.workingdir))
-            ComSystem.execMethod(os.symlink, os.path.normpath(_linkpath), self.src)
-#            _path.popd()
-        #####_
-        # if type of cdsl is wheater shared nor hostdependent, a error has been accured
-        #####
-        else:
-            _path.popd()
-            raise CdslUnsupportedTypeException(self.type + " is not a supported cdsl type.")
+        # createdefault destination
+#        if self.isHostdependent():
+#            self.logger.debug("Copy Files: " + self.src + " => " + os.path.join(self.cdslRepository.getTree(), self.cdslRepository.getDefaultPath()))
+#            ComSystem.execLocalStatusOutput("cp -a " + self.src + " " + self.cdslRepository.getDefaultPath())
+
+        if self.isHostdependent():
+            if force:
+                self.logger.debug("Removing oldfile %s" %self.src)
+                ComSystem.execLocalStatusOutput("rm -rf %s" %self.src)
+            elif not force:
+                self.logger.debug("Moving %s => %s.orig" %(self.src, self.src))
+                ComSystem.execLocalStatusOutput("mv %s %s.orig" %(self.src, self.src))
         
-        #####
-        # Update inventoryfile
-        # same procedure for changed and new hostdependent/shared cdsls
-        #####
+        # Now create the symlinks
+        for sourcepath in self.getSourcePaths():
+            self.logger.debug("Creating Link: %s" %sourcepath)
+            if self.isShared():
+                # Either backup or remove!
+                if not force:
+                    self.logger.debug("Backup Files: " + sourcepath + " => " + sourcepath + ".orig")
+                    ComSystem.execLocalStatusOutput("mv " + sourcepath + " " + sourcepath + ".orig")
+                else:
+                    self.logger.debug("Remove Files: " + sourcepath)
+                    if os.path.isfile(sourcepath):
+                        ComSystem.execMethod(os.remove, sourcepath)
+                    else:
+                        ComSystem.execMethod(shutil.rmtree, sourcepath)
+                src=os.path.join(_relativepath, self.cdslRepository.getSharedTreepath(), self.cdslRepository.expandCdsl(self))
+                dest=sourcepath
+            elif self.isHostdependent():
+                src=os.path.join(_relativepath, self.cdslRepository.getLinkPath(), self.cdslRepository.expandCdsl(self))
+                dest=sourcepath
+            ComSystem.execMethod(os.symlink, src, dest)
         _path.popd()
-        self.logger.debug("Updating cdsl-inventoryfile")
+                            
         return ComSystem.execMethod(self.cdslRepository.commit,self)
     
     def delete(self,recursive=True,force=True):
@@ -897,7 +828,10 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.16  2010-02-09 21:45:58  marc
+# Revision 1.17  2010-02-15 12:54:06  marc
+# - fixed bugs with nested cdsls not being working
+#
+# Revision 1.16  2010/02/09 21:45:58  marc
 # fixed bug 370 and 371.
 # Where cdsl on cdsl of same type could not be created.
 #
