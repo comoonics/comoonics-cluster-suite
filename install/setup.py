@@ -6,7 +6,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.8 2010-02-12 10:13:09 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.9 2010-02-15 13:53:50 marc Exp $"
 
 from distutils.core import setup
 import sys, os, string
@@ -987,7 +987,8 @@ Those are classes used by more other packages.
                        "comoonics.lockfile",
                        "comoonics.odict",
                        "comoonics.stabilized",
-                       "comoonics.XMLConfigParser" ],
+                       "comoonics.XMLConfigParser",
+                       "comoonics.ComSystemInformation" ],
       "scripts":       [ "bin/stabilized" ],
     },
     "mgrep": {

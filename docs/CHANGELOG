@@ -52,6 +52,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Mon Feb 15 2010 MG <grimme@atix.de>, 0.2-21
+  - fixed bug with nested cdsls not being working.
 * Tue Feb 09 2010 MG <grimme@atix.de>, 0.2-20
   - fixed bug that two cdsls of the same type cannot be created underneath each other.
 * Mon Feb 08 2010 MG <grimme@atix.de>, 0.2-19
@@ -504,6 +506,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-tools-py
+* Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-5
+ - added ComSystemInformation
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-4
   - added autopath update to also work with SLES
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
