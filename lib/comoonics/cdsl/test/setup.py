@@ -27,24 +27,63 @@ class SetupCluster:
         self.clusterRepository = ClusterRepository(doc.documentElement,doc)
         self.clusterinfo = ClusterInfo(self.clusterRepository)
 
-class SetupCDSLRepository:
+class SetupBase(object):
+    results={ "hd": (
+                     "hd", 
+                     True, 
+                     [u'hd'],  # sourcepath
+                     [u'.cluster/cdsl/1/hd', u'.cluster/cdsl/3/hd', u'.cluster/cdsl/2/hd', u'.cluster/cdsl/default/hd'], 
+                     []
+                     ),
+              "hd/sd": (
+                        "hd/sd", 
+                        False, 
+                        [u'.cluster/cdsl/1/hd/sd', u'.cluster/cdsl/3/hd/sd', u'.cluster/cdsl/2/hd/sd', u'.cluster/cdsl/default/hd/sd'],
+                        [u'.cluster/shared/hd/sd'], 
+                        [u'.cluster/shared/hd']
+                        ), 
+              "hd/sd/hf": (
+                           "hd/.cdsl.sd/hf", 
+                           True, 
+                           [u'.cluster/shared/hd/sd/hf'], # sourcepath 
+                           [u'.cluster/cdsl/1/hd/.cdsl.sd/hf', u'.cluster/cdsl/3/hd/.cdsl.sd/hf', u'.cluster/cdsl/2/hd/.cdsl.sd/hf', u'.cluster/cdsl/default/hd/.cdsl.sd/hf'], 
+                           [u'.cluster/cdsl/1/hd/.cdsl.sd', u'.cluster/cdsl/3/hd/.cdsl.sd', u'.cluster/cdsl/2/hd/.cdsl.sd', u'.cluster/cdsl/default/hd/.cdsl.sd']
+                           ),
+              "hd/sd/hd": (
+                           "hd/.cdsl.sd/hd", 
+                           True, 
+                           [u'.cluster/shared/hd/sd/hd'], # sourcepath 
+                           [u'.cluster/cdsl/1/hd/.cdsl.sd/hd', u'.cluster/cdsl/3/hd/.cdsl.sd/hd', u'.cluster/cdsl/2/hd/.cdsl.sd/hd', u'.cluster/cdsl/default/hd/.cdsl.sd/hd'], 
+                           [u'.cluster/cdsl/1/hd/.cdsl.sd', u'.cluster/cdsl/3/hd/.cdsl.sd', u'.cluster/cdsl/2/hd/.cdsl.sd', u'.cluster/cdsl/default/hd/.cdsl.sd']
+                           ),
+              "hd/sd/hd/sd": (
+                              "hd/sd/.cdsl.hd/sd", 
+                              False, 
+                              [u'.cluster/cdsl/1/hd/.cdsl.sd/hd/sd', u'.cluster/cdsl/3/hd/.cdsl.sd/hd/sd', u'.cluster/cdsl/2/hd/.cdsl.sd/hd/sd', u'.cluster/cdsl/default/hd/.cdsl.sd/hd/sd'], 
+                              [u'.cluster/shared/hd/sd/.cdsl.hd/sd'], 
+                              [u'.cluster/shared/hd/sd/.cdsl.hd']
+                              ),
+              "hd/sd/hd/sf": (
+                              "hd/sd/.cdsl.hd/sf", 
+                              False, 
+                              [u'.cluster/cdsl/1/hd/.cdsl.sd/hd/sf', u'.cluster/cdsl/3/hd/.cdsl.sd/hd/sf', u'.cluster/cdsl/2/hd/.cdsl.sd/hd/sf', u'.cluster/cdsl/default/hd/.cdsl.sd/hd/sf'], 
+                              [u'.cluster/shared/hd/sd/.cdsl.hd/sf'], 
+                              [u'.cluster/shared/hd/sd/.cdsl.hd']
+                              ),
+#                  "hd/sd/hd/sd/hd": ("hd/.cdsl.sd/hd/.cdsl.sd/hd", True),
+#                      "hd/sd/hd/sd/hf": ("hd/.cdsl.sd/hd/.cdsl.sd/hf", True),
+#                      "ne": ("ne", None),
+#                      "hd/ne": ("hd/ne", None),
+#                      "hd/sd/ne": ("hd/sd/ne", None),
+#                      "hd/sd/hd/ne": ("hd/.cdsl.sd/hd/ne", None),
+#                      "hd/sd/hd/sd/ne": ("hd/sd/.cdsl.hd/sd/ne", None),
+                     }
+
+class SetupCDSLRepository(SetupBase):
     def __init__(self, clusterinfo):
+        super(SetupCDSLRepository, self).__init__()
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         import shutil
-        self.results={ "hd": ("hd", True),
-                      "hd/sd": ("hd/sd", False), 
-                      "hd/sd/hf": ("hd/sd.cdsl/hf", True),
-                      "hd/sd/hd": ("hd/sd.cdsl/hd", True),
-                      "hd/sd/hd/sd": ("hd/sd/hd.cdsl/sd", False),
-                      "hd/sd/hd/sf": ("hd/sd/hd.cdsl/sf", False),
-                      "hd/sd/hd/sd/hd": ("hd/sd.cdsl/hd/sd.cdsl/hd", True),
-                      "hd/sd/hd/sd/hf": ("hd/sd.cdsl/hd/sd.cdsl/hf", True),
-                      "ne": ("ne", None),
-                      "hd/ne": ("hd/ne", None),
-                      "hd/sd/ne": ("hd/sd/ne", None),
-                      "hd/sd/hd/ne": ("hd/sd.cdsl/hd/ne", None),
-                      "hd/sd/hd/sd/ne": ("hd/sd/hd.cdsl/sd/ne", None),
-                     }
         os.mkdir(os.path.join(tmppath, "repo2"))
         os.mkdir(os.path.join(tmppath, "repo2/repo3"))
         os.mkdir(os.path.join(tmppath, "repo4"))
@@ -81,13 +120,14 @@ class SetupCDSLRepository:
         shutil.rmtree(os.path.join(tmppath, "repo7"))
         os.rmdir(os.path.join(tmppath, "repo8"))
             
-class SetupCDSLs:
+class SetupCDSLs(SetupBase):
     def __init__(self, repository, mynodeid="1"):
         """
         Method to check if Module handels nested cdsls correctly. Creates a nested 
         cdsl-structure and check every single cdsl for existance. Creates a cdsl-object 
         without commiting it to filesystem to check if exists()-method fails correctly.
         """
+        super(SetupCDSLs, self).__init__()
 
         #create cluster objects
         # create cdsl objects
@@ -95,56 +135,6 @@ class SetupCDSLs:
         self._createCDSLFiles(tmppath)
         self.mynodeid=mynodeid
         # cdslname: { expanded, HD/Shareed, sourcepaths, destpaths, subpaths
-        self.results={ "hd": (
-                              "hd", 
-                              True, 
-                              [u'hd'],  # sourcepath
-                              [u'.cluster/cdsl/1/hd', u'.cluster/cdsl/3/hd', u'.cluster/cdsl/2/hd', u'.cluster/cdsl/default/hd'], 
-                              []
-                              ),
-                      "hd/sd": (
-                                "hd/sd", 
-                                False, 
-                                [u'.cluster/cdsl/1/hd/sd', u'.cluster/cdsl/3/hd/sd', u'.cluster/cdsl/2/hd/sd', u'.cluster/cdsl/default/hd/sd'],
-                                [u'.cluster/shared/hd/sd'], 
-                                [u'.cluster/shared/hd']
-                                 ), 
-                      "hd/sd/hf": (
-                                   "hd/sd.cdsl/hf", 
-                                   True, 
-                                   [u'.cluster/shared/hd/sd/hf'], # sourcepath 
-                                   [u'.cluster/cdsl/1/hd/sd.cdsl/hf', u'.cluster/cdsl/3/hd/sd.cdsl/hf', u'.cluster/cdsl/2/hd/sd.cdsl/hf', u'.cluster/cdsl/default/hd/sd.cdsl/hf'], 
-                                   [u'.cluster/cdsl/1/hd/sd.cdsl', u'.cluster/cdsl/3/hd/sd.cdsl', u'.cluster/cdsl/2/hd/sd.cdsl', u'.cluster/cdsl/default/hd/sd.cdsl']
-                                   ),
-                      "hd/sd/hd": (
-                                   "hd/sd.cdsl/hd", 
-                                   True, 
-                                   [u'.cluster/shared/hd/sd/hd'], # sourcepath 
-                                   [u'.cluster/cdsl/1/hd/sd.cdsl/hd', u'.cluster/cdsl/3/hd/sd.cdsl/hd', u'.cluster/cdsl/2/hd/sd.cdsl/hd', u'.cluster/cdsl/default/hd/sd.cdsl/hd'], 
-                                   [u'.cluster/cdsl/1/hd/sd.cdsl', u'.cluster/cdsl/3/hd/sd.cdsl', u'.cluster/cdsl/2/hd/sd.cdsl', u'.cluster/cdsl/default/hd/sd.cdsl']
-                                   ),
-                      "hd/sd/hd/sd": (
-                                      "hd/sd/hd.cdsl/sd", 
-                                      False, 
-                                      [u'.cluster/cdsl/1/hd/sd.cdsl/hd/sd', u'.cluster/cdsl/3/hd/sd.cdsl/hd/sd', u'.cluster/cdsl/2/hd/sd.cdsl/hd/sd', u'.cluster/cdsl/default/hd/sd.cdsl/hd/sd'], 
-                                      [u'.cluster/shared/hd/sd/hd.cdsl/sd'], 
-                                      [u'.cluster/shared/hd/sd/hd.cdsl']
-                                      ),
-                      "hd/sd/hd/sf": (
-                                      "hd/sd/hd.cdsl/sf", 
-                                      False, 
-                                      [u'.cluster/cdsl/1/hd/sd.cdsl/hd/sf', u'.cluster/cdsl/3/hd/sd.cdsl/hd/sf', u'.cluster/cdsl/2/hd/sd.cdsl/hd/sf', u'.cluster/cdsl/default/hd/sd.cdsl/hd/sf'], 
-                                      [u'.cluster/shared/hd/sd/hd.cdsl/sf'], 
-                                      [u'.cluster/shared/hd/sd/hd.cdsl']
-                                      ),
-#                      "hd/sd/hd/sd/hd": ("hd/sd.cdsl/hd/sd.cdsl/hd", True),
-#                      "hd/sd/hd/sd/hf": ("hd/sd.cdsl/hd/sd.cdsl/hf", True),
-#                      "ne": ("ne", None),
-#                      "hd/ne": ("hd/ne", None),
-#                      "hd/sd/ne": ("hd/sd/ne", None),
-#                      "hd/sd/hd/ne": ("hd/sd.cdsl/hd/ne", None),
-#                      "hd/sd/hd/sd/ne": ("hd/sd/hd.cdsl/sd/ne", None),
-                     }
     
     def _createCDSLFiles(self, _tmppath):
         from comoonics.cdsl import cmpbysubdirs

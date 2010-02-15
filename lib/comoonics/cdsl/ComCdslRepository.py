@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 
 import fcntl # needed for filelocking
 import re
@@ -913,14 +913,14 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         Examples:
           h                   => l/h                      depth<h>=1
           h/s                 => st/h/s                   depth<h>=1
-          h/s/h               => l/h/s.c/h                depth<h>=2   expandcount=1
-          h/s/h/s             => st/h/s/h.c/s             depth<h>=2   expandcount=1
-          h/s/h/s/h           => l/h/s.c/h/s.c/h          depth<h>=2   expandcount=2
+          h/s/h               => l/h/c.s/h                depth<h>=2   expandcount=1
+          h/s/h/s             => st/h/s/c.h/s             depth<h>=2   expandcount=1
+          h/s/h/s/h           => l/h/c.s/h/c.s/h          depth<h>=2   expandcount=2
           t/h                 => l/t/h
           t/h/t/s             => st/t/h/t/s
-          t/h/t/s/t/h         => l/t/h/t/s.c/t/h
-          t/h/t/s/t/h/t/s     => s/t/h/t/s/t/h.c/t/s
-          t/h/t/s/t/h/t/s/t/h => l/t/h/t/s.c/t/h/t/s.c/t/h
+          t/h/t/s/t/h         => l/t/h/t/c.s/t/h
+          t/h/t/s/t/h/t/s     => s/t/h/t/s/t/c.h/t/s
+          t/h/t/s/t/h/t/s/t/h => l/t/h/t/c.s/t/h/t/c.s/t/h
           ..
         @param _cdsl: the cdsl.
         @type _cdsl: comoonics.cdsl.ComCdsl.Cdsl|string
@@ -948,7 +948,8 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         parent=cdsl.getParent()
         while parent != None:
             if parent != None and parent.getParent() != None and cdsl.type != parent.type:
-                tmppath="%s%s%s" %(parent.src, self.getExpandString(), strippath(tmppath, parent.src))
+                (_phead, _ptail)=os.path.split(parent.src)
+                tmppath=os.path.join(_phead, "%s.%s" %(self.getExpandString(), stripleadingsep(_ptail)), stripleadingsep(strippath(tmppath, parent.src)))
             parent=parent.getParent()
         
         return tmppath
@@ -957,7 +958,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         """
         Returns True if this path is and expanded path
         """
-        return _expanded.find(self.getExpandString()) > 0 # and self.hasCdsl(_expanded.replace(self.getExpandString(), ""))
+        return _expanded.find(self.getExpandString()) >= 0 # and self.hasCdsl(_expanded.replace(self.getExpandString(), ""))
 
     def setTreePath(self, value):
         self.setAttribute(self.cdsls_tree_attribute, value)
