@@ -2,7 +2,7 @@
 """
 Binary to query clusterconfiguration
 """
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -336,22 +336,28 @@ for token in parser:
 #            parser.get_token()
     
         else:
-            raise NameError("Cannot find query named " + query+ ", command: " + " ".join(sys.argv))
+            raise NameError("Cannot find query named " + query)
 
         if result:
             logger.debug("result: %s" %result)
             sys.stdout.write("%s" %options.prefix)
             printResult(result, options, params)
             sys.stdout.write("%s" %options.suffix)
-    except e:
-        sys.stderr.write("Error %s during query %s. Command: %s" %(e, query, " ".join(sys.argv)))
+    except Exception, e:
+        sys.stderr.write("""Error: %s 
+During query: %s. 
+Command: %s
+""" %(e, query, " ".join(sys.argv)))
         ComLog.debugTraceLog()
     if parser:
         step2nextquery(parser)
 
 ###########
 # $Log: com-queryclusterconf,v $
-# Revision 1.18  2010-02-16 10:29:34  marc
+# Revision 1.19  2010-02-16 10:37:36  marc
+# fixed error handling
+#
+# Revision 1.18  2010/02/16 10:29:34  marc
 # added logging.basicConfig()
 #
 # Revision 1.17  2010/02/05 12:25:27  marc
