@@ -7,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.32 2010-02-12 10:13:38 marc Exp $
+# $Id: com-ec,v 1.33 2010-02-16 10:29:34 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.32 $"
+__version__ = "$Revision: 1.33 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -43,6 +43,8 @@ values=dict()
 
 XSLT_PATH="/opt/atix/comoonics-cs/xsl"
 DEFAULT_XSLT="comoonics-enterprise-copy.xsl"
+
+logging.basicConfig()
 
 ComSystem.__EXEC_REALLY_DO=""
 __logStrLevel__="com-ec"
@@ -238,7 +240,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.32  2010-02-12 10:13:38  marc
+# Revision 1.33  2010-02-16 10:29:34  marc
+# added logging.basicConfig()
+#
+# Revision 1.32  2010/02/12 10:13:38  marc
 # synchronized
 #
 # Revision 1.31  2010/02/10 13:17:51  mark

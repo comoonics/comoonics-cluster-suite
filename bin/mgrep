@@ -32,6 +32,7 @@ import logging
 from threading import Lock
 from optparse import OptionParser, IndentedHelpFormatter
 from comoonics import ComLog
+logging.basicConfig()
 
 __version__="$Revision: 1.1 $"
 logging.basicConfig()

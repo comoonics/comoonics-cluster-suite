@@ -5,11 +5,12 @@ Contains deleting of symbolic links and content of cdsl.
 !!ATTENTION!!
    You can remove data with that program. Use on your own risk!
 """
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 
 import getopt
 import sys
 import logging
+logging.basicConfig()
 
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))

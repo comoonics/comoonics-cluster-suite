@@ -6,6 +6,7 @@ Background is to have a tool checking if a file has not changed in content, by p
 for some time.
 """
 import logging
+logging.basicConfig()
 import os, sys
 
 import os.path

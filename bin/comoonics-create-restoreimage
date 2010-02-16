@@ -17,6 +17,7 @@ Comoonics Assistant to create a Comoonics desaster recovery dvd
 import sys
 import logging
 from optparse import OptionParser, IndentedHelpFormatter
+logging.basicConfig()
 
 sys.path.append("../lib")
 

@@ -1,3 +1,4 @@
+logging.basicConfig()
 #!/usr/bin/python
 """Com.oonics Livecd admin
 
@@ -5,10 +6,10 @@
 """
 
 # here is some internal information
-# $Id: com-livecd-admin.py,v 1.3 2009-10-08 09:34:49 marc Exp $
+# $Id: com-livecd-admin.py,v 1.4 2010-02-16 10:29:34 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 __description__="""
 Comoonics LiveCD administrators utility
 """
@@ -17,6 +18,7 @@ Comoonics LiveCD administrators utility
 import sys
 import logging
 from optparse import OptionParser, IndentedHelpFormatter
+logging.basicConfig()
 
 sys.path.append("../lib")
 import os.path

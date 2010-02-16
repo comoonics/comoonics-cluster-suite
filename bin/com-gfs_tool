@@ -17,6 +17,7 @@ lockdumpFormater [mountpoint] outputs the lockdump by the given writer or defaul
 import sys
 import logging
 import logging.handlers
+logging.basicConfig()
 
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))

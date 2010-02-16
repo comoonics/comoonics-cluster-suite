@@ -20,6 +20,7 @@ from comoonics import GetOpts
 from comoonics.scsi import ComSCSI
 
 import logging
+logging.basicConfig()
 
 ComLog.setLevel(logging.INFO)
 

@@ -2,7 +2,7 @@
 """
 Binary to query clusterconfiguration
 """
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -174,180 +174,187 @@ paramsparsestring="\%\([a-zA-Z0-9_]+\)"
 for token in parser:
     query=token
     logger.debug("query: %s" %(query))
-    if query.startswith("query="):
-        query=query[len("query="):]
-    #query given file with specified query, returns xml
-    if query == "query_xml":
-        if options.seperator==None:
-            options.seperator="\n"
-        result=clusterInfo.queryXml(parser.get_token())
+    try:
+        if query.startswith("query="):
+            query=query[len("query="):]
+        #query given file with specified query, returns xml
+        if query == "query_xml":
+            if options.seperator==None:
+                options.seperator="\n"
+            result=clusterInfo.queryXml(parser.get_token())
     
-    #query given file with specified query, returns value
-    elif query == "query_value":
-        if options.seperator==None:
-            options.seperator=" "
-        result=clusterInfo.queryValue(parser.get_token())
+        #query given file with specified query, returns value
+        elif query == "query_value":
+            if options.seperator==None:
+                options.seperator=" "
+            result=clusterInfo.queryValue(parser.get_token())
 
-    #print clusters network devices by name, separated by value of options.netdevs    
-    elif query == "netdevs":
-        result = []
-        if options.seperator==None:
-            options.seperator=" "
-        key=parser.get_token()
-        try:
-            node=clusterInfo.getNode(key)
-        except KeyError:
-            node=clusterInfo.getNodeFromId(key)
+        #print clusters network devices by name, separated by value of options.netdevs    
+        elif query == "netdevs":
+            result = []
+            if options.seperator==None:
+                options.seperator=" "
+            key=parser.get_token()
+            try:
+                node=clusterInfo.getNode(key)
+            except KeyError:
+                node=clusterInfo.getNodeFromId(key)
         
-        for Nic in node.getNics():
-            result.append(Nic.getName())
-
-    #Query Nodename to given mac, raise exception if mac not found
-    elif query == "nodename":
-        result=clusterInfo.getNodeName(parser.get_token())
-    
-    #Query Nodename to given id, raise exception if id not found
-    elif query == "nodenamebyid":
-        result=clusterInfo.getNodeNameById(parser.get_token())
-
-    #Query Nodeid to given mac, raise exception if mac not found
-    elif query == "nodeid":
-        result=clusterInfo.getNodeId(parser.get_token())
-    
-    #print ip of given node and given device
-    elif query == "ip":
-        _node = clusterInfo.getNode(parser.get_token())
-        _nic = _node.getNic(parser.get_token())
-        result=_nic.getIP()
-
-    #print ip of given node and given device
-    elif query == "master":
-        _node = clusterInfo.getNode(parser.get_token())
-        _nic = _node.getNic(parser.get_token())
-        result=_nic.getMaster()
-
-    #print ip of given node and given device
-    elif query == "slave":
-        _node = clusterInfo.getNode(parser.get_token())
-        _nic = _node.getNic(parser.get_token())
-        result=_nic.getSlave()
-
-    #print ip of given node and given device
-    elif query == "mask":
-        _node = clusterInfo.getNode(parser.get_token())
-        _nic = _node.getNic(parser.get_token())
-        result=_nic.getNetmask()
-
-    #print ip of given node and given device
-    elif query == "gateway":
-        _node = clusterInfo.getNode(parser.get_token())
-        _nic = _node.getNic(parser.get_token())
-        result=_nic.getGateway()
-
-    #print list of clusters host with if and name
-    #FIXME: Returns only first ip-address<->name pair of every clusternode to avoid duplicate entries for the same hostname
-    elif query == "hosts":
-        result=[]
-        if options.seperator==None:
-            options.seperator="\n"
-        for node in clusterInfo.getNodes():
             for Nic in node.getNics():
-                if Nic.getIP() != "" and Nic.getIP() != "dhcp":
-                    result.append("%s \t%s" %(Nic.getIP(), node.getName()))
+                result.append(Nic.getName())
+
+        #Query Nodename to given mac, raise exception if mac not found
+        elif query == "nodename":
+            result=clusterInfo.getNodeName(parser.get_token())
+    
+        #Query Nodename to given id, raise exception if id not found
+        elif query == "nodenamebyid":
+            result=clusterInfo.getNodeNameById(parser.get_token())
+
+        #Query Nodeid to given mac, raise exception if mac not found
+        elif query == "nodeid":
+            result=clusterInfo.getNodeId(parser.get_token())
+    
+        #print ip of given node and given device
+        elif query == "ip":
+            _node = clusterInfo.getNode(parser.get_token())
+            _nic = _node.getNic(parser.get_token())
+            result=_nic.getIP()
+
+        #print ip of given node and given device
+        elif query == "master":
+            _node = clusterInfo.getNode(parser.get_token())
+            _nic = _node.getNic(parser.get_token())
+            result=_nic.getMaster()
+
+        #print ip of given node and given device
+        elif query == "slave":
+            _node = clusterInfo.getNode(parser.get_token())
+            _nic = _node.getNic(parser.get_token())
+            result=_nic.getSlave()
+
+        #print ip of given node and given device
+        elif query == "mask":
+            _node = clusterInfo.getNode(parser.get_token())
+            _nic = _node.getNic(parser.get_token())
+            result=_nic.getNetmask()
+
+        #print ip of given node and given device
+        elif query == "gateway":
+            _node = clusterInfo.getNode(parser.get_token())
+            _nic = _node.getNic(parser.get_token())
+            result=_nic.getGateway()
+
+        #print list of clusters host with if and name
+        #FIXME: Returns only first ip-address<->name pair of every clusternode to avoid duplicate entries for the same hostname
+        elif query == "hosts":
+            result=[]
+            if options.seperator==None:
+                options.seperator="\n"
+            for node in clusterInfo.getNodes():
+                for Nic in node.getNics():
+                    if Nic.getIP() != "" and Nic.getIP() != "dhcp":
+                        result.append("%s \t%s" %(Nic.getIP(), node.getName()))
+                        break
+
+        #print ifconfig for given mac, raise exception if mac not found
+        elif query == "ifconfig":
+            if options.seperator==None:
+                options.seperator=" "
+
+            _mac=parser.get_token()
+            for node in clusterInfo.getNodes():
+                if node.nicMac.has_key(_mac):
+                    _nic = node.nicMac[_mac]
+                    result=[ _nic.getName(), _nic.getIP(), _nic.getNetmask() ]
+                    if options.properties:
+                        result.update(_nic.getProperties().list(options.seperator))
                     break
+            if not result:
+                raise ClusterMacNotFoundException("Cannot find ipconfig for mac-address " + _mac)
 
-    #print ifconfig for given mac, raise exception if mac not found
-    elif query == "ifconfig":
-        if options.seperator==None:
-            options.seperator=" "
+        #print rootvolume of node with given name
+        elif query == "rootvolume":
+            result=clusterInfo.getNode(parser.get_token()).getRootvolume()
 
-        _mac=parser.get_token()
-        for node in clusterInfo.getNodes():
-            if node.nicMac.has_key(_mac):
-                _nic = node.nicMac[_mac]
-                result=[ _nic.getName(), _nic.getIP(), _nic.getNetmask() ]
-                if options.properties:
-                    result.update(_nic.getProperties().list(options.seperator))
-                break
-        if not result:
-            raise ClusterMacNotFoundException("Cannot find ipconfig for mac-address " + _mac)
-
-    #print rootvolume of node with given name
-    elif query == "rootvolume":
-        result=clusterInfo.getNode(parser.get_token()).getRootvolume()
-
-    #print rootfs of node with given name
-    elif query == "rootfs":
-        result=clusterInfo.getNode(parser.get_token()).getRootFs()
+        #print rootfs of node with given name
+        elif query == "rootfs":
+            result=clusterInfo.getNode(parser.get_token()).getRootFs()
     
-    #print mount options of node with given name
-    elif query == "mountopts":
-        result=clusterInfo.getNode(parser.get_token()).getMountopts()
+        #print mount options of node with given name
+        elif query == "mountopts":
+            result=clusterInfo.getNode(parser.get_token()).getMountopts()
 
-    #print syslog of node with given name
-    elif query == "syslog":
-        result=clusterInfo.getNode(parser.get_token()).getSyslog()
+        #print syslog of node with given name
+        elif query == "syslog":
+            result=clusterInfo.getNode(parser.get_token()).getSyslog()
 
-    #print failoverdomainnodes belonging to given failoverdomain, seperated by <sep>
-    elif query == "failoverdomainnodes":
-        result=clusterInfo.getFailoverdomainNodes(parser.get_token())
+        #print failoverdomainnodes belonging to given failoverdomain, seperated by <sep>
+        elif query == "failoverdomainnodes":
+            result=clusterInfo.getFailoverdomainNodes(parser.get_token())
 
-    #prints prefered failover node belonging to given failoverdomain
-    elif query == "failoverdomainprefnode":
-        result=clusterInfo.getFailoverdomainPrefNode(parser.get_token())
+        #prints prefered failover node belonging to given failoverdomain
+        elif query == "failoverdomainprefnode":
+            result=clusterInfo.getFailoverdomainPrefNode(parser.get_token())
 
-    #print list of nodeids, seperated by given value
-    elif query == "nodeids":
-        if options.seperator==None:
-            options.seperator=" "
+        #print list of nodeids, seperated by given value
+        elif query == "nodeids":
+            if options.seperator==None:
+                options.seperator=" "
 
-        result = []
-        for node in clusterInfo.getNodes():
-            result.append(node.getId())
+            result = []
+            for node in clusterInfo.getNodes():
+                result.append(node.getId())
 
-    #print scsifailover of node with given name
-    elif query == "scsifailover":
-        result=clusterInfo.getNode(parser.get_token()).getScsifailover()
+        #print scsifailover of node with given name
+        elif query == "scsifailover":
+            result=clusterInfo.getNode(parser.get_token()).getScsifailover()
     
-    elif query == "convert":
-        result=clusterInfo.clusterRepository.convert(parser.get_token())
+        elif query == "convert":
+            result=clusterInfo.clusterRepository.convert(parser.get_token())
 
-    elif clusterQueryMap.has_option(clusterQueryMap.mainsection, query):
-        import re
-        querymethod=getattr(clusterInfo, "queryValue")
-        if options.seperator==None:
-            options.seperator=" "
+        elif clusterQueryMap.has_option(clusterQueryMap.mainsection, query):
+            import re
+            querymethod=getattr(clusterInfo, "queryValue")
+            if options.seperator==None:
+                options.seperator=" "
 
-        if options.evalparams:
-            params = clusterQueryMap.array2params(parserQueryParams(parser))
+            if options.evalparams:
+                params = clusterQueryMap.array2params(parserQueryParams(parser))
 
-        _query=clusterQueryMap.get(clusterQueryMap.mainsection, query)
-        count=len(re.findall(paramsparsestring, _query))
-        if _query.startswith("xml:"):
-            _query=_query[len("xml:"):]
-            querymethod=getattr(clusterInfo, "queryXml")
+            _query=clusterQueryMap.get(clusterQueryMap.mainsection, query)
+            count=len(re.findall(paramsparsestring, _query))
+            if _query.startswith("xml:"):
+                _query=_query[len("xml:"):]
+                querymethod=getattr(clusterInfo, "queryXml")
 
-        if params:
-            _query=_query % params
-        result=querymethod(_query)
+            if params:
+                _query=_query % params
+            result=querymethod(_query)
 #            
 #        for i in range(count):
 #            parser.get_token()
     
-    else:
-        raise NameError("Cannot find query named " + query+ ", command: " + " ".join(sys.argv))
+        else:
+            raise NameError("Cannot find query named " + query+ ", command: " + " ".join(sys.argv))
 
-    if result:
-        logger.debug("result: %s" %result)
-        sys.stdout.write("%s" %options.prefix)
-        printResult(result, options, params)
-        sys.stdout.write("%s" %options.suffix)
+        if result:
+            logger.debug("result: %s" %result)
+            sys.stdout.write("%s" %options.prefix)
+            printResult(result, options, params)
+            sys.stdout.write("%s" %options.suffix)
+    except e:
+        sys.stderr.write("Error %s during query %s. Command: %s" %(e, query, " ".join(sys.argv)))
+        ComLog.debugTraceLog()
     if parser:
         step2nextquery(parser)
 
 ###########
 # $Log: com-queryclusterconf,v $
-# Revision 1.17  2010-02-05 12:25:27  marc
+# Revision 1.18  2010-02-16 10:29:34  marc
+# added logging.basicConfig()
+#
+# Revision 1.17  2010/02/05 12:25:27  marc
 # - implemented properties output
 # - added querymap to be working
 # - more fuzzy

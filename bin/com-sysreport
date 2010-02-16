@@ -28,6 +28,7 @@ from comoonics.ComPath import Path
 
 import tempfile
 import logging
+logging.basicConfig()
 
 ComSystem.__EXEC_REALLY_DO=""
 ComLog.setLevel(logging.INFO)

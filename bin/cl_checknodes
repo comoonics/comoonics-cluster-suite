@@ -26,6 +26,8 @@ import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 sys.path.append("../lib")
 
+logging.basicConfig()
+
 from comoonics.cluster import parseClusterConf
 from comoonics import ComSystem, ComLog
 from xml import xpath

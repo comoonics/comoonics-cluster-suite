@@ -5,10 +5,10 @@
 """
 
 # here is some internal information
-# $Id: com-ec-administrator-tui.py,v 1.4 2009-10-08 09:34:49 marc Exp $
+# $Id: com-ec-administrator-tui.py,v 1.5 2010-02-16 10:29:34 marc Exp $
 #
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 __description__="""
 Comoonics Assistant to create a Comoonics desaster recovery dvd
 """
@@ -17,6 +17,7 @@ Comoonics Assistant to create a Comoonics desaster recovery dvd
 import sys
 import logging
 from optparse import OptionParser, IndentedHelpFormatter
+logging.basicConfig()
 
 sys.path.append("../lib")
 import os.path

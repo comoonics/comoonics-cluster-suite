@@ -35,6 +35,7 @@ from threading import activeCount
 # RHEL3 doesn't have a logging module
 try:
    import logging
+   logging.basicConfig()
 except ImportError:
    import sos.rhel3_logging
    logging = sos.rhel3_logging

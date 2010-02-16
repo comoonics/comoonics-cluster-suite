@@ -26,6 +26,7 @@ from comoonics import GetOpts
 import logging.handlers
 
 import logging
+logging.basicConfig()
 
 ComLog.setLevel(logging.INFO)
 
