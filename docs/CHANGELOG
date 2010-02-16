@@ -11,6 +11,8 @@ WARNING:
 CHANGES:
 
 comoonics-assistant-py:
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-5
+  - added logging.basicConfig
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-4
   - added autopath update to also work with SLES
 * Fri Nov 14 2008 MH <hlawatschek@atix.de>, 0.1-3
@@ -52,6 +54,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-cdsl-py:
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.2-22
+  - added logging.basicConfig
 * Mon Feb 15 2010 MG <grimme@atix.de>, 0.2-21
   - fixed bug with nested cdsls not being working.
 * Tue Feb 09 2010 MG <grimme@atix.de>, 0.2-20
@@ -111,6 +115,9 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-24
+  - added logging.basicConfig
+  - catching exceptions and being more helpfull
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-23
    - new upstream version
 * Wed Jul 22 2009 MG <grimme@atix.de>, 0.1-22
@@ -159,6 +166,8 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-7
+  - added logging.basicConfig
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-6
   - moved pexpect and pxssh to cluster.tools
   - fixed imports in pexpect
@@ -330,6 +339,8 @@ comoonics-db-py
    initial revision
   
 comoonics-dr-py:
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-6
+  - added logging.basicConfig
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-5
   - added autopath update to also work with SLES
 * Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-4
@@ -338,7 +349,9 @@ comoonics-dr-py:
   - initial revision
 
 comoonics-ec-py
-* Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-43
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-45
+  - added logging.basicConfig
+* Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-44
 - Fixed import in CatifModificationSet
 * Wed Feb 10 2010 MH <hlawatschek@atix.de>, 0.1-43
 - Removed uneeded debug messages
@@ -460,6 +473,8 @@ comoonics-search-py
   initial revision
 
 comoonics-scsi-py
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-3
+  - added logging.basicConfig
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
   - added autopath update to also work with SLES
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-1:
@@ -506,6 +521,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-tools-py
+* Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-6
+  - added logging.basicConfig
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-5
  - added ComSystemInformation
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-4
