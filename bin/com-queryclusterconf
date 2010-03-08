@@ -2,7 +2,7 @@
 """
 Binary to query clusterconfiguration
 """
-__version__ = "$Revision: 1.19 $"
+__version__ = "$Revision: 1.20 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -342,7 +342,8 @@ for token in parser:
             logger.debug("result: %s" %result)
             sys.stdout.write("%s" %options.prefix)
             printResult(result, options, params)
-            sys.stdout.write("%s" %options.suffix)
+            logger.debug("Suffix: " +options.suffix)
+            sys.stdout.write(""+options.suffix)
     except Exception, e:
         sys.stderr.write("""Error: %s 
 During query: %s. 
@@ -354,7 +355,10 @@ Command: %s
 
 ###########
 # $Log: com-queryclusterconf,v $
-# Revision 1.19  2010-02-16 10:37:36  marc
+# Revision 1.20  2010-03-08 12:42:01  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.19  2010/02/16 10:37:36  marc
 # fixed error handling
 #
 # Revision 1.18  2010/02/16 10:29:34  marc
