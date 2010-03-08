@@ -6,7 +6,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.9 2010-02-15 13:53:50 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.10 2010-03-08 12:46:38 marc Exp $"
 
 from distutils.core import setup
 import sys, os, string
@@ -23,7 +23,7 @@ from distutils import log
 class bdist_rpm_fedora (Command):
 
     description = "create an RPM distribution"
-    slesinconsistentrpms={"PyXML": "pyxml"}
+    slesinconsistentrpms={"PyXML": "pyxml", "python-devel": None }
 
     user_options = [
         ('bdist-base=', None,
@@ -395,13 +395,15 @@ class bdist_rpm_fedora (Command):
             values=list()
             for value in val:
                 if value in self.slesinconsistentrpms:
-                    _filteredvalssles.append(self.slesinconsistentrpms[value])
+                    if self.slesinconsistentrpms[value] != None:
+                        _filteredvalssles.append(self.slesinconsistentrpms[value])
                     _filteredvalselse.append(value)
                 else:
                     _vals.append(value)
         elif val is not None:
             if val in self.slesinconsistentrpms:
-                _filteredvalssles.append(self.slesinconsistentrpms[val])
+                if self.slesinconsistentrpms[val] != None:
+                    _filteredvalssles.append(self.slesinconsistentrpms[val])
                 _filteredvalselse.append(val)
         else:
                 _vals.append(val)
@@ -478,7 +480,7 @@ class bdist_rpm_fedora (Command):
             val = getattr(self, string.lower(field))
             
             filteredvalssles=None
-            if string.lower(field) == "requires":
+            if string.lower(field) == "requires" or string.lower(field) == "build_requires":
                 filteredvalssles, filteredvalselse, val = self._filterdistdepField(string.lower(field), val)
             if type(val) is ListType:
                 spec_file.append('%s: %s' % (field, string.join(val)))
@@ -500,8 +502,25 @@ class bdist_rpm_fedora (Command):
             spec_file.append('Distribution: ' + self.distribution_name)
 
         if self.build_requires:
-            spec_file.append('BuildRequires: ' +
-                             string.join(self.build_requires))
+            filteredvalssles=list()
+            filteredvalselse=list()
+            for val in self.build_requires:
+                list1, list2, val = self._filterdistdepField("", val)
+                filteredvalssles.extend(list1)
+                filteredvalselse.extend(list2)
+            
+            if len(filteredvalselse) > 0:
+                filteredvalssles.extend(val)
+                filteredvalselse.extend(val)
+                spec_file.append("%if %{sles}")
+                if len(filteredvalssles) > 0:
+                    spec_file.append("BuildRequires: %s" %string.join(filteredvalssles))
+                spec_file.append("%else")
+                spec_file.append("BuildRequires: %s" %string.join(filteredvalselse))
+                spec_file.append("%endif")
+            else:
+                spec_file.append('BuildRequires: ' +
+                                 string.join(self.build_requires))
 
         if self.icon:
             spec_file.append('Icon: ' + os.path.basename(self.icon))

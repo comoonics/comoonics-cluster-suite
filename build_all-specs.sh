@@ -32,7 +32,7 @@ for file in $files; do
     echo "Cleaning old builds of package $package"
     find $RPMBUILDDIR -name "${package}*.rpm" -delete
 	echo "Building $package"
-	rpmbuild -bb --define "$define1" --define "$define2" --define "_topdir $RPMBUILDDIR" $file
+	rpmbuild -ba --define "$define1" --define "$define2" --define "_topdir $RPMBUILDDIR" $file
    if [ $? -ne 0 ]; then
    	 failedbuilds="$failedbuilds $package"
 #   	 echo "Failed to build $buildfile"
@@ -48,7 +48,7 @@ fi
 
 packages=""
 for package in $successfullbuilds; do
-   packages="$packages "$(find $RPMBUILDDIR -name "${package}*.rpm" -not -path "*/SRPMS/*")
+   packages="$packages "$(find $RPMBUILDDIR -name "${package}*.rpm")
 done
 
 echo "Packages2sign $packages"
