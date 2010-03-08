@@ -3,12 +3,12 @@ Class for the BackupHandlerImplementation.
 Derives everything from ComArchiv->ArchivHandler. But perhaps in Future some specific Backupmethods are neccesary.
 """
 # here is some internal information
-# $Id: ComBackupHandler.py,v 1.2 2007-04-04 12:45:37 marc Exp $
+# $Id: ComBackupHandler.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
 
 from comoonics import ComLog
-from comoonics.ComArchive import ArchiveHandler, NotImplementedError
+from comoonics.storage.ComArchive import ArchiveHandler
 
 class BackupHandler(ArchiveHandler):
     """
@@ -58,7 +58,10 @@ class BackupHandler(ArchiveHandler):
 
 ########################
 # $Log: ComBackupHandler.py,v $
-# Revision 1.2  2007-04-04 12:45:37  marc
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2007/04/04 12:45:37  marc
 # MMG Backup Legato Integration :
 # - added extractArchive (just for the reference)
 #

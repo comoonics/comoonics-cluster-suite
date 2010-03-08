@@ -7,15 +7,14 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLVMCopyObject.py,v 1.8 2010-02-09 21:48:24 mark Exp $
+# $Id: ComLVMCopyObject.py,v 1.9 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyObject.py,v $
 
 from ComCopyObject import CopyObject
-from comoonics.ComDataObject import DataObject
 from comoonics.storage.ComLVM import VolumeGroup, LinuxVolumeManager
 from comoonics import ComLog
 from comoonics import XmlTools
@@ -76,50 +75,12 @@ class LVMCopyObject(CopyObject):
     def getMetaData(self):
         return self.vg.getElement()
 
-def main():
-    from xml.dom.ext import PrettyPrint
-    from xml.dom.ext.reader import Sax2
-    from comoonics import ComSystem
-    import logging
-    ComLog.setLevel(logging.DEBUG)
-    sourcexml="""
-        <source type="lvm">
-           <volumegroup name='centos' free='32' numlvs='2' attrs='wz--n-' numpvs='1' serial='0' size='3456'>
-              <physicalvolume attr='a-' size='3456' name='/dev/sdf2' free='32' format='lvm2'/>
-              <logicalvolume origin='' size='512' name='swap' attrs='-wi-a-'/>
-              <logicalvolume origin='' size='2912' name='system' attrs='-wi-a-'/>
-           </volumegroup>
-       </source>
-"""
-    destxml="""
-        <destination type="lvm">
-            <volumegroup name="centos_new">
-                <physicalvolume name="/dev/sde"/>
-            </volumegroup>
-        </destination>
-"""
-    print "Testing updateMetData"
-    ComSystem.setExecMode(ComSystem.SIMULATE)
-
-    reader = Sax2.Reader(validate=0)
-    sourcedoc=reader.fromString(sourcexml)
-    destdoc=reader.fromString(destxml)
-    source=CopyObject(sourcedoc.documentElement, sourcedoc)
-    dest=CopyObject(destdoc.documentElement, destdoc)
-    print "Source: %s" %(source)
-    print "Dest: %s" %(dest)
-    dest.updateMetaData(source.getMetaData())
-    print "Updating MetaData..."
-    PrettyPrint(dest.getElement())
-
-if __name__ == '__main__':
-    main()
-
-
-
 #################
 # $Log: ComLVMCopyObject.py,v $
-# Revision 1.8  2010-02-09 21:48:24  mark
+# Revision 1.9  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.8  2010/02/09 21:48:24  mark
 # added .storage path in includes
 #
 # Revision 1.7  2008/02/27 10:50:04  marc

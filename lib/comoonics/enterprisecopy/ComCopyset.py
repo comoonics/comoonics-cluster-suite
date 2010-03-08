@@ -6,20 +6,16 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyset.py,v 1.5 2008-03-12 09:41:25 marc Exp $
+# $Id: ComCopyset.py,v 1.6 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyset.py,v $
-
-import exceptions
 
 from xml.dom import Node
 
 from comoonics.ComDataObject import DataObject
-from comoonics.ComExceptions import ComException
-from comoonics import ComLog
 from comoonics.ComJournaled import JournaledObject
 from comoonics.enterprisecopy.ComRequirement import Requirements
 
@@ -52,12 +48,12 @@ class Copyset(DataObject, Requirements):
                 from ComBootloaderCopyset import BootloaderCopyset
                 cls=BootloaderCopyset
             elif __type=="storage":
-                from comoonics.storage.ComStorageCopyset import StorageCopyset
+                from comoonics.enterprisecopy.ComStorageCopyset import StorageCopyset
                 cls=StorageCopyset
             elif _copyset_registry.has_key(__type):
                 cls=_copyset_registry[__type]
             else:
-                raise exceptions.NotImplementedError()
+                raise NotImplementedError()
         return object.__new__(cls, args, kwds)
 
     def __init__(self, element, doc):
@@ -111,7 +107,10 @@ class CopysetJournaled(Copyset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComCopyset.py,v $
-# Revision 1.5  2008-03-12 09:41:25  marc
+# Revision 1.6  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.5  2008/03/12 09:41:25  marc
 # support for a more general constructor
 #
 # Revision 1.4  2007/09/07 14:36:07  marc

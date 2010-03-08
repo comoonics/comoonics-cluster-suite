@@ -7,43 +7,41 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.10 2010-02-09 21:48:24 mark Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.11 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
-
-from xml import xpath
 
 from comoonics.storage.ComDevice import Device
 from comoonics.storage import ComFileSystem
-from comoonics.storage.ComFileSystem import FileSystem
 from comoonics.storage.ComMountpoint import MountPoint
 from ComCopyObject import CopyObjectJournaled
-from comoonics.ComExceptions import *
+from comoonics.ComExceptions import ComException
 from comoonics import ComLog
 
 class FilesystemCopyObject(CopyObjectJournaled):
     __logStrLevel__="FilesystemCopyObject"
     log=ComLog.getLogger(__logStrLevel__)
 
-    """ Base Class for all source and destination objects"""
+    # Base Class for all source and destination objects"""
     def __init__(self, element, doc):
         CopyObjectJournaled.__init__(self, element, doc)
+        __device=None
         try:
-            __device=xpath.Evaluate('device', element)[0]
+            __device=element.getElementsByTagName("device")[0]
             self.device=Device(__device, doc)
         except Exception, e:
             ComLog.debugTraceLog(self.log)
             raise ComException("device for copyset not defined (%s)" %(e))
         try:
-            __fs=xpath.Evaluate('device/filesystem', element)[0]
+            __fs=__device.getElementsByTagName("filesystem")[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
         except Exception:
             raise ComException("filesystem for copyset not defined")
         try:
-            __mp=xpath.Evaluate('device/mountpoint', element)[0]
+            __mp=__device.getElementsByTagName("mountpoint")[0]
             self.mountpoint=MountPoint(__mp, doc)
         except Exception:
             raise ComException("mountpoint for copyset not defined")
@@ -148,7 +146,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.10  2010-02-09 21:48:24  mark
+# Revision 1.11  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.10  2010/02/09 21:48:24  mark
 # added .storage path in includes
 #
 # Revision 1.9  2007/10/16 15:26:24  marc

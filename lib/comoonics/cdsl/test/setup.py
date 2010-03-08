@@ -138,13 +138,13 @@ class SetupCDSLs(SetupBase):
     
     def _createCDSLFiles(self, _tmppath):
         from comoonics.cdsl import cmpbysubdirs
-        _cdsls=self.repository.getCdsls()
+        _cdsls=self.results.keys()
         _cdsls.sort(cmpbysubdirs)
         for _cdsl in _cdsls:
-            if _cdsl.src.endswith("d") and not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
-                os.makedirs(os.path.join(_tmppath, _cdsl.src))
-            elif not os.path.exists(os.path.join(_tmppath, _cdsl.src)):
-                open(os.path.join(_tmppath, _cdsl.src), "w+")
+            if _cdsl.endswith("d") and not os.path.exists(os.path.join(_tmppath, _cdsl)):
+                os.makedirs(os.path.join(_tmppath, _cdsl))
+            elif not os.path.exists(os.path.join(_tmppath, _cdsl)):
+                open(os.path.join(_tmppath, _cdsl), "w+")
 
     def setupCDSLInfrastructure(self, path, cdslRepository, clusterinfo):
         from comoonics.cdsl.ComCdsl import Cdsl

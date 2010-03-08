@@ -7,22 +7,19 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.8 2010-02-09 21:48:24 mark Exp $
+# $Id: ComPartitionCopyObject.py,v 1.9 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
 
-from xml import xpath
-from xml.dom.ext import PrettyPrint
-
 from ComCopyObject import CopyObjectJournaled
 
 from comoonics.storage.ComDisk import HostDisk
-from comoonics.ComExceptions import *
+from comoonics.ComExceptions import ComException
 from comoonics import ComLog
 
 
@@ -33,7 +30,7 @@ class PartitionCopyObject(CopyObjectJournaled):
     def __init__(self, element, doc):
         CopyObjectJournaled.__init__(self, element, doc)
         try:
-            __disk=xpath.Evaluate('disk', element)[0]
+            __disk=element.getElementsByTagName('disk')[0]
             self.disk=HostDisk(__disk, doc)
         except Exception:
             raise ComException("disk for copyset not defined")
@@ -74,7 +71,10 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.8  2010-02-09 21:48:24  mark
+# Revision 1.9  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.8  2010/02/09 21:48:24  mark
 # added .storage path in includes
 #
 # Revision 1.7  2007/09/07 14:39:41  marc

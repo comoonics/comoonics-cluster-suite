@@ -3,22 +3,18 @@ CopyObject to implement a path source/destination.
 """
 
 # here is some internal information
-# $Id: ComPathCopyObject.py,v 1.3 2008-03-12 12:28:32 marc Exp $
+# $Id: ComPathCopyObject.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPathCopyObject.py,v $
 
 from ComCopyObject import CopyObjectJournaled
 from comoonics import ComLog, ComSystem
 from comoonics.ComPath import Path
-from comoonics.ComSystem import ExecLocalException
 from comoonics.ComExceptions import ComException
 
-import os
-import os.path
-from xml import xpath
 import xml.dom
 
 class PathCopyObject(CopyObjectJournaled):
@@ -56,7 +52,7 @@ class PathCopyObject(CopyObjectJournaled):
             doc=params[1]
             CopyObjectJournaled.__init__(self, element, doc)
             try:
-                __path=xpath.Evaluate('path', element)[0]
+                __path=element.getElementsByTagName('path')[0]
                 self.path=Path(__path, doc)
             except Exception:
                 raise ComException("Path for copyobject \"%s\" not defined" %self.getAttribute("name", "unknown"))
@@ -64,6 +60,7 @@ class PathCopyObject(CopyObjectJournaled):
         self.addToUndoMap(self.path.__class__.__name__, "pushd", "popd")
 
     def __prepare(self):
+        import os
         self.origpath=self.path.getPath()
         ComSystem.execMethod(self.path.mkdir)
         ComSystem.execMethod(self.path.pushd)
@@ -72,6 +69,7 @@ class PathCopyObject(CopyObjectJournaled):
         PathCopyObject.logger.debug("prepareAsSource() CWD: " + os.getcwd())
 
     def __cleanup(self):
+        import os
         oldpath=self.path.getPath()
         self.replayJournal()
         self.commitJournal()
@@ -113,69 +111,11 @@ class PathCopyObject(CopyObjectJournaled):
     def getMountpoint(self):
         return self.getPath().getElement()
 
-def __testPathCopyset(_modset):
-    print "testing PathModificationset..."
-    print "cwd: %s" %os.getcwd()
-    _modset.doPre()
-    print "cwd(after doPre): %s" %os.getcwd()
-    _modset.doCopy()
-    print "cwd(before doPost): %s" %os.getcwd()
-    _modset.doPost()
-    print "cwd: %s" %os.getcwd()
-
-def __testPathCopyObject(_copyobj):
-    from xml.dom.ext import PrettyPrint
-    PrettyPrint(_copyobj.getElement())
-
-def main():
-    _xmls=[
-           """
-    <copyset type="filesystem" name="save-sysreport-redhat">
-        <source type="path">
-            <path name="/tmp/sysreport-$(date -u +%G%m%d%k%M%S | /usr/bin/tr -d ' ')"/>
-        </source>
-        <destination type="backup">
-            <metadata>
-                <archive name='/tmp/meta-clone-lilr627-02.tar' format='tar' type='file'>
-                    <file name='./path.xml'/>
-                </archive>
-            </metadata>
-            <data>
-                <archive name='/tmp/path-02.tgz' format='tar' type='file' compression='gzip'/>
-            </data>
-        </destination>
-    </copyset>
-           """,
-           ]
-    import logging
-    ComLog.setLevel(logging.DEBUG)
-    from ComCopyset import getCopyset, Copyset
-    from ComCopyObject import registerCopyObject
-    from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
-    from ComPathCopyObject import PathCopyObject
-    ComSystem.setExecMode(ComSystem.SIMULATE)
-    print "registering %s" %PathCopyObject
-    registerCopyObject("path", PathCopyObject)
-    reader=Sax2.Reader(validate=0)
-    print "Test with xml:"
-    for _xml in _xmls:
-        doc=reader.fromString(_xml)
-        _copyset=Copyset(doc.documentElement, doc)
-        print "Copyset: %s" %_copyset
-        __testPathCopyset(_copyset)
-    print "Test with params"
-    _copyobj=PathCopyObject("/tmp/path", True)
-    __testPathCopyObject(_copyobj)
-    print "Test with keys"
-    _copyobj=PathCopyObject(path="/tmp/path", dest=True)
-    __testPathCopyObject(_copyobj)
-
-if __name__ == '__main__':
-    main()
-
 # $Log: ComPathCopyObject.py,v $
-# Revision 1.3  2008-03-12 12:28:32  marc
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2008/03/12 12:28:32  marc
 # - added a constructor that also would take Paths as is
 # - added tests.
 # - support for simulation

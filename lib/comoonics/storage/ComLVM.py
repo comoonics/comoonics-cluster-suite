@@ -8,15 +8,13 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComLVM.py,v $
 
 import os
-import string
-from exceptions import RuntimeError, IndexError, TypeError
 import math
 import xml.dom
-from xml.dom import Element, Node
+from xml.dom import Node
 
 from comoonics import ComSystem
 from comoonics.ComDataObject import DataObject
@@ -58,8 +56,12 @@ class LinuxVolumeManager(DataObject):
         if not (os.access(CMD_LVM, os.X_OK)) and (os.access("/sbin/lvm", os.X_OK)):
             CMD_LVM="/sbin/lvm"
 
-        if not os.access("/etc/lvm/.cache", os.R_OK) and not os.access("/etc/lvm/cache/.cache", os.R_OK):
-            raise RuntimeError("LVM could not read lvm cache file")
+        try:
+            _cachedir=ComSystem.execLocalOutput("%s dumpconfig devices/cache_dir", True)
+            _cachedir.strip()
+        except ComSystem.ExecLocalException:
+            if not os.access("/etc/lvm/.cache", os.R_OK) and not os.access("/etc/lvm/cache/.cache", os.R_OK):
+                raise RuntimeError("LVM could not read lvm cache file")
 
         f = open("/proc/devices", "r")
         lines = f.readlines()
@@ -182,37 +184,6 @@ class LinuxVolumeManager(DataObject):
 
     pvlist=staticmethod(pvlist)
 
-    # FIXME: this is a hack.  we really need to have a --force option.
-    def unlinkConf():
-        if os.path.exists("%s/lvm.conf" %(LinuxVolumeManager.LVM_ROOT,)):
-            os.unlink("%s/lvm.conf" %(LinuxVolumeManager.LVM_ROOT,))
-
-    unlinkConf=staticmethod(unlinkConf)
-
-    def writeForceConf():
-        """Write out an /etc/lvm/lvm.conf that doesn't do much (any?) filtering"""
-
-        try:
-            os.unlink("%s/.cache" % LinuxVolumeManager.LVM_ROOT)
-        except:
-            pass
-        if not os.path.isdir(LinuxVolumeManager.LVM_ROOT):
-            os.mkdir(LinuxVolumeManager.LVM_ROOT)
-
-        LinuxVolumeManager.unlinkConf()
-
-        f = open("%s/lvm.conf" %(LinuxVolumeManager.LVM_ROOT,), "w+")
-        f.write("""
-# anaconda hacked lvm.conf to avoid filtering breaking things
-devices {
-  sysfs_scan = 0
-  md_component_detection = 1
-}
-""")
-        return
-
-    writeForceConf=staticmethod(writeForceConf)
-
     def getPossiblePhysicalExtents(floor=0):
         """Returns a list of integers representing the possible values for
            the physical extent of a volume group.  Value is in KB.
@@ -271,9 +242,7 @@ devices {
 
     getMaxLVSize=staticmethod(getMaxLVSize)
 
-    '''
-    Public methods
-    '''
+    # Public methods
     def __init__(self, *params):
         if len(params) == 2:
             DataObject.__init__(self, params[0], params[1])
@@ -281,9 +250,7 @@ devices {
             raise IndexError('Index out of range for LinuxVolumeManager constructor (%u)' % len(params))
         self.ondisk=False
 
-    '''
-    Methods shared by all subclasses (mostly abstract)
-    '''
+    # Methods shared by all subclasses (mostly abstract)
     def checkAttribute(self, attribute, position):
         attr=self.getAttribute("attrs", "")
         self.log.debug("checkAttribute(%s, %u)==%s"%(attribute, position, str(self.getAttribute("attrs", ""))))
@@ -316,9 +283,7 @@ class LogicalVolume(LinuxVolumeManager):
 
     LVPATH_SPLIT_PATTERNS=["^%s/([^-]+)-([^/-]+)$" %(MAPPER_PATH), "^%s/([^/]+)/([^/]+)$" %(DEV_PATH)]
 
-    """
-    static methods
-    """
+    # static methods
     def isValidLVPath(path, doc=None):
         """
         returns True if this path is a valid path to a logical volume and if that volume either activated or not exists.
@@ -382,9 +347,7 @@ class LogicalVolume(LinuxVolumeManager):
         if rc >> 8 == 0 and not ComSystem.isSimulate():
             self.ondisk=True
 
-    '''
-    The LVM methods
-    '''
+    # The LVM methods
     def isActivated(self):
         return self.checkAttribute(self.ATTRIB_ACTIVATED, self.ATTRIB_ACTIVATED_POS)
 
@@ -940,73 +903,12 @@ class VolumeGroup(LinuxVolumeManager):
         if rc >> 8 != 0:
             raise RuntimeError("running vgresize on %s failed: %s, %s" % (str(self.getAttribute("name")), rc >> 8, rv))
 
-def __line__(str):
-    print "---------------------------------------%s-----------------------------" %(str)
-
-def test():
-    from logging import INFO
-    ComLog.setLevel(INFO)
-    ComSystem.setExecMode(ComSystem.SIMULATE)
-    devicenames=["/dev/sda", "/dev/cciss/c0d0p1", "zipfl", "/dev/mapper/abc-def", "/dev/abc/def", "/dev/mapper/abc/def", "/dev/abc/def/geh" ]
-    for device in devicenames:
-        __line__("device="+device)
-        try:
-            (vgname, lvname)=LogicalVolume.splitLVPath(device)
-            print "Found: vgname: %s, lvname: %s" %(vgname, lvname)
-        except LogicalVolume.LVMInvalidLVPathException, e:
-            print e.value
-
-    __line__("Testing core functionality in simulation mode")
-    try:
-        vgs=LinuxVolumeManager.vglist()
-        for _vg in vgs:
-            print "Volume group: "
-            print _vg
-            for lv in _vg.getLogicalVolumes():
-                print "Logical volume: ", lv
-
-            for pv in _vg.getPhysicalVolumes():
-                print "Physical volume: ", pv
-    except RuntimeError, re:
-        print re
-
-    try:
-        vgname="test_vg"
-        lvname="test_lv"
-        pvname="/dev/sda"
-        __line__("Creating pv: %s" %pvname)
-        _pv=PhysicalVolume(pvname)
-        _pv.create()
-        __line__("Creating vg: %s" %vgname)
-        _vg=VolumeGroup(vgname, _pv)
-        _vg.create()
-        _vg.addPhysicalVolume(_pv)
-        __line__("Creating lv: %s" %lvname)
-        _lv=LogicalVolume(lvname, _vg)
-        _lv.create()
-        _vg.addLogicalVolume(_lv)
-        
-        print "Volumegroup %s: %s" %(vgname, _vg)
-        
-        __line__("Changing clustered")
-        _vg.clustered()
-        _vg.notclustered()
-        
-        __line__("Removing lv")
-        _lv.remove()
-        __line__("Removing vg")
-        _vg.remove()
-        __line__("Removing pv")
-        _pv.remove()
-    except Exception:
-        ComLog.errorTraceLog()
-
-if __name__=="__main__":
-    test()
-
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.3  2010-02-10 12:49:07  mark
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2010/02/10 12:49:07  mark
 # added .storage path in includes
 #
 # Revision 1.2  2010/02/07 20:32:42  marc

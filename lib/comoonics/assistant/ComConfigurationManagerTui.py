@@ -2,11 +2,9 @@
 Generic ComAssitant TUI
 """
 
-from snack import *
 import logging
-import sys
 
-from comoonics import ComLog, odict
+from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from ComConfigurationManager import ConfigurationManager
 
@@ -25,6 +23,7 @@ class ConfigurationManagerTui(object):
         """
         @param: controller, a list of AssistantControllers
         """
+        from snack import SnackScreen
         self.controller=controller
         self.screen = SnackScreen()
         self.confignames=self.controller.getCompleteConfigSetNames()
@@ -33,6 +32,7 @@ class ConfigurationManagerTui(object):
     def run(self, warning=None):
         ''' @returns [name, type, direction] '''
         #items=["a", "b"]
+        from snack import ListboxChoiceWindow, ButtonChoiceWindow 
         result=None
         while True:
             self.confignames=self.controller.getCompleteConfigSetNames()
@@ -66,6 +66,7 @@ class ConfigurationManagerTui(object):
         return result
          
     def _run_direction(self, name, directions):
+        from snack import ListboxChoiceWindow
         _res=ListboxChoiceWindow(self.screen, "Mode Selection", "You selected %s\nWhat do you want to do ?" %name, directions, buttons = ('Next', 'Cancel'), width = 40, scroll = 0, height = -1, default = None, help = None)
         if _res[0] != "next": return
         direction = directions[_res[1]]
@@ -76,6 +77,7 @@ class ConfigurationManagerTui(object):
             self.controller.deleteConfigSet(name, self.confignames[name])
         
     def _run_create(self):
+        from snack import ListboxChoiceWindow, ButtonChoiceWindow, EntryWindow  
         templatetypes=self.controller.getCompleteConfigTemplateSetNames()
         if len(templatetypes) != 0: 
             _res=ListboxChoiceWindow(self.screen, "Configuration Types", "Select type of new configuration set", templatetypes, buttons = ('Create', 'Cancel'), width = 40, scroll = 1, height = -1, default = None, help = None)
@@ -89,12 +91,14 @@ class ConfigurationManagerTui(object):
         self.controller.createConfigSet(name, type)
         
     def _run_rename(self, oldname=""):
+        from snack import EntryWindow
         _res=EntryWindow(self.screen, "Rename configuration set", "Enter new name of the configuration set\nOld name: %s" %oldname, ['New name:'], allowCancel = 1, width = 40, entryWidth = 20, buttons = [ 'Ok', 'Cancel' ], help = None)
         if _res[0]!="ok": return
         name=_res[1][0]
         return name
     
     def _run_warning(self, warning):
+        from snack import ButtonChoiceWindow
         _rec=ButtonChoiceWindow(self.screen, "Are you sure ?", warning, buttons = [ 'Ok', 'Back' ]) 
         if _rec == "ok":
             return self.OK
@@ -108,6 +112,7 @@ class ConfigurationManagerTui(object):
         
         
     def getEntryWindow(self, screen):
+        from snack import EntryWindow
         w = EntryWindow(screen ,"Com-ec Assistant", "text", ("a", "b", "c", "d", "e", "f", "g"), buttons = [ 'Ok', 'Scan', 'Cancel' ])
         w.run()
         
@@ -121,6 +126,7 @@ def ButtonWindow(screen, title, text, allowCancel = 1, width = 40,
     EntryWindow(screen, title, text, prompts, allowCancel = 1, width = 40,
         entryWidth = 20, buttons = [ 'Ok', 'Cancel' ], help = None):
     """
+    from snack import ButtonBar, TextboxReflowed, GridFormHelp  
     bb = ButtonBar(screen, buttons);
     t = TextboxReflowed(width, text)
 

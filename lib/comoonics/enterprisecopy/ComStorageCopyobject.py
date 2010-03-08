@@ -3,27 +3,19 @@ CopyObject implementation for Storage implementations.
 """
 
 # here is some internal information
-# $Id: ComStorageCopyobject.py,v 1.2 2007-03-26 08:12:22 marc Exp $
+# $Id: ComStorageCopyobject.py,v 1.1 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
-# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/Attic/ComStorageCopyobject.py,v $
+__version__ = "$Revision: 1.1 $"
+# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComStorageCopyobject.py,v $
 
 from comoonics.enterprisecopy.ComCopyObject import CopyObjectJournaled
-from comoonics.storage.ComStorage import Storage
 from comoonics import ComLog
-from comoonics.ComDisk import Disk
-
-"""
-Dictionary to hold all storageconnections keyed by connectionname. In order to achieve only one connection each
-StorageObject.
-"""
+from comoonics.storage.ComDisk import Disk
 
 class StorageCopyObject(CopyObjectJournaled):
     __logStrLevel__="StorageCopyObject"
-    def __new__(cls, *args, **kwds):
-        return object.__new__(cls)
     def __init__(self, element, doc, storage):
         super(StorageCopyObject, self).__init__(element, doc)
         self.storage=storage
@@ -79,7 +71,10 @@ mylogger=ComLog.getLogger(StorageCopyObject.__logStrLevel__)
 
 ########################
 # $Log: ComStorageCopyobject.py,v $
-# Revision 1.2  2007-03-26 08:12:22  marc
+# Revision 1.1  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2007/03/26 08:12:22  marc
 # - added support for undoing and journaling
 #
 # Revision 1.1  2007/02/09 11:36:16  marc

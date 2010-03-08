@@ -2,19 +2,16 @@
 Class for the EMC-Legator BackupHandlerImplementation.
 """
 # here is some internal information
-# $Id: ComEMCLegatoBackupHandler.py,v 1.5 2007-07-31 10:02:54 marc Exp $
+# $Id: ComEMCLegatoBackupHandler.py,v 1.6 2010-03-08 12:30:48 marc Exp $
 #
 
-import os
 import os.path
 import tempfile
-from exceptions import KeyError
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 from comoonics.backup.ComBackupHandler import BackupHandler
-from ComEMCLegatoNetworker import LegatoNetworker, LegatoBackupLevel
-from comoonics.ComArchive import NotImplementedError
+from ComEMCLegatoNetworker import LegatoNetworker
 
 LEGATO_CMD="/usr/sbin/savefs"
 
@@ -153,7 +150,10 @@ class EMCLegatoBackupHandler(BackupHandler):
 
 ########################
 # $Log: ComEMCLegatoBackupHandler.py,v $
-# Revision 1.5  2007-07-31 10:02:54  marc
+# Revision 1.6  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.5  2007/07/31 10:02:54  marc
 # small fix in outputting
 #
 # Revision 1.4  2007/07/10 11:31:54  marc

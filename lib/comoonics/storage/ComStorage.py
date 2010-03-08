@@ -4,10 +4,10 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComStorage.py,v 1.3 2007-04-04 12:35:05 marc Exp $
+# $Id: ComStorage.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComStorage.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -36,6 +36,7 @@ class Storage(object):
     raised.
     """
     __logStrLevel__="Storage"
+    log=ComLog.getLogger(__logStrLevel__)
 
     def getStorageObject(implementation, the_element):
         """ returns the storage object by the implementation attribute and the given element."""
@@ -52,15 +53,15 @@ class Storage(object):
             if cls:
                 try:
                     inst=object.__new__(cls)
-                    log.debug("class is %s" %(cls))
+                    Storage.log.debug("class is %s" %(cls))
                     inst.__init__(element=the_element)
                     connname=inst.getConnectionName()
                     if not StorageConnections.has_key(connname):
-                        log.debug("Creating new storage connection %s %s" %(connname, StorageConnections.keys()))
+                        Storage.log.debug("Creating new storage connection %s %s" %(connname, StorageConnections.keys()))
                         StorageConnections[connname]=inst
                         return inst
                     else:
-                        log.debug("Returning already established storage connection %s" %(connname))
+                        Storage.log.debug("Returning already established storage connection %s" %(connname))
                         return StorageConnections[connname]
                 except:
                     import traceback
@@ -95,7 +96,7 @@ class Storage(object):
         if len(props)>=1:
             self.properties=Properties(props[0])
             for propertyname in self.properties.keys():
-                log.debug("fromElement: Setting attribute %s, %s" %(propertyname, self.properties[propertyname].getAttribute("value")))
+                self.log.debug("fromElement: Setting attribute %s, %s" %(propertyname, self.properties[propertyname].getAttribute("value")))
                 setattr(self, propertyname, self.properties[propertyname].getAttribute("value"))
         for attribute in element.attributes:
             self.__dict__[attribute.name]=attribute.value
@@ -151,19 +152,14 @@ class Storage(object):
     def close(self):
         """ Cleans up and closes all open connections to the storagesystem """
 
-log=ComLog.getLogger(Storage.__logStrLevel__)
-log.debug("IMPORTING: "+__name__)
 StorageConnections=dict()
-
-def main():
-    pass
-
-if __name__ == '__main__':
-    main()
 
 ########################
 # $Log: ComStorage.py,v $
-# Revision 1.3  2007-04-04 12:35:05  marc
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2007/04/04 12:35:05  marc
 # MMG Backup Legato Integration :
 # - just logging
 #

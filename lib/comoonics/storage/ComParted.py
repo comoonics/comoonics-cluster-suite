@@ -13,9 +13,7 @@ import math
 from comoonics.ComExceptions import ComException
 from comoonics import ComLog
 
-from ComPartition import Partition, PartitionFlag
-
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComParted.py,v $
 
 class PartitioningError(ComException): pass
@@ -177,23 +175,27 @@ class PartedHelper:
 
     def get_logical_partitions(self, disk):
         """Return a list of logical PedPartition objects on disk."""
+        from ComPartition import Partition
         func = lambda part: (part.is_active()
                              and part.type & Partition.PARTITION_TYPES["logical"])
         return self.filter_partitions(disk, func)
 
     def get_primary_partitions(self, disk):
         """Return a list of primary PedPartition objects on disk."""
+        from ComPartition import Partition
         func = lambda part: part.type == Partition.PARTITION_TYPES["primary"]
         return self.filter_partitions(disk, func)
 
     def get_raid_partitions(self, disk):
         """Return a list of RAID-type PedPartition objects on disk."""
+        from ComPartition import PartitionFlag
         func = lambda part: (part.is_active()
                              and part.get_flag(PartitionFlag.ALLFLAGS["raid"]) == 1)
         return self.filter_partitions(disk, func)
 
     def get_lvm_partitions(self, disk):
         """Return a list of physical volume-type PedPartition objects on disk."""
+        from ComPartition import PartitionFlag
         func = lambda part: (part.is_active()
                              and part.get_flag(PartitionFlag.ALLFLAGS["lvm"]) == 1)
         return self.filter_partitions(disk, func)
@@ -207,6 +209,7 @@ class PartedHelper:
         """Add a new partition to the device.
             size of 0 means rest of remaining disk space
         """
+        from ComPartition import Partition
         part = disk.next_partition ()
         status = 0
         while part:
@@ -234,3 +237,8 @@ class PartedHelper:
                                     "new partition" % (disk.dev.path))
         return newp
 
+###################
+# $Log: ComParted.py,v $
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#

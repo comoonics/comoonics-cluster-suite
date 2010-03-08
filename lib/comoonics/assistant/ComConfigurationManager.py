@@ -6,7 +6,6 @@ import dircache
 import os
 import shutil
 
-from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
 
 class TypeNotMatchError(ComException):

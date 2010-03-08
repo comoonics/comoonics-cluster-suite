@@ -7,14 +7,13 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.2 2010-02-07 20:32:17 marc Exp $
+# $Id: ComFileSystem.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
-import os
 import os.path
 import exceptions
 
@@ -49,6 +48,8 @@ def getFileSystem(element, doc):
         return ext3FileSystem(element, doc)
     if __type == "gfs":
         return gfsFileSystem(element, doc)
+    if __type == "ocfs2":
+        return ocfs2FileSystem(element, doc)
     raise exceptions.NotImplementedError()
 
 
@@ -79,7 +80,6 @@ class FileSystem(DataObject):
         self.partedFileSystemType = None
         self.cmd_fsck=None
         self.cmd_mkfs=None
-
 
     def mount(self, device, mountpoint):
         """ mount a filesystem
@@ -372,12 +372,11 @@ class gfsFileSystem(FileSystem):
             log.debug("scan Options Journals: " +__journals)
             self.setAttribute("journals", __journals)
 
-
-
-
-
 # $Log: ComFileSystem.py,v $
-# Revision 1.2  2010-02-07 20:32:17  marc
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2010/02/07 20:32:17  marc
 # - added OCFS2 Filesystem
 # - new imports
 #

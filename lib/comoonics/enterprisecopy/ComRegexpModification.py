@@ -7,21 +7,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComRegexpModification.py,v 1.5 2010-02-10 12:48:46 mark Exp $
+# $Id: ComRegexpModification.py,v 1.6 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRegexpModification.py,v $
 
-import exceptions
-import xml.dom
-from xml import xpath
 import re
-import os
 
 from ComFileModification import FileModification
-from comoonics.storage.ComFile import File
 from comoonics import ComSystem
 from comoonics import ComLog
 
@@ -32,7 +27,7 @@ class RegexpModification(FileModification):
     DEFAULT_OPTIONS=0
     __logStrName__="comoonics.enterprisecopy.ComRegexpModification.RegexpModification"
     logger=ComLog.getLogger(__logStrName__)
-    """ Regular Expression Modification"""
+    # Regular Expression Modification
     def __init__(self, element, doc):
         FileModification.__init__(self, element, doc)
 
@@ -101,14 +96,11 @@ class RegexpModification(FileModification):
 
         return __options
 
-def main():
-    pass
-
-if __name__ == '__main__':
-    main()
-
 # $Log: ComRegexpModification.py,v $
-# Revision 1.5  2010-02-10 12:48:46  mark
+# Revision 1.6  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.5  2010/02/10 12:48:46  mark
 # added .storage path in includes
 #
 # Revision 1.4  2007/09/07 14:41:24  marc

@@ -12,21 +12,17 @@ Hello world
 """
 
 # here is some internal information
-# $Id: ComPathModificationset.py,v 1.2 2008-08-05 13:10:14 marc Exp $
+# $Id: ComPathModificationset.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPathModificationset.py,v $
 
 from ComModificationset import ModificationsetJournaled
-from comoonics import ComLog, ComSystem
+from comoonics import ComLog
 from comoonics.ComPath import Path
 from comoonics.ComExceptions import ComException
-
-import os
-import os.path
-from xml import xpath
 
 class PathModificationset(ModificationsetJournaled):
     """ implementation class for this modificationset """
@@ -40,7 +36,7 @@ class PathModificationset(ModificationsetJournaled):
         """
         super(PathModificationset, self).__init__(element, doc)
         try:
-            __path=xpath.Evaluate('path', self.element)[0]
+            __path=element.getElementsByTagName('path')[0]
         except Exception:
             raise ComException("Path for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
         self.path=Path(__path, doc)
@@ -48,6 +44,7 @@ class PathModificationset(ModificationsetJournaled):
         self.addToUndoMap(self.path.__class__.__name__, "pushd", "popd")
 
     def doPre(self):
+        import os
         self.path.mkdir()
         self.path.pushd()
         self.journal(self.path, "pushd")
@@ -55,6 +52,7 @@ class PathModificationset(ModificationsetJournaled):
         super(PathModificationset, self).doPre()
 
     def doPost(self):
+        import os
         super(PathModificationset, self).doPost()
         oldpath=self.path.getPath()
         self.replayJournal()
@@ -65,60 +63,11 @@ class PathModificationset(ModificationsetJournaled):
         #    self.filesystem.umountDir(self.mountpoint)
         PathModificationset.logger.debug("doPost() CWD: " + os.getcwd())
 
-def __testPathModificationset(_modset):
-    print "testing PathModificationset..."
-    print "cwd: %s" %os.getcwd()
-    _modset.doPre()
-    print "cwd(after doPre): %s" %os.getcwd()
-    _modset.doModifications()
-    print "cwd(before doPost): %s" %os.getcwd()
-    _modset.doPost()
-    print "cwd(after all): %s" %os.getcwd()
-
-def main():
-    _xmls=[
-           """
-    <modificationset type="path" name="copy-to-path">
-        <path name="/var/log/">
-            <modification type="message">
-Hello world
-            </modification>
-            <modification type="message">
-Hello world2
-            </modification>
-        </path>
-    </modificationset>
-           """,
-           """
-    <modificationset type="path" name="copy-to-path">
-        <path name="/tmp/$(date -u +%G%m%d%k%M%S | /usr/bin/tr -d ' ')">
-            <modification type="message">
-Hello world
-            </modification>
-        </path>
-    </modificationset>
-           """,
-           ]
-    import logging
-    ComLog.setLevel(logging.DEBUG)
-    from ComModificationset import registerModificationset, getModificationset
-    from ComModification import registerModification
-    from ComMessage import MessageModification
-    from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
-    registerModificationset("path", PathModificationset)
-    registerModification("message", MessageModification)
-    reader=Sax2.Reader(validate=0)
-    for _xml in _xmls:
-        doc=reader.fromString(_xml)
-        _modset=getModificationset(doc.documentElement, doc)
-        __testPathModificationset(_modset)
-
-if __name__ == '__main__':
-    main()
-
 # $Log: ComPathModificationset.py,v $
-# Revision 1.2  2008-08-05 13:10:14  marc
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2008/08/05 13:10:14  marc
 # - fixed bug so that refids now work
 #
 # Revision 1.1  2007/09/07 14:40:07  marc

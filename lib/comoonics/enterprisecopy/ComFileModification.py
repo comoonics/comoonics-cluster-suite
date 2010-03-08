@@ -7,24 +7,15 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileModification.py,v 1.2 2010-02-09 21:48:24 mark Exp $
+# $Id: ComFileModification.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFileModification.py,v $
-
-import exceptions
-import xml.dom
-from xml import xpath
-import re
-import os
 
 from ComModification import Modification
 from comoonics.storage.ComFile import File
-from comoonics import ComSystem
-from comoonics import ComLog
-
 
 class FileModification(Modification):
     """ generic FileModification Modification"""
@@ -39,19 +30,21 @@ class FileModification(Modification):
     def doModifications(self, file, save=True):
         pass
             
-    """
-    privat methods
-    """
+    # privat methods
 
     def createFileList(self, element, doc):
         __files=list()
-        __elements=xpath.Evaluate('file', element)
-        for i in range(len(__elements)):
-            __files.append(File(__elements[i], doc))
+        __elements=element.getElementsByTagName("file")
+        if __elements and len(__elements) > 0:
+            for i in range(len(__elements)):
+                __files.append(File(__elements[i], doc))
         return __files
 
 # $Log: ComFileModification.py,v $
-# Revision 1.2  2010-02-09 21:48:24  mark
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2010/02/09 21:48:24  mark
 # added .storage path in includes
 #
 # Revision 1.1  2006/07/19 14:29:15  marc

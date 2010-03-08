@@ -7,20 +7,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionModificationset.py,v 1.3 2010-02-10 12:48:46 mark Exp $
+# $Id: ComPartitionModificationset.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionModificationset.py,v $
 
-import xml.dom
-import exceptions
-from xml import xpath
-from xml.dom.ext import PrettyPrint
 import os
 
-from comoonics.ComExceptions import *
+from comoonics.ComExceptions import ComException
 from ComModificationset import ModificationsetJournaled
 from comoonics.storage.ComDisk import HostDisk
 from comoonics import ComLog
@@ -32,7 +28,7 @@ class PartitionModificationset(ModificationsetJournaled):
     def __init__(self, element, doc):
         ModificationsetJournaled.__init__(self, element, doc)
         try:
-            __disk=xpath.Evaluate('disk', element)[0]
+            __disk=element.getElementsByTagName('disk')[0]
             self.disk=HostDisk(__disk, doc)
         except Exception:
             raise ComException("disk for modificationset not defined")
@@ -54,7 +50,10 @@ class PartitionModificationset(ModificationsetJournaled):
 
 
 # $Log: ComPartitionModificationset.py,v $
-# Revision 1.3  2010-02-10 12:48:46  mark
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2010/02/10 12:48:46  mark
 # added .storage path in includes
 #
 # Revision 1.2  2007/03/26 08:02:23  marc

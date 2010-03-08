@@ -8,11 +8,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComBootDisk.py,v 1.3 2010-02-10 12:49:07 mark Exp $
+# $Id: ComBootDisk.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComBootDisk.py,v $
 
 import os
@@ -20,7 +20,7 @@ import re
 
 from comoonics import ComSystem
 from ComDisk import HostDisk
-from comoonics.ComExceptions import *
+from comoonics.ComExceptions import ComException
 
 class BootDisk(HostDisk):
     def __init__(self, element, doc, tmppath="/tmp"):
@@ -86,7 +86,10 @@ class BootDisk(HostDisk):
             raise ComException("cannot install grub on "+__dev)
 
 # $Log: ComBootDisk.py,v $
-# Revision 1.3  2010-02-10 12:49:07  mark
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2010/02/10 12:49:07  mark
 # added .storage path in includes
 #
 # Revision 1.2  2010/02/09 21:48:51  mark

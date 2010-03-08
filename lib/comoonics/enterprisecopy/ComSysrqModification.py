@@ -12,15 +12,12 @@
 
 
 # here is some internal information
-# $Id: ComSysrqModification.py,v 1.1 2007-09-07 14:42:09 marc Exp $
+# $Id: ComSysrqModification.py,v 1.2 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComSysrqModification.py,v $
-
-import os.path
-import re
 
 from ComModification import Modification
 import ComModification
@@ -84,50 +81,10 @@ class SysrqModification(Modification):
         for _sysrq in self.sysrqs:
             _sysrq.doCommands()
 
-def __test():
-    from xml.dom.ext.reader import Sax2
-    import tempfile
-    import logging
-    from comoonics.ComPath import Path
-    from ComModification import registerModification
-    registerModification("sysrq", SysrqModification)
-    ComLog.setLevel(logging.DEBUG)
-    __tmpdir=tempfile.mkdtemp()
-    print("tmpdir: %s" %__tmpdir)
-    __xmls=[
-"""
-<path name="%s">
-   <modification type="sysrq">
-      <sysrq command="memory"/>
-   </modification>
-</path>
-""" %__tmpdir,
-"""
-<path name="%s">
-   <modification type="sysrq">
-      <sysrq command="memory"/>
-      <sysrq command="tasks"/>
-   </modification>
-</path>
-""" %__tmpdir,
-    ]
-    # create Reader object
-    reader = Sax2.Reader()
-
-    for _xml in __xmls:
-        _doc = reader.fromString(_xml)
-        _path=Path(_doc.documentElement, _doc)
-        _path.mkdir()
-        _path.pushd()
-        for _modification in _doc.documentElement.getElementsByTagName("modification"):
-            _modification=ComModification.getModification(_modification, _doc)
-            _modification.doModification()
-        _path.popd()
-
-if __name__=="__main__":
-    __test()
-
 # $Log: ComSysrqModification.py,v $
-# Revision 1.1  2007-09-07 14:42:09  marc
+# Revision 1.2  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.1  2007/09/07 14:42:09  marc
 # initial revision
 #

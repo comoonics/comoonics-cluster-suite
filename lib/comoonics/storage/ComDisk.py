@@ -7,20 +7,17 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.3 2010-02-09 21:48:51 mark Exp $
+# $Id: ComDisk.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
 import exceptions
 import time
 import xml.dom
-
-import comoonics.storage.ComParted
-import comoonics.storage.ComPartition
 
 from comoonics import ComSystem
 from comoonics.ComDataObject import DataObject
@@ -91,13 +88,11 @@ class HostDisk(Disk):
         pass
     resolver=dict()
 
-    """ Disk represents a raw disk
-        Possible constructors:
-        __init__(self, element, doc=None)  type(element)=Node
-        __init__(self, name, doc=None) type(name)==str
-    """
     def __init__(self, *params):
-        """ creates a Disk object
+        """ Disk represents a raw disk
+            Possible constructors:
+            __init__(self, element, doc=None)  type(element)=Node
+            __init__(self, name, doc=None) type(name)==str
         """
         if len(params)==1:
             doc=xml.dom.getDOMImplementation().createDocument(None, self.TAGNAME, None)
@@ -206,7 +201,6 @@ class HostDisk(Disk):
         if not self.exists():
             raise ComException("Device %s not found or no valid device!" % self.getDeviceName())
         try:
-            import parted
             self.initFromDiskParted()
         except ImportError:
             self.initFromDiskPartedCmd()
@@ -236,7 +230,6 @@ class HostDisk(Disk):
     def createPartitions(self):
         """ creates new partition table """
         try:
-            import parted
             self.createPartitionsParted()
         except ImportError:
             self.createPartitionsPartedCmd()
@@ -391,43 +384,11 @@ except ImportError:
     import warnings
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
 
-def main():
-    disk_dumps=[ """
-        <disk name="Virtual Disks/atix/sourcedisk">
-            <properties>
-                <property name="size" value="10"/>
-                <property name="disk_group" value="146er"/>
-            </properties>
-        </disk>
-    """,
-    """
-        <disk name="Virtual Disks/atix/sourcedisk_snap">
-            <mapping lun="1">
-                <host name="server1"/>
-            </mapping>
-        </disk>
-    """,
-    """
-        <disk name="/dev/VolGroup00/LogVol00"/>
-    """]
-    for disk_dump in disk_dumps:
-        testDiskDump(disk_dump)
-
-def testDiskDump(dump):
-    print "Parsing dump..."
-    print dump
-    from xml.dom.ext.reader import Sax2
-    reader=Sax2.Reader(validate=0)
-    doc=reader.fromString(dump)
-    print "Creating disk..."
-    disk=Disk(doc.documentElement, doc)
-    print disk
-
-if __name__ == '__main__':
-    main()
-
 # $Log: ComDisk.py,v $
-# Revision 1.3  2010-02-09 21:48:51  mark
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2010/02/09 21:48:51  mark
 # added .storage path in includes
 #
 # Revision 1.2  2010/02/07 20:31:23  marc

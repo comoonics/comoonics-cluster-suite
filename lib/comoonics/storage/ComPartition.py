@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartition.py,v 1.2 2010-02-07 20:33:30 marc Exp $
+# $Id: ComPartition.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
 #import parted
@@ -15,13 +15,13 @@ import re
 from xml.dom import Node
 from xml import xpath
 
-import ComParted
+from ComParted import PartedHelper
 
 from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComPartition.py,v $
 
 class Partition(DataObject):
@@ -53,7 +53,7 @@ class Partition(DataObject):
 
     def __create_element_from_parted(self, part, doc):
         element=doc.createElement(self.TAGNAME)
-        phelper=ComParted.PartedHelper()
+        phelper=PartedHelper()
         # name
         element.setAttribute("name", str(part.num))
         #type
@@ -91,7 +91,7 @@ class Partition(DataObject):
         sectors=self.getPartedSize(dev)
         if sectors == 0: return 0
         # now round up
-        phelper=ComParted.PartedHelper()
+        phelper=PartedHelper()
         cyls=phelper.end_sector_to_cyl(dev, sectors)
         sectors=phelper.end_cyl_to_sector(dev, cyls)
         return sectors

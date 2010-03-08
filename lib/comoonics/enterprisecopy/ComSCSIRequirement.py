@@ -6,19 +6,16 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComSCSIRequirement.py,v 1.1 2007-03-26 08:04:48 marc Exp $
+# $Id: ComSCSIRequirement.py,v 1.2 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComSCSIRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
 from ComRequirement import Requirement
-import os
-from comoonics import ComSystem
 from comoonics import ComLog
-from comoonics.scsi import ComSCSI
 
 class SCSIRequirementException(ComException): pass
 
@@ -39,15 +36,11 @@ class SCSIRequirement(Requirement):
 
     """
 
-    """
-    Static methods and objects/attributes
-    """
+    # Static methods and objects/attributes
     __logStrLevel__ = "SCSIRequirement"
     log=ComLog.getLogger(__logStrLevel__)
 
-    """
-    Public methods
-    """
+    # Public methods
 
     def __init__(self, element, doc):
         """
@@ -92,21 +85,12 @@ class SCSIRequirement(Requirement):
         """
         self._do()
 
-def test():
-    from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
-    reader=Sax2.Reader(validate=0)
-    xmlbuf='<requirement type="scsi" format="fc" name="rescan" dest="host16"/>'
-    doc=reader.fromString(xmlbuf)
-    scsireq=SCSIRequirement(doc.documentElement, doc)
-    scsireq.do()
-
-if __name__ == "__main__":
-    test()
-
 ######################
 # $Log: ComSCSIRequirement.py,v $
-# Revision 1.1  2007-03-26 08:04:48  marc
+# Revision 1.2  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.1  2007/03/26 08:04:48  marc
 # initial revision
 #
 # Revision 1.5  2007/02/28 10:11:42  mark

@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComScsi.py,v 1.2 2010-02-09 21:48:51 mark Exp $
+# $Id: ComScsi.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
 
@@ -14,14 +14,11 @@ __version__ = "$$"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComScsi.py,v $
 
 import os
-import sys
-from types import *
-from exceptions import *
 
-import comoonics.ComLog
-import comoonics.ComSystem
-import comoonics.ComUtils
-from comoonics.ComExceptions import *
+from comoonics import ComLog
+from comoonics import ComSystem
+from comoonics import ComUtils
+from comoonics.ComExceptions import ComException
 
 class SCSI:
     def __init__(self):
@@ -50,8 +47,6 @@ class SCSI:
 
         if not os.path.isdir( __syspath ):
             raise ComException(__syspath + " not found")
-            pass
-
     
         if __hosts == "-":
             __hosts=self.getAllSCSIHosts()
@@ -71,7 +66,10 @@ class SCSI:
             ComSystem.execLocal( "echo \""+__bus+"\" \""+ __target+"\" \""+ __lun+ "\" > "+__syspath+"/"+__host+"/scan")
 
 # $Log: ComScsi.py,v $
-# Revision 1.2  2010-02-09 21:48:51  mark
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2010/02/09 21:48:51  mark
 # added .storage path in includes
 #
 # Revision 1.1  2009/09/28 15:13:36  marc

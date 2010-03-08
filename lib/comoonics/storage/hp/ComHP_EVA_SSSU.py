@@ -4,10 +4,10 @@ Python implementation of the HP SSSU utility to communicate with the HP EVA Stor
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU.py,v 1.9 2010-02-12 10:11:45 marc Exp $
+# $Id: ComHP_EVA_SSSU.py,v 1.10 2010-03-08 12:30:48 marc Exp $
 #
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU.py,v $
 
 import re
@@ -258,30 +258,12 @@ class HP_EVA_SSSU(object):
 mylogger=ComLog.getLogger(HP_EVA_SSSU.__logStrLevel__)
 logging.addLevelName(CMD_LOG_LEVEL, CMD_LOG_LEVEL_NAME)
 
-def main():
-    from xml.dom.ext import PrettyPrint
-    log = file('/tmp/ComHP_EVA_SSSU.log','w')
-    sssu=HP_EVA_SSSU("127.0.0.1", "Administrator", "Administrator", "EVA5000", True, "./ComHP_EVA_SSSU_Sim.py", log)
-    sssu.cmd("add", ["vdisk", "myvdisk", "size=100"])
-    sssu.cmd("ls", "vdisk myvdisk")
-    print "vdisk mydisk: %s" %(sssu.last_output)
-    sssu.cmd("ls", "vdisk myvdisk xml")
-    if sssu.xml_output:
-        print "vdisk mydisk as HP_EVA_Object:"
-        vdisk=HP_EVA_Object.fromXML(sssu.xml_output)
-        print vdisk
-    else:
-        print "no last xmloutput %s" %(sssu.xml_output)
-    sssu.disconnect()
-    log.close()
-
-if __name__ == '__main__':
-    import sys
-    main()
-
 ########################
 # $Log: ComHP_EVA_SSSU.py,v $
-# Revision 1.9  2010-02-12 10:11:45  marc
+# Revision 1.10  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.9  2010/02/12 10:11:45  marc
 # fixed pexpect imports
 #
 # Revision 1.8  2007/07/31 10:02:04  marc

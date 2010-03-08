@@ -10,11 +10,10 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComArchive.py,v $
 
 import os
-import string
 import shutil
 import tempfile
 import xml.dom
@@ -237,7 +236,7 @@ class ArchiveHandler(object):
         raise NotImplementedError()
 
 '''
-Archivee Handlers
+Archive Handlers
 '''
 
 
@@ -332,7 +331,7 @@ class TarArchiveHandler(ArchiveHandler):
         return True
 
 
-''' Archivee Handler for gzip compressed tar files '''
+''' Archive Handler for gzip compressed tar files '''
 class TarGzArchiveHandler(TarArchiveHandler):
     COMPRESSION="gzip"
     def __init__(self, name, properties=None):
@@ -341,7 +340,7 @@ class TarGzArchiveHandler(TarArchiveHandler):
         self.compressionmode=":gz"
 
 
-''' Archivee Handler for bzip2 compressed tar files '''
+''' Archive Handler for bzip2 compressed tar files '''
 class TarBz2ArchiveHandler(TarArchiveHandler):
     COMPRESSION="bz2"
     def __init__(self, name, properties=None):
@@ -486,51 +485,12 @@ all default to NONE
 global ArchiveHandlerFactory
 ArchiveHandlerFactory=ArchiveHandlerFactoryClass()
 
-"""
-Testing starts here
-"""
-class myTarArchiveHandler(TarArchiveHandler):
-    FORMAT="testformat"
-    TYPE="testtype"
-    pass
-class myTarBz2ArchiveHandler(TarBz2ArchiveHandler):
-    FORMAT="testformat"
-    TYPE="testtype"
-    pass
-class myTarGzArchiveHandler(TarGzArchiveHandler):
-    FORMAT="testformat"
-    TYPE="testtype"
-    pass
-
-def __TestRegisterArchiveHandler(theclass):
-    print "Registering class: %s" %(theclass)
-    ArchiveHandlerFactory.registerArchiveHandler(theclass)
-    print "registry: %s" %(ArchiveHandlerFactory)
-
-def __TestRetreiveArchiveHandler(theclass):
-    print "Retreiving data: %s, %s, %s" %(theclass.FORMAT, theclass.TYPE, theclass.COMPRESSION)
-    print ArchiveHandlerFactory.getArchiveHandler("testname", theclass.FORMAT, theclass.TYPE, theclass.COMPRESSION)
-
-def main():
-    print "Testing ArchivHandlerFactory"
-    print "Registry: "
-    print ArchiveHandlerFactory
-    __TestRegisterArchiveHandler(myTarArchiveHandler)
-    __TestRegisterArchiveHandler(myTarGzArchiveHandler)
-    __TestRegisterArchiveHandler(myTarBz2ArchiveHandler)
-
-    print "Retreiving data from registry:"
-    __TestRetreiveArchiveHandler(myTarArchiveHandler)
-    __TestRetreiveArchiveHandler(myTarGzArchiveHandler)
-    __TestRetreiveArchiveHandler(myTarBz2ArchiveHandler)
-    __TestRetreiveArchiveHandler(SimpleArchiveHandler)
-
-if __name__ == '__main__':
-    main()
-
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.2  2010-02-09 21:48:51  mark
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2010/02/09 21:48:51  mark
 # added .storage path in includes
 #
 # Revision 1.1  2009/09/28 15:13:36  marc

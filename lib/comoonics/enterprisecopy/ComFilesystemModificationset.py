@@ -7,24 +7,18 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.5 2010-02-09 21:48:24 mark Exp $
+# $Id: ComFilesystemModificationset.py,v 1.6 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemModificationset.py,v $
 
-import xml.dom
-import exceptions
-from xml import xpath
-from xml.dom.ext import PrettyPrint
-import os
 
-from comoonics.ComExceptions import *
+from comoonics.ComExceptions import ComException
 from ComModificationset import ModificationsetJournaled
 from comoonics.storage.ComDevice import Device
 from comoonics.storage import ComFileSystem
-from comoonics.storage.ComFileSystem import FileSystem
 from comoonics.storage.ComMountpoint import MountPoint
 from comoonics import ComLog
 
@@ -33,24 +27,26 @@ log=ComLog.getLogger("comoonics.enterprisecopy.ComFilesystemModificationset.File
 class FilesystemModificationset(ModificationsetJournaled):
     """ Base Class for all source and destination objects"""
     def __init__(self, element, doc):
+        import os
         ModificationsetJournaled.__init__(self, element, doc)
+        __device=None
         try:
-            __device=xpath.Evaluate('device', element)[0]
+            __device=element.getElementyByTagName('device')[0]
             self.device=Device(__device, doc)
         except Exception:
             raise ComException("Device for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
         try:
-            __fs=xpath.Evaluate('device/filesystem', element)[0]
+            __fs=__device.getElementsByTagName('filesystem')[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
         except Exception:
             raise ComException("filesystem for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
         try:
-            __mp=xpath.Evaluate('device/mountpoint', element)[0]
+            __mp=__device.getElementsByTagName('mountpoint')[0]
             self.mountpoint=MountPoint(__mp, doc)
         except Exception:
             raise ComException("Mountpoint for modificationset %s not defined" %self.getAttribute("name", "unknown"))
         self.umountfs=False
-        self.createModificationsList(xpath.Evaluate('device/modification', element), doc)
+        self.createModificationsList(__device.getElementsByTagName('modification'), doc)
         self.cwd = os.getcwd()
         log.debug("Modifications: %u" % len(self.modifications))
         log.debug("Filesystemodificationset CWD: " + self.cwd)
@@ -59,6 +55,7 @@ class FilesystemModificationset(ModificationsetJournaled):
         self.addToUndoMap(self.device.__class__.__name__, "lvm_vg_activate", "lvm_vg_deactivate")
 
     def doPre(self):
+        import os
         # mount Filesystem
         for journal_command in self.device.resolveDeviceName():
             self.journal(self.device, journal_command)
@@ -72,6 +69,7 @@ class FilesystemModificationset(ModificationsetJournaled):
         super(FilesystemModificationset, self).doPre()
 
     def doPost(self):
+        import os
         super(FilesystemModificationset, self).doPost()
         self.replayJournal()
         self.commitJournal()
@@ -85,7 +83,10 @@ class FilesystemModificationset(ModificationsetJournaled):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.5  2010-02-09 21:48:24  mark
+# Revision 1.6  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.5  2010/02/09 21:48:24  mark
 # added .storage path in includes
 #
 # Revision 1.4  2007/07/25 11:10:23  marc

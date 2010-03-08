@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.10 2010-02-07 20:30:36 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.11 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 import re
@@ -21,12 +21,6 @@ from comoonics import ComLog
 import ComCopyset
 import ComModificationset
 from comoonics.ComExceptions import ComException
-
-# Just to import DBLogger if it exists to be able to use it
-try:
-    from comoonics.db.ComDBLogger import DBLogger
-except:
-    pass
 
 class CouldNotFindSet(ComException):
     _set="Set"
@@ -212,7 +206,10 @@ class EnterpriseCopy(ComDataObject.DataObject):
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.10  2010-02-07 20:30:36  marc
+# Revision 1.11  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.10  2010/02/07 20:30:36  marc
 # - support for only selected sets.
 #
 # Revision 1.9  2007/07/31 15:15:29  marc

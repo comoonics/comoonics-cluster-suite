@@ -6,17 +6,16 @@ API for working with scsi and linux
 
 
 # here is some internal information
-# $Id: ComSCSI.py,v 1.3 2007-07-25 11:35:26 marc Exp $
+# $Id: ComSCSI.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/scsi/ComSCSI.py,v $
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
-import os
 import os.path
 import re
 from comoonics import ComSystem
@@ -356,25 +355,12 @@ def getBlockDeviceForWWWNLun(wwwn, lun, hosts=None):
     else:
         raise SCSIException("Could not find blockdevice for wwwn: %s, lun: %u" %(wwwn, int(lun)))
 
-def test():
-    __line("Testing scsihosts")
-    print getSCSIHosts()
-    __line("Testing fchosts")
-    print getFCHosts()
-
-    __line("scsirescaning fchosts")
-    for host in getFCHosts():
-        rescan(host)
-
-def __line(str):
-    print "--------------------------- %s ---------------------------------------" %(str)
-
-if __name__=="__main__":
-    test()
-
 ###########################
 # $Log: ComSCSI.py,v $
-# Revision 1.3  2007-07-25 11:35:26  marc
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2007/07/25 11:35:26  marc
 # -loglevel
 #
 # Revision 1.2  2007/04/04 12:32:44  marc

@@ -7,24 +7,21 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComBootloaderCopyset.py,v 1.3 2010-02-10 12:48:46 mark Exp $
+# $Id: ComBootloaderCopyset.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComBootloaderCopyset.py,v $
 
-import xml.dom
-import exceptions
-from xml import xpath
 
-from ComCopyset import *
+from ComCopyset import Copyset
 from comoonics.storage.ComBootDisk import BootDisk
-from comoonics.ComExceptions import *
-from comoonics import ComSystem
+from comoonics.ComExceptions import ComException
 
 class BootloaderCopyset(Copyset):
     def __init__(self, element, doc):
+        from xml import xpath
         Copyset.__init__(self, element, doc)
 
         try:
@@ -39,7 +36,10 @@ class BootloaderCopyset(Copyset):
 
 
 # $Log: ComBootloaderCopyset.py,v $
-# Revision 1.3  2010-02-10 12:48:46  mark
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2010/02/10 12:48:46  mark
 # added .storage path in includes
 #
 # Revision 1.2  2007/06/19 12:51:15  marc

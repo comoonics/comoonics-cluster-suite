@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComCatifModification.py,v 1.2 2010-02-12 10:10:26 marc Exp $
+# $Id: ComCatifModification.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCatifModification.py,v $
 
 import os.path
@@ -96,7 +96,7 @@ class CatifModification(Modification):
 
     def _cmd(self, __cmd, _log=None):
         if _log:
-           _log.write("%s\n" %__cmd)
+            _log.write("%s\n" %__cmd)
         self.catiflogger.debug(__cmd)
         #__out=ComSystem.execLocalOutput(__cmd)
         self.__cmd=__cmd
@@ -244,74 +244,11 @@ class CatifexecModification(CatifModification):
             self._log.close()
             self._log=None
 
-def __test():
-    from xml.dom.ext.reader import Sax2
-    import tempfile
-    import logging
-    from comoonics.ComPath import Path
-    from ComModification import registerModification
-    registerModification("catiffile", CatiffileModification)
-    registerModification("catifexec", CatifexecModification)
-    ComLog.setLevel(logging.DEBUG)
-    __tmpdir=tempfile.mkdtemp()
-    print("tmpdir: %s" %__tmpdir)
-    __xmls=[
-"""
-<path name="%s">
-   <modification type="catifexec">
-      <command name="/usr/bin/pstree"/>
-   </modification>
-</path>
-""" %__tmpdir,
-"""
-<path name="%s">
-   <modification type="catiffile">
-      <file name="/etc/*-release"/>
-      <file name="$(/bin/ls -d /var/log/Xorg.*.log /var/log/XFree86.*.log 2>/dev/null)"/>
-   </modification>
-</path>
-""" %__tmpdir,
-"""
-<path name="%s">
-   <modification type="catiffile">
-      <file name="/etc/ld.so.conf.d"/>
-      <file name="/etc/ld.so.conf.dadf"/>
-   </modification>
-</path>
-""" %__tmpdir,
-"""
-<path name="%s">
-   <modification type="catiffile" errors="ignore">
-      <file name="/etc/rc.d"/>
-      <file name="/etc/syslog.conf"/>
-   </modification>
-   <modification type="catifexec">
-      <command name="hostname"/>
-   </modification>
-   <modification type="catifexec">
-      <command name="/bin/bash -c 'echo lspci; echo; lspci; echo; echo lspci -n; echo; lspci -n; echo; echo lspci -nv; echo; lspci -nv; echo; echo lspci -nvv; echo; /sbin/lspci -nvv'" log="lspci"/>
-   </modification>
-</path>
-""" %__tmpdir
-    ]
-    # create Reader object
-    reader = Sax2.Reader()
-
-    for _xml in __xmls:
-        _doc = reader.fromString(_xml)
-        _path=Path(_doc.documentElement, _doc)
-        _path.mkdir()
-        _path.pushd()
-        for _modification in _doc.documentElement.getElementsByTagName("modification"):
-            _modification=ComModification.getModification(_modification, _doc)
-            _modification.doModification()
-        _path.popd()
-
-if __name__=="__main__":
-    __test()
-
 # $Log: ComCatifModification.py,v $
-# Revision 1.2  2010-02-12 10:10:26  marc
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2010/02/12 10:10:26  marc
 # fixed pexpect import
 #
 # Revision 1.1  2007/09/07 14:35:09  marc

@@ -3,17 +3,17 @@ Assistant helper for storage information
 """
 
 # here is some internal information
-# $Id: ComStorageAssistantHelper.py,v 1.2 2008-11-12 10:05:10 mark Exp $
+# $Id: ComStorageAssistantHelper.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/assistant/ComStorageAssistantHelper.py,v $
 
 import re
-from comoonics import ComSystem, ComLog, ComParted
+from comoonics import ComSystem, ComLog
 from comoonics.assistant.ComAssistantHelper import AssistantHelper
 
-from comoonics.ComLVM import *
+#from comoonics.ComLVM import
 
 __logStrLevel__="comoonics.assistant.ComAssistantHelper"
 
@@ -32,8 +32,8 @@ class StorageAssistantHelper(AssistantHelper):
             if self.query == "livecd":
                 return self.getLiveCDDevice()
         except Exception, e:
-                ComLog.errorTraceLog()
-                return
+            ComLog.errorTraceLog()
+            return
         
         
     def getRootDevice(self):
@@ -98,6 +98,7 @@ class StorageAssistantHelper(AssistantHelper):
             
     
     def _getLVM_physicalVolume(self, device):
+        from comoonics.storage.ComLVM import LogicalVolume, LinuxVolumeManager, VolumeGroup 
         try:
             (vgname, lvname)=LogicalVolume.splitLVPath(device)
             _vg=VolumeGroup(vgname)

@@ -6,21 +6,20 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.8 2008-03-12 09:40:53 marc Exp $
+# $Id: ComCopyObject.py,v 1.9 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
 from comoonics.ComJournaled import JournaledObject
 from comoonics import ComLog
-from comoonics.enterprisecopy.ComRequirement import Requirements
+from ComRequirement import Requirements
 
 from xml.dom import Node
-
 
 class UnsupportedCopyObjectException(ComException): pass
 class UnsupportedMetadataException(ComException): pass
@@ -131,7 +130,10 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.8  2008-03-12 09:40:53  marc
+# Revision 1.9  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.8  2008/03/12 09:40:53  marc
 # support for a more general constructor
 #
 # Revision 1.7  2007/09/07 14:35:33  marc

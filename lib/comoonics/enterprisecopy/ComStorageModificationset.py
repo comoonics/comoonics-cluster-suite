@@ -24,12 +24,12 @@ Example Configuration for the HP_EVA implementation:
 """
 
 # here is some internal information
-# $Id: ComStorageModificationset.py,v 1.2 2007-03-26 08:14:38 marc Exp $
+# $Id: ComStorageModificationset.py,v 1.1 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.2 $"
-# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/Attic/ComStorageModificationset.py,v $
+__version__ = "$Revision: 1.1 $"
+# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComStorageModificationset.py,v $
 
 from comoonics.enterprisecopy.ComModificationset import Modificationset
 from comoonics.storage.ComStorage import Storage
@@ -59,45 +59,11 @@ class StorageModificationset(Modificationset):
 
 mylogger=ComLog.getLogger(StorageModificationset.__logStrLevel__)
 
-def main():
-    import sys
-    cwd=sys.argv[0]
-    cwd=cwd[:cwd.rfind("/")]
-    xml_dumps=["""
-    <modificationset type="storage" action="add" id="basestoragesystem" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="%s/hp/ComHP_EVA_SSSU_Sim.py">
-        <disk name="Virtual Disks/atix/sourcedisk">
-            <properties>
-                <property name="size" value="10"/>
-                <property name="disk_group" value="146er"/>
-            </properties>
-        </disk>
-    </modificationset>
-""" %(cwd),
-"""
-    <modificationset type="storage" action="map_luns" id="basestoragesystem" implementation="comoonics.storage.hp.ComHP_EVA_Storage" system="127.0.0.1/EVA5000" username="Administrator" password="Administrator" cmd="%s/hp/ComHP_EVA_SSSU_Sim.py">
-        <disk name="Virtual Disks/atix/sourcedisk">
-            <mapping lun="0">
-                <host name="server1"/>
-            </mapping>
-        </disk>
-    </modificationset>""" %(cwd)]
-    for xml_dump in xml_dumps:
-        testModificationsetFromXMLDump(xml_dump)
-
-def testModificationsetFromXMLDump(xml_dump):
-    from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
-    reader=Sax2.Reader(validate=0)
-    #mylogger.debug("xml: %s" %(match.group(1)))
-    doc=reader.fromString(xml_dump)
-    sms=StorageModificationset(doc.documentElement, doc)
-    sms.doModifications()
-
-if __name__ == '__main__':
-    main()
-
 # $Log: ComStorageModificationset.py,v $
-# Revision 1.2  2007-03-26 08:14:38  marc
+# Revision 1.1  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2007/03/26 08:14:38  marc
 # - added support for undoing and journaling
 #
 # Revision 1.1  2007/02/09 11:36:16  marc

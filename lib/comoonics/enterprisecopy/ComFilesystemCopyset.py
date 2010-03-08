@@ -7,22 +7,18 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.16 2010-02-09 21:48:24 mark Exp $
+# $Id: ComFilesystemCopyset.py,v 1.17 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
-import exceptions
 import warnings
-from xml import xpath
 
 from ComCopyObject import CopyObject
-from ComCopyset import *
-from comoonics.storage.ComDisk import Disk
-from comoonics.ComExceptions import *
+from ComCopyset import Copyset
 from comoonics import ComSystem
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
@@ -117,14 +113,14 @@ class FilesystemCopyset(Copyset):
             doc=params[1]
             Copyset.__init__(self, element, doc)
             try:
-                __source=xpath.Evaluate('source', element)[0]
+                __source=element.getElementsByTagName('source')[0]
                 self.source=CopyObject(__source, doc)
             except Exception, e:
                 ComLog.getLogger(__logStrLevel__).warning(e)
                 ComLog.debugTraceLog(ComLog.getLogger(__logStrLevel__))
                 raise ComException("Source for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
             try:
-                __dest=xpath.Evaluate('destination', element)[0]
+                __dest=element.getElementsByTagName('destination')[0]
                 self.dest=CopyObject(__dest, doc)
             except Exception, e:
                 ComLog.getLogger(__logStrLevel__).warning(e)
@@ -264,62 +260,11 @@ class FilesystemCopyset(Copyset):
         raise ComException("data copy %s to %s is not supported" \
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
-def __testCopyset(_copyset):
-    import os
-    print "testing PathModificationset..."
-    print "cwd: %s" %os.getcwd()
-    _copyset.doPre()
-    print "cwd(after doPre): %s" %os.getcwd()
-    _copyset.doCopy()
-    print "cwd(before doPost): %s" %os.getcwd()
-    _copyset.doPost()
-    print "cwd: %s" %os.getcwd()
-
-def main():
-    _xmls=[
-           """
-    <copyset type="filesystem" name="save-sysreport-redhat">
-        <source type="path">
-            <path name="/tmp/sysreport-$(date -u +%G%m%d%k%M%S | /usr/bin/tr -d ' ')"/>
-        </source>
-        <destination type="backup">
-            <metadata>
-                <archive name='/tmp/meta-clone-lilr627-02.tar' format='tar' type='file'>
-                    <file name='./path.xml'/>
-                </archive>
-            </metadata>
-            <data>
-                <archive name='/tmp/path-02.tgz' format='tar' type='file' compression='gzip'/>
-            </data>
-        </destination>
-    </copyset>
-           """,
-           ]
-    import logging
-    from ComPathCopyObject import PathCopyObject 
-    from ComCopyObject import registerCopyObject
-    from xml.dom.ext.reader import Sax2
-    ComLog.setLevel(logging.DEBUG)
-    ComSystem.setExecMode(ComSystem.SIMULATE)
-    print "registering %s" %PathCopyObject
-    registerCopyObject("path", PathCopyObject)
-    reader=Sax2.Reader(validate=0)
-    print "Test with xml:"
-    for _xml in _xmls:
-        doc=reader.fromString(_xml)
-        _copyset=Copyset(doc.documentElement, doc)
-        print "Copyset: %s" %_copyset
-        __testCopyset(_copyset)
-    print "Test with params: "
-    FilesystemCopyset.DEFAULT_OPTIONS=["--archive", "--update", "--one-file-system"]
-    copyset=FilesystemCopyset(PathCopyObject(path="/tmp", source=True), PathCopyObject(path="/tmp2", dest=True))
-    __testCopyset(copyset)
-
-if __name__ == "__main__":
-    main()
-
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.16  2010-02-09 21:48:24  mark
+# Revision 1.17  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.16  2010/02/09 21:48:24  mark
 # added .storage path in includes
 #
 # Revision 1.15  2008/03/12 12:27:41  marc

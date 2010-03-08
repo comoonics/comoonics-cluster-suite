@@ -5,22 +5,16 @@ Classes for resolving scsi devices by different selektors
 
 
 # here is some internal information
-# $Id: ComSCSIResolver.py,v 1.3 2007-07-25 11:35:13 marc Exp $
+# $Id: ComSCSIResolver.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/scsi/ComSCSIResolver.py,v $
 
 from comoonics import ComLog
-from comoonics.ComExceptions import ComException
-from comoonics.ComDisk import HostDisk
+from comoonics.storage.ComDisk import HostDisk
 from comoonics.scsi import ComSCSI
-
-import os
-import os.path
-import re
-from comoonics import ComSystem
 
 log=ComLog.getLogger("comoonics.scsi.ComSCSI")
 
@@ -39,18 +33,12 @@ class FCTransportResolver(HostDisk.DeviceNameResolver):
             (wwwn, lun, other)=value.split(":")
             return "%s%s" %(ComSCSI.getBlockDeviceForWWWNLun(wwwn, lun), other)
 
-def test():
-    res=SCSIWWIDResolver()
-    print "SCSIWWIDResolver.key: "+res.getKey()
-    res=FCTransportResolver()
-    print "SCSIWWIDResolver.key: "+res.getKey()
-
-if __name__=="__main__":
-    test()
-
 ###########################
 # $Log: ComSCSIResolver.py,v $
-# Revision 1.3  2007-07-25 11:35:13  marc
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2007/07/25 11:35:13  marc
 # - loglevel
 #
 # Revision 1.2  2007/04/04 12:33:58  marc

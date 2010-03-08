@@ -2,13 +2,10 @@
 Generic ComAssitant TUI
 """
 
-from snack import *
-import logging
-import sys
+from snack import Grid
 
-from comoonics import ComLog, odict
-from ComAssistantInfo import *
-from ComECAssistantController import *
+#from ComAssistantInfo import *
+#from ComECAssistantController import *
 from comoonics.ComExceptions import ComException
 
 class CancelException(ComException):pass
@@ -18,6 +15,7 @@ class AssistantInfoRadioBar(Grid):
         """
         @param buttonarray is an array in the form ([radiobutton, widget], ...)
         """
+        from snack import RadioGroup, Textbox, Entry, FLAG_DISABLED  
         self.group = RadioGroup()
         self.list = []
         self.item = 0
@@ -56,6 +54,7 @@ class AssistantInfoRadioBar(Grid):
         self._hasManualToggled()
 
     def _hasManualToggled(self):
+        from snack import FLAG_DISABLED
         self.manualentry.setFlags(FLAG_DISABLED, sense=self.dm.selected())
             
     def getSelection(self): 
@@ -78,6 +77,7 @@ class AssistantTui(object):
         """
         @param: controller, a list of AssistantControllers
         """
+        from snack import SnackScreen
         self.title=title
         self.controller=controller
         self.infodict=self._build_infodict()
@@ -110,6 +110,7 @@ class AssistantTui(object):
             return False
         
     def _build_infodict(self):
+        from comoonics import odict
         _dict=odict.Odict()
         for _controller in self.controller:
             _tdict=_controller.getInfoDict()
@@ -122,6 +123,7 @@ class AssistantTui(object):
         return _dict
          
     def _run_warning(self, warning):
+        from snack import ButtonChoiceWindow
         _rec=ButtonChoiceWindow(self.screen, "Are you sure ?", warning, buttons = [ 'Ok', 'Back' ]) 
         if _rec == "ok":
             return self.OK
@@ -160,6 +162,7 @@ class AssistantTui(object):
         return self.NEXT
         
     def _run_save(self):
+        from snack import ButtonChoiceWindow
         try:
             for _controller in self.controller:
                 _controller.save()
@@ -182,6 +185,7 @@ class AssistantTui(object):
         
         
     def getEntryWindow(self, screen):
+        from snack import EntryWindow
         w = EntryWindow(screen ,self.title, "text", ("a", "b", "c", "d", "e", "f", "g"), buttons = [ 'Ok', 'Scan', 'Cancel' ])
         w.run()
         
@@ -193,10 +197,11 @@ class AssistantTui(object):
     
 
 def AssistantWindow(screen, title, info, width = 40, buttons = [ 'Next', 'Previous', 'Return' ], help = None):
+    from snack import ButtonBar, TextboxReflowed, GridFormHelp, Label
     """
     EntryWindow():
     """
-    bb = ButtonBar(screen, buttons);
+    bb = ButtonBar(screen, buttons)
     rb = AssistantInfoRadioBar(screen, info)
     t = TextboxReflowed(width, info.getComment())
    
@@ -212,7 +217,7 @@ def AssistantWindow(screen, title, info, width = 40, buttons = [ 'Next', 'Previo
     return (bb.buttonPressed(result), rb.getSelection())
 
 def ConfirmationWindow(screen, title, infolist, width = 40, buttons = [ 'Start', 'Modify', 'Save', 'Exit' ], help = None):
-
+    from snack import ButtonBar, Label, GridFormHelp, Textbox
     bb = ButtonBar(screen, buttons);
     ig=Grid(2, len(infolist))
     i=0
@@ -230,19 +235,4 @@ def ConfirmationWindow(screen, title, infolist, width = 40, buttons = [ 'Start',
     result = g.runOnce()
 
     return (bb.buttonPressed(result))
-   
-    
-    
-def test():
-    ComLog.setLevel(logging.DEBUG)
-    ac=ECAssistantController("./localclone.xml", "./infodef.xml", "/opt/atix/comoonics-cs/xsl/localclone.xsl", scan=True)
-    ac2=ECAssistantController("./createlivecd.xml", "./createlivecd.infodef.xml", scan=True)
 
-    at = AssistantTui([ac2, ac])
-    result = at.run()
-#    at.cleanup()
-#    ac.printDocument()
-    
-if __name__=="__main__":
-    test()
-        

@@ -7,15 +7,12 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.6 2007-09-07 14:38:56 marc Exp $
+# $Id: ComModificationset.py,v 1.7 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModificationset.py,v $
-
-import exceptions
-import os
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComJournaled import JournaledObject
@@ -40,11 +37,11 @@ def getModificationset(element, doc):
         from ComPartitionModificationset import PartitionModificationset
         return PartitionModificationset(element, doc)
     elif __type == "storage":
-        from comoonics.storage.ComStorageModificationset import StorageModificationset
+        from comoonics.enterprisecopy.ComStorageModificationset import StorageModificationset
         return StorageModificationset(element, doc)
     elif _modificationset_registry.has_key(__type):
         return _modificationset_registry[__type](element, doc)
-    raise exceptions.NotImplementedError("Modifcicationset for type " + __type + " is not implemented")
+    raise NotImplementedError("Modifcicationset for type " + __type + " is not implemented")
 
 class Modificationset(DataObject, Requirements):
     TAGNAME = "modificationset"
@@ -114,7 +111,10 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComModificationset.py,v $
-# Revision 1.6  2007-09-07 14:38:56  marc
+# Revision 1.7  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.6  2007/09/07 14:38:56  marc
 # -added registry implementation.
 # -logging
 #

@@ -24,14 +24,17 @@ registerModificationset("isofs", ISOFSModificationset)
 registerCopyObject("path", PathCopyObject)
 
 try:
-   from ComSysrqModification import SysrqModification
-   registerModification("sysrq", SysrqModification)
+    from ComSysrqModification import SysrqModification
+    registerModification("sysrq", SysrqModification)
 except ImportError:
-   pass
+    pass
 
 ########
 # $Log: __init__.py,v $
-# Revision 1.4  2010-02-07 20:02:29  marc
+# Revision 1.5  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.4  2010/02/07 20:02:29  marc
 # SysRq will only be loaded if available
 #
 # Revision 1.3  2008/02/19 17:32:41  mark

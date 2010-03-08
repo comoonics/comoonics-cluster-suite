@@ -4,10 +4,10 @@ Python implementation of an HP SSSU utility simulator to emulate the output gene
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_SSSU_Sim.py,v 1.2 2010-02-12 10:11:45 marc Exp $
+# $Id: ComHP_EVA_SSSU_Sim.py,v 1.3 2010-03-08 12:30:48 marc Exp $
 #
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py,v $
 
 import cmd
@@ -800,17 +800,6 @@ def main():
     sssu_sim=HP_EVA_SSSU_Sim()
     sssu_sim.cmdloop()
 
-def test():
-#    ComLog.setLevel(logging.INFO)
-    # first setup the storage environment
-    returnHP_EVA_ObjectFromXML("./test/system_dump.xml")
-    returnHP_EVA_ObjectFromXML("./test/vdisk_dump.xml")
-    returnHP_EVA_ObjectFromXML("./test/diskgroup_dump.xml")
-    print "Found systems: %s, %s" %(HP_EVA_Storagecells.ids(), HP_EVA_Storagecells.names())
-    sssu_sim=HP_EVA_SSSU_Sim(None)
-    sssu_sim.cmdloop()
-
-
 def returnHP_EVA_ObjectFromXML(filename):
     from xml.dom.ext.reader import Sax2
     from xml.dom.ext import PrettyPrint
@@ -827,15 +816,12 @@ if __name__ == '__main__':
     except ComExceptions.ComException, e:
         sys.stderr.write(e.__str__())
 
-if __name__ == '__test__':
-    try:
-        test()
-    except ComExceptions.ComException, e:
-        sys.stderr.write(e.__str__())
-
 #######################
 # $Log: ComHP_EVA_SSSU_Sim.py,v $
-# Revision 1.2  2010-02-12 10:11:45  marc
+# Revision 1.3  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.2  2010/02/12 10:11:45  marc
 # fixed pexpect imports
 #
 # Revision 1.1  2007/02/09 11:36:16  marc

@@ -4,10 +4,10 @@ Python implementation of the Base Storage Interface to connect a modification or
 """
 
 # here is some internal information
-# $Id: ComHP_EVA_Storage.py,v 1.7 2010-02-12 10:11:45 marc Exp $
+# $Id: ComHP_EVA_Storage.py,v 1.8 2010-03-08 12:30:48 marc Exp $
 #
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/hp/ComHP_EVA_Storage.py,v $
 
 from comoonics.cluster.tools.pexpect import TIMEOUT
@@ -51,10 +51,10 @@ class HP_EVA_Storage(Storage):
         else:
             self.cmdlog='/tmp/ComHP_EVA_SSSU_cmd.log'
         self.autoconnect=False
+        self.sssu=None
         if kwds.has_key("autoconnect"):
             self.autoconnect=kwds["autoconnect"]
             self.connect()
-        self.sssu=None
 
 
     def getConnectionName(self):
@@ -313,51 +313,12 @@ class HP_EVA_Storage(Storage):
 
 mylogger=ComLog.getLogger(HP_EVA_Storage.__logStrLevel__)
 
-def main():
-    from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
-    reader=Sax2.Reader(validate=0)
-    #mylogger.debug("xml: %s" %(match.group(1)))
-    xml_dump="""
-        <disk name="Virtual Disks/atix/sourcedisk">
-            <properties>
-                <property name="size" value="10"/>
-                <property name="disk_group" value="146er"/>
-            </properties>
-        </disk>
-"""
-    doc=reader.fromString(xml_dump)
-    disk=Disk(doc.documentElement, doc)
-    for property in disk.getProperties().iter():
-        print "property of disk: %s=>%s" %(property.getAttribute("name"),property.getAttribute("value"))
-    storage=HP_EVA_Storage(system="127.0.0.1/EVA5000", username="Administrator", password="Administrator", autoconnect=True, cmd="./ComHP_EVA_SSSU_Sim.py")
-    print "Connectionname: %s" %(storage.getConnectionName())
-    print "Adding Disk %s" %(disk.getAttribute("name"))
-    print storage.add(disk)
-    print "Removing Disk %s" %(disk.getAttribute("name"))
-    print storage.delete(disk)
-    xml_dump="""
-        <disk name="Virtual Disks/atix/sourcedisk_snap">
-            <mapping lun="1">
-                <host name="server1"/>
-            </mapping>
-        </disk>
-"""
-    doc=reader.fromString(xml_dump)
-    disk=Disk(doc.documentElement, doc)
-    print "Adding Luns to Disk %s" %(disk.getAttribute("name"))
-    print storage.map_luns(disk)
-    print "Removing Luns from Disk %s" %(disk.getAttribute("name"))
-    print storage.unmap_luns(disk)
-
-    storage.close()
-
-if __name__ == '__main__':
-    main()
-
 ########################
 # $Log: ComHP_EVA_Storage.py,v $
-# Revision 1.7  2010-02-12 10:11:45  marc
+# Revision 1.8  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.7  2010/02/12 10:11:45  marc
 # fixed pexpect imports
 #
 # Revision 1.6  2007/07/10 11:35:43  marc

@@ -13,10 +13,10 @@ Example Configuration:
 """
 
 # here is some internal information
-# $Id: ComISOFSModificationset.py,v 1.3 2008-02-29 15:04:11 mark Exp $
+# $Id: ComISOFSModificationset.py,v 1.4 2010-03-08 12:30:48 marc Exp $
 #
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComISOFSModificationset.py,v $
 
 from ComModificationset import ModificationsetJournaled
@@ -25,7 +25,6 @@ from comoonics.ComExceptions import ComException
 from comoonics.ComPath import Path
 
 import os
-from xml import xpath
 
 CMD_MKISOFS="/usr/bin/mkisofs"
 
@@ -40,7 +39,7 @@ class ISOFSModificationset(ModificationsetJournaled):
         """
         super(ISOFSModificationset, self).__init__(element, doc)
         try:
-            __path=xpath.Evaluate('path', element)
+            __path=element.getElementsByTagName('path')
         except Exception:
             raise ComException("Path for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
         self.pathlist=__path
@@ -91,7 +90,10 @@ class ISOFSModificationset(ModificationsetJournaled):
         return CMD_MKISOFS + " " + " ".join(_opts)
 
 # $Log: ComISOFSModificationset.py,v $
-# Revision 1.3  2008-02-29 15:04:11  mark
+# Revision 1.4  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.3  2008/02/29 15:04:11  mark
 # use Path Object
 #
 # Revision 1.2  2008/02/20 13:51:03  mark

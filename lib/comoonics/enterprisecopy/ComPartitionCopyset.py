@@ -34,37 +34,34 @@ supported flag name attributes: Note, that some may not be supported by the disk
 
 
 # here is some internal information
-# $Id: ComPartitionCopyset.py,v 1.5 2007-10-15 09:11:47 mark Exp $
+# $Id: ComPartitionCopyset.py,v 1.6 2010-03-08 12:30:48 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyset.py,v $
 
 import os
 import re
-import xml.dom
-import exceptions
-from xml import xpath
 
-from ComCopyset import *
+from ComCopyset import CopysetJournaled
 from ComCopyObject import CopyObject
 from comoonics.ComExceptions import *
-from comoonics import ComSystem
+from comoonics import ComSystem, ComLog
 
 __logStrLevel__ = "PartitionCopyset"
 class PartitionCopyset(CopysetJournaled):
     def __init__(self, element, doc):
         CopysetJournaled.__init__(self, element, doc)
         try:
-            __source=xpath.Evaluate('source', element)[0]
+            __source=element.getElementsByTagName('source')[0]
             self.source=CopyObject(__source, doc)
         #except Exception, e:
-        except None:
+        except Exception, e:
             ComLog.getLogger(__logStrLevel__).warning(e)
             raise ComException("source for copyset not defined")
         try:
-            __dest=xpath.Evaluate('destination', element)[0]
+            __dest=element.getElementsByTagName('destination')[0]
             self.dest=CopyObject(__dest, doc)
         except Exception, e:
         #except None:
@@ -131,7 +128,10 @@ class PartitionCopyset(CopysetJournaled):
 
 
 # $Log: ComPartitionCopyset.py,v $
-# Revision 1.5  2007-10-15 09:11:47  mark
+# Revision 1.6  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.5  2007/10/15 09:11:47  mark
 # Fixed BZ#42. Added source and dest cleanup
 #
 # Revision 1.4  2007/02/27 15:54:41  mark

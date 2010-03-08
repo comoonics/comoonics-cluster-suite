@@ -104,6 +104,24 @@ def guessType(_cdslpath, _cdslrepository, _exists=True):
     else:
         return Cdsl.UNKNOWN_TYPE
 
+def subpathsto(to, fromwhere):
+    """
+    This method will return all subpaths from the frompath fromwhere to the path to. 
+    """
+    import os.path
+    _from=fromwhere
+    common=commonpath(_from, to)
+    paths=[]
+    if common != "" or to=="":
+        _from, _head=os.path.split(strippath(_from, common))
+        if not _from or _from == "":
+            paths.append(os.path.join(common, _head))
+        else:
+            paths.append(os.path.join(common, _from, _head))
+            paths.extend(subpathsto(to, os.path.join(common, _from)))
+    return paths
+            
+
 def strippath(_path, _headpath):
     """
     Strips the headpath from the head of given path and returns the "relative" resultpath. If it does not
@@ -117,9 +135,9 @@ def strippath(_path, _headpath):
     """
     import os.path
     if os.path.normpath(_path[0:len(_headpath)])==os.path.normpath(_headpath):
-        return _path[len(_headpath):]
+        return dirtrim(_path[len(_headpath):])
     else:
-        return _path
+        return dirtrim(_path)
 
 def isCDSLPath(path, cdslRepository, root="/"):
     """
@@ -220,7 +238,7 @@ def getNodeFromPath(path, cdslRepository, exists=True):
     import os
     if isHostdependentPath(path, cdslRepository, exists):
         try:
-            return strippath(path, cdslRepository.getTreePath()).split(os.sep)[1]
+            return strippath(path, cdslRepository.getTreePath()).split(os.sep)[0]
         except:
             pass
     raise ValueError("Could not find nodepart in path %s" %path)
@@ -230,7 +248,29 @@ def isSubPath(_path, _subdir):
     import os.path
     _p=dirtrim(_path)
     _s=dirtrim(_subdir)
-    return _p.startswith(_s+os.sep) or _p.endswith(os.path.join(os.sep, _s)) or _p.find(os.path.join(os.sep, _s)+os.sep)>=0
+    return _p.startswith(_s+os.sep) or _p.endswith(os.path.join(os.sep, _s)) or _p.find(os.path.join(os.sep, _s)+os.sep)>=0 or _s==""
+
+def commonpath(path1, path2):
+    """
+    Returns the longest path that is common to path1 and path2.
+    """
+    import os
+    _p1=dirtrim(path1)
+    _p2=dirtrim(path2)
+    if not _p1 or _p1=="":
+        return ""
+    elif not _p2 or _p2=="":
+        return ""
+    elif _p1 == _p2:
+        return _p1
+    elif isSubPath(_p1, _p2):
+        return _p2
+    elif _p1.find(os.sep) > _p1.find(os.sep):
+        _p1h, _p1t=os.path.split(_p1)
+        return commonpath(_p1h, _p2)
+    else:
+        _p2h, _p2t=os.path.split(_p2)
+        return commonpath(_p1, _p2h)
 
 def dirtrim(_dir):
     import os
@@ -278,7 +318,10 @@ def commonoptparseroptions(parser):
 
 #################
 # $Log: __init__.py,v $
-# Revision 1.9  2010-02-15 12:54:06  marc
+# Revision 1.10  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.9  2010/02/15 12:54:06  marc
 # - fixed bugs with nested cdsls not being working
 #
 # Revision 1.8  2010/02/07 20:01:26  marc

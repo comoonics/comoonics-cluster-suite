@@ -23,13 +23,6 @@ class test_Cdsl(unittest.TestCase):
             self.assertEquals(sp1, sp2, "Sourcepaths for cdsl %s are not equal: %s != %s" %(cdsl.src, sp1, sp2))
 #            print "sourcepaths(%s): %s" %(cdsl, cdsl.getSourcePaths())    
             
-#    def test_C_CdslSubPaths(self):
-#        for cdsl in repository.getCdsls():
-#            sp1=cdsl._getSubPathsToParent()
-#            sp2=setupCdsls.results[cdsl.src][4]
-#            self.assertEquals(sp1, sp2, "SubPaths2Parent for cdsl %s are not equal: %s != %s" %(cdsl.src, sp1, sp2))
-#            print "Subpaths2parent(%s): %s" %(cdsl, cdsl._getSubPathsToParent())
-#
     def test_D_getChilds(self):
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
         try:
@@ -63,7 +56,7 @@ class test_Cdsl(unittest.TestCase):
         _added, _removed=validate.validate(onfilesystem=True, update=True, root=setup.tmppath)
         self.assertEquals(_added[0].src, _removed_cdsl.src, "The removed cdsl %s is different from the added one %s" %(_added[0].src, _removed_cdsl.src))
 #        print "+%s" %_added[0].src
-
+#
 #    def test_CdslOfSameType(self):
 #        from comoonics.cdsl.ComCdsl import CdslOfSameType, Cdsl
 #        
@@ -83,7 +76,7 @@ class test_Cdsl(unittest.TestCase):
                 for nodeid in setupCluster.clusterinfo.getNodeIdentifiers('id'):
                     _file="%s.%s" %(_cdsl.src, nodeid)
                     _files2remove.append(_file)
-                _files2remove.append("%s.%s" %(_cdsl.src, "orig"))
+            _files2remove.append("%s.%s" %(_cdsl.src, "orig"))
             setupCdsls.repository.workingdir.pushd()
             if _cdsl.isHostdependent():
                 shutil.move("%s.%s" %(_cdsl.src, "default"), _cdsl.src)
@@ -108,7 +101,7 @@ class test_Cdsl(unittest.TestCase):
         _cdslsrev.sort(cmpbysubdirs)
         _cdslsrev.reverse()
         for _cdsl in _cdslsrev:
-            print "- %s\n" %_cdsl.src
+#            print "- %s\n" %_cdsl.src
             setupCdsls.repository.workingdir.pushd()
             _cdsl.delete(True, True)
             self.assertFalse(_cdsl.exists(), "%s CDSL %s exists although it was removed before." %(_cdsl.type, _cdsl))
@@ -120,6 +113,8 @@ if __name__ == "__main__":
     from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
     import os
     #import sys;sys.argv = ['', 'Test.testName']
+    olddir=os.curdir
+    os.chdir(setup.tmppath)
     setupCluster=setup.SetupCluster()        
     repository=ComoonicsCdslRepository(clusterinfo=setupCluster.clusterinfo, root=setup.tmppath, usenodeids="True")  
     setupCdsls=setup.SetupCDSLs(repository)
@@ -129,4 +124,5 @@ if __name__ == "__main__":
     if module.result.wasSuccessful():
         setupCdsls.cleanUpInfrastructure(setup.tmppath, repository, setupCluster.clusterinfo)
         setup.cleanup()
+    os.chdir(olddir)
     sys.exit(not module.result.wasSuccessful())    

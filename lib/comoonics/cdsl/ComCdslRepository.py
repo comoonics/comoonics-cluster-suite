@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.19 $"
+__version__ = "$Revision: 1.20 $"
 
 import fcntl # needed for filelocking
 import re
@@ -240,6 +240,16 @@ class CdslRepository(DataObject):
             return cdsl.src
         else:
             return cdsl
+    
+    def unexpand(self, path):
+        """
+        unexpands the given path.
+        @param path: the path that should be cleared of all cdsl expansions
+        @type path: L{String}
+        @return: returns the unexpanded path
+        @rtype: L{String}
+        """
+        return path
     
     def isExpandedDir(self, src):
         """
@@ -953,6 +963,36 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
             parent=parent.getParent()
         
         return tmppath
+    
+    def unexpand(self, path, clusterinfo=None):
+        """
+        unexpands the given path.
+        @param path: the path that should be cleared of all cdsl expansions
+        @type path: L{String}
+        @return: returns the unexpanded path
+        @rtype: L{String}
+        """
+        from comoonics.cdsl import strippath
+        subpath=path
+        subpath=stripleadingsep(strippath(strippath(subpath, self.root), self.getMountpoint()))
+        subpath=stripleadingsep(strippath(subpath, self.getLinkPath()))
+        subpath=stripleadingsep(strippath(subpath, self.getSharedTreepath()))
+        if clusterinfo:
+            nodes=clusterinfo.getNodeIdentifiers()
+        else:
+            nodes=range(1, int(self.getMaxnodeidnum())+1)
+        for node in nodes:
+            subpath=stripleadingsep(strippath(subpath, os.path.join(self.getTreePath(), node)))
+        newsubpath=list()
+        prepath=os.sep.join(path.split(os.sep)[:path.count(os.sep)-subpath.count(os.sep)])
+        head, tail=os.path.split(subpath)
+        while tail and tail != "":
+            if tail.startswith(self.getExpandString()+"."):
+                tail=tail[len(self.getExpandString())+1:]
+            newsubpath.append(tail)
+            head, tail=os.path.split(head)
+        newsubpath.reverse()
+        return dirtrim(os.path.join(prepath, os.sep.join(newsubpath)))
     
     def isExpandedDir(self, _expanded):
         """

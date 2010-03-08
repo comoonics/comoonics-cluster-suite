@@ -6,17 +6,16 @@ Just to output a message as requirement
 
 
 # here is some internal information
-# $Id: ComMessage.py,v 1.1 2007-09-07 14:37:56 marc Exp $
+# $Id: ComMessage.py,v 1.2 2010-03-08 12:30:48 marc Exp $
 #
 
 import sys
-import logging
-from ComRequirement import Requirement, getRequirement, registerRequirement
-from ComModification import Modification, getModification, registerModification
+from ComRequirement import Requirement
+from ComModification import Modification
 from comoonics import ComLog
 from comoonics import XmlTools
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComMessage.py,v $
 
 class MessageModification(Modification):
@@ -97,66 +96,11 @@ class Message(object):
                 _message+="\n"
         self.out.write(_message)
 
-def test_requirement():
-    _xmls=[
-           """
-           <requirement type="message" message="hello world"/>
-           """,
-           """
-           <requirement type="message">
-           <text>hello world
-           my dear lad</text>
-           </requirement>
-           """
-           ]
-    from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
-    reader=Sax2.Reader(validate=0)
-    for _xml in _xmls:
-        doc=reader.fromString(_xml)
-        _req=getRequirement(doc.documentElement, doc)
-        _req.do()
-
-def test_modification():
-    _xmls=[
-           """
-           <modification type="message" message="hello world"/>
-           """,
-           """
-           <modification type="message">
-           <text>hello world</text>
-           <text>my dear lad</text>
-           </modification>
-           """
-           ]
-    from xml.dom.ext.reader import Sax2
-    from comoonics.ComDisk import Disk
-    reader=Sax2.Reader(validate=0)
-    for _xml in _xmls:
-        doc=reader.fromString(_xml)
-        _req=getModification(doc.documentElement, doc)
-        print "Modification: %s" %_req
-        _req.doModification()
-
-if __name__ == "__main__":
-    ComLog.setLevel(logging.DEBUG)
-    registerModification("message", MessageModification)
-    print "Testing as Modification"
-    try:
-        test_modification()
-    except Exception, e:
-        print "Error: %s"%e
-        ComLog.debugTraceLog(MessageModification.log)
-    registerRequirement("message", MessageRequirement)
-    print "Testing as requirement"
-    try:
-        test_requirement()
-    except Exception, e:
-        print "Error: %s"%e
-        ComLog.debugTraceLog(MessageRequirement.log)
-
 ###################
 # $Log: ComMessage.py,v $
-# Revision 1.1  2007-09-07 14:37:56  marc
+# Revision 1.2  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.1  2007/09/07 14:37:56  marc
 # initial revision
 #

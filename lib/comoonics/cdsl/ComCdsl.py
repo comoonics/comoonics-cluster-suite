@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 
 # @(#)$File$
 #
@@ -371,15 +371,15 @@ class ComoonicsCdsl(Cdsl):
         @param timestamp: Timestamp to set to cdsl (Default: None), if not set create timestamp from systemtime
         @type timestamp: string
         """
-        from comoonics.cdsl import stripleadingsep, strippath
-        
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdsl")
         cdslRepository=cdslRepository.getRepositoryForCdsl(src)
-        if src.startswith(os.sep):
-            src=stripleadingsep(strippath(strippath(src, cdslRepository.root), cdslRepository.getMountpoint()))
-            self.logger.debug("cdsl stripped to %s" %src)
-
         super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp, ignoreerrors=ignoreerrors)
+        #add default node to a special nodelist
+        self.nodesWithDefaultdir = self.nodes[:]
+        self.nodesWithDefaultdir.append(self.default_node)
+
+        self.src=self._stripsrc(self.src, cdslRepository, clusterinfo)
+
         #set reldir to current path
         self.reldir = os.getcwd()
         
@@ -389,9 +389,21 @@ class ComoonicsCdsl(Cdsl):
         self.default_dir = dirtrim(cdslRepository.getDefaultDir())
         self.cdsl_link = dirtrim(cdslRepository.getLinkPath())
 
-        #add default node to a special nodelist
-        self.nodesWithDefaultdir = self.nodes[:]
-        self.nodesWithDefaultdir.append(self.default_node)
+    def _stripsrc(self, _src, cdslRepository, clusterinfo):
+#        cdslRepository.workingdir.pushd()
+        from comoonics.cdsl import stripleadingsep, strippath
+        if not _src.startswith(os.sep):
+            _src=os.path.realpath(_src)
+        src=_src
+        src=stripleadingsep(strippath(strippath(src, cdslRepository.root), cdslRepository.getMountpoint()))
+        src=stripleadingsep(strippath(src, cdslRepository.getLinkPath()))
+        src=stripleadingsep(strippath(src, cdslRepository.getSharedTreepath()))
+        for node in self.getNodenames():
+            src=stripleadingsep(strippath(src, os.path.join(cdslRepository.getTreePath(), node)))
+        src=cdslRepository.unexpand(src, clusterinfo)
+        self.logger.debug("cdsl stripped %s to %s" %(_src, src))
+#        cdslRepository.workingdir.popd()
+        return src
 
     def __str__(self):
         return self.src
@@ -410,52 +422,46 @@ class ComoonicsCdsl(Cdsl):
             _nodes.append(str(_node))
         return _nodes
 
-    def _getSubPathsToParent(self):
-        """
-        This method will return the subpaths to the parent. 
-        If there is no parent the whole path will be returned
-        """
-        from comoonics.cdsl import strippath
-        parent=self.getParent()
-        # get the next cdsl of same type
-        while parent and parent.type != self.type:
-            parent=parent.getParent()
-        paths=list()
-        cdsldirs=list()
-        if self.isHostdependent():
-            for node in self.nodesWithDefaultdir:
-                cdsldirs.append(os.path.join(self.cdslRepository.getTreePath(), node))
-        elif self.isShared():
-            cdsldirs.append(self.cdslRepository.getSharedTreepath())
-        if parent:
-            parent=parent.src
-            expanded=self.cdslRepository.expandCdsl(self)
-            pexpanded=self.cdslRepository.expandCdsl(parent)
-            # means this cdsl is expanded with isNested???? or we are the last nested shared cdsl
-            if expanded != self.src:
-                # now we need to build the difference between parentpath and src path and remove from 
-                # the expanded src path
-                # if parent is not expanded we remove more
-                tail=strippath(self.src, parent)
-                base=expanded[:-len(tail)]
-                if parent == pexpanded:
-                    phead, ptail = os.path.split(parent)
-                    bhead, btail = os.path.split(base)
-                    while phead and bhead and ptail == btail:
-                        base=bhead
-                        parent=phead
-                        phead, ptail = os.path.split(parent)
-                        bhead, btail = os.path.split(base)
-                for cdsldir in cdsldirs:
-                    paths.append(os.path.join(cdsldir, base))
-        # If this is a shared cdsl without shared parent we should all dirs down to the cdsltree
-        else:
-            head, tail = os.path.split(self.src)
-            while head:
-                for cdsldir in cdsldirs:
-                    paths.append(os.path.join(cdsldir, head))
-                head, tail = os.path.split(head)            
-        return paths
+#        parent=self.getParent()
+#        # get the next cdsl of same type
+#        while parent and parent.type != self.type:
+#            parent=parent.getParent()
+#        paths=list()
+#        cdsldirs=list()
+#        if self.isHostdependent():
+#            for node in self.nodesWithDefaultdir:
+#                cdsldirs.append(os.path.join(self.cdslRepository.getTreePath(), node))
+#        elif self.isShared():
+#            cdsldirs.append(self.cdslRepository.getSharedTreepath())
+#        if parent:
+#            parent=parent.src
+#            expanded=self.cdslRepository.expandCdsl(self)
+#            pexpanded=self.cdslRepository.expandCdsl(parent)
+#            # means this cdsl is expanded with isNested???? or we are the last nested shared cdsl
+#            if expanded != self.src:
+#                # now we need to build the difference between parentpath and src path and remove from 
+#                # the expanded src path
+#                # if parent is not expanded we remove more
+#                tail=strippath(self.src, parent)
+#                base=expanded[:-len(tail)]
+#                if parent == pexpanded:
+#                    phead, ptail = os.path.split(parent)
+#                    bhead, btail = os.path.split(base)
+#                    while phead and bhead and ptail == btail:
+#                        base=bhead
+#                        parent=phead
+#                        phead, ptail = os.path.split(parent)
+#                        bhead, btail = os.path.split(base)
+#                for cdsldir in cdsldirs:
+#                    paths.append(os.path.join(cdsldir, base))
+#        # If this is a shared cdsl without shared parent we should all dirs down to the cdsltree
+#        else:
+#            head, tail = os.path.split(self.src)
+#            while head:
+#                for cdsldir in cdsldirs:
+#                    paths.append(os.path.join(cdsldir, head))
+#                head, tail = os.path.split(head)            
+#        return paths
 
     def getDestPaths(self):
         """
@@ -597,7 +603,7 @@ class ComoonicsCdsl(Cdsl):
         @type force: Boolean
         """
         from comoonics.ComPath import Path
-        from comoonics.cdsl import isSubPath, strippath
+        from comoonics.cdsl import isSubPath
         #important pathes to work with cdsls
         #####
         # Chancel creation of cdsl if it already exists
@@ -608,6 +614,12 @@ class ComoonicsCdsl(Cdsl):
         if self.exists():
             self.logger.debug("CDSL already exists, chancel commit")
             raise CdslAlreadyExists("Cdsl %s is already existant." %self.src)
+        if self.isShared() and (self.getParent() == None or self.getParent().isShared()):
+            self.logger.debug("The cdsl %s to be shared back seems to recide already in a shared area." %self.src)
+            raise CdslOfSameType("The cdsl %s to be shared seems to recide already in a shared area." %self.src)
+        if self.isHostdependent() and self.getParent() != None and self.getParent().isHostdependent():
+            self.logger.debug("The cdsl %s to be hostdependent seems to recide alreay in an hostdependent area." %self.src)
+            raise CdslOfSameType("The cdsl %s to be hostdependent seems to recide alreay in an hostdependent area." %self.src)
         elif self.isShared():
             if isSubPath(self.src, self.cdsltree_shared):
                 self.logger.debug("Given source is already part of a hostdependent CDSL")
@@ -631,7 +643,7 @@ class ComoonicsCdsl(Cdsl):
         if _depth > 0:
             if self.isShared():
                 _depth=_depth+self._pathdepth(self.cdsltree)+1 # 1 because we need to add the node
-            elif self.isHostdependent():
+            elif self.isHostdependent() and self.getParent() != None:
                 _depth=_depth+self._pathdepth(self.cdsltree_shared)
             _relativepath = _depth * "../"
         else:
@@ -675,7 +687,6 @@ class ComoonicsCdsl(Cdsl):
         
         # Now create the symlinks
         for sourcepath in self.getSourcePaths():
-            self.logger.debug("Creating Link: %s" %sourcepath)
             if self.isShared():
                 # Either backup or remove!
                 if not force:
@@ -692,6 +703,7 @@ class ComoonicsCdsl(Cdsl):
             elif self.isHostdependent():
                 src=os.path.join(_relativepath, self.cdslRepository.getLinkPath(), self.cdslRepository.expandCdsl(self))
                 dest=sourcepath
+            self.logger.debug("Creating Link: %s => %s" %(src, dest))
             ComSystem.execMethod(os.symlink, src, dest)
         _path.popd()
                             
@@ -706,7 +718,7 @@ class ComoonicsCdsl(Cdsl):
         @type recursive: Boolean
         """
         from comoonics.ComPath import Path
-        from comoonics.cdsl import getNodeFromPath
+        from comoonics.cdsl import getNodeFromPath, isSubPath, commonpath, subpathsto
 
         if not self.exists():
             raise CdslDoesNotExistException("Cdsl with source " + self.src + " does not exist, cannot delete.")
@@ -743,13 +755,45 @@ class ComoonicsCdsl(Cdsl):
 #                _delpaths[_path]=self.
                 
         # tidy up the rest
-        siblings=list()
-        for sibling in self.getSiblings():
-            siblings.append(sibling.src)
-        self.logger.debug("delete(%s): siblings: %s" %(self.src, siblings))
-        if len(self.getSiblings()) == 0:
-            for _path in self._getSubPathsToParent():
-                _delpaths2.append(_path)
+        # Means:
+        # * if we have siblings: clean up to longest common path with all siblings
+        prefixes=list()
+        if self.isHostdependent():
+            for nodename in self.getNodenames():
+                prefixes.append(os.path.join(self.cdslRepository.getTreePath(), nodename))
+        elif self.isShared():
+            prefixes.append(self.cdslRepository.getSharedTreepath())
+        
+        # Let's find our parent of same type
+        parent2nd=None
+        if self.getParent()!=None and self.getParent().getParent() != None:
+            parent2nd=self.getParent().getParent()
+            
+        subpaths=list()
+        if len(self.getSiblings()) > 0:
+            longestcommon=""
+            for sibling in self.getSiblings():
+                common=commonpath(self.src, sibling.src)
+                while common and common != longestcommon:
+                    if isSubPath(common, longestcommon):
+                        longestcommon=common
+            for _path in subpathsto(longestcommon, self.src):
+                subpaths.append(_path)
+        # * if we have a parent of same type and no siblings:  clean up to parent
+        elif parent2nd != None:
+            for _path in subpathsto(parent2nd.src, self.src):
+                subpaths.append(_path)
+        # * if we don't have a parent and no siblings:  clean up to root+mountpoint
+        else:
+            for _path in subpathsto("", self.src):
+                subpaths.append(_path)
+                
+        for path in subpaths:
+            if str(path) != str(self.src):
+                for prefix in prefixes:
+                    _delpaths2.append(os.path.join(prefix, path))
+            
+        self.logger.debug("delpaths2: %s" %_delpaths2)
                         
         self.logger.debug("delete: cwd: %s" %_cwd)
         self._removePath(_delpaths)
@@ -822,13 +866,16 @@ class ComoonicsCdsl(Cdsl):
         _tmpcdsls = []
         for cdsl in self.cdslRepository.getCdsls():
             #compare which cdsls have got a different source, but the same parent
-            if self.src != cdsl.src and cdsl.getParent() and cdsl.getParent() == self.getParent() :
+            if self.src != cdsl.src and cdsl.getParent() == self.getParent() :
                 _tmpcdsls.append(cdsl)
         return _tmpcdsls
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.17  2010-02-15 12:54:06  marc
+# Revision 1.18  2010-03-08 12:30:48  marc
+# version for comoonics4.6-rc1
+#
+# Revision 1.17  2010/02/15 12:54:06  marc
 # - fixed bugs with nested cdsls not being working
 #
 # Revision 1.16  2010/02/09 21:45:58  marc

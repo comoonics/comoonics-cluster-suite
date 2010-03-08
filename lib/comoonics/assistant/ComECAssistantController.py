@@ -32,7 +32,6 @@ The second one is a xml file, that defines the values that should be modified.
 
 
 """
-import xml.dom
 from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2
 from xml import xpath
@@ -46,11 +45,8 @@ from comoonics.enterprisecopy import ComEnterpriseCopy
 from comoonics.ComExceptions import ComException
 
 
-from ComAssistantController import *
-from ComAssistantInfo import *
-
-import ComAssistantHelper
-
+from ComAssistantController import AssistantController
+#from ComAssistantInfo import *
 
 class FileNotFoundException(ComException):
     pass
@@ -128,6 +124,8 @@ class ECAssistantController(AssistantController):
         
             
     def _createInfoDict(self, scan):
+        from ComAssistantInfo import AttrAssistantInfo 
+        from ComAssistantHelper import createAssistantHelper
         self.infodict=InfoDict()
         # get the root element
         _info=self.value_def_doc.getElementsByTagName("info")[0]
@@ -156,7 +154,7 @@ class ECAssistantController(AssistantController):
                                                _elem.getAttribute("type"),\
                                                _elem.getComment(),\
                                                None,\
-                                               ComAssistantHelper.createAssistantHelper(_elem.getHelperClassName(), _elem.getHelperQuery()))
+                                               createAssistantHelper(_elem.getHelperClassName(), _elem.getHelperQuery()))
             if scan:
                 _ainfo.scan()
             self.infodict.addValue(_elem.getName(),_ainfo)
@@ -227,6 +225,3 @@ def test():
     
 if __name__=="__main__":
     test_infodict()
-        
-        
-
