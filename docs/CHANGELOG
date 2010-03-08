@@ -11,6 +11,8 @@ WARNING:
 CHANGES:
 
 comoonics-assistant-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
+  - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-5
   - added logging.basicConfig
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-4
@@ -22,24 +24,10 @@ comoonics-assistant-py:
   - minor enhancements
 * Fri Feb 28 2008 MH <hlawatschek@atix.de>, 0.1-1
   - initial revision
-  
-comoonics-base-py:
-* Mon Sep 28 2009 MG <grimmme@atix.de>, 0.1-4
-  - New version for new build system
-* Tue Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-3
-  - fedora compliant additional changes.
-* Tue Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-2
-  - fedora compliant
-* Mon Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-1
-  - initial revision
-
-comoonics-backup-py:
-* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-2
-  - no change (silly me!)
-* Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
-   initial revision
 
 comoonics-backup-legato-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-7
+  - first version for comoonics-4.6-rc1.
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-6
   - Fixed imports
 * Tue Aug 03 2007 MG <grimme@atix.de>, 0.1-5
@@ -53,7 +41,32 @@ comoonics-backup-legato-py:
 * Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
    initial revision
 
+comoonics-backup-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
+  - first version for comoonics-4.6-rc1.
+* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-2
+  - no change (silly me!)
+* Mon Apr 04 2007 MG <grimme@atix.de>, 0.1-1
+   initial revision
+  
+comoonics-base-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
+  - first version for comoonics-4.6-rc1.
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-5
+  - changes in tests.
+* Mon Sep 28 2009 MG <grimmme@atix.de>, 0.1-4
+  - New version for new build system
+* Tue Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-3
+  - fedora compliant additional changes.
+* Tue Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-2
+  - fedora compliant
+* Mon Jul 20 2009 MH <hlawatschek@atix.de>, 0.1-1
+  - initial revision
+
 comoonics-cdsl-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.2-23
+  - first version for comoonics-4.6-rc1.
+  - rmcdsl, mkcdslinfrastructur to query it ..
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.2-22
   - added logging.basicConfig
 * Mon Feb 15 2010 MG <grimme@atix.de>, 0.2-21
@@ -115,6 +128,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-25
+  - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-24
   - added logging.basicConfig
   - catching exceptions and being more helpfull
@@ -166,6 +181,8 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-8
+  - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-7
   - added logging.basicConfig
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-6
@@ -183,6 +200,8 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-25
+  - first version for comoonics-4.6-rc1.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-24
   - added autopath update to also work with SLES
 * Thu May 10 2007 MG <grimme@atix.de>, 0.1-23
@@ -319,6 +338,8 @@ comoonics-cs-py:
    added properties (ComProperties)
 
 comoonics-db-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-14
+  - first version for comoonics-4.6-rc1.
 * Tue Dec 02 2008 MG <grimme@atix.de>, 0.1-13
    - fixed bug when DBObjects that have been newly created could not be made persistent (Bug #301)
 * Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-11
@@ -339,6 +360,8 @@ comoonics-db-py
    initial revision
   
 comoonics-dr-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-7
+  - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-6
   - added logging.basicConfig
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-5
@@ -348,7 +371,27 @@ comoonics-dr-py:
 * Fri Feb 28 2008 MH <hlawatschek@atix.de>, 0.1-1
   - initial revision
 
+comoonics-ec-admin-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-4
+  - first version for comoonics-4.6-rc1.
+* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
+  - added autopath update to also work with SLES
+* Thu Nov 13 2008 MH <hlawatschek@atix.de>, 0.1-2
+  - some bug fixes
+* Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-1
+  - initial revision
+
+comoonics-ec-base-py:
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
+  - first version for comoonics-4.6-rc1.
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
+   - new upstream version
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
+   - initial revision
+
 comoonics-ec-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-46
+  - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-45
   - added logging.basicConfig
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-44
@@ -433,31 +476,23 @@ comoonics-ec-py
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
   changed that modset and copysets can be mixed not for copysets then modsets.
 
-comoonics-ec-admin-py:
-* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
-  - added autopath update to also work with SLES
-* Thu Nov 13 2008 MH <hlawatschek@atix.de>, 0.1-2
-  - some bug fixes
-* Mon Nov 10 2008 MH <hlawatschek@atix.de>, 0.1-1
-  - initial revision
-
-comoonics-ec-base-py:
-* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
-   - new upstream version
-* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
-   - initial revision
+comoonics-fenceacksv-plugins-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
+  - first version for comoonics-4.6-rc1.
+* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1
+  initial revision
 
 comoonics-fenceacksv-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
+  - first version for comoonics-4.6-rc1.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
   Fixed deps
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
 
-comoonics-fenceacksv-plugins-py
-* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
-  initial revision
-
 comoonics-installation-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-2
+  - first version for comoonics-4.6-rc1.
 * Tue May 20 2008 MG <grimme@atix.de>, 0.1-1
   initial revision
 
@@ -468,11 +503,9 @@ comoonics-pythonosfix-py
 * Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-1:
   initial revision
 
-comoonics-search-py
-* Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1:
-  initial revision
-
 comoonics-scsi-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-4
+  - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-3
   - added logging.basicConfig
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
@@ -480,20 +513,15 @@ comoonics-scsi-py
 * Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
 
-comoonics-storage-py
-* Wed Feb 10 2010 MH <hlawatschek@atix.de>, 0.1-5
-- Fixed imports
-* Tue Feb 09 2010 MG <grimme@atix.de>, 0.1-4
- - Fixed imports
-* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-3
-  - new upstream version
-* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2
-  only a cosmetic change in Storage
-* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1
-  added storage copyset/modset stuff
-  initial release
+comoonics-search-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-2
+  - first version for comoonics-4.6-rc1.
+* Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1:
+  initial revision
 
 comoonics-storage-hp-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-10
+  - first version for comoonics-4.6-rc1.
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-9
  - Fixed pexpect imports
 * Thu Aug 02 2007 MG <grimme@atix.de>, 0.1-8
@@ -520,7 +548,24 @@ comoonics-storage-hp-py
   added implementation for eva
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
+comoonics-storage-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
+  - first version for comoonics-4.6-rc1.
+* Wed Feb 10 2010 MH <hlawatschek@atix.de>, 0.1-5
+- Fixed imports
+* Tue Feb 09 2010 MG <grimme@atix.de>, 0.1-4
+ - Fixed imports
+* Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-3
+  - new upstream version
+* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-2
+  only a cosmetic change in Storage
+* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-1
+  added storage copyset/modset stuff
+  initial release
+
 comoonics-tools-py
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-7
+  - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-6
   - added logging.basicConfig
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-5
@@ -535,6 +580,8 @@ comoonics-tools-py
   initial release
 
 mgrep
+* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
+  - first version for comoonics-4.6-rc1.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
   - added autopath update to also work with SLES
 * Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1
