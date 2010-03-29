@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.3 2010-03-08 12:30:48 marc Exp $
+# $Id: ComFileSystem.py,v 1.4 2010-03-29 14:13:45 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
 import os.path
@@ -25,15 +25,16 @@ from comoonics.ComDataObject import DataObject, NotImplementedYetException
 
 log=ComLog.getLogger("ComFileSystem")
 
-CMD_MKFS="/sbin/mkfs"
-CMD_GFS_MKFS="/sbin/gfs_mkfs"
-CMD_GFS_TOOL="/sbin/gfs_tool"
-CMD_GFS_FSCK="/sbin/gfs_fsck"
-CMD_MOUNT="/bin/mount"
-CMD_UMOUNT="/bin/umount"
-CMD_E2LABEL="/sbin/e2label"
-CMD_E2FSCK="/sbin/e2fsck"
+CMD_MKFS="mkfs"
+CMD_GFS_MKFS="gfs_mkfs"
+CMD_GFS_TOOL="gfs_tool"
+CMD_GFS_FSCK="gfs_fsck"
+CMD_MOUNT="mount"
+CMD_UMOUNT="umount"
+CMD_E2LABEL="e2label"
+CMD_E2FSCK="e2fsck"
 CMD_TUNEFSOCFS="tunefs.ocfs2 -L"
+CMD_OCFS2FSCK="ocfs2.fsck"
 
 def getFileSystem(element, doc):
     """factory method to ceate a FileSystem object
@@ -93,7 +94,7 @@ class FileSystem(DataObject):
         __mp=mountpoint.getAttribute("name")
         if not os.path.exists(__mp) and __mkdir:
             log.debug("Path %s does not exists. I'll create it." % __mp)
-            os.makedirs(__mp)
+            ComSystem.execMethod(os.makedirs, __mp)
 
         if __exclusive and __exclusive != "" and os.path.exists(__exclusive):
             raise ComException("lockfile " + __exclusive + " exists!")
@@ -224,7 +225,7 @@ class extFileSystem(FileSystem):
         self.setFsckCmd(CMD_E2FSCK+" -y")
         self.labelCmd=CMD_E2LABEL
 
-    def labelDevice(self, label, device):
+    def labelDevice(self, device, label):
         __devicePath = device.getDevicePath()
         __cmd = self.labelCmd + " " + __devicePath + " " + label
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
@@ -234,7 +235,7 @@ class extFileSystem(FileSystem):
 
     def getLabel(self, device):
         # BUG: Cannot function!!!!
-        __devicePath=""
+        __devicePath= device.getDevicePath()
         __cmd = self.labelCmd + " " + __devicePath
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("getLabel: " + __cmd + ": " + __ret)
@@ -283,8 +284,9 @@ class ocfs2FileSystem(extFileSystem):
     def __init__(self,element, doc):
         extFileSystem.__init__(self,element, doc)
         self.name = "ocfs2"
-        self.setMkfsCmd(CMD_MKFS + " -t ocfs2 ")
+        self.setMkfsCmd("yes | " + CMD_MKFS + " -t ocfs2 -F")
         self.labelCmd = CMD_TUNEFSOCFS
+        self.setFsckCmd(CMD_OCFS2FSCK + " -y")
 
 class gfsFileSystem(FileSystem):
     """ The Global Filesystem - gfs """
@@ -373,7 +375,11 @@ class gfsFileSystem(FileSystem):
             self.setAttribute("journals", __journals)
 
 # $Log: ComFileSystem.py,v $
-# Revision 1.3  2010-03-08 12:30:48  marc
+# Revision 1.4  2010-03-29 14:13:45  marc
+# - fixed bug in labelDevice
+# - first tested version for ocfs2
+#
+# Revision 1.3  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2010/02/07 20:32:17  marc
