@@ -50,6 +50,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-7
+  - ComSystem: added list and dict for simualted commands and methods
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
   - first version for comoonics-4.6-rc1.
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-5
@@ -390,6 +392,12 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py
+* Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-47
+  - com-ec: reworked undo to pass it selected sets if necessary
+  - ComEnterpriseCopy: better error handling, undo methods accept empty namesets
+  - ComFileSystemModificationSet: better error handling, fixed bug with redids
+  - ComFilesystemCopyset: better error handling
+  - ComCopyset: better error handling
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-46
   - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-45
@@ -549,6 +557,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-7
+  - ComFilesystem: first tested version for ocfs2
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
   - first version for comoonics-4.6-rc1.
 * Wed Feb 10 2010 MH <hlawatschek@atix.de>, 0.1-5
