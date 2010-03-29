@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.19 2009-07-22 08:37:40 marc Exp $
+# $Id: ComSystem.py,v 1.20 2010-03-29 14:14:15 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,7 +28,7 @@ here should be some more information about the module, that finds its way inot t
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.19 $"
+__version__ = "$Revision: 1.20 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -66,6 +66,32 @@ error:
 
 __EXEC_REALLY_DO = None
 log=ComLog.getLogger("ComSystem")
+simcmds=list()
+siminfo=dict()
+def clearSimCommands():
+    """
+    Resets all stored simcommands
+    """
+    global simcmds
+    global siminfo
+    simcmds=list()
+    siminfo=dict()
+
+def getSimCommands():
+    """
+    Returns all commands being simulated
+    """
+    global simcmds
+    return simcmds
+    
+def getSimInfo():
+    """
+    Returns information on all simulated cmds
+    @return: A map of simulated returncodes and the like. Attributes are "stdout", "stderr", "return". Default is None for no information.
+    @rtype: L{dict}
+    """
+    global siminfo
+    return siminfo
 
 def setExecMode(mode):
     """ set the mode for system execution """
@@ -87,25 +113,36 @@ def askExecModeCmd(__cmd):
         if __ans == "y" or __ans == "" or __ans=="c":
             return True
         return False
-    elif __EXEC_REALLY_DO == SIMULATE:
+    elif isSimulate():
         log.info("SIMULATE: "+__cmd)
+        simcmds.append(__cmd)
+        siminfo[__cmd]=None
         return False
     return True
 
 def __simret(**kwds):
     cmd=kwds["command"]
     log.info("SIMULATE: "+ cmd)
+    simcmds.append(cmd)
     returncode=kwds.get("returncode", 0)
+    siminfo["return"]=returncode
     out=kwds.get("output", SKIPPED)
-    errormsg=kwds.get("error", None)
+    if out == None:
+        out=SKIPPED
+    errormsg=kwds.get("error", "")
+    if errormsg==None:
+        errormsg=""
 
     if kwds.get("tostderr", False) != False:
         sys.stderr.write("%s" %errormsg)
+        siminfo["stderr"]=errormsg
     if kwds.get("tostdout", False) != False:
         sys.stderr.write(out)
+        siminfo["stdout"]=out
 
     if kwds.get("asstring", False) != False:
         if returncode==0:
+            siminfo["return"]=out
             return out
         else:
             raise ExecLocalException(cmd, returncode, out, errormsg)
@@ -131,7 +168,7 @@ def execLocalStatusOutput(__cmd, __output=None):
         if __ans == "y" or __ans == "" or __ans == "c":
             return commands.getstatusoutput(__cmd)
         return [0,SKIPPED]
-    elif __EXEC_REALLY_DO == SIMULATE:
+    elif isSimulate():
         return __simret(command=__cmd, output=__output)
     return commands.getstatusoutput(__cmd)
 
@@ -177,7 +214,7 @@ def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
                 return [0, SKIPPED, ""]
             else:
                 return [0, SKIPPED]
-    elif __EXEC_REALLY_DO == SIMULATE:
+    elif isSimulate():
         if err:
             return __simret(command=__cmd, output=__output, error=__err)
         else:
@@ -247,7 +284,10 @@ def execMethod(cmd, *params):
         return cmd(*params)
 
 # $Log: ComSystem.py,v $
-# Revision 1.19  2009-07-22 08:37:40  marc
+# Revision 1.20  2010-03-29 14:14:15  marc
+# - added feature that simcommands will be stored in a list
+#
+# Revision 1.19  2009/07/22 08:37:40  marc
 # fedora compliant
 #
 # Revision 1.18  2008/08/05 13:06:35  marc
