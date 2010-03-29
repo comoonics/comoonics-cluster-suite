@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComEnterpriseCopy.py,v 1.11 2010-03-08 12:30:48 marc Exp $
+# $Id: ComEnterpriseCopy.py,v 1.12 2010-03-29 14:10:25 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComEnterpriseCopy.py,v $
 
 import re
@@ -122,6 +122,8 @@ class EnterpriseCopy(ComDataObject.DataObject):
             self.undoDonesets(names)
 
     def undoDonesets(self, names=None):
+        if not names:
+            names=[ "all" ]
         self._logger.debug("name: %s, donesets: sets: %s " %(names, self.donesets))
         self.donesets.reverse()
         for set in self.donesets:
@@ -137,6 +139,8 @@ class EnterpriseCopy(ComDataObject.DataObject):
                     set.undoModifications()
 
     def undoAllsets(self, names=None):
+        if not names:
+            names=[ "all" ]
         self._logger.debug("name: %s, allsets: %s " %(names, self.allsets))
         self.allsets.reverse()
         for set in self.allsets:
@@ -206,7 +210,10 @@ class EnterpriseCopy(ComDataObject.DataObject):
 
 #################################
 # $Log: ComEnterpriseCopy.py,v $
-# Revision 1.11  2010-03-08 12:30:48  marc
+# Revision 1.12  2010-03-29 14:10:25  marc
+# - fixed bug in undo methods when no names have been given.
+#
+# Revision 1.11  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.10  2010/02/07 20:30:36  marc
