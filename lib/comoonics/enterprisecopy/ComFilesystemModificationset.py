@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.6 2010-03-08 12:30:48 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.7 2010-03-29 14:12:30 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemModificationset.py,v $
 
 
@@ -22,7 +22,8 @@ from comoonics.storage import ComFileSystem
 from comoonics.storage.ComMountpoint import MountPoint
 from comoonics import ComLog
 
-log=ComLog.getLogger("comoonics.enterprisecopy.ComFilesystemModificationset.FilesystemModificationset")
+__logStrLevel__ = "comoonics.enterprisecopy.ComFilesystemModificationset.FilesystemModificationset"
+log=ComLog.getLogger(__logStrLevel__)
 
 class FilesystemModificationset(ModificationsetJournaled):
     """ Base Class for all source and destination objects"""
@@ -31,20 +32,24 @@ class FilesystemModificationset(ModificationsetJournaled):
         ModificationsetJournaled.__init__(self, element, doc)
         __device=None
         try:
-            __device=element.getElementyByTagName('device')[0]
+            __device=element.getElementsByTagName('device')[0]
             self.device=Device(__device, doc)
-        except Exception:
-            raise ComException("Device for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
+            __device=self.device.getElement()
+        except Exception, e:
+            ComLog.debugTraceLog(ComLog.getLogger(__logStrLevel__))
+            raise ComException("Device for modificationset \"%s\" not defined. Error: %s." %(self.getAttribute("name", "unknown"), e))
         try:
             __fs=__device.getElementsByTagName('filesystem')[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
-        except Exception:
-            raise ComException("filesystem for modificationset \"%s\" not defined" %self.getAttribute("name", "unknown"))
+        except Exception, e:
+            ComLog.debugTraceLog(ComLog.getLogger(__logStrLevel__))
+            raise ComException("Filesystem for modificationset \"%s\" not defined. Error: %s." %(self.getAttribute("name", "unknown"), e))
         try:
             __mp=__device.getElementsByTagName('mountpoint')[0]
             self.mountpoint=MountPoint(__mp, doc)
-        except Exception:
-            raise ComException("Mountpoint for modificationset %s not defined" %self.getAttribute("name", "unknown"))
+        except Exception, e:
+            ComLog.debugTraceLog(ComLog.getLogger(__logStrLevel__))
+            raise ComException("Mountpoint for modificationset %s not defined" %(self.getAttribute("name", "unknown"), e))
         self.umountfs=False
         self.createModificationsList(__device.getElementsByTagName('modification'), doc)
         self.cwd = os.getcwd()
@@ -83,7 +88,11 @@ class FilesystemModificationset(ModificationsetJournaled):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.6  2010-03-08 12:30:48  marc
+# Revision 1.7  2010-03-29 14:12:30  marc
+# - fixed bug with referenced elements (refid)
+# - extended error detection in constructor
+#
+# Revision 1.6  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.5  2010/02/09 21:48:24  mark
