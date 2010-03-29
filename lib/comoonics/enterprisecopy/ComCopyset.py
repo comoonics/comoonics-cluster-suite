@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyset.py,v 1.6 2010-03-08 12:30:48 marc Exp $
+# $Id: ComCopyset.py,v 1.7 2010-03-29 14:09:53 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyset.py,v $
 
 from xml.dom import Node
@@ -35,6 +35,8 @@ class Copyset(DataObject, Requirements):
         if isinstance(args[0], Node):
             element=args[0]
             __type=element.getAttribute("type")
+            if not __type:
+                raise AttributeError("Attribute @type is not defined in element %s." %element.getAttribute("name"))
             if __type == "partition":
                 from ComPartitionCopyset import PartitionCopyset
                 cls=PartitionCopyset
@@ -53,7 +55,7 @@ class Copyset(DataObject, Requirements):
             elif _copyset_registry.has_key(__type):
                 cls=_copyset_registry[__type]
             else:
-                raise NotImplementedError()
+                raise NotImplementedError("Copyset class of type %s is not yet implemented and cannot be instantiated." %(__type))
         return object.__new__(cls, args, kwds)
 
     def __init__(self, element, doc):
@@ -107,7 +109,10 @@ class CopysetJournaled(Copyset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComCopyset.py,v $
-# Revision 1.6  2010-03-08 12:30:48  marc
+# Revision 1.7  2010-03-29 14:09:53  marc
+# - extended error handling
+#
+# Revision 1.6  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.5  2008/03/12 09:41:25  marc
