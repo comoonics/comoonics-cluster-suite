@@ -7,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.33 2010-02-16 10:29:34 marc Exp $
+# $Id: com-ec,v 1.34 2010-03-29 14:14:40 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.33 $"
+__version__ = "$Revision: 1.34 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -233,14 +233,24 @@ except Exception, e:
         line("Finished execution of enterprisecopy with errors. Skipping undo on request")
     elif len(ecopy.donesets)>0:
         line("Undoing %u sets" % (len(ecopy.donesets)))
-        ecopy.undo()
+        if options.copyset:
+            ecopy.undoCopysets(options.copyset)
+        elif options.modificationset:
+            ecopy.undoModificationsets(options.modificationset)
+        elif options.sets:
+            ecopy.undo(options.sets)
+        else:
+            ecopy.undo()
 
     line("Errors during execution of enterprisecopy %s." %(_name))
     sys.exit(2)
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.33  2010-02-16 10:29:34  marc
+# Revision 1.34  2010-03-29 14:14:40  marc
+# - reworked undo handling
+#
+# Revision 1.33  2010/02/16 10:29:34  marc
 # added logging.basicConfig()
 #
 # Revision 1.32  2010/02/12 10:13:38  marc
