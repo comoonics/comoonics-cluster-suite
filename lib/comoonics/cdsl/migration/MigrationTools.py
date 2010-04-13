@@ -4,7 +4,7 @@ Created on Feb 4, 2010
 @author: marc
 '''
 
-# $Id: MigrationTools.py,v 1.1 2010-02-07 20:01:26 marc Exp $
+# $Id: MigrationTools.py,v 1.2 2010-04-13 13:24:02 marc Exp $
 #
 # @(#)$File$
 #
@@ -25,7 +25,7 @@ Created on Feb 4, 2010
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cdsl/migration/MigrationTools.py,v $
 
 from comoonics.cdsl.migration import ConfigfileFormatException
@@ -88,7 +88,7 @@ class DefaultMigrationTool(MigrationTool):
                         if noderefs and len(noderefs) > 0:
                             for j in range(len(noderefs)):
                                 nodes.append(noderefs[j].getAttribute("ref"))
-                    cdsl=ComoonicsCdsl(cdsls[i].getAttribute("src"), cdsls[i].getAttribute("type"), torepository, None, nodes, cdsls[i].getAttribute("timestamp"))
+                    cdsl=ComoonicsCdsl(cdsls[i].getAttribute("src"), cdsls[i].getAttribute("type"), torepository, None, nodes, cdsls[i].getAttribute("timestamp"), kwds.get("ignoreerrors", True))
                     torepository.commit(cdsl)
             return torepository
         else:
@@ -107,6 +107,9 @@ class DefaultMigrationTool(MigrationTool):
         
 ###############
 # $Log: MigrationTools.py,v $
-# Revision 1.1  2010-02-07 20:01:26  marc
+# Revision 1.2  2010-04-13 13:24:02  marc
+# - support for ignoreerrors
+#
+# Revision 1.1  2010/02/07 20:01:26  marc
 # First candidate for new version.
 #
