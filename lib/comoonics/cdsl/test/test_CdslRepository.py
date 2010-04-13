@@ -194,15 +194,15 @@ class test_CdslRepository(unittest.TestCase):
         from comoonics import XmlTools
         from comoonics.cdsl import stripleadingsep
         repository=comoonics.cdsl.migration.migrate(None, ComoonicsCdslRepository.version, fromresource="./cdsl4.xml", root=setup.tmppath, mountpoint="repo8", ignoreerrors=True)
-#        oldelement=XmlTools.parseXMLFile("cdsl4.xml")
-#        wanttocdsls=oldelement.documentElement.getElementsByTagName("cdsl")
-#        for i in range(len(wanttocdsls)):
-#            wanttocdsl=wanttocdsls[i]
-#            src=stripleadingsep(wanttocdsl.getAttribute("src"))
-#            iscdsl=repository.getCdsl(src)
-#            self.assertTrue(wanttocdsl.getAttribute("timestamp") == iscdsl.getAttribute("timestamp") and \
-#                            wanttocdsl.getAttribute("type") == iscdsl.getAttribute("type"), \
-#                            "Cdsl %s has different timestamp or type after migration" %iscdsl)
+        oldelement=XmlTools.parseXMLFile("cdsl4.xml")
+        wanttocdsls=oldelement.documentElement.getElementsByTagName("cdsl")
+        for i in range(len(wanttocdsls)):
+            wanttocdsl=wanttocdsls[i]
+            src=stripleadingsep(wanttocdsl.getAttribute("src"))
+            iscdsl=repository.getCdsl(src)
+            self.assertTrue(wanttocdsl.getAttribute("timestamp") == iscdsl.getAttribute("timestamp") and \
+                            wanttocdsl.getAttribute("type") == iscdsl.getAttribute("type"), \
+                            "Cdsl %s has different timestamp or type after migration" %iscdsl)
         os.remove(os.path.join(repository.root, repository.getMountpoint(), repository.resource))
             
 if __name__ == "__main__":
