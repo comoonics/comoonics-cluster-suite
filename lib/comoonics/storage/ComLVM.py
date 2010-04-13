@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComLVM.py,v $
 
 import os
@@ -299,7 +299,7 @@ class LogicalVolume(LinuxVolumeManager):
             lv.init_from_disk()
             return True
         except LinuxVolumeManager.LVMException:
-            ComLog.debugTraceLog(LogicalVolume.log)
+#            ComLog.debugTraceLog(LogicalVolume.log)
             return False
         except RuntimeError:
             # If any command fails BZ #72
@@ -905,7 +905,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.4  2010-03-08 12:30:48  marc
+# Revision 1.5  2010-04-13 13:27:34  marc
+# - removed an error leading exception
+#
+# Revision 1.4  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.3  2010/02/10 12:49:07  mark
