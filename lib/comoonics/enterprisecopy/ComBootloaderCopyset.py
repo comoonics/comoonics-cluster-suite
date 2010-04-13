@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComBootloaderCopyset.py,v 1.4 2010-03-08 12:30:48 marc Exp $
+# $Id: ComBootloaderCopyset.py,v 1.5 2010-04-13 13:25:06 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComBootloaderCopyset.py,v $
 
 
@@ -21,11 +21,11 @@ from comoonics.ComExceptions import ComException
 
 class BootloaderCopyset(Copyset):
     def __init__(self, element, doc):
-        from xml import xpath
         Copyset.__init__(self, element, doc)
 
         try:
-            __dest=xpath.Evaluate('destination/disk', element)[0]
+            _dest=element.getElementsByTagName("destination")[0]
+            __dest=element.getElementsByTagName("disk")[0]
             self.destination=BootDisk(__dest, doc)
         except Exception:
             raise ComException("destination for copyset not defined")
@@ -36,7 +36,10 @@ class BootloaderCopyset(Copyset):
 
 
 # $Log: ComBootloaderCopyset.py,v $
-# Revision 1.4  2010-03-08 12:30:48  marc
+# Revision 1.5  2010-04-13 13:25:06  marc
+# - removed a xpath dep
+#
+# Revision 1.4  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.3  2010/02/10 12:48:46  mark
