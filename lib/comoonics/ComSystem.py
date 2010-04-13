@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.20 2010-03-29 14:14:15 marc Exp $
+# $Id: ComSystem.py,v 1.21 2010-04-13 13:28:06 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,7 +28,7 @@ here should be some more information about the module, that finds its way inot t
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.20 $"
+__version__ = "$Revision: 1.21 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -140,20 +140,27 @@ def __simret(**kwds):
         sys.stderr.write(out)
         siminfo["stdout"]=out
 
-    if kwds.get("asstring", False) != False:
+    if kwds.get("asstring", False) == False and type(out) != list and kwds.get("tostdout", False) == False:
+        out=[out]
+
+    if kwds.get("asstring", False) == False and kwds.get("tostderr", False) == False and kwds.get("tostderr", False) == False and errormsg and errormsg != "":
+        if errormsg == True:
+            errormsg=[ "" ]
+        if type(errormsg) != list:
+            errormsg=[errormsg]
+        return [returncode, out, errormsg]
+    elif kwds.get("asstring", False) == False and kwds.get("tostderr", False) != False and kwds.get("tostdout", False) != False:
         if returncode==0:
             siminfo["return"]=out
-            return out
+            return returncode
         else:
             raise ExecLocalException(cmd, returncode, out, errormsg)
-    elif kwds.get("asstring", False) == False and kwds.has_key("error"):
-        return [returncode, out, errormsg]
     elif kwds.get("tostdout", False) != False:
         return returncode
     else:
         return [returncode, out]
 
-def execLocalStatusOutput(__cmd, __output=None):
+def execLocalStatusOutput(__cmd, __output=None, __rc=0):
     """ 
     exec %__cmd and return output and status (rc, out).
     @param __cmd the command to be executed
@@ -161,15 +168,17 @@ def execLocalStatusOutput(__cmd, __output=None):
     """
     global __EXEC_REALLY_DO
     log.debug(__cmd)
+    if not __output:
+        __output=""
     if __EXEC_REALLY_DO == ASK:
         __ans=raw_input(__cmd+" (y*,n,c)")
         if __ans == "c":
             __EXEC_REALLY_DO=CONTINUE
         if __ans == "y" or __ans == "" or __ans == "c":
             return commands.getstatusoutput(__cmd)
-        return [0,SKIPPED]
+        return (0,SKIPPED)
     elif isSimulate():
-        return __simret(command=__cmd, output=__output)
+        return (__rc, __output)
     return commands.getstatusoutput(__cmd)
 
 
@@ -196,7 +205,7 @@ def execLocalOutput(__cmd, asstr=False, __output=None):
 
 def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
     """ 
-    exec %__cmd and returns an array ouf output lines (rc, out, err)
+    exec %__cmd and returns an array ouf output lines either (rc, out, err) or (rc, out) dependent on if err or not.
     @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
     if sys.version[:3] < "2.4":
@@ -215,10 +224,9 @@ def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
             else:
                 return [0, SKIPPED]
     elif isSimulate():
-        if err:
-            return __simret(command=__cmd, output=__output, error=__err)
-        else:
-            return __simret(command=__cmd, output=__output)
+        if not __err:
+            __err=err
+        return __simret(command=__cmd, output=__output, error=__err, tostderr=False, tostdout=False, asstring=False)
     if sys.version[:3] < "2.4":
         child=popen2.Popen3(__cmd, err)
         __rc=child.wait()
@@ -254,10 +262,10 @@ def execLocal(__cmd, __output=None, __error=None):
         elif __ans == "c":
             __EXEC_REALLY_DO=CONTINUE
         return 0
-    elif __EXEC_REALLY_DO == SIMULATE:
-        return __simret(command=__cmd, output=__output, tostdout=True, tostderr=True, error=__error)
-
-    return os.system(__cmd)
+    elif isSimulate():
+        return __simret(command=__cmd, output=__output, asstring=False, tostdout=True, tostderr=True, error=__error)
+    else:
+        return os.system(__cmd)
 
 def execMethod(cmd, *params):
     """
@@ -278,13 +286,18 @@ def execMethod(cmd, *params):
         else:
             _tmpList.append(type(i).__name__)
 
-    if not askExecModeCmd("%s(%s)" %(cmd.__name__, ", ".join(_tmpList))):
+    if not isSimulate and not askExecModeCmd("%s(%s)" %(cmd.__name__, ", ".join(_tmpList))):
         return True
+    elif isSimulate():
+        return __simret(command="%s(%s)" %(cmd.__name__, ", ".join(_tmpList)), output="%s(%s)" %(cmd.__name__, ", ".join(_tmpList)), asstring=True, tostdout=True, tostderr=True, returncode=True)
     else:
         return cmd(*params)
 
 # $Log: ComSystem.py,v $
-# Revision 1.20  2010-03-29 14:14:15  marc
+# Revision 1.21  2010-04-13 13:28:06  marc
+# - bugfixes in simulation code
+#
+# Revision 1.20  2010/03/29 14:14:15  marc
 # - added feature that simcommands will be stored in a list
 #
 # Revision 1.19  2009/07/22 08:37:40  marc
