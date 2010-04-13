@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.20 $"
+__version__ = "$Revision: 1.21 $"
 
 import fcntl # needed for filelocking
 import re
@@ -650,7 +650,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
                 return self.getRepository(mountpoint).getRepositoryForCdsl(src)
         return self
 
-    def getCdsl(self,src):
+    def getCdsl(self,src, repository=None):
         """
         Uses given source to return matching cdsl
         @param src: Path of searched cdsl
@@ -660,7 +660,8 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         @raise CdslRepositoryNotFound: if the cdsl could not be found in the repository 
         """
         from comoonics.cdsl import strippath, stripleadingsep
-        repository=self.getRepositoryForCdsl(src)
+        if not repository:
+            repository=self.getRepositoryForCdsl(src)
         if src.startswith(os.sep):
             src=stripleadingsep(strippath(strippath(src, self.root), self.getMountpoint()))
             self.logger.debug("cdsl stripped to %s" %src)
@@ -982,7 +983,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         else:
             nodes=range(1, int(self.getMaxnodeidnum())+1)
         for node in nodes:
-            subpath=stripleadingsep(strippath(subpath, os.path.join(self.getTreePath(), node)))
+            subpath=stripleadingsep(strippath(subpath, os.path.join(self.getTreePath(), str(node))))
         newsubpath=list()
         prepath=os.sep.join(path.split(os.sep)[:path.count(os.sep)-subpath.count(os.sep)])
         head, tail=os.path.split(subpath)
