@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemModificationset.py,v 1.7 2010-03-29 14:12:30 marc Exp $
+# $Id: ComFilesystemModificationset.py,v 1.8 2010-04-13 13:25:35 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemModificationset.py,v $
 
 
@@ -20,7 +20,7 @@ from ComModificationset import ModificationsetJournaled
 from comoonics.storage.ComDevice import Device
 from comoonics.storage import ComFileSystem
 from comoonics.storage.ComMountpoint import MountPoint
-from comoonics import ComLog
+from comoonics import ComLog, ComSystem
 
 __logStrLevel__ = "comoonics.enterprisecopy.ComFilesystemModificationset.FilesystemModificationset"
 log=ComLog.getLogger(__logStrLevel__)
@@ -68,7 +68,7 @@ class FilesystemModificationset(ModificationsetJournaled):
             self.filesystem.mount(self.device, self.mountpoint)
             self.journal(self.filesystem, "mount", [self.mountpoint])
         __cwd=os.getcwd()
-        os.chdir(self.mountpoint.getAttribute("name"))
+        ComSystem.execMethod(os.chdir, self.mountpoint.getAttribute("name"))
         self.journal(os, "chdir", __cwd)
         log.debug("doPre() CWD: " + os.getcwd())
         super(FilesystemModificationset, self).doPre()
@@ -88,7 +88,10 @@ class FilesystemModificationset(ModificationsetJournaled):
         return self.modifications
 
 # $Log: ComFilesystemModificationset.py,v $
-# Revision 1.7  2010-03-29 14:12:30  marc
+# Revision 1.8  2010-04-13 13:25:35  marc
+# - made to be simulated if need be
+#
+# Revision 1.7  2010/03/29 14:12:30  marc
 # - fixed bug with referenced elements (refid)
 # - extended error detection in constructor
 #

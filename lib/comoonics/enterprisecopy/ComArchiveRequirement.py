@@ -6,11 +6,11 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComArchiveRequirement.py,v 1.7 2007-08-22 16:25:46 marc Exp $
+# $Id: ComArchiveRequirement.py,v 1.8 2010-04-13 13:24:38 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveRequirement.py,v $
 
 from comoonics.ComExceptions import ComException
@@ -73,11 +73,11 @@ class ArchiveRequirement(Requirement):
         destfile=self.getAttribute("dest")
         __mkdir=self.getAttributeBoolean("mkdir", default=True)
 
-        if not os.path.exists(destfile) and __mkdir:
+        if not ComSystem.execMethod(os.path.exists, destfile) and __mkdir:
             ComLog.getLogger(ArchiveRequirement.__logStrLevel__).debug("Path %s does not exists. I'll create it." % destfile)
             os.makedirs(destfile)
 
-        if self.check():
+        if self.check() and not ComSystem.isSimulate():
             if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
                 raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
 
@@ -87,7 +87,7 @@ class ArchiveRequirement(Requirement):
             raise RuntimeError("running \"%s\" failed: %u, %s" % (__cmd, rc,rv))
 
         self.olddir=os.curdir
-        os.chdir(destfile)
+        ComSystem.execMethod(os.chdir, destfile)
         __cmd="gzip -cd %s | cpio -i" % srcfile
         (rc, rv, stderr) = ComSystem.execLocalGetResult(__cmd, True)
         if rc >> 8 != 0:
@@ -107,10 +107,10 @@ class ArchiveRequirement(Requirement):
         srcfile=self.getAttribute("name")
         destfile=self.getAttribute("dest")
 
-        if self.check():
+        if self.check() and not ComSystem.isSimulate():
             if not os.access(srcfile, os.R_OK) or not os.access(destfile, os.F_OK) or not os.access(destfile, os.W_OK):
                 raise ArchiveRequirementException("Either srcfile %s is not readable or dest %s is not writeable" % (srcfile, destfile))
-        os.chdir(destfile)
+        ComSystem.execMethod(os.chdir, destfile)
         __cmd="cp %s %s" %(srcfile, srcfile+self.getAttribute("bak_suffix", ".bak"))
         try:
             (rc, rv, stderr) = ComSystem.execLocalGetResult(__cmd, True)
@@ -121,7 +121,7 @@ class ArchiveRequirement(Requirement):
 
         __cmd="find . | cpio -o -c |gzip -9 > %s" % (srcfile)
         (rc, rv, stderr) = ComSystem.execLocalGetResult(__cmd, True)
-        os.chdir(self.olddir)
+        ComSystem.execMethod(os.chdir, self.olddir)
         if rc >> 8 != 0:
             raise RuntimeError("running \"%s\" failed: %u, %s, errors: %s" % (__cmd, rc,rv, stderr))
         __cmd="rm -rf %s/*" % destfile
@@ -131,7 +131,10 @@ class ArchiveRequirement(Requirement):
 
 ######################
 # $Log: ComArchiveRequirement.py,v $
-# Revision 1.7  2007-08-22 16:25:46  marc
+# Revision 1.8  2010-04-13 13:24:38  marc
+# - made to be simulated if need be
+#
+# Revision 1.7  2007/08/22 16:25:46  marc
 # Fixed Bug BZ#86 (cpio does not work if tmp dir has files)
 #
 # Revision 1.6  2007/04/10 16:51:24  marc

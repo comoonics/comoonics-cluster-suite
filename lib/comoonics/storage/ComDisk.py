@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.4 2010-03-08 12:30:48 marc Exp $
+# $Id: ComDisk.py,v 1.5 2010-04-13 13:27:08 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
@@ -128,7 +128,7 @@ class HostDisk(Disk):
         return self.log
 
     def exists(self):
-        return os.path.exists(self.getDeviceName())
+        return ComSystem.execMethod(os.path.exists, self.getDeviceName())
 
     def getDeviceName(self):
         """ returns the Disks device name (e.g. /dev/sda) """
@@ -385,7 +385,10 @@ except ImportError:
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
 
 # $Log: ComDisk.py,v $
-# Revision 1.4  2010-03-08 12:30:48  marc
+# Revision 1.5  2010-04-13 13:27:08  marc
+# - made to be simulated if need be
+#
+# Revision 1.4  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.3  2010/02/09 21:48:51  mark
