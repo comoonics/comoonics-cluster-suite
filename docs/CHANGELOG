@@ -50,6 +50,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-8
+  - ComSystem: reviewed simulation code
 * Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-7
   - ComSystem: added list and dict for simualted commands and methods
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
@@ -66,6 +68,8 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-24
+  - minor changed to implement better testing
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.2-23
   - first version for comoonics-4.6-rc1.
   - rmcdsl, mkcdslinfrastructur to query it ..
@@ -130,6 +134,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-26
+  - second version for comoonics-4.6-rc1
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-25
   - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-24
@@ -183,6 +189,8 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-9
+  - second version for comoonics-4.6-rc1
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-8
   - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-7
@@ -384,6 +392,8 @@ comoonics-ec-admin-py:
   - initial revision
 
 comoonics-ec-base-py:
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-4
+  - better simulation code
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
   - first version for comoonics-4.6-rc1.
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-2
@@ -392,6 +402,9 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-4
+  - better simulation code
+  - com-ec: fixed bug that debug messages would not be displayed
 * Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-47
   - com-ec: reworked undo to pass it selected sets if necessary
   - ComEnterpriseCopy: better error handling, undo methods accept empty namesets
@@ -557,6 +570,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-8
+  - better simulation code
 * Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-7
   - ComFilesystem: first tested version for ocfs2
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
