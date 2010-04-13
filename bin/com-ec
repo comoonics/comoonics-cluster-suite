@@ -7,11 +7,11 @@ does it.
 
 
 # here is some internal information
-# $Id: com-ec,v 1.34 2010-03-29 14:14:40 marc Exp $
+# $Id: com-ec,v 1.35 2010-04-13 13:28:42 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.34 $"
+__version__ = "$Revision: 1.35 $"
 __description__="""
 The comoonics Enterprisecopy binary parses an xml configfile and then goes through every copy and modificationset and
 does it.
@@ -90,6 +90,8 @@ parser.add_option("-x", "--xslt",            dest="xslt",            help="preco
 if options.debug:
     ComLog.getLogger().propagate=1
     ComLog.setLevel(logging.DEBUG)
+else:
+    ComLog.setLevel(logging.INFO)
 
 import os.path
 i=0
@@ -113,8 +115,6 @@ elif len(args) == 0:
 else:
     logger.critical("Could not find file %s" %(args[0]))
     sys.exit(1)
-
-ComLog.setLevel(logging.INFO)
 
 # filter warnings
 if not options.debug:
@@ -192,8 +192,8 @@ except KeyboardInterrupt:
 except SystemExit, se:
     sys.exit(se)
 except Exception, e:
-    logger.error("Error occured during initialisation of enterprisecopy. Errormessage: %s." %(e))
     ComLog.debugTraceLog()
+    logger.error("Error occured during initialisation of enterprisecopy. Errormessage: %s." %(e))
     sys.exit(2)
 
 if ecopy.hasAttribute("name"):
@@ -247,7 +247,10 @@ except Exception, e:
 
 ##################
 # $Log: com-ec,v $
-# Revision 1.34  2010-03-29 14:14:40  marc
+# Revision 1.35  2010-04-13 13:28:42  marc
+# - fixed bug with not working debug messages
+#
+# Revision 1.34  2010/03/29 14:14:40  marc
 # - reworked undo handling
 #
 # Revision 1.33  2010/02/16 10:29:34  marc
