@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 
 # @(#)$File$
 #
@@ -392,7 +392,7 @@ class ComoonicsCdsl(Cdsl):
     def _stripsrc(self, _src, cdslRepository, clusterinfo):
 #        cdslRepository.workingdir.pushd()
         from comoonics.cdsl import stripleadingsep, strippath
-        if not _src.startswith(os.sep):
+        if not _src.startswith(os.sep) and os.path.exists(_src):
             _src=os.path.realpath(_src)
         src=_src
         src=stripleadingsep(strippath(strippath(src, cdslRepository.root), cdslRepository.getMountpoint()))
@@ -832,7 +832,7 @@ class ComoonicsCdsl(Cdsl):
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
         if _path == None:
             _path=os.path.dirname(self.src)
-        self.logger.debug("getParent(%s)" %_path)
+        self.logger.debug("getParent(path: %s)" %_path)
         if not _path or _path.strip() == "" or os.path.normpath(stripleadingsep(os.path.join(self.cdslRepository.root, self.cdslRepository.getMountpoint()))) == _path:
             return None
         
@@ -872,7 +872,10 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.18  2010-03-08 12:30:48  marc
+# Revision 1.19  2010-04-13 14:49:19  marc
+# - fixed bug with wrongly detected relativ cdsls
+#
+# Revision 1.18  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.17  2010/02/15 12:54:06  marc
