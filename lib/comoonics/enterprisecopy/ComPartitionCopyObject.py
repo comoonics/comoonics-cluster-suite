@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.9 2010-03-08 12:30:48 marc Exp $
+# $Id: ComPartitionCopyObject.py,v 1.10 2010-04-13 13:26:05 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -52,10 +52,11 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.commitJournal()
 
     def cleanupDest(self):
-        __tmp=os.tempnam("/tmp")
+        import tempfile
+        __tmp=tempfile.NamedTemporaryFile()
         if self.disk.hasPartitionTable():
-            self.disk.savePartitionTable(__tmp)
-            self.journal(self.disk, "savePartitionTable", __tmp)
+            self.disk.savePartitionTable(__tmp.name)
+            self.journal(self.disk, "savePartitionTable", __tmp.name)
         else:
             self.journal(self.disk, "noPartitionTable")
 
@@ -71,7 +72,10 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.9  2010-03-08 12:30:48  marc
+# Revision 1.10  2010-04-13 13:26:05  marc
+# - removed os.tempnam
+#
+# Revision 1.9  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.8  2010/02/09 21:48:24  mark

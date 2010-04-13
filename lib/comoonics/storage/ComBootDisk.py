@@ -8,11 +8,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComBootDisk.py,v 1.4 2010-03-08 12:30:48 marc Exp $
+# $Id: ComBootDisk.py,v 1.5 2010-04-13 13:26:51 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComBootDisk.py,v $
 
 import os
@@ -23,12 +23,8 @@ from ComDisk import HostDisk
 from comoonics.ComExceptions import ComException
 
 class BootDisk(HostDisk):
-    def __init__(self, element, doc, tmppath="/tmp"):
+    def __init__(self, element, doc):
         HostDisk.__init__(self, element, doc)
-        if not os.path.isdir( tmppath ):
-            raise ComException(tmppath + " not found")
-        self.__tmp=tmppath
-
 
     def installBootloader(self, loader="grub"):
         if loader!="grub":
@@ -39,28 +35,26 @@ class BootDisk(HostDisk):
     def scanBootloaderGrub(self):
         #scans bootdisk for a possible grub installation
         #returns (hd0,x) when succeeded
-
-        __tmp=os.tempnam(self.__tmp)
+        import tempfile
+        __tmp=tempfile.NamedTemporaryFile()
 
         # This is not working with all devices (e.g. cciss, mpath)
         # So I removed the part.
         #__exp=re.compile("[0-9]*")
         #__dev=__exp.sub("",self.getDeviceName())
         __dev=self.getDeviceName()
-        __cmd="""/sbin/grub --batch 2>/dev/null <<EOF | egrep "(hd[0-9]+,[0-9]+)" 1>"""+__tmp+"""
+        __cmd="""/sbin/grub --batch 2>/dev/null <<EOF | egrep "(hd[0-9]+,[0-9]+)" 1>"""+__tmp.name+"""
         device (hd0) """+__dev+"""
         find /grub/stage2
         quit
         EOF
         """
         # TODO this will not work
-        if ComSystem.execLocal( __cmd ):
+        if ComSystem.execLocal( __cmd, """(hd0,1)
+""" ):
             raise ComException("cannot find grub on "+__dev)
 
-        __fd=os.fdopen(os.open(__tmp,os.O_RDONLY))
-        __part=__fd.readline()
-        __fd.close()
-        os.unlink(__tmp)
+        __part=__tmp.readline()
         self.log.debug("Found grub loader on " + __part)
         return __part
 
@@ -86,7 +80,10 @@ class BootDisk(HostDisk):
             raise ComException("cannot install grub on "+__dev)
 
 # $Log: ComBootDisk.py,v $
-# Revision 1.4  2010-03-08 12:30:48  marc
+# Revision 1.5  2010-04-13 13:26:51  marc
+# - removed os.tempnam
+#
+# Revision 1.4  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.3  2010/02/10 12:49:07  mark
