@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.21 2010-04-13 13:28:06 marc Exp $
+# $Id: ComSystem.py,v 1.22 2010-04-23 11:03:26 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,7 +28,7 @@ here should be some more information about the module, that finds its way inot t
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.21 $"
+__version__ = "$Revision: 1.22 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -208,10 +208,6 @@ def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
     exec %__cmd and returns an array ouf output lines either (rc, out, err) or (rc, out) dependent on if err or not.
     @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
-    if sys.version[:3] < "2.4":
-        import popen2
-    else:
-        import subprocess
     global __EXEC_REALLY_DO
     log.debug(__cmd)
     if __EXEC_REALLY_DO == ASK:
@@ -228,6 +224,7 @@ def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
             __err=err
         return __simret(command=__cmd, output=__output, error=__err, tostderr=False, tostdout=False, asstring=False)
     if sys.version[:3] < "2.4":
+        import popen2
         child=popen2.Popen3(__cmd, err)
         __rc=child.wait()
         __rv=child.fromchild.readlines()
@@ -236,6 +233,7 @@ def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
             return [__rc, __rv, __err]
         return [__rc, __rv]
     else:
+        import subprocess
         p = subprocess.Popen([__cmd], shell=True, 
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                              close_fds=True)
@@ -294,7 +292,10 @@ def execMethod(cmd, *params):
         return cmd(*params)
 
 # $Log: ComSystem.py,v $
-# Revision 1.21  2010-04-13 13:28:06  marc
+# Revision 1.22  2010-04-23 11:03:26  marc
+# just reorganized some code
+#
+# Revision 1.21  2010/04/13 13:28:06  marc
 # - bugfixes in simulation code
 #
 # Revision 1.20  2010/03/29 14:14:15  marc
