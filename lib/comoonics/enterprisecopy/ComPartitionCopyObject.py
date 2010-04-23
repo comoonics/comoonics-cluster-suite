@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartitionCopyObject.py,v 1.10 2010-04-13 13:26:05 marc Exp $
+# $Id: ComPartitionCopyObject.py,v 1.11 2010-04-23 10:55:27 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPartitionCopyObject.py,v $
 
 import os
@@ -37,6 +37,10 @@ class PartitionCopyObject(CopyObjectJournaled):
 
         self.addToUndoMap(self.disk.__class__.__name__, "savePartitionTable", "restorePartitionTable")
         self.addToUndoMap(self.disk.__class__.__name__, "noPartitionTable", "deletePartitionTable")
+        # We need to have the tempfile globlally available because of it deleteing itself when not
+        # referenced anymore.
+        import tempfile
+        self.__tmp=tempfile.NamedTemporaryFile()
 
 
     def prepareAsSource(self):
@@ -52,11 +56,9 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.commitJournal()
 
     def cleanupDest(self):
-        import tempfile
-        __tmp=tempfile.NamedTemporaryFile()
         if self.disk.hasPartitionTable():
-            self.disk.savePartitionTable(__tmp.name)
-            self.journal(self.disk, "savePartitionTable", __tmp.name)
+            self.disk.savePartitionTable(self.__tmp.name)
+            self.journal(self.disk, "savePartitionTable", self.__tmp.name)
         else:
             self.journal(self.disk, "noPartitionTable")
 
@@ -72,7 +74,10 @@ class PartitionCopyObject(CopyObjectJournaled):
         self.disk.updateChildrenWithPK(HostDisk(element, None))
 
 # $Log: ComPartitionCopyObject.py,v $
-# Revision 1.10  2010-04-13 13:26:05  marc
+# Revision 1.11  2010-04-23 10:55:27  marc
+# - moved tmpfile as private class variable
+#
+# Revision 1.10  2010/04/13 13:26:05  marc
 # - removed os.tempnam
 #
 # Revision 1.9  2010/03/08 12:30:48  marc
