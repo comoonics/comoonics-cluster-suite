@@ -18,11 +18,11 @@ will copy a source lvm configuration defined by a source dom to a destination lv
 
 
 # here is some internal information
-# $Id: ComLVMCopyset.py,v 1.8 2010-03-08 12:30:48 marc Exp $
+# $Id: ComLVMCopyset.py,v 1.9 2010-04-23 10:54:59 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComLVMCopyset.py,v $
 
 from exceptions import IndexError
@@ -92,6 +92,7 @@ class LVMCopyset(CopysetJournaled):
     def doCopy(self):
         # do everything
         self.prepareSource()
+        ComLog.getLogger(self.__logStrLevel__).debug("Updating metadata from %s" %(self.source))
         ComLog.getLogger(self.__logStrLevel__).debug("Updating metadata on %s" %(self.dest))
         self.dest.updateMetaData(self.source.getMetaData())
         self.prepareDest()
@@ -138,7 +139,10 @@ class LVMCopyset(CopysetJournaled):
 
 ########################
 # $Log: ComLVMCopyset.py,v $
-# Revision 1.8  2010-03-08 12:30:48  marc
+# Revision 1.9  2010-04-23 10:54:59  marc
+# - added debug log
+#
+# Revision 1.8  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.7  2010/02/09 21:48:24  mark
