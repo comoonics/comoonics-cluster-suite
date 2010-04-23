@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.5 2010-04-13 13:27:08 marc Exp $
+# $Id: ComDisk.py,v 1.6 2010-04-23 10:58:37 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
@@ -273,23 +273,28 @@ class HostDisk(Disk):
         if self.isDMMultipath():
             self.log.debug("Device %s is a dm_multipath device, adding partitions" %self.getDeviceName())
             __cmd=CMD_KPARTX + " -d " + self.getDeviceName()
-            __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-            self.log.debug(__ret)
-            __cmd=CMD_KPARTX + " -a " + self.getDeviceName()
-            __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-            self.log.debug(__ret)
-        #FIXME: crappy fix to give os some time to create devicefiles.
-        time.sleep(10)
+            try:
+                __ret = ComSystem.execLocalOutput(__cmd, True, "")
+                self.log.debug(__ret)
+                __cmd=CMD_KPARTX + " -a " + self.getDeviceName()
+                __ret = ComSystem.execLocalOutput(__cmd, True, "")
+                self.log.debug(__ret)
+                #FIXME: crappy fix to give os some time to create devicefiles.
+                time.sleep(10)
+            except ComSystem.ExecLocalException, ele:
+                ComLog.debugTraceLog(self.log)
+                self.log.debug("Could not execute %s. Error %s" %(ele.cmd, ele))
 
 
     def isDMMultipath(self):
         if not os.path.exists(CMD_DMSETUP):
             return False
         __cmd="%s table %s --target=multipath 2>/dev/null | grep multipath &>/dev/null"  % (CMD_DMSETUP, self.getDeviceName())
-        if ComSystem.execLocal(__cmd):
+        try:
+            ComSystem.execLocalOutput(__cmd, True, "")
+            return True
+        except ComSystem.ExecLocalException: 
             return False
-        return True
-
 
     def getAllPartitions(self):
         parts=[]
@@ -303,16 +308,15 @@ class HostDisk(Disk):
         Throws ComException on error
         """
         __cmd = self.getDumpStdout() + " > " + filename
-        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+        __ret = ComSystem.execLocalOutput(__cmd, True, "saved partition table")
         self.log.debug("savePartitionTable( " + filename + "):\n " + __ret)
-        if __rc != 0:
-            raise ComException(__cmd)
 
     def getPartitionTable(self):
-        rc, rv = ComSystem.execLocalGetResult(self.getDumpStdout())
-        if rc == 0:
+        try:
+            rv = ComSystem.execLocalOutput(self.getDumpStdout(), True, "getPartitionTable")
             return rv
-        return list()
+        except ComSystem.ExecLocalException:
+            return list()
 
     def getDumpStdout(self):
         """ returns the command string for dumping partition information
@@ -357,10 +361,8 @@ class HostDisk(Disk):
         Throws ComException on error
         """
         __cmd = self.getRestoreStdin(True) + " < " + filename
-        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        self.log.debug("restorePartitionTable( " + filename + "):\n " + __ret)
-        if __rc != 0:
-            raise ComException(__cmd)
+        __out = ComSystem.execLocalOutput(__cmd, True, "")
+        self.log.debug("restorePartitionTable( " + filename + "):\n " + __out)
 
     def getRestoreStdin(self, force=False):
         """ returns command string to restore a partition table
@@ -385,7 +387,10 @@ except ImportError:
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
 
 # $Log: ComDisk.py,v $
-# Revision 1.5  2010-04-13 13:27:08  marc
+# Revision 1.6  2010-04-23 10:58:37  marc
+# - rewrote execution parts to be better readable and more consistent
+#
+# Revision 1.5  2010/04/13 13:27:08  marc
 # - made to be simulated if need be
 #
 # Revision 1.4  2010/03/08 12:30:48  marc
