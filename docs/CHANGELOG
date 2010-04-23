@@ -50,6 +50,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Fri Apr 23 2010 MG <grimme@atix.de>, 0.1-9
+  - ComSystem: reorganized some code parts.
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-8
   - ComSystem: reviewed simulation code
 * Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-7
@@ -402,7 +404,9 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py
-* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-4
+* Fri Apr 23 2010 MG <grimme@atix.de>, 0.1-49
+  - ComPartitionCopyObject: moved tmpfile as private variable to not loose tmpfile
+* Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-48
   - better simulation code
   - com-ec: fixed bug that debug messages would not be displayed
 * Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-47
@@ -570,6 +574,9 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Fri Apr 23 2010 MG <grimme@atix.de>, 0.1-9
+  - ComDisk: rewrote execution part
+  - ComLVM: rewrote execution part
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-8
   - better simulation code
 * Mon Mar 29 2010 MG <grimme@atix.de>, 0.1-7
