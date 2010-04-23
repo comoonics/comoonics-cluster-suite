@@ -10,6 +10,7 @@ import logging
 logging.basicConfig()
 ComLog.setLevel(logging.DEBUG)
 import unittest
+ComSystem.setExecMode(ComSystem.SIMULATE)
 
 class Test(unittest.TestCase):
     devicenames={"/dev/sda": [ LogicalVolume.LVMInvalidLVPathException ], 
@@ -78,7 +79,9 @@ class Test(unittest.TestCase):
             print("Removing pv")
             _pv.remove()
         except Exception, e:
-            self.assert_("Caught unexpected exception during lvm environment creation %s." %e)
+            import traceback
+            traceback.print_exc()
+            self.fail("Caught unexpected exception during lvm environment creation %s." %e)
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
