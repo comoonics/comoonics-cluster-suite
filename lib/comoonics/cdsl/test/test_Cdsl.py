@@ -55,16 +55,40 @@ class test_Cdsl(unittest.TestCase):
         _removed_cdsl=repository.delete(_cdsls[-1])
         _added, _removed=validate.validate(onfilesystem=True, update=True, root=setup.tmppath)
         self.assertEquals(_added[0].src, _removed_cdsl.src, "The removed cdsl %s is different from the added one %s" %(_added[0].src, _removed_cdsl.src))
-#        print "+%s" %_added[0].src
-#
-#    def test_CdslOfSameType(self):
-#        from comoonics.cdsl.ComCdsl import CdslOfSameType, Cdsl
-#        
-#        self.assertRaises(CdslOfSameType, Cdsl, "hd/hd", Cdsl.SHARED_TYPE, repository, setupCluster.clusterinfo)
+        for backupfile in validate.backupfiles:
+            os.remove(backupfile)
+
+    def test_G_CdslValidate(self):
+        from comoonics.cdsl.ComCdslValidate import CdslValidate
+        import shutil
+        import StringIO
+        _cdsls=repository.getCdsls()
+        shutil.move(os.path.join(repository.workingdir, repository.resource), os.path.join(repository.workingdir, repository.resource+".bak"))
+        file(os.path.join(repository.workingdir, repository.resource), "w+") 
+        validate=CdslValidate(repository, setupCluster.clusterinfo)
+        _added, _removed=validate.validate(onfilesystem=True, update=True, root=setup.tmppath)
+        identical=True
+        buf1=StringIO.StringIO()
+        buf2=StringIO.StringIO()
+        for _cdsl in repository.getCdsls():
+            buf2.write("%s, " %_cdsl)
+            
+        for _cdsl in _cdsls:
+            buf1.write("%s, " %_cdsl)
+            if not repository.hasCdsl(_cdsl.src):
+                identical=False
+        if len(_cdsls) != len(repository.cdsls):
+            identical=False
+        self.failUnless(identical, "The cdsls in the reconstructed repository and old cdsls are not the same. %s!=%s"%(buf1.getvalue(), buf2.getvalue()) )
+        os.remove(os.path.join(repository.workingdir, repository.resource+".bak"))
+        for backupfile in validate.backupfiles:
+            os.remove(backupfile)
     
     def test_Y_CdslsDeleteNoForce(self):
         import shutil
         from comoonics.cdsl import cmpbysubdirs
+        from comoonics.ComPath import Path
+        wpath=Path()
         _cdslsrev=repository.getCdsls()
         _cdslsrev.sort(cmpbysubdirs)
         _cdslsrev.reverse()
@@ -76,13 +100,13 @@ class test_Cdsl(unittest.TestCase):
                 for nodeid in setupCluster.clusterinfo.getNodeIdentifiers('id'):
                     _file="%s.%s" %(_cdsl.src, nodeid)
                     _files2remove.append(_file)
-            _files2remove.append("%s.%s" %(_cdsl.src, "orig"))
-            setupCdsls.repository.workingdir.pushd()
+                _files2remove.append("%s.%s" %(_cdsl.src, "orig"))
+            wpath.pushd(setupCdsls.repository.workingdir)
             if _cdsl.isHostdependent():
                 shutil.move("%s.%s" %(_cdsl.src, "default"), _cdsl.src)
-            setupCdsls.repository.workingdir.popd()
+            wpath.popd()
             _cdsl.commit()
-            setupCdsls.repository.workingdir.pushd()
+            wpath.pushd(setupCdsls.repository.workingdir)
             for _file in _files2remove:
 #                print "- %s" %_file
                 if os.path.isdir(_file):
@@ -90,24 +114,23 @@ class test_Cdsl(unittest.TestCase):
 #                    os.removedirs(_file)
                 else:
                     os.remove(_file)
-            setupCdsls.repository.workingdir.popd()
+            wpath.popd()
             self.assertTrue(_cdsl.exists(), "%s CDSL %s does not exist although it was created before." %(_cdsl.type, _cdsl))
             for __cdsl in setupCdsls.repository.getCdsls():
                 self.assertTrue(__cdsl.exists(), "The still existant %s cdsl %s does not exist any more." %(__cdsl.type, __cdsl))
 
     def test_Z_CdslsDelete(self):
         from comoonics.cdsl import cmpbysubdirs
+        from comoonics.ComPath import Path
         _cdslsrev=repository.getCdsls()
         _cdslsrev.sort(cmpbysubdirs)
         _cdslsrev.reverse()
         for _cdsl in _cdslsrev:
 #            print "- %s\n" %_cdsl.src
-            setupCdsls.repository.workingdir.pushd()
             _cdsl.delete(True, True)
             self.assertFalse(_cdsl.exists(), "%s CDSL %s exists although it was removed before." %(_cdsl.type, _cdsl))
             for __cdsl in  repository.getCdsls():
                 self.assertTrue(__cdsl.exists(), "The still existant %s cdsl %s does not exist any more." %(__cdsl.type, __cdsl))
-            setupCdsls.repository.workingdir.popd()
 
 if __name__ == "__main__":
     from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository

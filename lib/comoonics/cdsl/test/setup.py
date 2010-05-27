@@ -149,6 +149,7 @@ class SetupCDSLs(SetupBase):
     def setupCDSLInfrastructure(self, path, cdslRepository, clusterinfo):
         from comoonics.cdsl.ComCdsl import Cdsl
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
+        from comoonics.ComPath import Path
         self.repository.buildInfrastructure(clusterinfo)
         _dirs=self.results.keys()
         _dirs.sort()
@@ -165,22 +166,26 @@ class SetupCDSLs(SetupBase):
             if _cdsl:
                 self.repository.commit(_cdsl)
         
-        self.repository.workingdir.pushd()
+        wpath=Path()
+        wpath.pushd(self.repository.workingdir)
         if os.path.isdir(cdslRepository.getLinkPath()):
             os.rmdir(cdslRepository.getLinkPath())
             os.symlink(os.path.join(cdslRepository.getTreePath(), self.mynodeid), cdslRepository.getLinkPath())
         self._createCDSLFiles(path)
-        self.repository.workingdir.popd()
+        wpath.popd()
 
     def cleanUpInfrastructure(self, path, cdslRepository, clusterinfo):
+        from comoonics.ComPath import Path
         for cdsl in self.repository.getCdsls():
             if cdsl.exists():
                 cdsl.delete(True, True)
-        self.repository.workingdir.pushd()
+        wpath=Path()
+        wpath.pushd(self.repository.workingdir)
         if os.path.islink(cdslRepository.getLinkPath()):
             os.remove(cdslRepository.getLinkPath())
             os.mkdir(cdslRepository.getLinkPath())
         cdslRepository.removeInfrastructure(clusterinfo)
+        wpath.popd()
 
 from unittest import TestProgram, TextTestRunner
 
