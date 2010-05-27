@@ -31,6 +31,7 @@ ComLog.setLevel(logging.INFO)
 import logging
 
 logging.basicConfig()
+logger=ComLog.getLogger("com-cdslinvchk")
 
 from optparse import OptionParser
 
@@ -40,29 +41,49 @@ parser.add_option("-f", "--filesystem", dest="filesystem", default=False, action
 parser.add_option("-p", "--path", dest="path", default=".", help="Set the path to be searched. Defaults to the base cdslpath.")
 parser.add_option("-C", "--cdsl", dest="cdsls", default=[], type="string", action="append", help="Defines the cdsl to be validated. Only available when used not in filesystemmode." )
 parser.add_option("-R", "--norecursive", dest="norecursive", default=False, action="store_true", help="If filesystem selected it will not run recursively")
+parser.add_option("-t", "--cdsltree", default=ComoonicsCdslRepository.cdsltree_default, dest="cdsltree", help="path for hostdependent cdsls")
+parser.add_option("-s", "--cdsltreeshared", default=ComoonicsCdslRepository.cdslsharedtree_default, dest="cdsltreeshared", help="path for the reshared cdsls")
+parser.add_option("-L", "--cdsllink", default=ComoonicsCdslRepository.cdsllink_default, dest="cdsllink", help="path for the cdsl link.")
+parser.add_option("-M", "--maxnodeidnum", default=ComoonicsCdslRepository.maxnodeidnum_default, dest="maxnodeidnum", type="int", help="Up to this nodeid node dirs are created")
+parser.add_option("-N", "--usenodenames", default=not ComoonicsCdslRepository.usenodeids_default, dest="usenodenames", action="store_true", help="Use nodenames instead of nodeids.")
+parser.add_option("-D", "--defaultdir", default=ComoonicsCdslRepository.defaultdir_default, dest="defaultdir", help="set the default node directory.")
 
 parser=commonoptparseroptions(parser)
 
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()
 
-doc=comoonics.cluster.parseClusterConf(options.clusterconf)
+try: 
+    doc=comoonics.cluster.parseClusterConf(options.clusterconf)
           
-#create needed cluster objects
-clusterRepository = ClusterRepository(doc.documentElement,doc)
-clusterInfo = ClusterInfo(clusterRepository)
+    #create needed cluster objects
+    clusterRepository = ClusterRepository(doc.documentElement,doc)
+    clusterInfo = ClusterInfo(clusterRepository)
+    cdslRepository=None
+    try:
+        cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
+    except (IOError, OSError), error:
+        logger.error(error)
+        ComLog.debugTraceLog(logger)
+        if not options.update:
+            logger.warn("Error during setup of cdsl repository %s. You might consider fixing with update enabled (com-cdsllinvchk --update)." %options.inventoryfile)
+            raise
+        else:
+            logger.warn("Reconstructing repository..")
 
-cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
+    validator=CdslValidate(cdslRepository, clusterInfo, root=options.root, mountpoint=options.mountpoint, resource=options.inventoryfile, cdsltree=options.cdsltree, cdsltreeshared=options.cdsltreeshared, cdsllink=options.cdsllink, maxnodeidnum=str(options.maxnodeidnum), usenodeids=str(not options.usenodenames), defaultdir=options.defaultdir)
 
-validator=CdslValidate(cdslRepository, clusterInfo)
+    _added, _removed=validator.validate(update=options.update, onfilesystem=options.filesystem, filesystempath=options.path, cdsls=options.cdsls, recursive=not options.norecursive)
+    if _added and len(_added) > 0:
+        for _addedcdsl in _added:
+            print "Added cdsl %s type %s" %(_addedcdsl, _addedcdsl.type)
+    if _removed and len(_removed) > 0:
+        for _removedcdsl in _removed:
+            print "Removed cdsl %s type %s" %(_removedcdsl, _removedcdsl.type)
+    if ((_added and len(_added) > 0) or (_removed and len(_removed) > 0)) and not options.update:
+        print >>sys.stderr, "Cdslrepository is inconsistent to the filesystem. Please run this command with -U/--update option to fix this." 
+        sys.exit(len(_added)+len(_removed))
+except Exception, e:
+    ComLog.errorTraceLog(logger)
+    logger.error("Error occured during com-cdslinvchk: %s" %e)
 
-_added, _removed=validator.validate(update=options.update, onfilesystem=options.filesystem, filesystempath=options.path, cdsls=options.cdsls, recursive=not options.norecursive)
-if _added and len(_added) > 0:
-    for _addedcdsl in _added:
-        print "Added cdsl %s type %s" %(_addedcdsl, _addedcdsl.type)
-if _removed and len(_removed) > 0:
-    for _removedcdsl in _removed:
-        print "Removed cdsl %s type %s" %(_removedcdsl, _removedcdsl.type)
-if ((_added and len(_added) > 0) or (_removed and len(_removed) > 0)) and not options.update:
-    print >>sys.stderr, "Cdslrepository is inconsistent to the filesystem. Please run this command with -U/--update option to fix this." 
-    sys.exit(len(_added)+len(_removed))
