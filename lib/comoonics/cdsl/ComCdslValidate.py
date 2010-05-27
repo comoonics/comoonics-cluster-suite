@@ -25,22 +25,83 @@ version of os.walk() (see L{os} for details), which skips submounts but follows 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 
 import os
 
 class CdslValidate(object):
-    """
-    Class that controlls the validation and repair of cdsls. All methods are consolidated under this
-    class.
-    """
-    def __init__(self, cdslRepository, clusterInfo):
-        self.cdslrepository=cdslRepository
-        self.clusterinfo=clusterInfo
-        from comoonics import ComLog
-        self.logger=ComLog.getLogger("comoonics.cdsl.ComCdslValidate.CdslValidate")
+    def createDefaultRepository(clusterInfo, **keys):
+        from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+        repository=keys.get("repository", None)
+        if repository:
+            keys["resource"]=keys.get("resource", repository.getResource())
+            keys["root"]=keys.get("root", repository.root)
+            keys["mountpoint"]=keys.get("mountpoint", repository.getMountpoint())
+            keys["cdsltree"]=keys.get("cdsltree", repository.getTreePath())
+            keys["cdsltreeshared"]=keys.get("cdsltreeshared", repository.getSharedTreepath())
+            keys["cdsllink"]=keys.get("cdsllink", repository.getLinkPath())
+            keys["defaultdir"]=keys.get("defaultdir", repository.getDefaultDir())
+            keys["maxnodeidnum"]=keys.get("maxnodeidnum", repository.getMaxnodeidnum())
+            keys["nodeprefix"]=keys.get("nodeprefix", repository.getNodePrefix())
+            keys["usenodeids"]=keys.get("usenodeids", repository.getUseNodeids())
+            keys["expandstring"]=keys.get("expandstring", repository.getExpandString())
+        return ComoonicsCdslRepository(clusterinfo=clusterInfo, **keys)
+    createDefaultRepository=staticmethod(createDefaultRepository)
 
-    def walkdir(self, top=".", names=None, recursive=True, onerror=None):
+    def backupFileName(filename, idx=0):
+        """
+        Will create a backup filename of the given file.
+        Usually this means move the file from filename => filename.cdslvalidate.%(date)
+        """
+        from datetime import datetime
+        
+        backupfilename="%s.cdslvalidate.%s.%u" %(filename, datetime.now().strftime("%Y%m%d-%H%M%S"), idx)
+        if os.path.exists(backupfilename):
+            idx=idx+1
+            return CdslValidate.backupFileName(filename,idx)
+        else:
+            return backupfilename
+    backupFileName=staticmethod(backupFileName)
+
+    def backupFile(filename, backupfile=None):
+        import shutil
+        #from comoonics import ComSystem
+        if not backupfile:
+            backupfile=CdslValidate.backupFileName(filename)
+        shutil.copyfile(filename, backupfile)
+        # ComSystem.execLocalOutput("cp %s %s" %(filename, backupfile))
+    backupFile=staticmethod(backupFile)
+
+    def __init__(self, cdslRepository, clusterInfo, **keys):
+        """
+        Class that controlls the validation and repair of cdsls. All methods are consolidated under this
+        class.
+        """
+        self.backupfiles=list()
+        from comoonics import ComLog
+        from xml.sax import SAXParseException
+        self.logger=ComLog.getLogger("comoonics.cdsl.ComCdslValidate.CdslValidate")
+        self.clusterinfo=clusterInfo
+        self.cdslrepository=cdslRepository
+        try:
+            self.cdslrepository.lockresourceRO()
+            self.cdslrepository.refresh()
+        except (AttributeError, IOError, OSError, SAXParseException), error:
+            if self.cdslrepository:
+                self.cdslrepository.unlockresource()
+                resource=os.path.join(self.cdslrepository.workingdir, self.cdslrepository.resource)
+            else:
+                resource=os.path.normpath(os.path.join(keys["root"], keys["mountpoint"], keys["resource"]))
+            self.logger.error("Could not find read cdsl repository from %s. Trying to reconstruct." %resource)
+            if os.path.exists(resource):
+                _backupfile=CdslValidate.backupFileName(resource)
+                self.logger.error("Backing up old repository from %s to %s" %(resource, _backupfile))
+                CdslValidate.backupFile(resource, _backupfile)
+                self.backupfiles.append(_backupfile)
+                os.remove(resource)
+            self.cdslrepository=CdslValidate.createDefaultRepository(clusterInfo, repository=self.cdslrepository, **keys)
+
+    def walkdir(self, top=".", names=None, recursive=True, onerror=None, filter=None):
         """Directory tree generator.
     
         Modified version of os.walk(). See L{os} for details of usage.
@@ -53,7 +114,9 @@ class CdslValidate(object):
         """
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
         from comoonics.cdsl import ismount, dirtrim
-        from comoonics.cdsl.ComCdsl import Cdsl        
+        from comoonics.cdsl.ComCdsl import Cdsl    
+        if not filter:
+            filter=os.path.islink    
 
         # We may not have read permission for top, in which case we can't
         # get a list of the files the directory contains.  os.path.walk
@@ -69,6 +132,10 @@ class CdslValidate(object):
                 names = [ names, ]
 
             for name in names:
+                # Only links are cdsls so far
+                cdsllink=os.path.normpath(os.path.join(self.cdslrepository.workingdir, top, name))
+                if not filter(cdsllink) and not os.path.isdir(cdsllink):
+                    continue
                 cdsl=None
                 if self.cdslrepository.isExpandedDir(name):
                     continue
@@ -95,8 +162,8 @@ class CdslValidate(object):
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         # Note that listdir and error are globals in this module due
         # to earlier import-*.
-        cwd=Path(os.path.join(self.cdslrepository.workingdir.getPath(), self.cdslrepository.getLinkPath()))
-        cwd.pushd()
+        cwd=Path()
+        cwd.pushd(os.path.join(self.cdslrepository.workingdir, self.cdslrepository.getLinkPath()))
         if not keys.get("onfilesystem", False):
             for cdsl in self.cdslrepository.walkCdsls(keys.get("clusterinfo"), keys.get("cdsls", []), ComoonicsCdslRepository.guessonerror):
                 yield cdsl
@@ -107,7 +174,7 @@ class CdslValidate(object):
                 _pathtail=None
             for cdsl in self.walkdir(_pathhead, _pathtail, keys.get("recursive", True)):
                 yield cdsl
-        self.cdslrepository.workingdir.popd()
+#        self.cdslrepository.workingdir.popd()
         cwd.popd()
                                   
     def validate(self, **keys):
@@ -132,6 +199,10 @@ class CdslValidate(object):
         for _cdsl in self.walk(path=keys.get("filesystempath", "."), clusterinfo=self.clusterinfo, onfilesystem=keys.get("onfilesystem", False), cdsls=keys.get("cdsls", []), recursive=keys.get("recursive", True)):
             self.logger.info("validate %s." %_cdsl)
             __added, __removed = self.cdslrepository.update(_cdsl, self.clusterinfo, not keys.get("update", False))
+            if __added or __removed:
+                _backupfile=CdslValidate.backupFileName(os.path.join(self.cdslrepository.workingdir, self.cdslrepository.resource))
+                self.backupfiles.append(_backupfile)
+                self.backupFile(os.path.join(self.cdslrepository.workingdir, self.cdslrepository.resource), _backupfile)
             if __added:
                 self.logger.info("+ %s" %__added)
                 _added.append(__added)
@@ -142,7 +213,17 @@ class CdslValidate(object):
 
 ##############
 # $Log: ComCdslValidate.py,v $
-# Revision 1.9  2010-02-07 20:01:26  marc
+# Revision 1.10  2010-05-27 08:47:24  marc
+# - CdslValidate:
+#   - createDefaultRepository: new method to reconstruct repository if not existant or currupt
+#   - backupFileName: new method, generate backupfilename to given filename
+#   - backupFile: new method, backup the given file
+#   - __init__: reconstruct and backup repository if it does not exist or is currupt
+#   - walkdir: added filter as parameter that filters possible cdsl (symlinks).
+#   - walk: adapted to new Path API
+#   - validate: backup repository before applying changes.
+#
+# Revision 1.9  2010/02/07 20:01:26  marc
 # First candidate for new version.
 #
 # Revision 1.8  2009/07/22 08:37:09  marc
