@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.19 $"
+__version__ = "$Revision: 1.20 $"
 
 # @(#)$File$
 #
@@ -169,6 +169,10 @@ class Cdsl(DataObject):
     def __str__(self):
         return self.src
     
+    def setSource(self, src):
+        self.src=src
+        self.setAttribute("src", src)
+    
     def commit(self):
         """
         Commit new or changed cdsl to inventoryfile, Placeholder for 
@@ -208,8 +212,8 @@ class Cdsl(DataObject):
         """
         from comoonics.ComPath import Path
         from comoonics.cdsl import ltrimDir, isHostdependentPath, isSharedPath
-        _path=Path(self.getBasePath())
-        _path.pushd()
+        _path=Path()
+        _path.pushd(self.getBasePath())
         _exists=False
         _cdslpath=self.getCDSLPath()
         _cdsllinkpath=self.getCDSLLinkPath()
@@ -232,12 +236,16 @@ class Cdsl(DataObject):
         _exists_once=False
         _exists_everywhere=True
         for _destpath in self.getDestPaths(): 
-            _exists=os.path.exists(_destpath) and \
-                os.path.samefile(_destpath, _cdslpath) and \
-                os.path.samefile(_destpath, _cdsllinkpath)
-            if _exists:
-                _exists_once=True
-            if not os.path.exists(_destpath):
+            try:
+                _exists=os.path.exists(_destpath) and \
+                    os.path.samefile(_destpath, _cdslpath) and \
+                    os.path.samefile(_destpath, _cdsllinkpath)
+                if _exists:
+                    _exists_once=True
+                if not os.path.exists(_destpath):
+                    _exists_everywhere=False
+            except OSError:
+                _exists_once=False
                 _exists_everywhere=False
         _path.popd()
         return _exists_once and _exists_everywhere
@@ -373,12 +381,11 @@ class ComoonicsCdsl(Cdsl):
         """
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdsl")
         cdslRepository=cdslRepository.getRepositoryForCdsl(src)
-        super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp, ignoreerrors=ignoreerrors)
         #add default node to a special nodelist
+        super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp, ignoreerrors=ignoreerrors)
         self.nodesWithDefaultdir = self.nodes[:]
         self.nodesWithDefaultdir.append(self.default_node)
-
-        self.src=self._stripsrc(self.src, cdslRepository, clusterinfo)
+        src=self._stripsrc(src, cdslRepository, clusterinfo)
 
         #set reldir to current path
         self.reldir = os.getcwd()
@@ -392,17 +399,22 @@ class ComoonicsCdsl(Cdsl):
     def _stripsrc(self, _src, cdslRepository, clusterinfo):
 #        cdslRepository.workingdir.pushd()
         from comoonics.cdsl import stripleadingsep, strippath
-        if not _src.startswith(os.sep) and os.path.exists(_src):
+        from comoonics.ComPath import Path 
+        cwd=Path()
+        cwd.pushd(cdslRepository.workingdir)
+        if os.path.exists(_src):
             _src=os.path.realpath(_src)
         src=_src
         src=stripleadingsep(strippath(strippath(src, cdslRepository.root), cdslRepository.getMountpoint()))
         src=stripleadingsep(strippath(src, cdslRepository.getLinkPath()))
         src=stripleadingsep(strippath(src, cdslRepository.getSharedTreepath()))
-        for node in self.getNodenames():
-            src=stripleadingsep(strippath(src, os.path.join(cdslRepository.getTreePath(), node)))
+        if hasattr(self, "nodesWithDefaultdir"):
+            for node in self.getNodenames():
+                src=stripleadingsep(strippath(src, os.path.join(cdslRepository.getTreePath(), node)))
         src=cdslRepository.unexpand(src, clusterinfo)
         self.logger.debug("cdsl stripped %s to %s" %(_src, src))
-#        cdslRepository.workingdir.popd()
+        self.setSource(src)
+        cwd.popd()
         return src
 
     def __str__(self):
@@ -629,8 +641,8 @@ class ComoonicsCdsl(Cdsl):
                 self.logger.debug("Given source is already part of a hostdependent CDSL")
                 raise CdslAlreadyExists("Cdsl %s is already a shared cdsl." %self.src)
 
-        _path=Path(self.getBasePath())
-        _path.pushd()
+        _path=Path()
+        _path.pushd(self.getBasePath())
                 
 #        _expanded=self.cdslRepository.expandCdsl(self)
 #        parent=self.getParent()
@@ -703,7 +715,7 @@ class ComoonicsCdsl(Cdsl):
             elif self.isHostdependent():
                 src=os.path.join(_relativepath, self.cdslRepository.getLinkPath(), self.cdslRepository.expandCdsl(self))
                 dest=sourcepath
-            self.logger.debug("Creating Link: %s => %s" %(src, dest))
+            self.logger.debug("Creating Link: %s => %s, currentpath: %s" %(src, dest, _path))
             ComSystem.execMethod(os.symlink, src, dest)
         _path.popd()
                             
@@ -731,8 +743,8 @@ class ComoonicsCdsl(Cdsl):
             for cdsl in _tmp:
                 cdsl.delete(recursive, force)
         
-        _cwd=Path(self.getBasePath())
-        _cwd.pushd()
+        _cwd=Path()
+        _cwd.pushd(self.getBasePath())
         
         #delete or move cdsl from filesystem first is from second to if second=None it is removed
         _delpaths=list()
@@ -872,7 +884,16 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.19  2010-04-13 14:49:19  marc
+# Revision 1.20  2010-05-27 08:34:12  marc
+# - Cdsl:
+#    - setSource: added method setSource
+#    - changed to current Path API
+#    - exists: detect an error when destpath does not exist
+# - ComooncisCdsl
+#    - changed to current Path API
+#    - _strippath: added call of setSource
+#
+# Revision 1.19  2010/04/13 14:49:19  marc
 # - fixed bug with wrongly detected relativ cdsls
 #
 # Revision 1.18  2010/03/08 12:30:48  marc
