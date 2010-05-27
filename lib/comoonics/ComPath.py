@@ -14,7 +14,7 @@ hello world2
 """
 
 # here is some internal information
-# $Id: ComPath.py,v 1.5 2010-02-05 12:23:04 marc Exp $
+# $Id: ComPath.py,v 1.6 2010-05-27 08:51:28 marc Exp $
 #
 # @(#)$File$
 #
@@ -36,7 +36,7 @@ hello world2
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComPath.py,v $
 
 from ComDataObject import DataObject
@@ -68,7 +68,9 @@ class Path(DataObject):
         self.oldpaths=list()
 
         # Case path is given
-        if params and len(params)==1:
+        if not params and not kwds:
+            (element, doc)=self._createElement(os.getcwd())
+        elif params and len(params)==1:
             (element, doc)=self._createElement(params[0])
         elif params and len(params)==2:
             (element, doc)=params
@@ -101,9 +103,10 @@ class Path(DataObject):
     def pushd(self, path=None):
         _cwd=os.getcwd()
         if not path:
-            path=self.getPath()
-            if str(path) == _cwd:
-                return 
+            path=_cwd
+#            path=self.getPath()
+#            if str(path) == _cwd:
+#                return 
         os.chdir(str(path))
         self.getOldPaths().append(_cwd)
         self.setAttribute("name", path)
@@ -146,7 +149,10 @@ class Path(DataObject):
 
 ################
 # $Log: ComPath.py,v $
-# Revision 1.5  2010-02-05 12:23:04  marc
+# Revision 1.6  2010-05-27 08:51:28  marc
+# - stabilized that every path that is pushed will consequently be poped.
+#
+# Revision 1.5  2010/02/05 12:23:04  marc
 # - moved oldpaths to constructor in order to not have it globally initiated
 # - better constructor with more params
 # - mkdir works better now
