@@ -50,6 +50,9 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Thu May 27 2010 MG <grimme@atix.de>, 0.1-10
+  - ComException: will also return its representation if not unicode
+  - ComPath: every path pushed will also be poped even if the same path is pushed multiple times.
 * Fri Apr 23 2010 MG <grimme@atix.de>, 0.1-9
   - ComSystem: reorganized some code parts.
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-8
@@ -70,6 +73,15 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Thu May 27 2010 MG <grimme@atix.de>, 0.1-26
+  - com-mkcdsl: fixed bug that com-mkcdsl would not create a cdsl of either a relative 
+         path or path as link (e.g. /etc/init.d/whatever => /etc/rc.d/init.d/whatever)
+  - com-mkcdslinfrastructure: fixed that no parameters are passed to the repository
+  - com-cdslinvchk: will reconstruct now a corrupt or unexistant repository. 
+         Repositories are backuped before being changed.
+  - com-rmcdsl: will also remove linked cdsls and relative paths (see com-mkcdsl)
+* Tue May 18 2010 MG <grimme@atix.de>, 0.1-25
+  - ComCdsl: ComoonicsCdsl.__init__(): resolving of paths to realpath for cdsl
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-24
   - minor changed to implement better testing
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.2-23
