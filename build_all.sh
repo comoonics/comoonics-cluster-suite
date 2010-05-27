@@ -16,5 +16,5 @@ if [ -n "$failedbuilds" ]; then
 	echo "Could not build the following packages: $failedbuilds" >&2
 	exit 1
 fi
-
+touch .lastbuild
 rpm --resign dist/*.rpm
