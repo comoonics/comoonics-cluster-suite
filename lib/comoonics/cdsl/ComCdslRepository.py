@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.21 $"
+__version__ = "$Revision: 1.22 $"
 
 import fcntl # needed for filelocking
 import re
@@ -80,7 +80,8 @@ class CdslRepository(DataObject):
         @type xml.dom.Document
         @param element: the preparsed element. Defaults to dom.getDocumentElement()
         @type xml.dom.Element
-        """       
+        """     
+        import stat  
         element=None
         doc=None
         self.cdsls = dict()
@@ -92,6 +93,8 @@ class CdslRepository(DataObject):
             self.validate = kwds.get("validate", False)
             from comoonics import XmlTools
             if self.resource and os.path.exists(self.resource):
+                if os.stat(self.resource)[stat.ST_SIZE] <= 0:
+                    raise IOError("Repository %s has zero size. Cannot read. Try to reconstruct or restore the repository (com-cdsllinvchk)." %self.resource)
                 _file = os.fdopen(os.open(self.resource,os.O_RDONLY))
                 try:
                     doc=XmlTools.createDOMfromXML(_file, None, self.validate)
@@ -299,6 +302,7 @@ class ComoonicsCdslRepository(CdslRepository):
     cdsltree_default = ".cluster/cdsl"
     cdslsharedtree_default = ".cluster/shared"
     cdsllink_default = ".cdsl.local"
+    defaultdir_default = "default"
     maxnodeidnum_default = "0"
     usenodeids_default = str(True)
     default_resources=[ ".cdsl_inventory.xml", "var/lib/cdsl/cdsl_inventory.xml" ]
@@ -345,6 +349,9 @@ class ComoonicsCdslRepository(CdslRepository):
         @type  nodeprefix: L{String}
         @param expandstring: How should reshared or rehostdeps be suffixed. Default: ".cdsl"
         @type  expandstring: L{String}
+        @param nocreate: Not create a repository if it does not exist but fail with an exception.
+        @type  nocreate: L{Boolean}
+        
         """
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdslRepository")
         self.cdsls=dict()
@@ -352,37 +359,43 @@ class ComoonicsCdslRepository(CdslRepository):
         self.parent=None
         self.dtd=None
         self.resourcehandle=None
+        self.resourcehandlelock=0
         if not keys:
             raise TypeError("comoonics.cdsl.ComCdslRepository.ComoonicsCDSLRepository can only be instanciated with keywords not otherwise.")
         self.root = keys.get("root", "/")
                            
-        self.workingdir=Path(os.path.join(self.root, stripleadingsep(keys.get("mountpoint", ""))))
-        if not self.workingdir.exists():
-            raise IOError(2, "Mount point %s does not exist." %self.workingdir.getPath())
-        self.workingdir.pushd()
+        self.workingdir=os.path.join(self.root, stripleadingsep(keys.get("mountpoint", "")))
+        if not os.path.exists(self.workingdir):
+            raise IOError(2, "Mount point %s does not exist." %self.workingdir)
+#        self.workingdir.pushd()
+        path=Path()
+        path.pushd(self.workingdir)
+        resource=None
         try:
             resource=keys.get("resource", ComoonicsCdslRepository.guessresource())
             if resource==None:
                 resource=ComoonicsCdslRepository.guessresource()
+            open(resource)
         except IOError:
-            resource=self.default_resources[0]
+            if keys.get("nocreate", False):
+                raise
+            elif resource == None:
+                resource=self.default_resources[0]
         self.log.debug("CdslRepository: resource %s" %resource)
         keys["resource"]=resource
-        # Change to path in order to find resource
-        
+        # Change to path in order to find resource (resource is read relatively from parentclass. So we need to 
+        # change to workingdir
         super(ComoonicsCdslRepository,self).__init__(**keys)
+        path.popd()
+        
         if self.getVersion() != self.version:
-            self.workingdir.popd()
             raise CdslVersionException("""
 Wrong version of cdsl repository %s. 
 Version must be %s but is %s. 
 Please first migrate to appropriate version.
-For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir.getPath(), self.resource), self.getVersion(), self.version))
+For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir, self.resource), self.getVersion(), self.version))
         self.setMountpoint(stripleadingsep(keys.get("mountpoint", "")))
-        self.lockresourceRW()
-        self.writeresource()
-        self.unlockresource()
-        self.workingdir.popd()
+        self.writeresource(False)
 
     def __str__(self):
         buf=super(ComoonicsCdslRepository, self).__str__()
@@ -392,26 +405,32 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
     def _updateFromElement(self, element, document):
         self._readCdslsElement(element, True)
 
+    def getWriteResourceName(self):
+        return os.path.join(os.path.dirname(self.resource), os.path.basename(self.resource)+".tmp")
+
     def lockresourceRO(self):
         self.lockresource()
         
     def lockresourceRW(self):
-        self.lockresource("w+")
+        if os.path.exists(os.path.join(self.workingdir, self.resource)):
+            self.lockresource("r+")
+        else:
+            self.lockresource("w+")
 
     def lockresource(self, mode="r"):
+        if mode == "r":
+            lockmode=fcntl.LOCK_SH
+        else:
+            lockmode=fcntl.LOCK_EX
         if not self.resourcehandle:
-            self.workingdir.pushd()
-            self.resourcehandle = file(self.resource,mode)
-            if mode == "r":
-                lockmode=fcntl.LOCK_SH
-            else:
-                lockmode=fcntl.LOCK_EX
-            fcntl.lockf(self.resourcehandle,lockmode)
-            self.workingdir.popd()
+            self.resourcehandle = file(os.path.join(self.workingdir, self.resource), mode)
+        fcntl.lockf(self.resourcehandle,lockmode)
+        self.resourcehandlelock=lockmode
 
     def unlockresource(self):
         if self.resourcehandle:
             fcntl.lockf(self.resourcehandle,fcntl.LOCK_UN)
+            self.resourcelock=0
             self.resourcehandle.close()
             self.resourcehandle = None
 
@@ -427,19 +446,31 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         from xml.dom.ext.reader import Sax2
         if not nolock:
             self.lockresourceRO()
+            _resourcehandle=self.resourcehandle
+        else:
+            _resourcehandle = file(os.path.join(self.workingdir, self.resource))
+            
+        _resourcehandle.seek(0)
         reader = Sax2.Reader(self.validate)
-        self.setDocument(reader.fromStream(self.resourcehandle))
+        self.setDocument(reader.fromStream(_resourcehandle))
         element=self.getDocument().documentElement
         self.setElement(element)
         if not nolock:
             self.unlockresource()
+        else:
+            _resourcehandle.close()
 
     def writeresource(self, nolock=True):
         from xml.dom.ext import PrettyPrint
-        if not nolock:
-            self.lockresource()
+        import shutil
         log.debug("ComoonicsCdslRepository writing resource %s/%s" %(self.workingdir, self.resource))
-        PrettyPrint(self.getDocument().documentElement, self.resourcehandle)
+        if not nolock:
+            self.lockresourceRW()
+        wresourcehandle = file(os.path.join(self.workingdir, self.getWriteResourceName()), "w+")
+        PrettyPrint(self.getDocument().documentElement, wresourcehandle)
+        wresourcehandle.close()
+        shutil.copy(os.path.join(self.workingdir, self.getWriteResourceName()), os.path.join(self.workingdir, self.resource))
+        os.remove(os.path.join(self.workingdir, self.getWriteResourceName()))
         if not nolock:
             self.unlockresource()
 
@@ -458,11 +489,11 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         topelement=doc.documentElement
         topelement.setAttribute(self.cdsls_version_attribute,self.version)
 
-        topelement.setAttribute(self.cdsls_tree_attribute, stripleadingsep(keys.get(self.cdsls_tree_attribute, self.getTreePath())))
-        topelement.setAttribute(self.cdsls_sharedtree_attribute, stripleadingsep(keys.get(self.cdsls_sharedtree_attribute, self.getSharedTreepath())))
-        topelement.setAttribute(self.cdsls_link_attribute, stripleadingsep(keys.get(self.cdsls_link_attribute, self.getLinkPath())))
+        topelement.setAttribute(self.cdsls_tree_attribute, stripleadingsep(keys.get("cdsltree", self.getTreePath())))
+        topelement.setAttribute(self.cdsls_sharedtree_attribute, stripleadingsep(keys.get("cdsltreeshared", self.getSharedTreepath())))
+        topelement.setAttribute(self.cdsls_link_attribute, stripleadingsep(keys.get("cdsllink", self.getLinkPath())))
         topelement.setAttribute(self.cdsls_maxnodeidnum_attribute, keys.get(self.cdsls_maxnodeidnum_attribute, self.getMaxnodeidnum()))
-        topelement.setAttribute(self.cdsls_usenodeids_attribute, keys.get(self.cdsls_usenodeids_attribute, self.getUseNodeids()))
+        topelement.setAttribute(self.cdsls_usenodeids_attribute, keys.get("usenodeids", self.getUseNodeids()))
         topelement.setAttribute(self.cdsls_mountpoint_attribute, stripleadingsep(keys.get(self.cdsls_mountpoint_attribute, self.getMountpoint())))
         topelement.setAttribute(self.cdsls_defaultdir_attribute, stripleadingsep(keys.get(self.cdsls_defaultdir_attribute, self.getDefaultDir())))
         topelement.setAttribute(self.cdsls_nodeprefix_attribute, keys.get(self.cdsls_nodeprefix_attribute, self.getNodePrefix()))
@@ -659,7 +690,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         @rtype: L{ComoonicsCdsl}
         @raise CdslRepositoryNotFound: if the cdsl could not be found in the repository 
         """
-        from comoonics.cdsl import strippath, stripleadingsep
+        from comoonics.cdsl import strippath
         if not repository:
             repository=self.getRepositoryForCdsl(src)
         if src.startswith(os.sep):
@@ -668,12 +699,13 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         if repository.cdsls.has_key(src):
             return repository.cdsls[src]
         else:
-            repository.workingdir.pushd()
+            path=Path()
+            path.pushd(repository.workingdir)
             for cdsl in repository.cdsls.values():
                 if cdsl.src == src or (os.path.exists(cdsl.src) and os.path.exists(src) and os.path.samefile(cdsl.src, src)):
-                    repository.workingdir.popd()
+                    path.popd()
                     return cdsl
-            repository.workingdir.popd()
+            path.popd()
         raise CdslNotFoundException(src,repository)
         
             
@@ -684,48 +716,32 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         @type cdsl: L{ComoonicsCdsl}
         """
         #Open and lock XML-file and return DOM
-        self.workingdir.pushd()
+        path=Path()
+        path.pushd(self.workingdir)
         self.refresh(False)
         self.lockresourceRW()
         if self.exists(cdsl):
-            log.debug("replacing cdsl %s.." % cdsl.src)
-            # modify cdsl-entry if cdsl already exists and there are changes to commit"""
             log.debug("cdsl exists")
-    
+            log.debug("removing cdsl %s.." % cdsl.src)
             #locate existing node entry
             oldnode = self.cdsls[cdsl.src].getElement()
+            self.getElement().removeChild(oldnode)
 
-            #modify existing cdsl-entry
-            if cdsl.getDocument().isSameNode(self.getDocument()):
-                _node = cdsl.getElement()         
-            else:
-                _node=self.getDocument().importNode(cdsl.getElement(), True)
-                cdsl.setElement(_node)
-                cdsl.setDocument(self.getDocument())
-            self.getElement().replaceChild(_node,oldnode)
-        
-            #modify cdsls of cdslRepository instance
-            self.cdsls[cdsl.src] = cdsl
-            
+        #modify existing cdsl-entry
+        if cdsl.getDocument().isSameNode(self.getDocument()):
+            _node = cdsl.getElement()         
         else:
-            # create new cdsl-entry in inventory-file"""
-            log.debug("adding cdsl %s.." % cdsl.src)
-            
-            #locate defaults element
-            if cdsl.getDocument().isSameNode(self.getDocument()):
-                _node = cdsl.getElement()         
-            else:
-                _node=self.getDocument().importNode(cdsl.getElement(), True)
-                cdsl.setElement(_node)
-                cdsl.setDocument(self.getDocument())
-            self.getElement().appendChild(_node)
-                    
-            #add new cdsl to instance of cdslRepository
-            self.cdsls[cdsl.src]=cdsl
+            _node=self.getDocument().importNode(cdsl.getElement(), True)
+            cdsl.setElement(_node)
+            cdsl.setDocument(self.getDocument())
+        self.getElement().appendChild(_node)
+        
+        #modify cdsls of cdslRepository instance
+        self.cdsls[cdsl.src] = cdsl
         
         self.writeresource()
         self.unlockresource()
-        self.workingdir.popd()
+        path.popd()
         return cdsl
     
     def delete(self,cdsl):
@@ -742,8 +758,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
             self.lockresourceRW()
             element=self.cdsls[cdsl.src].getElement()
             self.getElement().removeChild(element)
-            self.writeresource()
-            self.unlockresource()
+            self.writeresource(True)
             
             if self.cdsls.has_key(cdsl.src):
                 _deleted=cdsl
@@ -791,7 +806,8 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         if not nodes or len(nodes) == 0:
             raise TypeError("Either specify a clusterinfo or maxnodeidnums need to be set in order to determine the nodeids need to build the cdsl infrastructure.")
         
-        self.workingdir.pushd()
+        path=Path()
+        path.pushd(self.workingdir)
         if not os.path.exists(self.resource):
             self.lockresourceRW()
             self.writeresource()
@@ -823,7 +839,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         if recursive:
             for repository in self.getRepositories().values():
                 repository.buildInfrastructure(clusterinfo, recursive)
-        self.workingdir.popd()
+        path.popd()
 
     def removeInfrastructure(self,clusterinfo=None, recursive=True, force=False, withcdsls=True):
         """
@@ -850,7 +866,8 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
                 repository.removeInfrastructure(clusterinfo, recursive, force, withcdsls)
                 self._removeRepository(repository)
 
-        self.workingdir.pushd()
+        wpath=Path()
+        wpath.pushd(self.workingdir)
         if withcdsls:
             for cdsl in self.getCdsls():
                 if cdsl.exists():
@@ -894,7 +911,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
                 
         if os.path.exists(self.resource):
             ComSystem.execMethod(os.remove, self.resource)
-        self.workingdir.popd()
+        wpath.popd()
 
     def _getnearestcdsls(self, path, down=True, clusterinfo=None, onerror=None):
         from comoonics.cdsl import isSubPath
@@ -1047,7 +1064,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         """
         @rtype: string
         """
-        return self.getAttribute(self.cdsls_defaultdir_attribute, "default")
+        return self.getAttribute(self.cdsls_defaultdir_attribute, self.defaultdir_default)
     
     def setMaxnodeidnum(self, value):
         self.setAttribute(self.cdsls_maxnodeidnum_attribute, value)
@@ -1232,19 +1249,21 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         _deleted=None
         _type=guessType(src, self, False)
         if _type != Cdsl.HOSTDEPENDENT_TYPE and _type != Cdsl.SHARED_TYPE:
+            self.logger.debug("File %s seems to be no cdsl. Skipping it." %src)
+        
             #create hostdependent and shared cdsl-object and test if one of these is existing
-            _cdslHostdependent = Cdsl(src, Cdsl.HOSTDEPENDENT_TYPE, self, clusterInfo)
-            _cdslShared = Cdsl(src, Cdsl.SHARED_TYPE, self, clusterInfo)
-                       
-            if _cdslShared.exists():
-                self.log.debug("update: would add shared CDSl with source " + src + " to inventoryfile.")
-                _added=_cdslShared
-            elif _cdslHostdependent.exists():
-                self.log.debug("update: would add hostdependent CDSL with source " + src + " to inventoryfile.")
-                _added=_cdslHostdependent
-            else:
-                log.debug("update: CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
-                raise CdslNotFoundException(src, self)
+#            _cdslHostdependent = Cdsl(src, Cdsl.HOSTDEPENDENT_TYPE, self, clusterInfo)
+#            _cdslShared = Cdsl(src, Cdsl.SHARED_TYPE, self, clusterInfo)
+#                       
+#            if _cdslShared.exists():
+#                self.log.debug("update: would add shared CDSl with source " + src + " to inventoryfile.")
+#                _added=_cdslShared
+#            elif _cdslHostdependent.exists():
+#                self.log.debug("update: would add hostdependent CDSL with source " + src + " to inventoryfile.")
+#                _added=_cdslHostdependent
+#            else:
+#                log.debug("update: CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
+#                raise CdslNotFoundException(src, self)
         else:
             _added=Cdsl(src, _type, self, clusterInfo)
         
@@ -1258,3 +1277,23 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         @type root: string
         """
         self.root = root
+
+###############
+# $Log: ComCdslRepository.py,v $
+# Revision 1.22  2010-05-27 08:43:25  marc
+# - adapted to new upstream Path API
+# - CdslRepository:
+#   - __init__: detect 0 size inventoryfile
+# - ComoonicsCdslRepository
+#   - added defaultdir_default
+#   - attribute workingdir is a string not a Path
+#   - __init__: added parameter nocreate to not create repository if it does not exist but raise Exception
+#   - getWriteResourceName: added method that returns the name of the temporary inventory file to be written to
+#   - lockresourceRW: not truncate existing inventory files but open in write mode (r+ and w+)
+#   - lockresource: some more errors to be detected
+#   - _parseresourceFP: if nolock create a temporary handle but not use self.resourcehandle
+#   - writeresource: first write to getWriteResourceName then move it to old repository
+#   - _createEmptyDocumentStructure: accept given predefined parameters
+#   - commit: exchanged replaceChild to removeChild and all appendChild (better readable)
+#   - guessonerror: simplified perhaps obsolete
+#
