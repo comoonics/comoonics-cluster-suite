@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComExceptions.py,v 1.8 2010-02-05 12:20:57 marc Exp $
+# $Id: ComExceptions.py,v 1.9 2010-05-27 08:50:40 marc Exp $
 #
 # @(#)$File$
 #
@@ -48,9 +48,14 @@ class ComException(Exception):
             except Exception:
                 pass
             return repr(self.value)
+        else:
+            return self.value
 
 # $Log: ComExceptions.py,v $
-# Revision 1.8  2010-02-05 12:20:57  marc
+# Revision 1.9  2010-05-27 08:50:40  marc
+# added return value even if it is not unicode.
+#
+# Revision 1.8  2010/02/05 12:20:57  marc
 # - bugfix for recursive instantiation
 #
 # Revision 1.7  2009/09/28 15:12:42  marc
