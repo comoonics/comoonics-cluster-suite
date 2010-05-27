@@ -83,24 +83,24 @@ def guessType(_cdslpath, _cdslrepository, _exists=True):
     import os.path
     from ComCdsl import Cdsl
     from ComCdslRepository import CdslNotFoundException
-    _path=dirtrim(_cdslpath)
-    if _path.find(os.sep) > 0:
+    _path=os.path.join(_cdslrepository.workingdir, dirtrim(_cdslpath))
+#    if _path.find(os.sep) > 0:
 #        _path=os.path.dirname(_path)
-        while _path:
-            _path, _tail=os.path.split(_path)
-            try:
-                _cdsl=_cdslrepository.getCdsl(_path)
-                if _cdsl.isHostdependent():
-                    return Cdsl.SHARED_TYPE
-                elif _cdsl.isShared():
-                    return Cdsl.HOSTDEPENDENT_TYPE
-            except CdslNotFoundException:
-                continue
+#        while _path:
+#            _path, _tail=os.path.split(_path)
+#            try:
+#                _cdsl=_cdslrepository.getCdsl(_path)
+#                if _cdsl.isHostdependent() and isSharedPath(os.path.realpath(_cdslpath), _cdslrepository, _exists):
+#                    return Cdsl.SHARED_TYPE
+#                elif _cdsl.isShared() and isHostdependentPath(os.path.realpath(_path), _cdslrepository, _exists):
+#                    return Cdsl.HOSTDEPENDENT_TYPE
+#            except CdslNotFoundException:
+#                continue
 
-    if isHostdependentPath(os.path.realpath(_cdslpath), _cdslrepository, _exists):
-        return Cdsl.SHARED_TYPE
-    elif isSharedPath(os.path.realpath(_cdslpath), _cdslrepository, _exists):
+    if os.path.islink(_path) and isHostdependentPath(os.readlink(_path), _cdslrepository, _exists):
         return Cdsl.HOSTDEPENDENT_TYPE
+    elif os.path.islink(_path) and isSharedPath(os.readlink(_path), _cdslrepository, _exists):
+        return Cdsl.SHARED_TYPE
     else:
         return Cdsl.UNKNOWN_TYPE
 
@@ -303,6 +303,7 @@ def commonoptparseroptions(parser):
     Sets the give optparser to the common options needed by all cdsl commands.
     """
     import logging
+    from ComCdslRepository import ComoonicsCdslRepository
     
     logging.basicConfig()
     
@@ -310,7 +311,7 @@ def commonoptparseroptions(parser):
     parser.add_option("-q", "--quiet", action="callback", callback=setQuiet, help="Quiet, does not show any output")
     parser.add_option("-d", "--verbose", action="callback", callback=setDebug, help="Quiet, does not show any output")
 
-    parser.add_option("-i", "--inventoryfile", dest="inventoryfile", default=None, help="path to the cdsl inventory")
+    parser.add_option("-i", "--inventoryfile", dest="inventoryfile", default=ComoonicsCdslRepository.default_resources[0], help="path to the cdsl inventory")
     parser.add_option("-c", "--clusterconf", dest="clusterconf", default=None)
     parser.add_option("-r", "--root", dest="root", default="/", help="set the chroot path")
     parser.add_option("-m", "--mountpoint", dest="mountpoint", default="", help="set the mountpoint for this fs if any.")
@@ -318,7 +319,11 @@ def commonoptparseroptions(parser):
 
 #################
 # $Log: __init__.py,v $
-# Revision 1.10  2010-03-08 12:30:48  marc
+# Revision 1.11  2010-05-27 08:29:58  marc
+# - guessType: simplified
+# - commonoptparseroptions: added default to inventoryfile
+#
+# Revision 1.10  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.9  2010/02/15 12:54:06  marc
