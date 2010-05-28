@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.20 $"
+__version__ = "$Revision: 1.21 $"
 
 # @(#)$File$
 #
@@ -379,43 +379,24 @@ class ComoonicsCdsl(Cdsl):
         @param timestamp: Timestamp to set to cdsl (Default: None), if not set create timestamp from systemtime
         @type timestamp: string
         """
+
+        #set reldir to current path
+        self.reldir = os.getcwd()
+
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdsl")
         cdslRepository=cdslRepository.getRepositoryForCdsl(src)
         #add default node to a special nodelist
         super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp, ignoreerrors=ignoreerrors)
         self.nodesWithDefaultdir = self.nodes[:]
         self.nodesWithDefaultdir.append(self.default_node)
-        src=self._stripsrc(src, cdslRepository, clusterinfo)
+        src=cdslRepository.stripsrc(src)
+        self.setSource(src)
 
-        #set reldir to current path
-        self.reldir = os.getcwd()
-        
         #get needed pathes from cdslrepository and normalize them
         self.cdsltree = dirtrim(cdslRepository.getTreePath())
         self.cdsltree_shared = dirtrim(cdslRepository.getSharedTreepath())    
         self.default_dir = dirtrim(cdslRepository.getDefaultDir())
         self.cdsl_link = dirtrim(cdslRepository.getLinkPath())
-
-    def _stripsrc(self, _src, cdslRepository, clusterinfo):
-#        cdslRepository.workingdir.pushd()
-        from comoonics.cdsl import stripleadingsep, strippath
-        from comoonics.ComPath import Path 
-        cwd=Path()
-        cwd.pushd(cdslRepository.workingdir)
-        if os.path.exists(_src):
-            _src=os.path.realpath(_src)
-        src=_src
-        src=stripleadingsep(strippath(strippath(src, cdslRepository.root), cdslRepository.getMountpoint()))
-        src=stripleadingsep(strippath(src, cdslRepository.getLinkPath()))
-        src=stripleadingsep(strippath(src, cdslRepository.getSharedTreepath()))
-        if hasattr(self, "nodesWithDefaultdir"):
-            for node in self.getNodenames():
-                src=stripleadingsep(strippath(src, os.path.join(cdslRepository.getTreePath(), node)))
-        src=cdslRepository.unexpand(src, clusterinfo)
-        self.logger.debug("cdsl stripped %s to %s" %(_src, src))
-        self.setSource(src)
-        cwd.popd()
-        return src
 
     def __str__(self):
         return self.src
@@ -824,11 +805,12 @@ class ComoonicsCdsl(Cdsl):
 #                    if os.path.samefile(_to, _delpath):
 #                        _delpaths.remove(_delpath)
         self._removePath(_delpaths2)
+        _deleted=ComSystem.execMethod(self.cdslRepository.delete,self)
         _cwd.popd()
         self.logger.debug("Delete CDSL from Inventoryfile")
         #delete cdsl also from xml inventory file
         #self.cdslRepository.delete(self)
-        return ComSystem.execMethod(self.cdslRepository.delete,self)
+        return _deleted
         
     def getParent(self, _path=None):
         """
@@ -884,7 +866,17 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.20  2010-05-27 08:34:12  marc
+# Revision 1.21  2010-05-28 09:37:07  marc
+# - ComoonicsCdsl
+#   - __init__
+#     - moving setting of reldir earlier
+#     - changed strippath to come from CdslRepository
+#     - moved setSource to here
+#   - stripsrc (moved to ComoonicsCdslRepository)
+#   - delete
+#     - delete from repository in workdir
+#
+# Revision 1.20  2010/05/27 08:34:12  marc
 # - Cdsl:
 #    - setSource: added method setSource
 #    - changed to current Path API
