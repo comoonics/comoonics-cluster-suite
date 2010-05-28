@@ -193,8 +193,11 @@ class test_CdslRepository(unittest.TestCase):
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         from comoonics import XmlTools
         from comoonics.cdsl import stripleadingsep
-        repository=comoonics.cdsl.migration.migrate(None, ComoonicsCdslRepository.version, fromresource="./cdsl4.xml", root=setup.tmppath, mountpoint="repo8", ignoreerrors=True)
-        oldelement=XmlTools.parseXMLFile("cdsl4.xml")
+        fromsource=os.path.join(os.getcwd(), "cdsl4.xml")
+        cwd=Path()
+        cwd.pushd(setup.tmppath)
+        repository=comoonics.cdsl.migration.migrate(None, ComoonicsCdslRepository.version, fromresource=fromsource, root=setup.tmppath, mountpoint="repo8", ignoreerrors=True)
+        oldelement=XmlTools.parseXMLFile(fromsource)
         wanttocdsls=oldelement.documentElement.getElementsByTagName("cdsl")
         for i in range(len(wanttocdsls)):
             wanttocdsl=wanttocdsls[i]
@@ -204,6 +207,7 @@ class test_CdslRepository(unittest.TestCase):
                             wanttocdsl.getAttribute("type") == iscdsl.getAttribute("type"), \
                             "Cdsl %s has different timestamp or type after migration" %iscdsl)
         os.remove(os.path.join(repository.root, repository.getMountpoint(), repository.resource))
+        cwd.popd()
             
 if __name__ == "__main__":
     setupCluster=setup.SetupCluster()        

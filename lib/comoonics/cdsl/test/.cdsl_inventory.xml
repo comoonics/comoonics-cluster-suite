@@ -1,0 +1,4 @@
+
+<cdsls config_version='2.0' default_dir='default' maxnodeidnum='0' tree='.cluster/cdsl' node_prefix='' link='.cdsl.local' sharedtree='.cluster/shared' expandstring='.cdsl' mountpoint='repo2' use_nodeids='True'>
+  <repositories/>
+</cdsls>

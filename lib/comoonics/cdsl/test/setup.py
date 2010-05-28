@@ -83,6 +83,7 @@ class SetupCDSLRepository(SetupBase):
     def __init__(self, clusterinfo):
         super(SetupCDSLRepository, self).__init__()
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+        from comoonics.ComPath import Path
         import shutil
         os.mkdir(os.path.join(tmppath, "repo2"))
         os.mkdir(os.path.join(tmppath, "repo2/repo3"))
@@ -94,6 +95,8 @@ class SetupCDSLRepository(SetupBase):
         os.makedirs(os.path.join(tmppath, "repo7", "var/lib/cdsl"))
         shutil.copyfile("cdsl4.xml", os.path.join(tmppath, "repo7", ComoonicsCdslRepository.default_resources[1]))
         
+        wpath=Path()
+        wpath.pushd(tmppath)
         self.cdslRepository1 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=tmppath, usenodeids="True")
         self.cdslRepository2 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=tmppath, mountpoint="repo2", usenodeids="True")
         self.cdslRepository1.addRepository(self.cdslRepository2)
@@ -106,6 +109,7 @@ class SetupCDSLRepository(SetupBase):
         self.cdslRepository6 = ComoonicsCdslRepository(root=os.path.join(tmppath, "repo4", "repo5"), mountpoint="repo6", usenodeids="True", maxnodeidnum="4")
         self.cdslRepository5.addRepository(self.cdslRepository6)
         
+        wpath.popd()
         #self.cdslRepository7 = ComoonicsCdslRepository(root=os.path.join(tmppath, "repo7"))
 
     def cleanUpInfrastructure(self, path):
