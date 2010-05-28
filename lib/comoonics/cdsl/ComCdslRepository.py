@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.22 $"
+__version__ = "$Revision: 1.23 $"
 
 import fcntl # needed for filelocking
 import re
@@ -437,10 +437,13 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
     def refresh(self, nolock=True):
         if not nolock:
             self.lockresourceRO()
+        cwd=Path()
+        cwd.pushd(self.workingdir)
         self._parseresourceFP(True)
         self._updateFromElement(self.getElement(), self.getDocument())
         if not nolock:
             self.unlockresource()
+        cwd.popd()
         
     def _parseresourceFP(self, nolock=True):
         from xml.dom.ext.reader import Sax2
@@ -559,6 +562,27 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
                 self.repositories[path]=ComoonicsCdslRepository(resource=resource, mountpoint=path, root=os.path.join(self.root, self.getMountpoint()))
                 
             child = child.nextSibling
+
+    def stripsrc(self, _src):
+#        cdslRepository.workingdir.pushd()
+        from comoonics.cdsl import strippath
+        if not _src.startswith(os.sep):
+            _src=os.path.join(os.getcwd(), _src)
+        cwd=Path()
+        cwd.pushd(self.workingdir)
+        if os.path.exists(_src):
+            _src=os.path.realpath(_src)
+        src=_src
+        src=stripleadingsep(strippath(strippath(src, self.root), self.getMountpoint()))
+        src=stripleadingsep(strippath(src, self.getLinkPath()))
+        src=stripleadingsep(strippath(src, self.getSharedTreepath()))
+        if src.startswith(self.getTreePath()):
+            src=stripleadingsep(strippath(src, self.getTreePath()))
+            src=os.sep.join(src.split(os.sep)[1:])
+        src=self.unexpand(src)
+        self.logger.debug("cdsl stripped %s to %s" %(_src, src))
+        cwd.popd()
+        return src
                 
     def guessresource():
         """
@@ -690,12 +714,9 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         @rtype: L{ComoonicsCdsl}
         @raise CdslRepositoryNotFound: if the cdsl could not be found in the repository 
         """
-        from comoonics.cdsl import strippath
         if not repository:
             repository=self.getRepositoryForCdsl(src)
-        if src.startswith(os.sep):
-            src=stripleadingsep(strippath(strippath(src, self.root), self.getMountpoint()))
-            self.logger.debug("cdsl stripped to %s" %src)
+        src=self.stripsrc(src)
         if repository.cdsls.has_key(src):
             return repository.cdsls[src]
         else:
@@ -752,6 +773,8 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         """
         _deleted=None
         self.refresh(False)
+        cwd=Path()
+        cwd.pushd()
         if self.exists(cdsl):
             # delete cdsl-entry if existing"""
             #Open and lock XML-file and return DOM
@@ -982,7 +1005,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         
         return tmppath
     
-    def unexpand(self, path, clusterinfo=None):
+    def unexpand(self, path):
         """
         unexpands the given path.
         @param path: the path that should be cleared of all cdsl expansions
@@ -995,12 +1018,15 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         subpath=stripleadingsep(strippath(strippath(subpath, self.root), self.getMountpoint()))
         subpath=stripleadingsep(strippath(subpath, self.getLinkPath()))
         subpath=stripleadingsep(strippath(subpath, self.getSharedTreepath()))
-        if clusterinfo:
-            nodes=clusterinfo.getNodeIdentifiers()
-        else:
-            nodes=range(1, int(self.getMaxnodeidnum())+1)
-        for node in nodes:
-            subpath=stripleadingsep(strippath(subpath, os.path.join(self.getTreePath(), str(node))))
+        if path.startswith(self.getTreePath()):
+            path=stripleadingsep(strippath(path, self.getTreePath()))
+            path=os.sep.join(path.split(os.sep)[1:])
+#        if clusterinfo:
+#            nodes=clusterinfo.getNodeIdentifiers()
+#        else:
+#            nodes=range(1, int(self.getMaxnodeidnum())+1)
+#        for node in nodes:
+#            subpath=stripleadingsep(strippath(subpath, os.path.join(self.getTreePath(), str(node))))
         newsubpath=list()
         prepath=os.sep.join(path.split(os.sep)[:path.count(os.sep)-subpath.count(os.sep)])
         head, tail=os.path.split(subpath)
@@ -1280,7 +1306,21 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
 
 ###############
 # $Log: ComCdslRepository.py,v $
-# Revision 1.22  2010-05-27 08:43:25  marc
+# Revision 1.23  2010-05-28 09:40:15  marc
+# - ComoonicsCdslRepository
+#   - refresh
+#     - refresh in workingdir as cdsls are relative
+#   - stripsrc
+#     - moved here from Cdsl
+#     - removed dep for clusterinfo
+#   - getCdsl
+#     - uses stripsrc to strip src instead of incomplete
+#   - delete
+#     - delete in workingdir as cdsls are relative
+#   - unexpand
+#     - removed dep to clusterinfo
+#
+# Revision 1.22  2010/05/27 08:43:25  marc
 # - adapted to new upstream Path API
 # - CdslRepository:
 #   - __init__: detect 0 size inventoryfile
