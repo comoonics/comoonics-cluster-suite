@@ -73,6 +73,9 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Fri May 28 2010 MG <grimme@atix.de>, 0.1-27
+  - com-mkcdsl: now works with relative cdsl parameters
+  - com-rmcdsl: now works with relative cdsl parameters
 * Thu May 27 2010 MG <grimme@atix.de>, 0.1-26
   - com-mkcdsl: fixed bug that com-mkcdsl would not create a cdsl of either a relative 
          path or path as link (e.g. /etc/init.d/whatever => /etc/rc.d/init.d/whatever)
