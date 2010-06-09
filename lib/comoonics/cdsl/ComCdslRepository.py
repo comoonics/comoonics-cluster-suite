@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.23 $"
+__version__ = "$Revision: 1.24 $"
 
 import fcntl # needed for filelocking
 import re
@@ -716,7 +716,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         """
         if not repository:
             repository=self.getRepositoryForCdsl(src)
-        src=self.stripsrc(src)
+        src=repository.stripsrc(src)
         if repository.cdsls.has_key(src):
             return repository.cdsls[src]
         else:
@@ -1306,7 +1306,10 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
 
 ###############
 # $Log: ComCdslRepository.py,v $
-# Revision 1.23  2010-05-28 09:40:15  marc
+# Revision 1.24  2010-06-09 07:50:40  marc
+# - ComoonicsCdslRepository.getCdsl: fixed bug that cdsl could not be found in subrepositories
+#
+# Revision 1.23  2010/05/28 09:40:15  marc
 # - ComoonicsCdslRepository
 #   - refresh
 #     - refresh in workingdir as cdsls are relative
