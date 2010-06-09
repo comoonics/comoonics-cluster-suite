@@ -8,7 +8,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComLVM.py,v $
 
 import os
@@ -318,6 +318,8 @@ class LogicalVolume(LinuxVolumeManager):
             lv=LogicalVolume(lvname, vg, doc)
             lv.init_from_disk()
             return True
+        except LinuxVolumeManager.LVMCommandException:
+            return False
         except LinuxVolumeManager.LVMException:
 #            ComLog.debugTraceLog(LogicalVolume.log)
             return False
@@ -332,9 +334,10 @@ class LogicalVolume(LinuxVolumeManager):
         just splits the given path in vgname and lvname. Returns (vgname, lvname) or raises an LVMException.
         """
         import re
+        match=None
         for pattern in LogicalVolume.LVPATH_SPLIT_PATTERNS:
             match=re.match(pattern, path)
-            if match:
+            if match and match.group(1) != "mapper":
                 return match.groups()
         raise LogicalVolume.LVMInvalidLVPathException("Path %s is not a valid LVM Path" %(path))
 
@@ -887,7 +890,10 @@ class VolumeGroup(LinuxVolumeManager):
 
 ##################
 # $Log: ComLVM.py,v $
-# Revision 1.6  2010-04-23 10:57:51  marc
+# Revision 1.7  2010-06-09 08:16:27  marc
+# ComLVM: splitLVMPaths fixed bug with mapper devices.
+#
+# Revision 1.6  2010/04/23 10:57:51  marc
 # - rewrote lvm execution to share code and consolidated error handling
 #
 # Revision 1.5  2010/04/13 13:27:34  marc

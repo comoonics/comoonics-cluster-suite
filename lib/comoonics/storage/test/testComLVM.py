@@ -17,8 +17,8 @@ class Test(unittest.TestCase):
                  "/dev/cciss/c0d0p1": [ [ "cciss", "c0d0p1" ] ], 
                  "/dev/mapper/abc-def": [ [ "abc", "def" ] ], 
                  "/dev/abc/def" : [ [ "abc", "def" ] ], 
-                 "/dev/mapper/abc/def" : [ LogicalVolume.LVMInvalidLVPathException ], 
-                 "/dev/abc/def/geh" :  [ LogicalVolume.LVMInvalidLVPathException ] }
+                 "/dev/mapper/abc_def" : [ LogicalVolume.LVMInvalidLVPathException, None ],
+                 "/dev/abc/def/geh" :  [ LogicalVolume.LVMInvalidLVPathException, None ]}
 
     def testsplitLVPath(self):
         ComSystem.setExecMode(ComSystem.SIMULATE)
@@ -27,10 +27,13 @@ class Test(unittest.TestCase):
             expresult=self.devicenames[device][0]
             try:
                 result=list(LogicalVolume.splitLVPath(device))
-                result.sort()
-                expresult.sort()
-                print "Found: vgname: %s, lvname: %s" %(result[0], result[1])
-                self.assertEquals(result, expresult, "vgname: %s lvname: %s but returned vgname %s, lvname %s" %(result[0], result[1], expresult[0], expresult[1]))
+                if expresult != LogicalVolume.LVMInvalidLVPathException:
+                    result.sort()
+                    expresult.sort()
+                    print "Found: vgname: %s, lvname: %s" %(result[0], result[1])
+                    self.assertEquals(result, expresult, "vgname: %s lvname: %s but returned vgname %s, lvname %s" %(result[0], result[1], expresult[0], expresult[1]))
+                else:
+                    self.fail("We would expect a %s but got a %s" %(expresult, result))
             except LogicalVolume.LVMInvalidLVPathException, e:
                 print e.value
                 self.assertEquals(e.__class__, expresult, "Expected exception %s but got %s" %(expresult, e.__class__))
