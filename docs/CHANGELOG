@@ -73,6 +73,11 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Thu Jun 08 2010 MG <grimme@atix.de>, 0.1-28
+  - com-mkcdslinfrastructure: 
+         - fixed bug in parameter passing to ComCDSLRepository Constructor
+         - fixed bug in creation of subrepositories that were not created in parent repo
+  - ComoonicsCDSLRepository.getCdsl(): fixed but that cdsls from subrepositories were not found with subpath
 * Fri May 28 2010 MG <grimme@atix.de>, 0.1-27
   - com-mkcdsl: now works with relative cdsl parameters
   - com-rmcdsl: now works with relative cdsl parameters
@@ -589,6 +594,9 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Thu Jun 08 2010 MG <grimmeqatix.de>, 0.1-10
+  - ComLVM: fixed bug in errorhandling
+  - ComDisk: fixed bug with being unable to import pyparted
 * Fri Apr 23 2010 MG <grimme@atix.de>, 0.1-9
   - ComDisk: rewrote execution part
   - ComLVM: rewrote execution part
