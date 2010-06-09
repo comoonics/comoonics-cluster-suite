@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.6 2010-04-23 10:58:37 marc Exp $
+# $Id: ComDisk.py,v 1.7 2010-06-09 08:16:51 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
@@ -206,8 +206,7 @@ class HostDisk(Disk):
             self.initFromDiskPartedCmd()
             
     def initFromDiskPartedCmd(self):
-        if self.refByLabel():
-            pass        
+        raise ImportError("No pyparted found. You might want to install pyparted.")       
 
     def initFromDiskParted(self):
         import parted
@@ -387,7 +386,10 @@ except ImportError:
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
 
 # $Log: ComDisk.py,v $
-# Revision 1.6  2010-04-23 10:58:37  marc
+# Revision 1.7  2010-06-09 08:16:51  marc
+# - exception when pyparted is not installed
+#
+# Revision 1.6  2010/04/23 10:58:37  marc
 # - rewrote execution parts to be better readable and more consistent
 #
 # Revision 1.5  2010/04/13 13:27:08  marc
