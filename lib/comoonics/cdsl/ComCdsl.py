@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.21 $"
+__version__ = "$Revision: 1.22 $"
 
 # @(#)$File$
 #
@@ -384,12 +384,13 @@ class ComoonicsCdsl(Cdsl):
         self.reldir = os.getcwd()
 
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdsl")
+        src=cdslRepository.stripsrc(src)
         cdslRepository=cdslRepository.getRepositoryForCdsl(src)
         #add default node to a special nodelist
         super(ComoonicsCdsl,self).__init__(src, _type, cdslRepository, clusterinfo, nodes, timestamp, ignoreerrors=ignoreerrors)
         self.nodesWithDefaultdir = self.nodes[:]
         self.nodesWithDefaultdir.append(self.default_node)
-        src=cdslRepository.stripsrc(src)
+        src=cdslRepository.stripsrc(src, False)
         self.setSource(src)
 
         #get needed pathes from cdslrepository and normalize them
@@ -822,6 +823,7 @@ class ComoonicsCdsl(Cdsl):
         @rtype: ComoonicsCdsl
         """
         import os.path
+        from comoonics.ComPath import Path
         from comoonics.cdsl import stripleadingsep
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
         if _path == None:
@@ -831,9 +833,13 @@ class ComoonicsCdsl(Cdsl):
             return None
         
         try:
+            cwd=Path()
+            cwd.pushd(self.cdslRepository.workingdir)
             _cdsl=self.cdslRepository.getCdsl(_path)
+            cwd.popd()
             return _cdsl
         except CdslNotFoundException:
+            cwd.popd()
             return self.getParent(os.path.dirname(_path))  
         
     def getChilds(self):
@@ -866,7 +872,11 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.21  2010-05-28 09:37:07  marc
+# Revision 1.22  2010-06-17 08:24:31  marc
+# - getCdsl: two times stripsrc
+# - getParent: change to path of cdslrepo
+#
+# Revision 1.21  2010/05/28 09:37:07  marc
 # - ComoonicsCdsl
 #   - __init__
 #     - moving setting of reldir earlier

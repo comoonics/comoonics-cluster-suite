@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.24 $"
+__version__ = "$Revision: 1.25 $"
 
 import fcntl # needed for filelocking
 import re
@@ -563,14 +563,14 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
                 
             child = child.nextSibling
 
-    def stripsrc(self, _src):
+    def stripsrc(self, _src, join=True, realpath=True):
 #        cdslRepository.workingdir.pushd()
         from comoonics.cdsl import strippath
-        if not _src.startswith(os.sep):
+        if join and not _src.startswith(os.sep):
             _src=os.path.join(os.getcwd(), _src)
         cwd=Path()
         cwd.pushd(self.workingdir)
-        if os.path.exists(_src):
+        if realpath and os.path.exists(_src):
             _src=os.path.realpath(_src)
         src=_src
         src=stripleadingsep(strippath(strippath(src, self.root), self.getMountpoint()))
@@ -701,7 +701,7 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         from comoonics.cdsl import strippath
         src=stripleadingsep(strippath(strippath(stripleadingsep(src), self.root), self.getMountpoint()))
         for mountpoint in self.getRepositories().keys():
-            if src.startswith(mountpoint):
+            if src.startswith(mountpoint+os.sep):
                 return self.getRepository(mountpoint).getRepositoryForCdsl(src)
         return self
 
@@ -714,9 +714,10 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
         @rtype: L{ComoonicsCdsl}
         @raise CdslRepositoryNotFound: if the cdsl could not be found in the repository 
         """
+        src=self.stripsrc(src, True, False)
         if not repository:
             repository=self.getRepositoryForCdsl(src)
-        src=repository.stripsrc(src)
+        src=repository.stripsrc(src, False)
         if repository.cdsls.has_key(src):
             return repository.cdsls[src]
         else:
@@ -1306,7 +1307,11 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
 
 ###############
 # $Log: ComCdslRepository.py,v $
-# Revision 1.24  2010-06-09 07:50:40  marc
+# Revision 1.25  2010-06-17 08:24:58  marc
+# - getCdsl: two times stripsrc
+# - getParent: change to path of cdslrepo
+#
+# Revision 1.24  2010/06/09 07:50:40  marc
 # - ComoonicsCdslRepository.getCdsl: fixed bug that cdsl could not be found in subrepositories
 #
 # Revision 1.23  2010/05/28 09:40:15  marc
