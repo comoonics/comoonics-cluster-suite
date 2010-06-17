@@ -73,6 +73,16 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Tue Jun 10 2010 MG <grimmeqatix.de>, 0.1-29
+  - com-mkcdsl: fixed bug that a relativepath for a cdsl in a subrepo would not be created successfully.
+  - com-rmcdsl: fixed bug that a relativepath for a cdsl in a subrepo would not be removed.
+  - __init__.py: strippath accepts a realpath and join flag if a join with cwd and realpath should be made. 
+  - CommCdsl.py: 
+      - __init__: strippath is called twice. One in the beginning to get the path to the repo right and 
+            one afterwards to get the path right within the right repo.
+  - ComCdslRepository: 
+      - getCdsl: strippath is called twice. One in the beginning to get the path to the repo right and 
+            one afterwards to get the path right within the right repo.
 * Thu Jun 08 2010 MG <grimme@atix.de>, 0.1-28
   - com-mkcdslinfrastructure: 
          - fixed bug in parameter passing to ComCDSLRepository Constructor
