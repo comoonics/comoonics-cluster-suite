@@ -221,6 +221,8 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Thu Jun 17 2010 MG <grimme@atix.de>, 0.1-10
+  - fixed upstream bugs in com-dsh
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-9
   - second version for comoonics-4.6-rc1
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-8
