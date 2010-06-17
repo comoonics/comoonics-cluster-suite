@@ -189,9 +189,9 @@ def command_options (appname, usage):
                             "hostnames, or ip addresses (individually" + \
                             " or as a range i.e. node01-10 or " + \
                             "192.168.0.1-254).")
-    from comoonics.cluster.ComClusterRepository import RedhatClusterRepository
+    from comoonics.cluster import clusterconf
     host_options.add_option("-c", "--clusterconf", type="string", dest="clusterconf", help="Overwrites the default clusterconf file", 
-                            default=RedhatClusterRepository.defaultcluster_conf)
+                            default=clusterconf)
     host_options.add_option("-A", "--ask", action="store_true", dest="ask", default=False, help="Sets in ask mode to ask user which commands would be executed.")
     cmd_parser.add_option_group(host_options)
 
