@@ -122,7 +122,7 @@ def subpathsto(to, fromwhere):
     return paths
             
 
-def strippath(_path, _headpath):
+def strippath(_path, _headpath, _fullpath=True):
     """
     Strips the headpath from the head of given path and returns the "relative" resultpath. If it does not
     match the _path is returned without changes.
@@ -130,10 +130,14 @@ def strippath(_path, _headpath):
     @type _path: string
     @param _headpath: the path used as strip path.
     @type _headpath: string
+    @param _fullpath: only check if the fullpath is given. This is default.
+    @type _fullpath: L{Boolean}
     @return: the stripped path or the whole path if it does not match
     @rtype: string   
     """
     import os.path
+    if _fullpath and not _headpath.endswith(os.sep):
+        _headpath=_headpath+os.sep
     if os.path.normpath(_path[0:len(_headpath)])==os.path.normpath(_headpath):
         return dirtrim(_path[len(_headpath):])
     else:
@@ -319,7 +323,10 @@ def commonoptparseroptions(parser):
 
 #################
 # $Log: __init__.py,v $
-# Revision 1.11  2010-05-27 08:29:58  marc
+# Revision 1.12  2010-06-17 08:23:37  marc
+# strippath: extended with _fullpath flag
+#
+# Revision 1.11  2010/05/27 08:29:58  marc
 # - guessType: simplified
 # - commonoptparseroptions: added default to inventoryfile
 #
