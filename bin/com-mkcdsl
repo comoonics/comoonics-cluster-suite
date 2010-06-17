@@ -62,7 +62,11 @@ clusterRepository = ClusterRepository(doc.documentElement,doc)
 clusterInfo = ClusterInfo(clusterRepository)
     
 #create cdsl objects
-cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
+parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, nocreate=True)
+if options.mountpoint != "" or options.mountpoint != "/":
+    cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
+else:
+    cdslRepository=parentcdslRepository
 
 if options.hostdependent:
     #Creates a hostdependent cdsl and copies content to all nodes defined 
