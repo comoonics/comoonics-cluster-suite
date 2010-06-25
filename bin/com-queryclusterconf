@@ -2,7 +2,7 @@
 """
 Binary to query clusterconfiguration
 """
-__version__ = "$Revision: 1.20 $"
+__version__ = "$Revision: 1.21 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -171,6 +171,7 @@ parser=setupInputParser(options.queriesfile, values)
 params=None
 paramsparsestring="\%\([a-zA-Z0-9_]+\)"
 
+errors=0
 for token in parser:
     query=token
     logger.debug("query: %s" %(query))
@@ -350,12 +351,17 @@ During query: %s.
 Command: %s
 """ %(e, query, " ".join(sys.argv)))
         ComLog.debugTraceLog()
+        errors=errors+1
     if parser:
         step2nextquery(parser)
 
+sys.exit(errors)
 ###########
 # $Log: com-queryclusterconf,v $
-# Revision 1.20  2010-03-08 12:42:01  marc
+# Revision 1.21  2010-06-25 12:19:56  marc
+# - change to exit code if a query fails
+#
+# Revision 1.20  2010/03/08 12:42:01  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.19  2010/02/16 10:37:36  marc
