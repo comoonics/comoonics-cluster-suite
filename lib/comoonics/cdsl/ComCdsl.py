@@ -6,7 +6,7 @@ cdsl as an L{DataObject}.
 """
 
 
-__version__ = "$Revision: 1.22 $"
+__version__ = "$Revision: 1.23 $"
 
 # @(#)$File$
 #
@@ -768,9 +768,9 @@ class ComoonicsCdsl(Cdsl):
             longestcommon=""
             for sibling in self.getSiblings():
                 common=commonpath(self.src, sibling.src)
-                while common and common != longestcommon:
-                    if isSubPath(common, longestcommon):
-                        longestcommon=common
+#                while common and common != longestcommon:
+                if isSubPath(common, longestcommon):
+                    longestcommon=common
             for _path in subpathsto(longestcommon, self.src):
                 subpaths.append(_path)
         # * if we have a parent of same type and no siblings:  clean up to parent
@@ -872,7 +872,10 @@ class ComoonicsCdsl(Cdsl):
 
 ###############
 # $Log: ComCdsl.py,v $
-# Revision 1.22  2010-06-17 08:24:31  marc
+# Revision 1.23  2010-06-25 12:19:15  marc
+# - ComoonicsCdsl.delete: fixed longestcommon bug.
+#
+# Revision 1.22  2010/06/17 08:24:31  marc
 # - getCdsl: two times stripsrc
 # - getParent: change to path of cdslrepo
 #
