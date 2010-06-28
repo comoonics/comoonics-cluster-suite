@@ -73,6 +73,9 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Fri Jun 25 2010 MG <grimme@atix.de>, 0.1-30
+  - ComoonicsCdsl.py:ComoonicsCdsl.delete: fixed that removement of some cdsls would lead to 
+    neverending loop.
 * Tue Jun 10 2010 MG <grimmeqatix.de>, 0.1-29
   - com-mkcdsl: fixed bug that a relativepath for a cdsl in a subrepo would not be created successfully.
   - com-rmcdsl: fixed bug that a relativepath for a cdsl in a subrepo would not be removed.
@@ -166,6 +169,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Fri Jun 25 2010 MG <grimme@atix.de>, 0.1-27
+  - com-queryclusterconf: if query fails no errorcode was returned. Now an errorcode is returned.
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-26
   - second version for comoonics-4.6-rc1
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-25
