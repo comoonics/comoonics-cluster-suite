@@ -5,7 +5,7 @@ Contains deleting of symbolic links and content of cdsl.
 !!ATTENTION!!
    You can remove data with that program. Use on your own risk!
 """
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 
 import getopt
 import sys
@@ -42,13 +42,19 @@ ComLog.setLevel(logging.INFO)
 
 if len(args) != 1:
     parser.error("Failure no or more then one file is given as argument.")
-          
-doc=parseClusterConf(options.clusterconf)
-#create needed cluster objects
-clusterRepository = ClusterRepository(doc.documentElement,doc)
-clusterInfo = ClusterInfo(clusterRepository)
 
-cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
+try:          
+    doc=parseClusterConf(options.clusterconf)
+    #create needed cluster objects
+    clusterRepository = ClusterRepository(doc.documentElement,doc)
+    clusterInfo = ClusterInfo(clusterRepository)
 
-cdsl = cdslRepository.getCdsl(args[0])
-cdsl.delete(force=not options.symboliconly)
+    cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
+
+    cdsl = cdslRepository.getCdsl(args[0])
+    cdsl.delete(force=not options.symboliconly)
+except Exception, e:
+    print "Error: Could not remove cdsl. Command was %s " %" ".join(sys.argv)
+    print "Error: %s" %str(e)
+    ComLog.debugTraceLog()
+    sys.exit(1)
