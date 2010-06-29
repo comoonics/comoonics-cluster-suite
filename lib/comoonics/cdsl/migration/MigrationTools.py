@@ -4,7 +4,7 @@ Created on Feb 4, 2010
 @author: marc
 '''
 
-# $Id: MigrationTools.py,v 1.2 2010-04-13 13:24:02 marc Exp $
+# $Id: MigrationTools.py,v 1.3 2010-06-29 07:50:53 marc Exp $
 #
 # @(#)$File$
 #
@@ -25,11 +25,12 @@ Created on Feb 4, 2010
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cdsl/migration/MigrationTools.py,v $
 
 from comoonics.cdsl.migration import ConfigfileFormatException
 from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+from comoonics import ComLog
 
 class MigrationTool(object):
     '''
@@ -40,19 +41,19 @@ class MigrationTool(object):
         '''
         Constructor
         '''
-        pass
+        self.logger=ComLog.getLogger("comoonics.cdsl.migration.MigrationTool")
     
     def migrate(self, fromversion, toverstion, **kwds):
         pass
     
 class DefaultMigrationTool(MigrationTool):
     defaultsmapping={
-                     'use_nodeids': ComoonicsCdslRepository.cdsls_usenodeids_attribute,
-                     'cdsltree_shared': ComoonicsCdslRepository.cdsls_sharedtree_attribute,
-                     'cdsl_link': ComoonicsCdslRepository.cdsls_link_attribute,
-                     'maxnodeidnum': ComoonicsCdslRepository.cdsls_maxnodeidnum_attribute,
-                     'cdsltree': ComoonicsCdslRepository.cdsls_tree_attribute,
-                     'default_dir': ComoonicsCdslRepository.cdsls_defaultdir_attribute }
+                     'use_nodeids': "usenodeids",
+                     'cdsltree_shared': "cdsltreeshared",
+                     'cdsl_link': "cdsllink",
+                     'maxnodeidnum': "maxnodeidnum",
+                     'cdsltree': "cdsltree",
+                     'default_dir': "defaultdir" }
     def migrate(self, fromversion, toversion, **kwds):
         from comoonics.cdsl.ComCdsl import ComoonicsCdsl
         import os.path
@@ -76,6 +77,7 @@ class DefaultMigrationTool(MigrationTool):
             defaultkeys["root"]=root
             defaultkeys["mountpoint"]=mountpoint
             defaultkeys["resource"]=toresource
+            self.logger.debug("defaults: %s" %defaultkeys)
             torepository=ComoonicsCdslRepository(**defaultkeys)
             cdsls=fromelement.getElementsByTagName("cdsl")
             if cdsls and len(cdsls)>0:
@@ -107,7 +109,12 @@ class DefaultMigrationTool(MigrationTool):
         
 ###############
 # $Log: MigrationTools.py,v $
-# Revision 1.2  2010-04-13 13:24:02  marc
+# Revision 1.3  2010-06-29 07:50:53  marc
+#   - __init__: added logger
+#   - defaultsmapping: adapted to current status
+#   - migrate: debug output default values to be migrated
+#
+# Revision 1.2  2010/04/13 13:24:02  marc
 # - support for ignoreerrors
 #
 # Revision 1.1  2010/02/07 20:01:26  marc
