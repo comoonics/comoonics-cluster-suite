@@ -50,6 +50,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Tue Jun 29 2010 MG <grimme@atix.de>, 0.1-11
+  - ComException: fixed bug with wrong formated output on unicode.
 * Thu May 27 2010 MG <grimme@atix.de>, 0.1-10
   - ComException: will also return its representation if not unicode
   - ComPath: every path pushed will also be poped even if the same path is pushed multiple times.
@@ -73,6 +75,22 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Tue Jun 29 2010 MG <grimme@atix.de>, 0.1-31
+- Bug: Fixed that migration does not work and is not detected properly
+- migration.MigrationTools.DefaultMigrationTool
+  - __init__: added logger
+  - defaultsmapping: adapted to current status
+  - migrate: debug output default values to be migrated
+- ComCdslRepository.CdslRepository
+  - if inventoryfile cannot be found try to guess and raise exception only then.
+  - Fixed migration exception output
+- com-mkcdsl:
+  - added try except around everything
+- com-mkcdslinfrastructure
+  - added sourceinventory for migration
+- com-rmcdsl
+  - added try except around everything
+  - added nocreate to repository constructor  
 * Fri Jun 25 2010 MG <grimme@atix.de>, 0.1-30
   - ComoonicsCdsl.py:ComoonicsCdsl.delete: fixed that removement of some cdsls would lead to 
     neverending loop.
