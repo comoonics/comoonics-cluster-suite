@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComExceptions.py,v 1.9 2010-05-27 08:50:40 marc Exp $
+# $Id: ComExceptions.py,v 1.10 2010-06-29 08:15:30 marc Exp $
 #
 # @(#)$File$
 #
@@ -44,15 +44,18 @@ class ComException(Exception):
         if isinstance(self.value, unicode):
             # Don't throw a new exception if value.decode is not valid
             try:
-                self.value=self.value.decode()
+                return str(self.value)
             except Exception:
-                pass
-            return repr(self.value)
+                self.value=self.value.decode()
+                return eval(repr(self.value))
         else:
             return self.value
 
 # $Log: ComExceptions.py,v $
-# Revision 1.9  2010-05-27 08:50:40  marc
+# Revision 1.10  2010-06-29 08:15:30  marc
+# - fixed bug with wrong formated output of text exceptions
+#
+# Revision 1.9  2010/05/27 08:50:40  marc
 # added return value even if it is not unicode.
 #
 # Revision 1.8  2010/02/05 12:20:57  marc
