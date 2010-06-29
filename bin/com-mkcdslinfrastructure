@@ -37,6 +37,7 @@ parser.add_option("-L", "--cdsllink", default=ComoonicsCdslRepository.cdsllink_d
 parser.add_option("-M", "--maxnodeidnum", default=ComoonicsCdslRepository.maxnodeidnum_default, dest="maxnodeidnum", type="int", help="Up to this nodeid node dirs are created")
 parser.add_option("-N", "--usenodenames", default=not ComoonicsCdslRepository.usenodeids_default, dest="usenodenames", action="store_true", help="Use nodenames instead of nodeids.")
 parser.add_option("-D", "--defaultdir", default=ComoonicsCdslRepository.defaultdir_default, dest="defaultdir", help="set the default node directory.")
+parser.add_option("-S", "--sourceinventory", default=None, dest="sourceinventory", help="Source inventory file. Only for migration")
 #parser.add_option("-p", "--nodeprefix", default=None, dest="nodeprefix", help="set the nodeprefix if needed")
 parser.add_option("-C", "--onlyinventory", default=False, dest="onlyinventory", action="store_true", help="Only create the inventory file but don't create the filesystem structure.")
 parser.add_option("-g", "--migrate", default=False, dest="migrate", action="store_true", help="Migrates the current cdsl inventory to latest version")
@@ -97,7 +98,9 @@ except CdslVersionException:
         import comoonics.cdsl.migration
         cwd=os.getcwd()
         os.chdir(os.path.join(options.root, options.mountpoint))
-        repository=comoonics.cdsl.migration.migrate(None, ComoonicsCdslRepository.version, fromresource=ComoonicsCdslRepository.guessresource(), toresource=ComoonicsCdslRepository.default_resources[0], root=options.root, mountpoint=options.mountpoint)
+        if not options.sourceinventory:
+            options.sourceinventory=ComoonicsCdslRepository.guessresource()
+        repository=comoonics.cdsl.migration.migrate(None, ComoonicsCdslRepository.version, fromresource=options.sourceinventory, toresource=options.inventoryfile, root=options.root, mountpoint=options.mountpoint)
         os.chdir(cwd)
         print("If no errors occured you can now savely remove the old cdsl inventory found in %s/%s\n" %(os.path.join(options.root, options.mountpoint), ComoonicsCdslRepository.default_resources[1]))
     else:

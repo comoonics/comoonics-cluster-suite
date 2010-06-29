@@ -55,29 +55,35 @@ elif not options.shared and not options.hostdependent:
 else:
     src=args[0]
 
-doc=parseClusterConf(options.clusterconf)
+try:
+    doc=parseClusterConf(options.clusterconf)
           
-#create needed cluster objects
-clusterRepository = ClusterRepository(doc.documentElement,doc)
-clusterInfo = ClusterInfo(clusterRepository)
+    #create needed cluster objects
+    clusterRepository = ClusterRepository(doc.documentElement,doc)
+    clusterInfo = ClusterInfo(clusterRepository)
     
-#create cdsl objects
-parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, nocreate=True)
-if options.mountpoint != "" or options.mountpoint != "/":
-    cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
-else:
-    cdslRepository=parentcdslRepository
+    #create cdsl objects
+    parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, nocreate=True)
+    if options.mountpoint != "" or options.mountpoint != "/":
+        cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
+    else:
+        cdslRepository=parentcdslRepository
 
-if options.hostdependent:
-    #Creates a hostdependent cdsl and copies content to all nodes defined 
-    #in clusterrepository or specified by maxnodeidnum in cdslrepository
-    obj = ComoonicsCdsl(src, ComoonicsCdsl.HOSTDEPENDENT_TYPE, cdslRepository, clusterInfo, None)
-elif options.shared:
-    #Creates a shared cdsl and copies content to sharedtree defined 
-    #in clusterrepository
-    obj = ComoonicsCdsl(src, ComoonicsCdsl.SHARED_TYPE, cdslRepository, clusterInfo, None)
+    if options.hostdependent:
+        #Creates a hostdependent cdsl and copies content to all nodes defined 
+        #in clusterrepository or specified by maxnodeidnum in cdslrepository
+        obj = ComoonicsCdsl(src, ComoonicsCdsl.HOSTDEPENDENT_TYPE, cdslRepository, clusterInfo, None)
+    elif options.shared:
+        #Creates a shared cdsl and copies content to sharedtree defined 
+        #in clusterrepository
+        obj = ComoonicsCdsl(src, ComoonicsCdsl.SHARED_TYPE, cdslRepository, clusterInfo, None)
 
-obj.commit(force=options.force)
+    obj.commit(force=options.force)
         
-if options.updateinventory:
-    cdslRepository.update(src,clusterInfo, chroot=options.root)
+    if options.updateinventory:
+        cdslRepository.update(src,clusterInfo, chroot=options.root)
+except Exception, e:
+    print "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
+    print "Error: %s" %str(e)
+    ComLog.debugTraceLog()
+    sys.exit(1) 
