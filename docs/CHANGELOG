@@ -75,6 +75,8 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Fri Aug 06 2010 MG <grimme@atix.de>, 0.1-32
+- Fixed typos
 * Tue Jun 29 2010 MG <grimme@atix.de>, 0.1-31
 - Bug: Fixed that migration does not work and is not detected properly
 - migration.MigrationTools.DefaultMigrationTool
