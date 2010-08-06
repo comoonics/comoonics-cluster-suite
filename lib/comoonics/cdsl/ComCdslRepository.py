@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.26 $"
+__version__ = "$Revision: 1.27 $"
 
 import fcntl # needed for filelocking
 import re
@@ -394,7 +394,7 @@ class ComoonicsCdslRepository(CdslRepository):
 Wrong version of cdsl repository %s. 
 Version must be %s but is %s. 
 Please first migrate to appropriate version.
-For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir, self.resource), self.version, self.getVersion()))
+For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdir, self.resource), self.version, self.getVersion()))
         self.setMountpoint(stripleadingsep(keys.get("mountpoint", "")))
         self.writeresource(False)
 
@@ -1308,7 +1308,10 @@ For this use com-mkcdslinfrastructur --migrate""" %(os.path.join(self.workingdir
 
 ###############
 # $Log: ComCdslRepository.py,v $
-# Revision 1.26  2010-06-29 07:52:20  marc
+# Revision 1.27  2010-08-06 13:16:07  marc
+# - typo in Exception
+#
+# Revision 1.26  2010/06/29 07:52:20  marc
 # - ComCdslRepository.CdslRepository
 #   - if inventoryfile cannot be found try to guess and raise exception only then.
 #   - Fixed migration exception output
