@@ -6,3 +6,4 @@ build
 dist
 epydoc
 doc2man.py
+LICENSE.txt
