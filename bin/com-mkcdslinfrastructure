@@ -79,7 +79,7 @@ try:
             parentcdslRepository.addRepository(childcdslRepository, options.mountpoint)
     elif options.delete:
         if not options.onlyinventory:
-            childcdslRepository.removeInfrastructure(clusterinfo, options.recursive, options.force, True)
+            childcdslRepository.removeInfrastructure(clusterInfo, options.recursive, options.force, True)
         if parentcdslRepository != childcdslRepository:
             parentcdslRepository.removeRepository(childcdslRepository)
     elif options.get:
