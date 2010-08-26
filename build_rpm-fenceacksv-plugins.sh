@@ -1,16 +1,19 @@
 #!/bin/bash
-# $Id: build_rpm-fenceacksv-plugins.sh,v 1.5 2009-10-07 12:12:38 marc Exp $
+# $Id: build_rpm-fenceacksv-plugins.sh,v 1.6 2010-08-26 08:07:14 marc Exp $
 
 
 source ./build-lib2.sh
 
-NAME=comoonics-fenceacksv-py
+NAME=comoonics-fenceacksv-plugins-py
 
 build_rpms $NAME $*
 
 ##############
 # $Log: build_rpm-fenceacksv-plugins.sh,v $
-# Revision 1.5  2009-10-07 12:12:38  marc
+# Revision 1.6  2010-08-26 08:07:14  marc
+# new versions
+#
+# Revision 1.5  2009/10/07 12:12:38  marc
 # new versions
 #
 # Revision 1.4  2009/09/28 15:29:30  marc

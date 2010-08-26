@@ -6,7 +6,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.10 2010-03-08 12:46:38 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.11 2010-08-26 08:07:14 marc Exp $"
 
 from distutils.core import setup
 import sys, os, string
@@ -480,7 +480,7 @@ class bdist_rpm_fedora (Command):
             val = getattr(self, string.lower(field))
             
             filteredvalssles=None
-            if string.lower(field) == "requires" or string.lower(field) == "build_requires":
+            if (string.lower(field) == "requires" or string.lower(field) == "build_requires") and val != None:
                 filteredvalssles, filteredvalselse, val = self._filterdistdepField(string.lower(field), val)
             if type(val) is ListType:
                 spec_file.append('%s: %s' % (field, string.join(val)))
