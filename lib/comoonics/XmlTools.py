@@ -4,7 +4,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.14 2010-02-05 12:24:15 marc Exp $
+# $Id: XmlTools.py,v 1.15 2010-09-21 14:26:06 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -27,10 +27,6 @@ __version__= "$Revision $"
 import warnings
 #import xml.dom.Node
 from xml.dom import Node
-from xml.dom.ext.reader import Sax2
-from xml.parsers.xmlproc import xmlproc
-from xml.parsers.xmlproc import xmlval
-from xml.parsers.xmlproc import xmldtd
 from comoonics import ComLog
 
 logger=ComLog.getLogger("comoonics.XmlTools")
@@ -58,21 +54,37 @@ class ElementFilter(object):
         else:
             return ElementFilter.FILTER_REJECT
 
+def evaluateXPath(path, element):
+    try:
+        from xml.xpath import Evaluate
+        return Evaluate(path, element)
+    except ImportError:
+        # Implementation for etree
+        from lxml.etree import XPath, fromstring, tounicode, _ElementStringResult
+        # returns a list of _ElementStringResult
+        elist=XPath(path).evaluate(fromstring(toPrettyXML(element)))
+        nodelist=list()
+        for eelement in elist:
+            # either the returnlist is a stringlist or a element list
+            if isinstance(eelement, basestring):
+                nodelist.append(eelement)
+            else:
+                nodelist.append(parseXMLString(tounicode(eelement)))
+        return nodelist
+
 def overwrite_element_with_xpaths(element, xpaths):
     """ Overwrites all node values referred with the xpaths and the given values. Xpaths has to be a map with
         xpath as key and value as value. All other referred nodetypes are silently ignored.
     """
     for xpath in xpaths.keys():
         try:
-            import xml
             logger.debug("overwrite_element_with_xpaths xpath %s=%s, rootnode: %s, type(element): %s, class(element): %s" %(xpath, xpaths[xpath], element, type(element), element.__class__))
             if isinstance(element, Node):
-                from xml.dom   import Element
-                from xml.xpath import Evaluate
-                sets = Evaluate(xpath, element)
+                sets = evaluateXPath(xpath, element)
                 logger.debug("overwrite_element_with_xpaths found %u matches. overwriting." %len(sets))
-                for set in sets:
-                    set.nodeValue=xpaths[xpath]
+                for _set in sets:
+                    if not isinstance(_set, basestring):
+                        _set.nodeValue=xpaths[xpath]
             else:
                 import libxml2
                 ctxt = element.xpathNewContext()
@@ -105,10 +117,6 @@ def merge_trees_with_pk(source, dest, doc, pk="name", filter=None, onlyone=False
     If onlyone then only one child with the same pk is taken.
     """
     #get source childs
-
-    import xml
-    from xml import xpath
-
     for s_child in source.childNodes:
 
         if filter and filter.acceptNode(s_child) != ElementFilter.FILTER_ACCEPT: continue
@@ -127,8 +135,8 @@ def merge_trees_with_pk(source, dest, doc, pk="name", filter=None, onlyone=False
 
         #logger.debug("merge_trees_with_pk xpath: %s/@%s='%s'" %(tagname, pk, pkval))
         try:
-            _path=xpath.Evaluate(tagname+"/@"+pk+"='"+pkval+"'", dest)
-        except xpath.pyxpath.SyntaxError:
+            _path=evaluateXPath(tagname+"/@"+pk+"='"+pkval+"'", dest)
+        except:
             #ComLog.debugTraceLog(logger)
             _path=False
         if not _path:
@@ -137,7 +145,8 @@ def merge_trees_with_pk(source, dest, doc, pk="name", filter=None, onlyone=False
             # - create new element
             d_child=doc.createElement(tagname)
             # - add all Attributes
-            for attrnode in xpath.Evaluate("@*", s_child):
+            for i in range(s_child.attributes.length):
+                attrnode=s_child.attributes.item(i)
                 d_child.setAttribute(attrnode.name, s_child.getAttribute(attrnode.name))
             # - add child
             #print "add new child"
@@ -147,34 +156,107 @@ def merge_trees_with_pk(source, dest, doc, pk="name", filter=None, onlyone=False
         # yes we have
         else:
             # - get this child
-            d_child=xpath.Evaluate(tagname+"[@"+pk+"='"+pkval+"']", dest)[0]
+            d_child=evaluateXPath(tagname+"[@"+pk+"='"+pkval+"']", dest)[0]
 
         # - copy all attributes
-        for attrnode in xpath.Evaluate("@*", s_child):
+        for i in range(s_child.attributes.length):
+            attrnode=s_child.attributes.item(i)
             #print "new attribute: %s" % attrnode.name
             if not d_child.hasAttribute(attrnode.name):
                 d_child.setAttribute(attrnode.name, s_child.getAttribute(attrnode.name))
         # recursion on child
         merge_trees_with_pk(s_child, d_child, doc, pk, filter, onlyone)
 
+def getDOMImplementation(*params):
+    import xml.dom
+    impl=None
+    if params:
+        try:
+            impl=xml.dom.getDOMImplementation(params)
+        except (ImportError, TypeError):
+            pass
+    if not impl:
+#        try:
+#            import Ft.Xml.Domlette
+#            impl=Ft.Xml.Domlette.implementation
+#        except (ImportError, TypeError):
+        try:
+            impl=xml.dom.getDOMImplementation("4DOM")
+        except (ImportError, TypeError):
+            impl=xml.dom.getDOMImplementation()
+    return impl
+
+def parseXMLFile(xmlfile, validate=False):
+    """
+    Parses the given XML file and returns a xml.dom.Document as result.
+    @param xmlfile: the path to the file to be parsed.
+    @type  xmlfile: L{String}
+    @param validate: If it should also be validated (Default: False)
+    @type  validate: L{Boolean}
+    @return: the document element.
+    @rtype: L{xml.dom.Document} 
+    """
+    import os
+    filep = os.fdopen(os.open(xmlfile, os.O_RDONLY))
+    doc= parseXMLFP(filep, validate)
+    filep.close()
+    return doc
+
+def parseXMLFP(filep, validate=False):
+    try:
+        from Ft.Xml import Parse
+        doc=Parse(filep)
+    except ImportError:
+        import xml.dom.minidom
+        doc=xml.dom.minidom.parse(filep)
+    return doc
+
+def parseXMLString(xmlstring, validate=False):
+#    try:
+#        from Ft.Xml import Parse
+#        doc=Parse(xmlstring)
+#    except ImportError:
+    import xml.dom.minidom
+    doc=xml.dom.minidom.parseString(xmlstring)
+    return doc
+
+def toPrettyXML(node, *params):
+#    try:
+#        from Ft.Xml.Domlette import PrettyPrint
+#        import cStringIO
+#        buf = cStringIO.StringIO()
+#        PrettyPrint(node, stream=buf)
+#        return buf.getvalue()
+#    except ImportError:
+    import xml.dom
+    if isinstance(node, xml.dom.minidom.Node):
+        return node.toxml()
+    else:
+        from xml.dom.ext import PrettyPrint
+        import cStringIO
+        buf = cStringIO.StringIO()
+        PrettyPrint(node, stream=buf)
+        return buf.getvalue()
+            
+        
 def clone_node(node, doc=None):
     """
     clones the given node by creating a new one
     """
     import xml.dom
     if not doc:
-        try:
-            _impl=xml.dom.getDOMImplementation("4DOM")
-        except:
-            _impl=xml.dom.getDOMImplementation()
+        _impl=getDOMImplementation()
         doc=_impl.createDocument(None, node.tagName, None)
     if node.nodeType==Node.ELEMENT_NODE:
         newnode=doc.createElement(node.tagName)
-        for _child in node.childNodes:
-            newnode.appendChild(clone_node(_child, doc))
         for _i in range(node.attributes.length):
             _attr=node.attributes.item(_i)
-            newnode.setAttribute(_attr.nodeName, _attr.nodeValue)
+            if _attr:
+                newnode.setAttribute(_attr.nodeName, _attr.nodeValue)
+        child=node.firstChild
+        while child:
+            newnode.appendChild(clone_node(child, doc))
+            child=child.nextSibling
         return newnode
     elif node.nodeType==Node.TEXT_NODE or node.nodeType==Node.CDATA_SECTION_NODE:
         return doc.createTextNode(node.data)
@@ -189,12 +271,8 @@ def add_element_to_node(child, element, doc=None):
     """
     adds an element @child to the element tree @element. The child is copied.
     """
-    import xml.dom
     if not doc:
-        try:
-            _impl=xml.dom.getDOMImplementation("4DOM")
-        except:
-            _impl=xml.dom.getDOMImplementation()
+        _impl=getDOMImplementation()
         doc=_impl.createDocument(None, doc.documentElement.tagName, None)
     if child.nodeType==Node.ELEMENT_NODE:
         newchild=doc.createElement(child.tagName)
@@ -210,8 +288,6 @@ def add_element_to_node_sorted(child, elem, key):
     with respect to the key-Attribute value
     TODO add generic comparison method (see lamda)
     """
-    import xml
-
     keyval=child.getAttribute(key)
 
     for mychild in elem.childNodes:
@@ -235,11 +311,10 @@ def getTextFromElement(element):
     return return_text
 
 
-def createDOMfromXML(xmlstring, xslfilename=None, validate=0):
+def createDOMfromXML(xmlstring, xslfilename=None, validate=False):
     """
     creates a new DOM from a given xml string. Optionally, a xsl file can be used for translation
     """
-    reader=Sax2.Reader(validate)
     if xslfilename:
         import libxslt
         import libxml2
@@ -252,23 +327,13 @@ def createDOMfromXML(xmlstring, xslfilename=None, validate=0):
         xslt_style.freeStylesheet()
         n_doc.freeDoc()
         res.freeDoc()
-        doc=reader.fromString(str_buff)
+        doc=parseXMLString(str_buff)
     else:
-        doc=reader.fromStream(xmlstring)
+        import StringIO
+        buf=StringIO.StringIO(xmlstring)
+        doc=parseXMLFP(buf)
+        buf.close()
     return doc
-
-def validate_xml(xml_filename, dtd_filename):
-    """
-    Validates a given XML file with a given external DTD.
-    If the XML file is not valid, an exception will be 
-    printed with an error message.
-    """
-    dtd = xmldtd.load_dtd(dtd_filename)
-    parser = xmlproc.XMLProcessor()
-    parser.set_application(xmlval.ValidatingApp(dtd, parser))
-    parser.dtd = dtd
-    parser.ent = dtd
-    parser.parse_resource(xml_filename)
 
 def xpathjoin(path1, *paths):
     """
@@ -302,31 +367,12 @@ def xpathsplit(_xpath):
     else:
         return _xpath.split(XPATH_SEP)
 
-def parseXMLFile(xmlfile, validate=False):
-    """
-    Parses the given XML file and returns a xml.dom.Document as result.
-    @param xmlfile: the path to the file to be parsed.
-    @type  xmlfile: L{String}
-    @param validate: If it should also be validated (Default: False)
-    @type  validate: L{Boolean}
-    @return: the document element.
-    @rtype: L{xml.dom.Document} 
-    """
-    import os
-    filep = os.fdopen(os.open(xmlfile, os.O_RDONLY))
-    doc= parseXMLFP(filep, validate)
-    filep.close()
-    return doc
-
-def parseXMLFP(filep, validate=False):
-    from xml.dom.ext.reader import Sax2
-    reader = Sax2.Reader(validate=validate)
-    doc = reader.fromStream(filep)
-    return doc
-
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.14  2010-02-05 12:24:15  marc
+# Revision 1.15  2010-09-21 14:26:06  marc
+# reimplemented most functions so that they can use different implementations.
+#
+# Revision 1.14  2010/02/05 12:24:15  marc
 # - added parseXMLFile
 # - changed implementation to default 4DOM then fall back
 #
