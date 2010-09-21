@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.4 2010-03-29 14:13:45 marc Exp $
+# $Id: ComFileSystem.py,v 1.5 2010-09-21 14:21:31 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
 import os.path
@@ -51,6 +51,8 @@ def getFileSystem(element, doc):
         return gfsFileSystem(element, doc)
     if __type == "ocfs2":
         return ocfs2FileSystem(element, doc)
+    if __type == "nfs":
+        return nfsFileSystem(element, doc)
     raise exceptions.NotImplementedError()
 
 
@@ -374,8 +376,23 @@ class gfsFileSystem(FileSystem):
             log.debug("scan Options Journals: " +__journals)
             self.setAttribute("journals", __journals)
 
+class nfsFileSystem(FileSystem):
+    """ Implementation for NFS Filesystems """
+    def __init__(self, element, doc):
+        FileSystem.__init__(self, element, doc )
+        self.partedFileSystemType = None
+        self.formattable = 0
+        self.checked = 0
+        self.linuxnativefs = 1
+        self.maxSizeMB = 8 * 1024 * 1024
+        #self.packages = [ "e2fsprogs" ]
+        self.name="nfs"
+    
 # $Log: ComFileSystem.py,v $
-# Revision 1.4  2010-03-29 14:13:45  marc
+# Revision 1.5  2010-09-21 14:21:31  marc
+# added NFS Filesystem support
+#
+# Revision 1.4  2010/03/29 14:13:45  marc
 # - fixed bug in labelDevice
 # - first tested version for ocfs2
 #
