@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.12 2010-02-05 12:20:29 marc Exp $
+# $Id: ComDataObject.py,v 1.13 2010-09-21 14:25:09 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,12 +28,12 @@ here should be some more information about the module, that finds its way inot t
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
 import exceptions
-from xml.dom import Element, Node
+from xml.dom import Node
 from xml import xpath
 
 import ComLog
@@ -116,7 +116,7 @@ class DataObject(object):
         return self.element.hasAttribute(name)
 
     def setAttribute(self, name, value):
-        if not self.element and not isinstance(Element, self.element):
+        if not self.element and not self.element.nodeType == Node.ELEMENT_NODE:
             raise exceptions.IndexError("Element not defined or wrong instance.")
         if type(value)==bool:
             self.element.setAttribute(name, "")
@@ -226,7 +226,10 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.12  2010-02-05 12:20:29  marc
+# Revision 1.13  2010-09-21 14:25:09  marc
+# No isinstance for Element check but with nodetype
+#
+# Revision 1.12  2010/02/05 12:20:29  marc
 # more documentation
 #
 # Revision 1.11  2009/07/22 08:37:40  marc
