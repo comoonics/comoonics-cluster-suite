@@ -4,28 +4,27 @@ Created on Jul 14, 2009
 @author: marc
 '''
 import unittest
-from xml.dom.ext import PrettyPrint
-from xml.dom.minidom import parseString
 from comoonics import XmlTools
 from StringIO import StringIO
 
-xml1="""<?xml version='1.0' encoding='UTF-8'?>
+xmls = [ """<?xml version='1.0' encoding='UTF-8'?>
 <localclone>
   <node name='lilr629'/>
   <destdisks><disk name='/dev/gnbd/singleclone'/></destdisks>
   <kernel version='2.6.9-34.0.1.ELsmp'/>
 </localclone>
-"""
-xml2="""<?xml version='1.0' encoding='UTF-8'?>
+""",
+"""<?xml version='1.0' encoding='UTF-8'?>
 <localclone>
   <node name='myname'/>
   <destdisks><disk name='/dev/sda1'/></destdisks>
   <kernel version='2.6.9-34.0.1.ELsmp'/>
 </localclone>
+""",
+"<xyz>abcd</xyz>",
+"""<xyz abcd="abs"/>""",
+# merge source 1
 """
-xml3="<xyz>abcd</xyz>"
-xml4="""<xyz abcd="abs"/>"""
-xml5="""
     <a>
        <a name="a">
           <aa/>
@@ -37,8 +36,9 @@ xml5="""
           <cb/>
        </c>
     </a>
+""",
+# merge source 2
 """
-xml6="""
     <a>
        <b name="a">
           <bb/>
@@ -50,9 +50,9 @@ xml6="""
          <da/>
        </d>
     </a>
-"""
-xml7="""
-<?xml version='1.0' encoding='UTF-8'?>
+""",
+# merge result with only_one
+"""<?xml version='1.0' encoding='UTF-8'?>
 <a>
   <b name='a'>
     <bb/>
@@ -64,9 +64,9 @@ xml7="""
     <da/>
   </d>
 </a>
-"""
-xml8="""
-<?xml version='1.0' encoding='UTF-8'?>
+""",
+# merge result without onlyone (default)
+"""<?xml version='1.0' encoding='UTF-8'?>
 <a>
   <b name='a'>
     <bb/>
@@ -84,50 +84,68 @@ xml8="""
   </d>
 </a>
 """
-doc1=parseString(xml1)
-
+]
+xpaths=[ ("node/@name", [ "lilr629" ], "myname"), 
+         ("/localclone/destdisks/disk/@name", [ "/dev/sda1" ], "mydisk" ) ]
 class Test_XmlTools(unittest.TestCase):
     
-    xpaths={"node/@name": "myname",
-            "/localclone/destdisks/disk/@name": "/dev/sda1"}
-    def test_overwrite_element_with_xpaths(self):
-        XmlTools.overwrite_element_with_xpaths(doc1.documentElement, self.xpaths)
-        buf=StringIO()
-        PrettyPrint(doc1, buf)
-        self.assertEquals(buf.getvalue().replace("\n", "").replace(" ", ""), xml2.replace("\n", "").replace(" ", ""))
+    def setUp(self):
+        self.docs=list()
+        for i in range(len(xmls)): 
+            if i < len(xpaths):
+                self.docs.append([ XmlTools.parseXMLString(xmls[i]), xpaths[i]])
+            else:
+                self.docs.append([ XmlTools.parseXMLString(xmls[i]) ])
+
+    def test_evaluateXPath(self):
+        for doc in self.docs:
+            if len(doc) > 1:
+                (doc, xpathtest)=doc
+                (xpath, expectedresult, dummy) = xpathtest
+                result=XmlTools.evaluateXPath(xpath, doc)
+                self.assertEquals(result, expectedresult, "Result of xpath %s in document does not equals the expected result: %s != %s" %(xpath, result, expectedresult))
+        
+    def __test_overwrite_element_with_xpaths(self):
+        for doc in self.docs:
+            if len(doc) > 1:
+                (doc, xpathtest)=doc
+                (xpath, expectedresult, newvalue) = xpathtest
+                xml2=XmlTools.overwrite_element_with_xpaths(doc.documentElement, { xpath: newvalue })
+                buf=XmlTools.toPrettyXML(doc)
+                self.assertEquals(buf.replace("\n", "").replace(" ", ""), XmlTools.toPrettyXML(doc).replace("\n", "").replace(" ", ""))
 
     def testGetTextFromElement1(self):
-        doc=parseString(xml3)
+        doc=self.docs[2][0]
         self.assertEquals("abcd", XmlTools.getTextFromElement(doc.documentElement))
     def testGetTextFromElement(self):
-        doc=parseString(xml4)
+        doc=self.docs[3][0]
         self.assertEquals(None, XmlTools.getTextFromElement(doc.documentElement))
 
     def testMergeTreesWithPK1(self):
-        doc5=parseString(xml5)
-        doc6=parseString(xml6)
+        doc5=self.docs[4][0]
+        doc6=self.docs[5][0]
         
         XmlTools.merge_trees_with_pk(doc5.documentElement, doc6.documentElement, doc6, "name", None, True)
         
-        buf1=StringIO()
-        PrettyPrint(doc6, buf1)
-        self.assertEquals(buf1.getvalue().replace("\n", "").replace(" ", ""), xml7.replace("\n", "").replace(" ", ""))
+        buf1=XmlTools.toPrettyXML(doc6)
+        result=XmlTools.toPrettyXML(self.docs[6][0])
+        self.assertEquals(buf1.replace("\n", "").replace(" ", ""), result.replace("\n", "").replace(" ", ""), "testMergeTreesWithPK1: expected xml: \n%s, result: \n%s" %(result, buf1))
         
     def testMergeTreesWithPK2(self):
-        doc5=parseString(xml5)
-        doc6=parseString(xml6)
+        doc5=self.docs[4][0]
+        doc6=self.docs[5][0]
         
         XmlTools.merge_trees_with_pk(doc5.documentElement, doc6.documentElement, doc6, "name", None, False)
-        buf1=StringIO()
-        PrettyPrint(doc6, buf1)
-        self.assertEquals(buf1.getvalue().replace("\n", "").replace(" ", ""), xml8.replace("\n", "").replace(" ", ""))
+        buf1=XmlTools.toPrettyXML(doc6)
+        result=XmlTools.toPrettyXML(self.docs[7][0])
+        self.assertEquals(buf1.replace("\n", "").replace(" ", ""), result.replace("\n", "").replace(" ", ""), "testMergeTreesWithPK2: expected xml: \n%s, result: \n%s" %(result, buf1))
 
     def testCloneNode(self):
-        buf1=StringIO()
-        buf2=StringIO()
-        PrettyPrint(doc1.documentElement, buf1)
-        PrettyPrint(XmlTools.clone_node(doc1.documentElement), buf2)
-        self.assertEquals(buf1.getvalue(), buf2.getvalue())
+        for doc in self.docs:
+            doc=doc[0]
+            buf1=XmlTools.toPrettyXML(doc.documentElement)
+            buf2=XmlTools.toPrettyXML(XmlTools.clone_node(doc.documentElement))
+            self.assertEquals(buf1, buf2)
 
 def test_main():
     try:
