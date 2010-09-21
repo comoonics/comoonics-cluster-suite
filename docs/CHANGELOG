@@ -50,6 +50,11 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-12
+  - ComDataObject.py:
+    - No isinstance for Element check but with nodetype
+  - XMLTools.py
+    - reimplemented most functions so that they can use different implementations.
 * Tue Jun 29 2010 MG <grimme@atix.de>, 0.1-11
   - ComException: fixed bug with wrong formated output on unicode.
 * Thu May 27 2010 MG <grimme@atix.de>, 0.1-10
@@ -460,7 +465,12 @@ comoonics-ec-base-py:
 * Mon Sep 28 2009 MG <grimme@atix.de>, 0.1-1
    - initial revision
 
-comoonics-ec-py
+comoonics-ec-py:
+* Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-50
+  - ComFileModification.py:
+    - work with list of files containing globs
+  - ComFilesystemCopyObject.py:
+    - Trace exception with debug mode
 * Fri Apr 23 2010 MG <grimme@atix.de>, 0.1-49
   - ComPartitionCopyObject: moved tmpfile as private variable to not loose tmpfile
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-48
@@ -631,7 +641,12 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
-* Thu Jun 08 2010 MG <grimmeqatix.de>, 0.1-10
+* Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-11
+  - ComFile.py:
+    - added createElement, globFilename and integrated in Constructor
+  - ComFileSystem.py:
+    - added NFS File System
+* Thu Jun 08 2010 MG <grimme@atix.de>, 0.1-10
   - ComLVM: fixed bug in errorhandling
   - ComDisk: fixed bug with being unable to import pyparted
 * Fri Apr 23 2010 MG <grimme@atix.de>, 0.1-9
