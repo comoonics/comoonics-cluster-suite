@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.11 2010-03-08 12:30:48 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.12 2010-09-21 14:17:44 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from comoonics.storage.ComDevice import Device
@@ -38,8 +38,9 @@ class FilesystemCopyObject(CopyObjectJournaled):
         try:
             __fs=__device.getElementsByTagName("filesystem")[0]
             self.filesystem=ComFileSystem.getFileSystem(__fs, doc)
-        except Exception:
-            raise ComException("filesystem for copyset not defined")
+        except Exception, e:
+            ComLog.debugTraceLog(self.log)
+            raise ComException("filesystem for copyset not defined. Error: %s" %e)
         try:
             __mp=__device.getElementsByTagName("mountpoint")[0]
             self.mountpoint=MountPoint(__mp, doc)
@@ -146,7 +147,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.11  2010-03-08 12:30:48  marc
+# Revision 1.12  2010-09-21 14:17:44  marc
+# Trace exception with debug mode
+#
+# Revision 1.11  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.10  2010/02/09 21:48:24  mark
