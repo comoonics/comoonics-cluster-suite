@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComRegexpModification.py,v 1.6 2010-03-08 12:30:48 marc Exp $
+# $Id: ComRegexpModification.py,v 1.7 2010-11-16 11:30:25 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRegexpModification.py,v $
 
 import re
@@ -36,7 +36,7 @@ class RegexpModification(FileModification):
         if self.hasAttribute("nobackup"):
             if self.getAttribute("nobackup") == "1":
                 save=False
-        self.doRegexpModifications(file, save)
+        ComSystem.execMethod(self.doRegexpModifications, file, save)
 
     def doRegexpModifications(self, file, save=True, dest=None):
         __search = self.getAttribute("search")
@@ -97,7 +97,10 @@ class RegexpModification(FileModification):
         return __options
 
 # $Log: ComRegexpModification.py,v $
-# Revision 1.6  2010-03-08 12:30:48  marc
+# Revision 1.7  2010-11-16 11:30:25  marc
+# - made the regexp dep of execLocal
+#
+# Revision 1.6  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.5  2010/02/10 12:48:46  mark
