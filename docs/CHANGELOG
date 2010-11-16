@@ -468,6 +468,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-52
+- Modified ComExecutionModificationSet so that command can be given as textnode
 * Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-51
 - fixed bugs with old xml implementation
 - fixed ComPath bugs in ComPath*Set
