@@ -10,15 +10,14 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComArchive.py,v $
 
 import os
 import shutil
 import tempfile
 import xml.dom
-from xml.dom import Element, Node
-from xml.dom.ext.reader import Sax2
+from xml.dom import Node
 
 import tarfile
 from tarfile import TarInfo
@@ -72,9 +71,9 @@ class Archive(DataObject):
 
     def getDOMElement(self, name):
         '''returns a DOM Element from the given member name'''
+        from comoonics import XmlTools
         file=self.ahandler.getFileObj(name)
-        reader = Sax2.Reader()
-        doc = reader.fromStream(file)
+        doc=XmlTools.parseXMLFP(file)
         self.ahandler.closeAll()
         return doc.documentElement
 
@@ -99,11 +98,12 @@ class Archive(DataObject):
 
     def addDOMElement(self, element, name=None):
         '''adds an DOM Element as member name'''
+        from comoonics import XmlTools
         if name == None:
             name=self.getNextFileName()
         fd, path = tempfile.mkstemp()
         file = os.fdopen(fd, "w")
-        xml.dom.ext.PrettyPrint(element, file)
+        XmlTools.toPrettyXMLFP(element, file)
         file.close()
         try:
             self.ahandler.addFile(path, name)
@@ -487,7 +487,10 @@ ArchiveHandlerFactory=ArchiveHandlerFactoryClass()
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.3  2010-03-08 12:30:48  marc
+# Revision 1.4  2010-11-16 11:23:07  marc
+# - fixed bug with old XML implementation
+#
+# Revision 1.3  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2010/02/09 21:48:51  mark

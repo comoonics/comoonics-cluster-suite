@@ -6,14 +6,13 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComPartition.py,v 1.3 2010-03-08 12:30:48 marc Exp $
+# $Id: ComPartition.py,v 1.4 2010-11-16 11:24:20 marc Exp $
 #
 
 #import parted
 import re
 
 from xml.dom import Node
-from xml import xpath
 
 from ComParted import PartedHelper
 
@@ -21,7 +20,7 @@ from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComPartition.py,v $
 
 class Partition(DataObject):
@@ -154,7 +153,8 @@ class Partition(DataObject):
 
     def hasFlag(self, name):
         try:
-            return len(xpath.Evaluate('flag/@name='+name, self.element))
+            from comoonics import XmlTools
+            return len(XmlTools.evaluateXPath('flag/@name='+name, self.element))
         except Exception:
             return False
 
@@ -167,7 +167,8 @@ class Partition(DataObject):
 
     def removeFlag(self, name):
         try:
-            node=xpath.Evaluate('flag/@name='+name, self.element)[0]
+            from comoonics import XmlTools
+            node=XmlTools.evaluateXPath('flag/@name='+name, self.element)[0]
             self.element.removeChild(node)
         except Exception:
             raise ComException("no flag with name %s found" %name)
