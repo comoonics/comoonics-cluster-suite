@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.27 $"
+__version__ = "$Revision: 1.28 $"
 
 import fcntl # needed for filelocking
 import re
@@ -97,7 +97,7 @@ class CdslRepository(DataObject):
                     raise IOError("Repository %s has zero size. Cannot read. Try to reconstruct or restore the repository (com-cdsllinvchk)." %self.resource)
                 _file = os.fdopen(os.open(self.resource,os.O_RDONLY))
                 try:
-                    doc=XmlTools.createDOMfromXML(_file, None, self.validate)
+                    doc=XmlTools.parseXMLFP(_file)
                 except Exception, arg:
                     log.critical("Problem while reading XML: " + str(arg))
                     raise
@@ -1308,7 +1308,10 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
 
 ###############
 # $Log: ComCdslRepository.py,v $
-# Revision 1.27  2010-08-06 13:16:07  marc
+# Revision 1.28  2010-11-16 09:54:36  marc
+# - fixed bug with old XML implementation
+#
+# Revision 1.27  2010/08/06 13:16:07  marc
 # - typo in Exception
 #
 # Revision 1.26  2010/06/29 07:52:20  marc

@@ -80,6 +80,8 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-33
+- fixed bugs with old xml implementation
 * Fri Aug 06 2010 MG <grimme@atix.de>, 0.1-32
 - Fixed typos
 * Tue Jun 29 2010 MG <grimme@atix.de>, 0.1-31

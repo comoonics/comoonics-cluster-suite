@@ -85,8 +85,9 @@ try:
     elif options.get:
         print childcdslRepository.getAttribute(options.get)
     elif options.list:
-        for attribute in childcdslRepository.getElement().attributes:
-            print "%s: %s" %(attribute.name, attribute.value)
+        attributes=childcdslRepository.getElement().attributes
+        for i in range(attributes.length):
+            print "%s: %s" %(attributes.item(i).name, attributes.item(i).value)
     elif options.migrate:
         print "Seems you are using the latest version of the cdsl inventory. I will not try to migrate anything."
         sys.exit(0)
