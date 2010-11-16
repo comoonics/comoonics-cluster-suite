@@ -7,14 +7,19 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFile.py,v 1.4 2010-09-21 14:20:44 marc Exp $
+# $Id: ComFile.py,v 1.5 2010-11-16 11:23:34 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFile.py,v $
 
 from comoonics.ComDataObject import DataObject
+from comoonics.ComExceptions import ComException
+
+class GlobNotSupportedException(ComException):
+    def __str__(self):
+        return "File globbing to supported for the given file %s." %self.value
 
 class File(DataObject):
     TAGNAME="file"
@@ -55,11 +60,16 @@ class File(DataObject):
         elements=list()
         try:
             import glob
-            filenames=glob.glob(filename)
-            if filenames:
-                for _filename in filenames:
-                    (element, doc)=File._createElement(_filename, doc)
-                    elements.append(element)
+            # we need to exclude implicit shells from being globbed
+            import re
+            if re.search("\$\(.*\)", filename):
+                raise GlobNotSupportedException(filename)
+            else:
+                filenames=glob.glob(filename)
+                if filenames:
+                    for _filename in filenames:
+                        (element, doc)=File._createElement(_filename, doc)
+                        elements.append(element)
             return elements
         except ImportError:
             return elements
@@ -90,7 +100,10 @@ class File(DataObject):
         super(File, self).__init__(element, doc)
         
 # $Log: ComFile.py,v $
-# Revision 1.4  2010-09-21 14:20:44  marc
+# Revision 1.5  2010-11-16 11:23:34  marc
+# fixed bug with globs being applied on implicit skripts
+#
+# Revision 1.4  2010/09/21 14:20:44  marc
 # added createElement, globFilename and integrated in Constructor
 #
 # Revision 1.3  2010/03/08 12:30:48  marc
