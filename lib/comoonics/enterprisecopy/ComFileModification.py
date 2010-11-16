@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileModification.py,v 1.4 2010-09-21 14:11:29 marc Exp $
+# $Id: ComFileModification.py,v 1.5 2010-11-16 11:30:40 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFileModification.py,v $
 
 from ComModification import Modification
@@ -34,17 +34,24 @@ class FileModification(Modification):
 
     def createFileList(self, element, doc):
         """ creates the filelist and globs them if necessary """
+        from comoonics.storage.ComFile import GlobNotSupportedException
         files=list()
         elements=element.getElementsByTagName("file")
         if elements and len(elements) > 0:
             for i in range(len(elements)):
-                _elements=File.globFilename(elements[i].getAttribute(File.ATTRNAME), doc)
-                if _elements:
-                    files.extend(_elements)
+                try:
+                    _elements=File.globFilename(elements[i].getAttribute(File.ATTRNAME), doc)
+                    if _elements:
+                        files.extend(_elements)
+                except GlobNotSupportedException:
+                    files.append(elements[i])
         return files
 
 # $Log: ComFileModification.py,v $
-# Revision 1.4  2010-09-21 14:11:29  marc
+# Revision 1.5  2010-11-16 11:30:40  marc
+# fixed bug with globs being applied on implicit skripts
+#
+# Revision 1.4  2010/09/21 14:11:29  marc
 # work with list of files containing globs
 #
 # Revision 1.3  2010/03/08 12:30:48  marc
