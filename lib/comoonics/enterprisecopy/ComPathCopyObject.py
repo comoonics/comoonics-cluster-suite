@@ -3,11 +3,11 @@ CopyObject to implement a path source/destination.
 """
 
 # here is some internal information
-# $Id: ComPathCopyObject.py,v 1.4 2010-03-08 12:30:48 marc Exp $
+# $Id: ComPathCopyObject.py,v 1.5 2010-11-16 11:27:02 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPathCopyObject.py,v $
 
 from ComCopyObject import CopyObjectJournaled
@@ -63,9 +63,9 @@ class PathCopyObject(CopyObjectJournaled):
         import os
         self.origpath=self.path.getPath()
         ComSystem.execMethod(self.path.mkdir)
-        ComSystem.execMethod(self.path.pushd)
+        ComSystem.execMethod(self.path.pushd, self.path.getPath())
         if not ComSystem.isSimulate():
-            self.journal(self.path, "pushd")
+            self.journal(self.path, "pushd", self.path.getPath())
         PathCopyObject.logger.debug("prepareAsSource() CWD: " + os.getcwd())
 
     def __cleanup(self):
@@ -112,7 +112,10 @@ class PathCopyObject(CopyObjectJournaled):
         return self.getPath().getElement()
 
 # $Log: ComPathCopyObject.py,v $
-# Revision 1.4  2010-03-08 12:30:48  marc
+# Revision 1.5  2010-11-16 11:27:02  marc
+# - fixed bug with ComPath
+#
+# Revision 1.4  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.3  2008/03/12 12:28:32  marc

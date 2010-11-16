@@ -12,11 +12,11 @@ Hello world
 """
 
 # here is some internal information
-# $Id: ComPathModificationset.py,v 1.3 2010-03-08 12:30:48 marc Exp $
+# $Id: ComPathModificationset.py,v 1.4 2010-11-16 11:28:04 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComPathModificationset.py,v $
 
 from ComModificationset import ModificationsetJournaled
@@ -46,7 +46,7 @@ class PathModificationset(ModificationsetJournaled):
     def doPre(self):
         import os
         self.path.mkdir()
-        self.path.pushd()
+        self.path.pushd(self.path.getPath())
         self.journal(self.path, "pushd")
         PathModificationset.logger.debug("doPre() CWD: " + os.getcwd())
         super(PathModificationset, self).doPre()
@@ -64,7 +64,10 @@ class PathModificationset(ModificationsetJournaled):
         PathModificationset.logger.debug("doPost() CWD: " + os.getcwd())
 
 # $Log: ComPathModificationset.py,v $
-# Revision 1.3  2010-03-08 12:30:48  marc
+# Revision 1.4  2010-11-16 11:28:04  marc
+# - fixed bug with ComPath
+#
+# Revision 1.3  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2008/08/05 13:10:14  marc
