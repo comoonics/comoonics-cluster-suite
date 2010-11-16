@@ -38,10 +38,8 @@ class Test(unittest.TestCase):
         </destination>
     </copyset>"""
         from comoonics.enterprisecopy.ComCopyset import Copyset
-        from xml.dom.ext.reader import Sax2
-        from comoonics.storage.ComDisk import Disk
-        reader=Sax2.Reader(validate=0)
-        doc=reader.fromString(_xml)
+        from comoonics import XmlTools
+        doc=XmlTools.parseXMLString(_xml)
         _copyset=Copyset(doc.documentElement, doc)
         self.__testPathCopyset(_copyset)
            
