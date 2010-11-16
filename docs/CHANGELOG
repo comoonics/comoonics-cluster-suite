@@ -468,6 +468,10 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-51
+- fixed bugs with old xml implementation
+- fixed ComPath bugs in ComPath*Set
+- fixed RegexpModification set to make it dep from ComExecLocal
 * Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-50
   - ComFileModification.py:
     - work with list of files containing globs
@@ -643,6 +647,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-12
+- fixed bugs with old xml implementation
 * Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-11
   - ComFile.py:
     - added createElement, globFilename and integrated in Constructor
