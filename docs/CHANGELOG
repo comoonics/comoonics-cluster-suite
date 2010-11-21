@@ -50,6 +50,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-13
+- fixed bug 391 that cdsl tools won't work due to broken XML support (moved to upstream XmlTools implementation)
 * Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-12
   - ComDataObject.py:
     - No isinstance for Element check but with nodetype
@@ -80,6 +82,8 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-34
+- fixed bug 391 that cdsl tools won't work due to broken XML support (moved to upstream XmlTools implementation)
 * Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-33
 - fixed bugs with old xml implementation
 * Fri Aug 06 2010 MG <grimme@atix.de>, 0.1-32
@@ -196,6 +200,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-28
+- fixed bug 391 that cdsl tools won't work due to broken XML support (moved to upstream XmlTools implementation)
 * Fri Jun 25 2010 MG <grimme@atix.de>, 0.1-27
   - com-queryclusterconf: if query fails no errorcode was returned. Now an errorcode is returned.
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-26
