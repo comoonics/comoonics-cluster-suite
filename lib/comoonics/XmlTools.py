@@ -4,7 +4,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.15 2010-09-21 14:26:06 marc Exp $
+# $Id: XmlTools.py,v 1.16 2010-11-21 21:48:53 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -60,16 +60,17 @@ def evaluateXPath(path, element):
         return Evaluate(path, element)
     except ImportError:
         # Implementation for etree
-        from lxml.etree import XPath, fromstring, tounicode, _ElementStringResult
+        from lxml.etree import XPath, fromstring, tounicode
         # returns a list of _ElementStringResult
-        elist=XPath(path).evaluate(fromstring(toPrettyXML(element)))
+        buf=toPrettyXML(element)
+        elist=XPath(path).evaluate(fromstring(buf))
         nodelist=list()
         for eelement in elist:
             # either the returnlist is a stringlist or a element list
             if isinstance(eelement, basestring):
                 nodelist.append(eelement)
             else:
-                nodelist.append(parseXMLString(tounicode(eelement)))
+                nodelist.append(parseXMLString(tounicode(eelement)).documentElement)
         return nodelist
 
 def overwrite_element_with_xpaths(element, xpaths):
@@ -203,12 +204,12 @@ def parseXMLFile(xmlfile, validate=False):
     return doc
 
 def parseXMLFP(filep, validate=False):
-    try:
-        from Ft.Xml import Parse
-        doc=Parse(filep)
-    except ImportError:
-        import xml.dom.minidom
-        doc=xml.dom.minidom.parse(filep)
+#    try:
+#        from Ft.Xml import Parse
+#        doc=Parse(filep)
+#    except ImportError:
+    import xml.dom.minidom
+    doc=xml.dom.minidom.parse(filep)
     return doc
 
 def parseXMLString(xmlstring, validate=False):
@@ -220,7 +221,13 @@ def parseXMLString(xmlstring, validate=False):
     doc=xml.dom.minidom.parseString(xmlstring)
     return doc
 
-def toPrettyXML(node, *params):
+def toPrettyXML(node, ident="\t", newl="\n"):
+    import cStringIO
+    buf=cStringIO.StringIO()
+    toPrettyXMLFP(node, buf, ident, newl)
+    return buf.getvalue()
+
+def toPrettyXMLFP(node, filep, ident="\t", newl="\n"):
 #    try:
 #        from Ft.Xml.Domlette import PrettyPrint
 #        import cStringIO
@@ -228,16 +235,56 @@ def toPrettyXML(node, *params):
 #        PrettyPrint(node, stream=buf)
 #        return buf.getvalue()
 #    except ImportError:
-    import xml.dom
-    if isinstance(node, xml.dom.minidom.Node):
-        return node.toxml()
-    else:
-        from xml.dom.ext import PrettyPrint
-        import cStringIO
-        buf = cStringIO.StringIO()
-        PrettyPrint(node, stream=buf)
-        return buf.getvalue()
+    try:
+        import xml.dom.minidom
+        removePrettyTextNodes(node)
+        if isinstance(node, xml.dom.minidom.Attr):
+            filep.write(node.nodeValue+newl)
+        elif isinstance(node, xml.dom.minidom.Node):
+            node.writexml(filep, "", ident, newl)
+    except ImportError:
+        try:
+            import Ft.Xml.cDomlette
+            if isinstance(node, Ft.Xml.cDomlette.Node):
+                from Ft.Xml.Lib.Print import  PrettyPrint
+                PrettyPrint(node, stream=filep)
+        except: 
+            from xml.dom.ext import PrettyPrint
+            PrettyPrint(node, stream=filep)
             
+def removePrettyTextNodes(element, deep=True):
+    """
+    Removes all child Text Nodes being left from parsing a pretty document. Then toPrettyXml can be used again.
+    @param element: The element to be analysed
+    @param deep: walk recursive through the tree, default: True
+    @return: None 
+    """
+    import re
+    removeTextNodes(element, re.compile("^\s+$"), deep)
+    
+def removeTextNodes(element, stringorregexp, deep=True):
+    """
+    Removes all child Text Nodes that match the given stringorrepgexp.
+    @param element: the element to be analysed
+    @param stringorregexp: the string or regexp to be matched against.
+    @param deep: walk recursive through the tree, default: True
+    @type string: L<string>, L<re>   
+    """ 
+    import xml.dom
+    child=element.firstChild
+    children2remove=list()
+    while child:
+        if child.nodeType==xml.dom.Node.TEXT_NODE:
+            if isinstance(stringorregexp, basestring):
+                if child.nodeValue == stringorregexp:
+                    element.removeChild(child)
+            elif stringorregexp.match(child.nodeValue):
+                children2remove.append(child)
+        elif child.nodeType==xml.dom.Node.ELEMENT_NODE and deep:
+            removeTextNodes(child, stringorregexp, deep)
+        child=child.nextSibling
+    for child in children2remove:
+        element.removeChild(child)
         
 def clone_node(node, doc=None):
     """
@@ -369,7 +416,12 @@ def xpathsplit(_xpath):
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.15  2010-09-21 14:26:06  marc
+# Revision 1.16  2010-11-21 21:48:53  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#   - finished implementation of XmlTools
+#
+# Revision 1.15  2010/09/21 14:26:06  marc
 # reimplemented most functions so that they can use different implementations.
 #
 # Revision 1.14  2010/02/05 12:24:15  marc

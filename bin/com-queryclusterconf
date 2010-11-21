@@ -2,7 +2,7 @@
 """
 Binary to query clusterconfiguration
 """
-__version__ = "$Revision: 1.21 $"
+__version__ = "$Revision: 1.22 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -24,17 +24,15 @@ from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, ClusterMacNotFoundException, RedHatClusterRepository
 from comoonics.cluster.ComQueryMap import QueryMap
 
-from xml.dom.ext.reader import Sax2
-import xml.dom
-
 from optparse import OptionParser
 
 def printResult(result, options, params, paramsparsestring="\%\([a-zA-Z0-9_]+\)", outbuf=None):
-    from xml.dom.ext import PrettyPrint, Print
     from comoonics.ComDataObject import DataObject
     import warnings
     import StringIO
     import re
+    import comoonics.XmlTools
+    import xml.dom
     if not outbuf:
         outbuf=sys.stdout
 
@@ -44,9 +42,9 @@ def printResult(result, options, params, paramsparsestring="\%\([a-zA-Z0-9_]+\)"
     elif result:
         if isinstance(result, xml.dom.Node):
             if options.prettyprint:
-                PrettyPrint(result, outbuf)
+                comoonics.XmlTools.toPrettyXMLFP(result, outbuf)
             else:
-                Print(result, outbuf)
+                comoonics.XmlTools.toPrettyXMLFP(result, outbuf)
         elif isinstance(result, list):
             _results=list()
             for _result in result:
@@ -358,7 +356,12 @@ Command: %s
 sys.exit(errors)
 ###########
 # $Log: com-queryclusterconf,v $
-# Revision 1.21  2010-06-25 12:19:56  marc
+# Revision 1.22  2010-11-21 21:49:26  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#   - finished implementation of XmlTools
+#
+# Revision 1.21  2010/06/25 12:19:56  marc
 # - change to exit code if a query fails
 #
 # Revision 1.20  2010/03/08 12:42:01  marc
