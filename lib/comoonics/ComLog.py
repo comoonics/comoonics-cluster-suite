@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.15 2009-07-22 08:37:40 marc Exp $
+# $Id: ComLog.py,v 1.16 2010-11-21 21:48:19 marc Exp $
 #
 # @(#)$File$
 #
@@ -27,7 +27,7 @@ here should be some more information about the module, that finds its way inot t
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -156,9 +156,10 @@ def fileConfig(fname, defaults=None, _vars=None):
         try:
             #first, lose the existing handlers...
             logging._handlers.clear()
+            del logging._handlerList[:]
             #now set up the new ones...
             hlist = cp.get("handlers", "keys")
-            _mylogger.debug("handlers: %s" %hlist)
+            _mylogger.debug("handlers: %s, %u" %(hlist, len(hlist)))
             if len(hlist):
                 hlist = string.split(hlist, ",")
                 handlers = {}
@@ -201,6 +202,7 @@ def fileConfig(fname, defaults=None, _vars=None):
                         _mylogger.debug("handlers[%s]=%s" %(hand, h))
                         handlers[hand] = h
                     except:     #if an error occurs when instantiating a handler, too bad
+                        import warnings
                         _mylogger.exception("Could not create handler: %s" %klass)
                         #this could happen e.g. because of lack of privileges
                 #now all handlers are loaded, fixup inter-handler references...
@@ -279,7 +281,11 @@ def fileConfig(fname, defaults=None, _vars=None):
 _mylogger=logging.getLogger("comoonics.ComLog")
 
 # $Log: ComLog.py,v $
-# Revision 1.15  2009-07-22 08:37:40  marc
+# Revision 1.16  2010-11-21 21:48:19  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.15  2009/07/22 08:37:40  marc
 # fedora compliant
 #
 # Revision 1.14  2009/06/10 15:19:56  marc

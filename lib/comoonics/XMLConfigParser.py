@@ -3,28 +3,16 @@ Class for logging to a generic database
 
 """
 # here is some internal information
-# $Id: XMLConfigParser.py,v 1.2 2007-06-13 10:09:27 marc Exp $
+# $Id: XMLConfigParser.py,v 1.3 2010-11-21 21:48:19 marc Exp $
 #
-import sys, logging.handlers, string, socket, struct, os, traceback, types
-
-try:
-    import thread
-    import threading
-except ImportError:
-    thread = None
-
-import logging
-from ConfigParser import RawConfigParser, NoSectionError, NoOptionError, DuplicateSectionError
+from ConfigParser import NoSectionError, DuplicateSectionError
 from ConfigParser import ConfigParser as oldConfigParser
 from comoonics.ComExceptions import ComException
 from comoonics.ComProperties import Properties
-from comoonics import ComLog
-from comoonics import XmlTools
+import ComLog
+import XmlTools
 
 from xml.dom import Node
-from xml.dom.ext import PrettyPrint
-from xml.dom.ext.reader import Sax2
-from xml.xpath import Evaluate
 
 class NoLoggingConfigFound(ComException):
     pass
@@ -51,31 +39,29 @@ class ConfigParser(oldConfigParser):
 
     ADD_TAGS={ "formatter": ("format",)}
 
-    """ should we validate the xml or not """
+    # should we validate the xml or not
     validate=True
-    """ delimiter of lists """
+    # delimiter of lists
     delimiter=","
 
     _logging_element=None
     _subsection_prefixes=dict()
     def __init__(self, defaults=None):
         oldConfigParser.__init__(self, defaults)
+        self.doc=None
 
     def read(self, filename):
         """ This method reads the file and initializes all internal structures for handling as ConfigParser. """
         if isinstance(filename, basestring):
-            file=open(filename,"r")
-            if self.validate:
-                reader = Sax2.Reader(validate=0)
-            else:
-                reader = Sax2.Reader(validate=1)
-            self.doc = reader.fromStream(file)
+            self.doc=XmlTools.parseXMLFile(filename, self.validate)
             try:
-                _baseelement=self.doc.getElementsByTagName(self.LOGGING_TAGNAME)[0]
+                if self.doc.documentElement.tagName == self.LOGGING_TAGNAME:
+                    _baseelement=self.doc.documentElement
+                else:
+                    _baseelement=self.doc.documentElement.getElementsByTagName(self.LOGGING_TAGNAME)[0]
             except:
                 mylogger.exception("No Logging configuration found in file %s" %(filename))
                 raise NoLoggingConfigFound, "No Logging configuration found in file %s" %(filename)
-            file.close()
         elif isinstance(filename, Node):
             _baseelement=filename
         else:
@@ -100,9 +86,9 @@ class ConfigParser(oldConfigParser):
             _str+=arg+self.delimiter
         return "("+_str+")"
 
-    def _interpolate(self, section, option, rawval, vars):
+    def _interpolate(self, section, option, rawval, variables):
         if isinstance(rawval, basestring):
-            oldConfigParser._interpolate(self, section, option, rawval, vars)
+            oldConfigParser._interpolate(self, section, option, rawval, variables)
         return rawval
 
     def _read(self, _baseelement, filename):
@@ -114,7 +100,6 @@ class ConfigParser(oldConfigParser):
                 func=getattr(self, "apply_"+self._sections[_section]['__element__'].nodeName)
                 _cursect=self._sections[_section]
                 func(_cursect)
-
 
     def _parseSections(self, sections, baseelement, validsubsections):
         sectionselement=baseelement.getElementsByTagName(sections)
@@ -168,9 +153,10 @@ class ConfigParser(oldConfigParser):
                 mylogger.debug("_parseSection(%s): properties: %s" %(section, _properties))
                 for (_name, _property) in _properties.items():
                     _cursect[_name]=_property.getValue()
-        for _child in sectionelement.attributes:
-            mylogger.debug("_parseSection(%s, %s): %s->attribute: %s: %s" %(section, validsubsections, _cursect['__name__'], _child.name, _child.value))
+        for i in range(sectionelement.attributes.length):
+            _child=sectionelement.attributes.item(i)
             _cursect[_child.name]=_child.value
+            mylogger.debug("_parseSection(%s, %s): %s->attribute: %s: %s" %(section, validsubsections, _cursect['__name__'], _child.name, _child.value))
         return _cursect
 
     def apply_logger(self, cursect):
@@ -213,34 +199,13 @@ class ConfigParser(oldConfigParser):
                 args.append(arg)
         return args
 
-def __line(text):
-    print "-------------------------- %s --------------------------------------" %(text)
-
-def test():
-    _filename="../../test/loggingconfig.xml"
-    cp=ConfigParser()
-    cp.read(_filename)
-    __line("cp._sections")
-    print cp._sections
-    for section in (ConfigParser.LOGGERS_TAGNAME, ConfigParser.HANDLERS_TAGNAME, ConfigParser.FORMATTERS_TAGNAME):
-        __line("cp.get(%s, keys)" %section)
-        _keys=cp.get(section, "keys")
-        print _keys
-        for key in _keys.split(cp.delimiter):
-            _name=cp.formatSubsectionPair(section, key)
-            __line("cp.options(%s)"%(_name))
-            _options=cp.options(_name)
-            print _options
-            for _option in _options:
-                __line("cp.get(%s, %s)" %(_name, _option))
-                print "%s.%s: %s" %(_name, _option, cp.get(_name, _option, 1))
-
-if __name__=="__main__":
-    test()
-
 ########################
 # $Log: XMLConfigParser.py,v $
-# Revision 1.2  2007-06-13 10:09:27  marc
+# Revision 1.3  2010-11-21 21:48:19  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.2  2007/06/13 10:09:27  marc
 # - removed debugging
 #
 # Revision 1.1  2007/06/13 09:12:05  marc

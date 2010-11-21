@@ -1,14 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <logging>
     <loggers>
-        <logger name="root" handlers="root" level="NOTSET" propagate="0">
-            <logger name="atix" handlers="atix" propagate="0">
-                <logger name="atix1" handlers="atix1" propagate="0"/>
+        <logger name="root" handlers="root" level="DEBUG" propagate="0">
+            <logger name="atix" handlers="atix" propagate="0" level="DEBUG">
+                <logger name="atix1" handlers="atix1,atix2" level="DEBUG" propagate="0"/>
+                <logger name="comoonics" handlers="atix1,atix2" level="DEBUG" propagate="0"/>
             </logger>
         </logger>
     </loggers>
     <handlers>
-        <handler name="root" class="StreamHandler" formatter="form01" level="NOTSET">
+        <handler name="root" class="StreamHandler" formatter="form01">
             <properties><property name="stream">sys.stdout</property></properties>
             <args><arg>sys.stdout</arg></args>
         </handler>
@@ -20,18 +21,9 @@
             <properties><property name="stream">sys.stdout</property></properties>
             <args><arg>sys.stdout</arg></args>
         </handler>
-        <handler name="atix2" class="StreamHandler" formatter="form04">
-            <properties><property name="stream">sys.stdout</property></properties>
-            <args><arg>sys.stdout</arg></args>
+        <handler name="atix2" class="FileHandler" formatter="form04">
+            <args><arg>"/tmp/atix3logger.log"</arg></args>
         </handler>
-<!--        <handler name="atixdb" class="DBLogger" formatter="form01" level="DEBUG">
-            <args>
-                <arg>"localhost"</arg>
-                <arg>"atix"</arg>
-                <arg>"atix"</arg>
-                <arg>"atix_cmdb"</arg>
-            </args>
-        </handler>-->
     </handlers>
     <formatters>
         <formatter name="form01"><format>Formater01 %(name)s %(asctime)s %(levelname)s %(message)s</format></formatter>

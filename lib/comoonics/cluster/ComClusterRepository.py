@@ -11,7 +11,7 @@ inherited from L{DataObject}.
 
 
 # here is some internal information
-# $Id: ComClusterRepository.py,v 1.18 2009-07-22 08:37:10 marc Exp $
+# $Id: ComClusterRepository.py,v 1.19 2010-11-21 21:45:28 marc Exp $
 #
 # @(#)$File$
 #
@@ -33,16 +33,14 @@ inherited from L{DataObject}.
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
-
-from xml import xpath
 
 from comoonics import ComLog
 from comoonics.ComDataObject import  DataObject
 from comoonics.ComExceptions import ComException
 from comoonics.DictTools import searchDict, createDomFromHash
-from comoonics.XmlTools import xpathjoin, XPATH_SEP
+import comoonics.XmlTools
 
 log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
 
@@ -84,28 +82,23 @@ class ClusterRepository(ClusterObject):
         or comoonics) has to be created.
         args = (element,doc,options)
         """
-        from xml.dom.ext.reader import Sax2
         if len(args) >= 1 and isinstance(args[0], basestring):
-            reader = Sax2.Reader()
-            _xml=open(args[0])
-            doc = reader.fromStream(_xml)
-            _xml.close()
-            if len(xpath.Evaluate(ComoonicsClusterRepository.getDefaultComoonicsXPath(), doc.documentElement)) > 0:
+            doc=comoonics.XmlTools.parseXMLFile(args[0])
+            if len(comoonics.XmlTools.evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(), doc.documentElement)) > 0:
                 cls = ComoonicsClusterRepository
-            elif len(xpath.Evaluate(RedHatClusterRepository.getDefaultClusterNodeXPath(), doc.documentElement)) > 0:
+            elif len(comoonics.XmlTools.evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), doc.documentElement)) > 0:
                 cls = RedHatClusterRepository
         if len(args) >= 2:
             if (args[0] != None):                
-                if xpath.Evaluate(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0]) or len(args[2]) == 0:
+                if comoonics.XmlTools.evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0]) or len(args[2]) == 0:
                     cls = ComoonicsClusterRepository
-                elif xpath.Evaluate(RedHatClusterRepository.getDefaultClusterNodeXPath(), args[0]):
+                elif comoonics.XmlTools.evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), args[0]):
                     cls = RedHatClusterRepository
                     
             elif type(args[2]) == dict:
-                from ComClusterInfo.ComoonicsClusterInfo import element_osr, element_clusternode
-                if searchDict(args[2],element_osr):
+                if searchDict(args[2],"osr"):
                     cls = ComoonicsClusterRepository
-                elif searchDict(args[2],element_clusternode):
+                elif searchDict(args[2],RedHatClusterRepository.element_clusternode):
                     cls = RedHatClusterRepository
                 
         return object.__new__(cls) #, *args, **kwds)
@@ -166,26 +159,26 @@ class RedHatClusterRepository(ClusterRepository):
     attribute_quorum_quorate="quorate"
     attribute_quorum_groupmember="groupmember"
     
-    xpath_clustat=xpathjoin(element_cluster, element_clustat)
+    xpath_clustat=comoonics.XmlTools.xpathjoin(element_cluster, element_clustat)
 
     def getDefaultClusterConf():
         return "/etc/cluster/cluster.conf"
     getDefaultClusterConf=staticmethod(getDefaultClusterConf)
     
     def getDefaultClusterXPath():
-        return xpathjoin(XPATH_SEP, RedHatClusterRepository.element_cluster)
+        return comoonics.XmlTools.xpathjoin(comoonics.XmlTools.XPATH_SEP, RedHatClusterRepository.element_cluster)
     getDefaultClusterXPath=staticmethod(getDefaultClusterXPath)
 
     def getDefaultClusterNodeXPath():
-        return xpathjoin(RedHatClusterRepository.getDefaultClusterXPath(), RedHatClusterRepository.element_clusternodes, RedHatClusterRepository.element_clusternode)
+        return comoonics.XmlTools.xpathjoin(RedHatClusterRepository.getDefaultClusterXPath(), RedHatClusterRepository.element_clusternodes, RedHatClusterRepository.element_clusternode)
     getDefaultClusterNodeXPath=staticmethod(getDefaultClusterNodeXPath)
     
     def getDefaultClusterFailoverDomain(domain=""):
-        return xpathjoin(RedHatClusterRepository.getDefaultClusterXPath(), RedHatClusterRepository.element_rm, RedHatClusterRepository.element_failoverdomains, RedHatClusterRepository.element_failoverdomain+'[@'+RedHatClusterRepository.attribute_failoverdomain_name+'="'+domain+'"]')
+        return comoonics.XmlTools.xpathjoin(RedHatClusterRepository.getDefaultClusterXPath(), RedHatClusterRepository.element_rm, RedHatClusterRepository.element_failoverdomains, RedHatClusterRepository.element_failoverdomain+'[@'+RedHatClusterRepository.attribute_failoverdomain_name+'="'+domain+'"]')
     getDefaultClusterFailoverDomain=staticmethod(getDefaultClusterFailoverDomain)
     
     def getDefaultClustatXPath():
-        return xpathjoin(XPATH_SEP, RedHatClusterRepository.element_clustat)
+        return comoonics.XmlTools.xpathjoin(comoonics.XmlTools.XPATH_SEP, RedHatClusterRepository.element_clustat)
     getDefaultClustatXPath=staticmethod(getDefaultClustatXPath)
     
     def __init__(self, element=None, doc=None, *options):
@@ -198,12 +191,12 @@ class RedHatClusterRepository(ClusterRepository):
                 doc = createDomFromHash(options[0],defaults=options[1])
             else:
                 doc = createDomFromHash(options[0])
-            element = xpath.Evaluate(RedHatClusterRepository.getDefaultClusterXPath(), doc)[0]
+            element = comoonics.XmlTools.evaluateXPath(RedHatClusterRepository.getDefaultClusterXPath(), doc)[0]
 
         super(RedHatClusterRepository, self).__init__(element, doc)
         
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
-        _nodes = xpath.Evaluate(RedHatClusterRepository.getDefaultClusterNodeXPath(), self.getElement())
+        _nodes = comoonics.XmlTools.evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), self.getElement())
         for i in range(len(_nodes)):
             _node = ClusterNode(_nodes[i], doc)
             self.nodeNameMap[_node.getName()] = _node
@@ -369,9 +362,9 @@ class ComoonicsClusterRepository(RedHatClusterRepository):
 
     def getDefaultComoonicsXPath(_nodename=None):
         if not _nodename:
-            return xpathjoin(RedHatClusterRepository.getDefaultClusterNodeXPath(), ComoonicsClusterRepository.element_comoonics)
+            return comoonics.XmlTools.xpathjoin(RedHatClusterRepository.getDefaultClusterNodeXPath(), ComoonicsClusterRepository.element_comoonics)
         else:
-            return xpathjoin(RedHatClusterRepository.getDefaultClusterNodeXPath()+"["+RedHatClusterRepository.attribute_clusternode_name+"=\""+_nodename+"\"]", ComoonicsClusterRepository.element_comoonics)
+            return comoonics.XmlTools.xpathjoin(RedHatClusterRepository.getDefaultClusterNodeXPath()+"["+RedHatClusterRepository.attribute_clusternode_name+"=\""+_nodename+"\"]", ComoonicsClusterRepository.element_comoonics)
     getDefaultComoonicsXPath=staticmethod(getDefaultComoonicsXPath)
 
     def __init__(self, element=None, doc=None, *options):
@@ -426,7 +419,11 @@ cluster:
 ClusterRepository.CONVERTERS["ocfs2"]=ComoonicsClusterRepository.createOCFS2ClusterConf
 
 # $Log: ComClusterRepository.py,v $
-# Revision 1.18  2009-07-22 08:37:10  marc
+# Revision 1.19  2010-11-21 21:45:28  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.18  2009/07/22 08:37:10  marc
 # Fedora compliant
 #
 # Revision 1.17  2009/05/27 18:31:59  marc

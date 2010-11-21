@@ -27,7 +27,7 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.28 $"
+__version__ = "$Revision: 1.29 $"
 
 import fcntl # needed for filelocking
 import re
@@ -447,7 +447,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         cwd.popd()
         
     def _parseresourceFP(self, nolock=True):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         if not nolock:
             self.lockresourceRO()
             _resourcehandle=self.resourcehandle
@@ -455,8 +455,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             _resourcehandle = file(os.path.join(self.workingdir, self.resource))
             
         _resourcehandle.seek(0)
-        reader = Sax2.Reader(self.validate)
-        self.setDocument(reader.fromStream(_resourcehandle))
+        self.setDocument(comoonics.XmlTools.parseXMLFP(_resourcehandle))
         element=self.getDocument().documentElement
         self.setElement(element)
         if not nolock:
@@ -465,13 +464,13 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             _resourcehandle.close()
 
     def writeresource(self, nolock=True):
-        from xml.dom.ext import PrettyPrint
         import shutil
+        import comoonics.XmlTools
         log.debug("ComoonicsCdslRepository writing resource %s/%s" %(self.workingdir, self.resource))
         if not nolock:
             self.lockresourceRW()
         wresourcehandle = file(os.path.join(self.workingdir, self.getWriteResourceName()), "w+")
-        PrettyPrint(self.getDocument().documentElement, wresourcehandle)
+        comoonics.XmlTools.toPrettyXMLFP(self.getDocument().documentElement, wresourcehandle, "\t", "\n")
         wresourcehandle.close()
         shutil.copy(os.path.join(self.workingdir, self.getWriteResourceName()), os.path.join(self.workingdir, self.resource))
         os.remove(os.path.join(self.workingdir, self.getWriteResourceName()))
@@ -1308,7 +1307,11 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
 
 ###############
 # $Log: ComCdslRepository.py,v $
-# Revision 1.28  2010-11-16 09:54:36  marc
+# Revision 1.29  2010-11-21 21:44:47  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.28  2010/11/16 09:54:36  marc
 # - fixed bug with old XML implementation
 #
 # Revision 1.27  2010/08/06 13:16:07  marc

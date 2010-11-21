@@ -8,7 +8,7 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.14 2010-02-05 12:12:29 marc Exp $
+# $Id: ComClusterInfo.py,v 1.15 2010-11-21 21:45:28 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,13 +30,11 @@ of clusterrepositories
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 
-from xml import xpath
-from xml.dom.ext import PrettyPrint
-from comoonics.XmlTools import xpathjoin, xpathsplit, XPATH_SEP
+from comoonics.XmlTools import xpathjoin, xpathsplit, XPATH_SEP, evaluateXPath
 
 from comoonics.ComExceptions import ComException
 
@@ -174,10 +172,10 @@ class RedHatClusterInfo(ClusterInfo):
         @rtype: list
         """
         self.log.debug("queryValue: %s" %(query))
-        _tmp1 = xpath.Evaluate(query, self.clusterRepository.getElement())
+        _tmp1 = evaluateXPath(query, self.clusterRepository.getElement())
         _tmp2 = []
         for i in range(len(_tmp1)):
-            _tmp2.append(_tmp1[i].value)
+            _tmp2.append(_tmp1[i])
         return _tmp2
     
     def queryXml(self, query):
@@ -192,7 +190,7 @@ class RedHatClusterInfo(ClusterInfo):
         @rtype: list(xml.dom.Node)
         """
         self.log.debug("queryXml: %s" %(query))
-        _tmp1 = xpath.Evaluate(query, self.clusterRepository.getElement())
+        _tmp1 = evaluateXPath(query, self.clusterRepository.getElement())
         return _tmp1
                 
     def getNode(self, name):
@@ -335,7 +333,11 @@ class ComoonicsClusterInfo(RedHatClusterInfo):
         raise ClusterMacNotFoundException("Cannot find device with given mac: %s" %(str(mac)))
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.14  2010-02-05 12:12:29  marc
+# Revision 1.15  2010-11-21 21:45:28  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.14  2010/02/05 12:12:29  marc
 # - fix that getNode will also return right node when queried with id
 # - fixes with querymap
 #

@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.13 2010-09-21 14:25:09 marc Exp $
+# $Id: ComDataObject.py,v 1.14 2010-11-21 21:48:19 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,13 +28,12 @@ here should be some more information about the module, that finds its way inot t
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
 import exceptions
 from xml.dom import Node
-from xml import xpath
 
 import ComLog
 import XmlTools
@@ -64,12 +63,8 @@ class DataObject(object):
         doc=None
         if len(params) >= 1:
             if isinstance(params[0], basestring):
-                from xml.dom.ext.reader import Sax2
-                reader = Sax2.Reader()
-                _xml=open(params[0])
-                doc = reader.fromStream(_xml)
-                _xml.close()
-                element=doc.documentElement
+                element=XmlTools.parseXMLFile(params[0])
+                element=element.documentElement
             else:
                 element=params[0]
         if len(params) == 2:
@@ -226,7 +221,11 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.13  2010-09-21 14:25:09  marc
+# Revision 1.14  2010-11-21 21:48:19  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.13  2010/09/21 14:25:09  marc
 # No isinstance for Element check but with nodetype
 #
 # Revision 1.12  2010/02/05 12:20:29  marc

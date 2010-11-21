@@ -8,7 +8,7 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.12 2009-07-22 08:37:09 marc Exp $
+# $Id: ComClusterNode.py,v 1.13 2010-11-21 21:45:28 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,12 +30,10 @@ by a clusterrepository.
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
-
-from xml import xpath
 
 from ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository
 from ComClusterInfo import ClusterObject
@@ -58,7 +56,8 @@ class ClusterNode(ClusterObject):
         or comoonics) has to be created.
         """
         try:
-            xpath.Evaluate(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0])
+            import comoonics.XmlTools
+            comoonics.XmlTools.evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0])
         except NameError:
             if args[0].getAttribute("name"):
                 cls = RedHatClusterNode
@@ -295,7 +294,11 @@ class ComoonicsClusterNode(RedHatClusterNode):
         return _tmp
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.12  2009-07-22 08:37:09  marc
+# Revision 1.13  2010-11-21 21:45:28  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.12  2009/07/22 08:37:09  marc
 # Fedora compliant
 #
 # Revision 1.11  2009/05/27 18:31:59  marc

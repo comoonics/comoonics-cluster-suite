@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComSystem.py,v 1.22 2010-04-23 11:03:26 marc Exp $
+# $Id: ComSystem.py,v 1.23 2010-11-21 21:48:19 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,7 +28,7 @@ here should be some more information about the module, that finds its way inot t
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.22 $"
+__version__ = "$Revision: 1.23 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComSystem.py,v $
 
 import sys
@@ -284,7 +284,7 @@ def execMethod(cmd, *params):
         else:
             _tmpList.append(type(i).__name__)
 
-    if not isSimulate and not askExecModeCmd("%s(%s)" %(cmd.__name__, ", ".join(_tmpList))):
+    if not isSimulate() and not askExecModeCmd("%s(%s)" %(cmd.__name__, ", ".join(_tmpList))):
         return True
     elif isSimulate():
         return __simret(command="%s(%s)" %(cmd.__name__, ", ".join(_tmpList)), output="%s(%s)" %(cmd.__name__, ", ".join(_tmpList)), asstring=True, tostdout=True, tostderr=True, returncode=True)
@@ -292,7 +292,11 @@ def execMethod(cmd, *params):
         return cmd(*params)
 
 # $Log: ComSystem.py,v $
-# Revision 1.22  2010-04-23 11:03:26  marc
+# Revision 1.23  2010-11-21 21:48:19  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.22  2010/04/23 11:03:26  marc
 # just reorganized some code
 #
 # Revision 1.21  2010/04/13 13:28:06  marc

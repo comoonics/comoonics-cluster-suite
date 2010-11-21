@@ -8,7 +8,7 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: RedHatClusterHelper.py,v 1.2 2009-07-22 08:37:09 marc Exp $
+# $Id: RedHatClusterHelper.py,v 1.3 2010-11-21 21:45:28 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,13 +30,11 @@ of clusterrepositories
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/helper/RedHatClusterHelper.py,v $
 
 from comoonics import ComLog
-from xml import xpath
-from xml.dom.ext.reader import Sax2
-from xml.dom.ext import PrettyPrint
+import comoonics.XmlTools
 
 class RedHatClusterHelper(object):
     defaultclusterstatus_cmd= "/usr/sbin/clustat"
@@ -82,25 +80,21 @@ class RedHatClusterHelper(object):
         __output=self.__getfromkwds("output", kwds, None)
         self.log.debug("queryStatusElement: query=%s" %query)
         from comoonics import ComSystem
-        import StringIO
         try:
             # create Reader object
-            reader = Sax2.Reader()
-            _dom=reader.fromString(ComSystem.execLocalOutput(self.getClusterStatusCmd(True, delimitor), True, __output))
+            _dom=comoonics.XmlTools.parseXMLString(ComSystem.execLocalOutput(self.getClusterStatusCmd(True, delimitor), True, __output))
             if not query:
                 return _dom.documentElement
             else:
-                _tmp1 = xpath.Evaluate(query, _dom.documentElement)
+                _tmp1 = comoonics.XmlTools.evaluateXPath(query, _dom.documentElement)
                 _tmp2 = None
                 if asValue:
                     _tmp2=list()
                     for i in range(len(_tmp1)):
-                        _tmp2.append(_tmp1[i].value)
+                        _tmp2.append(_tmp1[i])
                     return delimitor.join(_tmp2)
                 else:
-                    _tmp2 = StringIO.StringIO()
-                    PrettyPrint(_tmp1[0], stream=_tmp2)
-                    return _tmp2.getvalue()
+                    return comoonics.XmlTools.toPrettyXML(_tmp1[0])
         except ComSystem.ExecLocalException, error:
             self.log.warning("Could not query the running cluster. No active values will be available. Error %s" %error)
 

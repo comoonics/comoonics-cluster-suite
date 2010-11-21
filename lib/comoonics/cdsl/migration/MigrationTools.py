@@ -4,7 +4,7 @@ Created on Feb 4, 2010
 @author: marc
 '''
 
-# $Id: MigrationTools.py,v 1.3 2010-06-29 07:50:53 marc Exp $
+# $Id: MigrationTools.py,v 1.4 2010-11-21 21:44:47 marc Exp $
 #
 # @(#)$File$
 #
@@ -25,7 +25,7 @@ Created on Feb 4, 2010
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cdsl/migration/MigrationTools.py,v $
 
 from comoonics.cdsl.migration import ConfigfileFormatException
@@ -98,7 +98,8 @@ class DefaultMigrationTool(MigrationTool):
             
     def getDefaultKeys(self, defaults):
         returnkeys=dict()
-        for attr in defaults.attributes:
+        for i in range(defaults.attributes.length):
+            attr=defaults.attributes.item(i)
             returnkeys[str(self.defaultsmapping.get(attr.name, attr.name))]=str(attr.value)
         return returnkeys
             
@@ -109,7 +110,11 @@ class DefaultMigrationTool(MigrationTool):
         
 ###############
 # $Log: MigrationTools.py,v $
-# Revision 1.3  2010-06-29 07:50:53  marc
+# Revision 1.4  2010-11-21 21:44:47  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.3  2010/06/29 07:50:53  marc
 #   - __init__: added logger
 #   - defaultsmapping: adapted to current status
 #   - migrate: debug output default values to be migrated

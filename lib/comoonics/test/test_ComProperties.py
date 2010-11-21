@@ -18,10 +18,9 @@ xml_str="""
 class test_Properties(unittest.TestCase):
 
     def __init__(self, testMethod="runTest"):
+        from comoonics import XmlTools
         super(test_Properties, self).__init__(testMethod)
-        from xml.dom.ext.reader import Sax2
-        reader=Sax2.Reader(validate=1)
-        document=reader.fromString(xml_str)
+        document=XmlTools.parseXMLString(xml_str)
         self.properties=Properties(document.documentElement, document)
 
     def test_getProperty1(self):

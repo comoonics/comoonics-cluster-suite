@@ -27,7 +27,7 @@ of used cluster configuration by parsing given cluster configuration.
 
 import os
 
-__version__='$Revision: 1.10 $'
+__version__='$Revision: 1.11 $'
 
 __all__=['clusterconf', 'querymapfile', 'clusterdtd', 'RedHatClusterConst', 'OSRClusterConst']
 
@@ -52,10 +52,9 @@ def parseClusterConf(_clusterconf=clusterconf, _validate=False):
 
 def parseClusterConfFP(_clusterconffp, _clusterconf, _validate=False):
     from comoonics import ComLog
-    from xml.dom.ext.reader import Sax2
-    reader = Sax2.Reader(validate=_validate)
+    from comoonics import XmlTools
     try:
-        doc = reader.fromStream(_clusterconffp)
+        doc = XmlTools.parseXMLFP(_clusterconffp)
     except Exception, arg:
         ComLog.getLogger().critical("Problem while reading clusterconfiguration (%s): %s" %(_clusterconf, str(arg)))
         raise
@@ -82,7 +81,11 @@ def commonoptparseroptions(parser):
 
 ###############
 # $Log: __init__.py,v $
-# Revision 1.10  2010-02-05 12:13:08  marc
+# Revision 1.11  2010-11-21 21:45:28  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.10  2010/02/05 12:13:08  marc
 # - take default clusterconf if none given
 #
 # Revision 1.9  2009/07/22 13:01:58  marc

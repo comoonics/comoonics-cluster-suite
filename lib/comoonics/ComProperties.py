@@ -4,7 +4,7 @@ Implementation of properties as DataObject
 
 __version__= "$Revision $"
 
-# $Id: ComProperties.py,v 1.8 2010-02-05 12:23:30 marc Exp $
+# $Id: ComProperties.py,v 1.9 2010-11-21 21:48:19 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -69,6 +69,7 @@ class Property(DataObject):
                     buf+=_child.nodeValue
         else:
             buf=self.getAttribute("value")
+        buf=buf.strip()
         return buf
 
 class Properties(DataObject):
@@ -130,7 +131,11 @@ class Properties(DataObject):
             
 mylogger=ComLog.getLogger(Properties.__logStrLevel__)
 # $Log: ComProperties.py,v $
-# Revision 1.8  2010-02-05 12:23:30  marc
+# Revision 1.9  2010-11-21 21:48:19  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.8  2010/02/05 12:23:30  marc
 # - added list method
 #
 # Revision 1.7  2009/07/22 08:37:40  marc

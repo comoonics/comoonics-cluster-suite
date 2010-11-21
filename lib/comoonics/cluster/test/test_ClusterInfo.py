@@ -63,6 +63,7 @@ class test_ClusterInfo(baseClusterTestClass):
         
     def testQueryProperties(self):
         from comoonics.ComDataObject import DataObject
+        import comoonics.XmlTools
         _tmp1 = "name"
         _tmp2 = "gfs-node1"
         _tmp3 = "name"
@@ -70,7 +71,8 @@ class test_ClusterInfo(baseClusterTestClass):
         result=[ "MASTER=yes", "SLAVE=no", "DELAY=0" ]
         result.sort()
         _query='/cluster/clusternodes/clusternode[@'+_tmp1+'="'+_tmp2+'"]/com_info/eth[@'+_tmp3+'="'+_tmp4+'"]'
-        properties=DataObject(self.clusterInfo.queryXml(_query)[0]).getProperties().list().split("\n")
+        propertieselement=self.clusterInfo.queryXml(_query)[0]
+        properties=DataObject(propertieselement).getProperties().list().split("\n")
         properties.sort()
         self.assertEquals(properties, result, "%s==%s != %s" %(_query, properties, result))
         

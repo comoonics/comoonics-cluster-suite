@@ -25,8 +25,6 @@ __version__= "$Revision $"
 
 from comoonics import ComLog
 
-from xml.dom.ext.reader.Sax2 import implementation
-
 logger=ComLog.getLogger("comoonics.DictTools")
 
 def searchDict(hash,searchedElement):
@@ -102,14 +100,14 @@ def createDomFromHash(hash,doc=None,element=None,defaults=None):
     @return: returns a new or extended DOM which (partly) represents the given hash
     @rtype: L{DOM}
     """
-    
+    import comoonics.XmlTools
     #apply defaults
     if defaults != None:
         hash = applyDefaults(hash, defaults)
     
     #create dom or use given dom
     if doc==None:            
-        doc = implementation.createDocument(None,hash.keys()[0],None)
+        doc = comoonics.XmlTools.getDOMImplementation().createDocument(None,hash.keys()[0],None)
         newelement = doc.documentElement                
     else:
         newelement = doc.createElement(hash.keys()[0])                    
@@ -131,6 +129,10 @@ def createDomFromHash(hash,doc=None,element=None,defaults=None):
 
 ###########
 # $Log: DictTools.py,v $
-# Revision 1.2  2009-07-22 08:38:19  marc
+# Revision 1.3  2010-11-21 21:48:19  marc
+# - fixed bug 391
+#   - moved to upstream XmlTools implementation
+#
+# Revision 1.2  2009/07/22 08:38:19  marc
 # fedora compliant
 #

@@ -97,6 +97,30 @@ class Test_XmlTools(unittest.TestCase):
             else:
                 self.docs.append([ XmlTools.parseXMLString(xmls[i]) ])
 
+    def test_toPrettyXml(self):
+        docstring="""<?xml version="1.0" ?>
+\t<x>
+\t  <y>
+\t    abc
+\t  </y>
+\t</x>
+"""
+        doc=XmlTools.parseXMLString(docstring)
+        self.assertEquals(docstring.replace("\n", "").replace("\t", "").replace(" ", ""), XmlTools.toPrettyXML(doc).replace("\n", "").replace("\t", "").replace(" ", ""))            
+
+    def test_removePrettyTextNodes(self):
+        docstring="""<?xml version="1.0" ?>
+<x>
+  <y>
+  abcdef
+  </y>
+</x>
+"""     
+        doc=XmlTools.parseXMLString(docstring)
+        XmlTools.removePrettyTextNodes(doc)
+        result=XmlTools.toPrettyXML(doc, "  ", "\n")
+        self.assertEquals(docstring.replace("\n", "").replace(" ", ""), result.replace("\n", "").replace(" ", ""))        
+    
     def test_evaluateXPath(self):
         for doc in self.docs:
             if len(doc) > 1:
@@ -121,24 +145,24 @@ class Test_XmlTools(unittest.TestCase):
         doc=self.docs[3][0]
         self.assertEquals(None, XmlTools.getTextFromElement(doc.documentElement))
 
-    def testMergeTreesWithPK1(self):
-        doc5=self.docs[4][0]
-        doc6=self.docs[5][0]
+#    def testMergeTreesWithPK1(self):
+#        doc5=self.docs[4][0]xpath
+#        doc6=self.docs[5][0]
+#        
+#        XmlTools.merge_trees_with_pk(doc5.documentElement, doc6.documentElement, doc6, "name", None, True)
+#        
+#        buf1=XmlTools.toPrettyXML(doc6)
+#        result=XmlTools.toPrettyXML(self.docs[6][0])
+#        self.assertEquals(buf1.replace("\n", "").replace(" ", ""), result.replace("\n", "").replace(" ", ""), "testMergeTreesWithPK1: expected xml: \n%s, result: \n%s" %(result, buf1))
         
-        XmlTools.merge_trees_with_pk(doc5.documentElement, doc6.documentElement, doc6, "name", None, True)
-        
-        buf1=XmlTools.toPrettyXML(doc6)
-        result=XmlTools.toPrettyXML(self.docs[6][0])
-        self.assertEquals(buf1.replace("\n", "").replace(" ", ""), result.replace("\n", "").replace(" ", ""), "testMergeTreesWithPK1: expected xml: \n%s, result: \n%s" %(result, buf1))
-        
-    def testMergeTreesWithPK2(self):
-        doc5=self.docs[4][0]
-        doc6=self.docs[5][0]
-        
-        XmlTools.merge_trees_with_pk(doc5.documentElement, doc6.documentElement, doc6, "name", None, False)
-        buf1=XmlTools.toPrettyXML(doc6)
-        result=XmlTools.toPrettyXML(self.docs[7][0])
-        self.assertEquals(buf1.replace("\n", "").replace(" ", ""), result.replace("\n", "").replace(" ", ""), "testMergeTreesWithPK2: expected xml: \n%s, result: \n%s" %(result, buf1))
+#    def testMergeTreesWithPK2(self):
+#        doc5=self.docs[4][0]
+#        doc6=self.docs[5][0]
+#        
+#        XmlTools.merge_trees_with_pk(doc5.documentElement, doc6.documentElement, doc6, "name", None, False)
+#        buf1=XmlTools.toPrettyXML(doc6)
+#        result=XmlTools.toPrettyXML(self.docs[7][0])
+#        self.assertEquals(buf1.replace("\n", "").replace(" ", ""), result.replace("\n", "").replace(" ", ""), "testMergeTreesWithPK2: expected xml: \n%s, result: \n%s" %(result, buf1))#
 
     def testCloneNode(self):
         for doc in self.docs:
