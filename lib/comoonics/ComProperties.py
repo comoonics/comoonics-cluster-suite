@@ -4,7 +4,7 @@ Implementation of properties as DataObject
 
 __version__= "$Revision $"
 
-# $Id: ComProperties.py,v 1.9 2010-11-21 21:48:19 marc Exp $
+# $Id: ComProperties.py,v 1.10 2010-11-22 12:25:51 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -32,6 +32,9 @@ from xml.dom import Node
 
 class Property(DataObject):
     TAGNAME="property"
+    ATTRIBUTE_NAME="name"
+    ATTRIBUTE_TYPE="type"
+    ATTRIBUTE_VALUE="value"
     __logStrLevel__ = "ComProperties"
 
     '''
@@ -46,21 +49,27 @@ class Property(DataObject):
             doc=args[len(args)-1]
             element=doc.createElement(Property.TAGNAME)
             super(Property, self).__init__(element, doc)
-            self.setAttribute("name", args[0])
+            self.setAttribute(Property.ATTRIBUTE_NAME, args[0])
             mylogger.debug("Setting value %s to True" %(args[0]))
-            self.setAttribute("value", True)
+            self.setAttribute(Property.ATTRIBUTE_VALUE, True)
         elif len(args)==3 and isinstance(args[0], basestring) and isinstance(args[1], basestring):
             doc=args[2]
             element=doc.createElement(Property.TAGNAME)
             super(Property, self).__init__(element, doc)
-            self.setAttribute("name", args[0])
-            self.setAttribute("value", args[1])
+            self.setAttribute(Property.ATTRIBUTE_NAME, args[0])
+            self.setAttribute(Property.ATTRIBUTE_VALUE, args[1])
         else:
 #            mylogger.debug("%s, %s" %(type(args[0]), type(args[1])))
             super(Property, self).__init__(*args)
-        if self.hasAttribute("name") and not self.hasAttribute("value") and len(self.getElement().childNodes)==0:
-            self.setAttribute("value", True)
+        if self.hasAttribute(Property.ATTRIBUTE_NAME) and not self.hasAttribute(Property.ATTRIBUTE_VALUE) and len(self.getElement().childNodes)==0:
+            self.setAttribute(Property.ATTRIBUTE_VALUE, True)
 
+    def getType(self):
+        if self.hasAttribute(Property.ATTRIBUTE_TYPE):
+            return self.getAttribute(Property.ATTRIBUTE_TYPE, None)
+        else:
+            return None
+    
     def getValue(self):
         if len(self.getElement().childNodes)>0:
             buf=""
@@ -68,12 +77,19 @@ class Property(DataObject):
                 if _child.nodeType == Node.TEXT_NODE:
                     buf+=_child.nodeValue
         else:
-            buf=self.getAttribute("value")
+            buf=self.getAttribute(Property.ATTRIBUTE_VALUE)
         buf=buf.strip()
+        thetype=self.getType()
+        if thetype:
+            try:
+                buf=thetype(buf)
+            except:
+                pass
         return buf
 
 class Properties(DataObject):
     TAGNAME="properties"
+    
     __logStrLevel__ = "ComProperties"
 
     '''
@@ -88,7 +104,7 @@ class Properties(DataObject):
         self.properties=dict()
         for property in self.getElement().getElementsByTagName(Property.TAGNAME):
             property=Property(property, self.getDocument())
-            self.properties[property.getAttribute("name")]=property
+            self.properties[property.getAttribute(Property.ATTRIBUTE_NAME)]=property
 
     def getProperties(self):
         return self.properties
@@ -120,18 +136,21 @@ class Properties(DataObject):
     def getAttribute(self, name):
         if self.has_key(name):
 #            ComLog.getLogger("Properties").debug("name: %s, value: %s" %(name, self.getProperty(name).getAttribute("value")))
-            return self.getProperty(name).getAttribute("value")
+            return self.getProperty(name).getAttribute(Property.ATTRIBUTE_VALUE)
         else:
             raise KeyError(name)
     def list(self, _pairsdelim="\n", _pairdelim="=", ):
         buf=list()
         for _property in self.iter():
-            buf.append("%s%s%s" %(_property.getAttribute("name"), _pairdelim, _property.getValue()))
+            buf.append("%s%s%s" %(_property.getAttribute(Property.ATTRIBUTE_NAME), _pairdelim, _property.getValue()))
         return _pairsdelim.join(buf)
             
 mylogger=ComLog.getLogger(Properties.__logStrLevel__)
 # $Log: ComProperties.py,v $
-# Revision 1.9  2010-11-21 21:48:19  marc
+# Revision 1.10  2010-11-22 12:25:51  marc
+# added type attribute.
+#
+# Revision 1.9  2010/11/21 21:48:19  marc
 # - fixed bug 391
 #   - moved to upstream XmlTools implementation
 #
