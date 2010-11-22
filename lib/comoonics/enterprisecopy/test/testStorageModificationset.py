@@ -37,10 +37,9 @@ class Test(unittest.TestCase):
         self.__testModificationsetFromXMLDump(xml_dump)
 
     def __testModificationsetFromXMLDump(self, xml_dump):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         from comoonics.enterprisecopy.ComStorageModificationset import StorageModificationset 
-        reader=Sax2.Reader(validate=0)
-        doc=reader.fromString(xml_dump)
+        doc=comoonics.XmlTools.parseXMLString(xml_dump)
         sms=StorageModificationset(doc.documentElement, doc)
         sms.doModifications()
 

@@ -31,11 +31,10 @@ class Test(unittest.TestCase):
         self.__testCopysetFromXMLDump(xml_dump)
 
     def __testCopysetFromXMLDump(self, xml_dump):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         from comoonics.enterprisecopy.ComStorageCopyset import StorageCopyset
-        reader=Sax2.Reader(validate=0)
         #mylogger.debug("xml: %s" %(match.group(1)))
-        doc=reader.fromString(xml_dump)
+        doc=comoonics.XmlTools.parseXMLString(xml_dump)
         scs=StorageCopyset(doc.documentElement, doc)
         scs.doCopy()
 

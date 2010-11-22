@@ -37,10 +37,9 @@ Hello world
         self.__testPathModificationset(_xml)
 
     def __testPathModificationset(self, _xml):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         from comoonics.enterprisecopy.ComPathModificationset import PathModificationset 
-        reader=Sax2.Reader(validate=0)
-        doc=reader.fromString(_xml)
+        doc=comoonics.XmlTools.parseXMLString(_xml)
         _modset=PathModificationset(doc.documentElement, doc)
         try:
             _modset.doPre()

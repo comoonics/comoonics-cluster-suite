@@ -35,7 +35,7 @@ class test_ClusterQueryMap(unittest.TestCase):
         params=["1234", "eth0"]
         for param in self._results[section]:
             _result1=self._results[section][param]
-            _result2=self.querymap.get(None, param)
+            _result2=self.querymap.get(None, param, False)
             if isinstance(_result2, basestring):
                 _result2= _result2 % self.querymap.array2params(params)
             else:

@@ -163,10 +163,9 @@ class Test(unittest.TestCase):
         ComSystem.setExecMode(oldexecmode)
 
     def __testCopyset(self, _xml):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         from comoonics.enterprisecopy.ComFilesystemCopyset import FilesystemCopyset
-        reader=Sax2.Reader(validate=0)
-        doc=reader.fromString(_xml)
+        doc=comoonics.XmlTools.parseXMLString(_xml)
         _copyset=FilesystemCopyset(doc.documentElement, doc)
         try:
             _copyset.doPre()

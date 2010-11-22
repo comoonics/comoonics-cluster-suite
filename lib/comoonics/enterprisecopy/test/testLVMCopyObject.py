@@ -10,9 +10,8 @@ class Test(unittest.TestCase):
 
 
     def testLVMCopyObject(self):
+        import comoonics.XmlTools
         from comoonics.enterprisecopy.ComCopyObject import CopyObject
-        from xml.dom.ext import PrettyPrint
-        from xml.dom.ext.reader import Sax2
         from comoonics import ComSystem
         sourcexml="""
         <source type="lvm">
@@ -31,9 +30,8 @@ class Test(unittest.TestCase):
         </destination>
         """
         ComSystem.setExecMode(ComSystem.SIMULATE)
-        reader = Sax2.Reader(validate=0)
-        sourcedoc=reader.fromString(sourcexml)
-        destdoc=reader.fromString(destxml)
+        sourcedoc=comoonics.XmlTools.parseXMLString(sourcexml)
+        destdoc=comoonics.XmlTools.parseXMLString(destxml)
         try:
             source=CopyObject(sourcedoc.documentElement, sourcedoc)
             dest=CopyObject(destdoc.documentElement, destdoc)

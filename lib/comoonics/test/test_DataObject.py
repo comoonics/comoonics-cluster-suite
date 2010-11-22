@@ -1,25 +1,20 @@
 import unittest
 import sys
-import os
-from xml.dom.ext.reader import Sax2
-from xml import xpath
+import comoonics.XmlTools
 
 class test_DataObject(unittest.TestCase):    
 
     def __init__(self, testMethod="runTest"):
+        import os.path
         super(test_DataObject, self).__init__(testMethod)
 
-        # create Reader object
-        reader = Sax2.Reader()
 
         #parse the document
-        file=os.fdopen(os.open("example_config.xml",os.O_RDONLY))
-        self.doc = reader.fromStream(file)
-
-        element=xpath.Evaluate('//*[@refid="bootfs"]', self.doc)[0]
+        print self.__class__.__name__
+        self.doc = comoonics.XmlTools.parseXMLFile(os.path.join(os.path.dirname(sys.argv[0]), "example_config.xml"))
 
         from comoonics.ComDataObject import DataObject
-        self.obj=DataObject(element, self.doc)
+        self.obj=DataObject(self.doc.documentElement, self.doc)
 
 #    def testToString(self):
 #        _str=""
@@ -69,7 +64,7 @@ class test_DataObject(unittest.TestCase):
         from comoonics.ComDataObject import DataObject
         print "Testing boolean"
         path="//device[@id='rootfs']"
-        element=xpath.Evaluate(path, self.doc)[0]
+        element=comoonics.XmlTools.evaluateXPath(path, self.doc)[0]
         obj=DataObject(element)
         print "%s.options: %s" %(path, obj.getAttribute("options"))
         result=obj.getAttributeBoolean("options")

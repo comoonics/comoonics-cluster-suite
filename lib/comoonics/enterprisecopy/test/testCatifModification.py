@@ -9,18 +9,17 @@ import unittest
 class Test(unittest.TestCase):
     def setUp(self):
         import tempfile
-        from ComModification import registerModification
+        from comoonics.enterprisecopy.ComModification import registerModification
         from comoonics.enterprisecopy.ComCatifModification import CatiffileModification, CatifexecModification  
         registerModification("catiffile", CatiffileModification)
         registerModification("catifexec", CatifexecModification)
         self.__tmpdir=tempfile.mkdtemp()
 
     def _testXML(self, _xml):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         from comoonics.ComPath import Path
         from comoonics.enterprisecopy import ComModification
-        reader = Sax2.Reader()
-        _doc = reader.fromString(_xml)
+        _doc = comoonics.XmlTools.parseXMLString(_xml)
         _path=Path(_doc.documentElement, _doc)
         _path.mkdir()
         _path.pushd()
@@ -29,7 +28,7 @@ class Test(unittest.TestCase):
                 _modification=ComModification.getModification(_modification, _doc)
                 _modification.doModification()
             except Exception, e:
-                self.assert_("Caught exception %s during Catif modification" %(e, _modification))
+                self.assert_("Caught exception %s during Catif modification %s" %(e, _modification))
         _path.popd()
         
     def testCatifExecModification(self):

@@ -50,6 +50,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-14
+- fixed a bug with replacement of runtime params %{param..}s ..
 * Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-13
 - fixed bug 391 that cdsl tools won't work due to broken XML support (moved to upstream XmlTools implementation)
 * Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-12
@@ -82,6 +84,8 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Sun Nov 22 2010 MG <grimme@atix.de>, 0.1-35
+- fixed bug with wrong validation of empty .cdsl_inventory.xml.
 * Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-34
 - fixed bug 391 that cdsl tools won't work due to broken XML support (moved to upstream XmlTools implementation)
 * Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-33
@@ -200,6 +204,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-29
+- introduced raw flag for get method. Defaults to True.
 * Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-28
 - fixed bug 391 that cdsl tools won't work due to broken XML support (moved to upstream XmlTools implementation)
 * Fri Jun 25 2010 MG <grimme@atix.de>, 0.1-27
@@ -474,6 +480,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-53
+- fixed xml issue with ComArchive.. to usage of XmlTools
 * Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-52
 - Modified ComExecutionModificationSet so that command can be given as textnode
 * Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-51

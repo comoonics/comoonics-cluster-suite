@@ -8,12 +8,11 @@ import unittest
 
 class Test(unittest.TestCase):
     def testSCSIRescan(self):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         from comoonics.enterprisecopy.ComSCSIRequirement import SCSIRequirement
         from comoonics.scsi.ComSCSI import SCSIException
-        reader=Sax2.Reader(validate=0)
         xmlbuf='<requirement type="scsi" format="fc" name="rescan" dest="host16"/>'
-        doc=reader.fromString(xmlbuf)
+        doc=comoonics.XmlTools.parseXMLString(xmlbuf)
         scsireq=SCSIRequirement(doc.documentElement, doc)
         try:
             scsireq.doPre()

@@ -26,12 +26,10 @@ class Test(unittest.TestCase):
         self.__testSysrqModification(__xml)
 
     def __testSysrqModification(self, _xml):
-        from xml.dom.ext.reader import Sax2
+        import comoonics.XmlTools
         from comoonics.enterprisecopy.ComSysrqModification import SysrqModification
         # create Reader object
-        reader = Sax2.Reader()
-
-        _doc = reader.fromString(_xml)
+        _doc = comoonics.XmlTools.parseXMLString(_xml)
         try:
             _modification=SysrqModification(element=_doc.documentElement, doc=_doc)
             _modification.doModification()

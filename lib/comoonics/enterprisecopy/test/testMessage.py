@@ -46,9 +46,8 @@ class Test(unittest.TestCase):
 
     def _testMessageRequirement(self, _xml):
         from comoonics.enterprisecopy.ComRequirement import getRequirement
-        from xml.dom.ext.reader import Sax2
-        reader=Sax2.Reader(validate=0)
-        doc=reader.fromString(_xml)
+        import comoonics.XmlTools
+        doc=comoonics.XmlTools.parseXMLString(_xml)
         _req=getRequirement(doc.documentElement, doc)
         try:
             _req.do()
@@ -57,9 +56,8 @@ class Test(unittest.TestCase):
 
     def _testMessageModification(self, _xml):
         from comoonics.enterprisecopy.ComModification import getModification
-        from xml.dom.ext.reader import Sax2
-        reader=Sax2.Reader(validate=0)
-        doc=reader.fromString(_xml)
+        import comoonics.XmlTools
+        doc=comoonics.XmlTools.parseXMLString(_xml)
         _mod=getModification(doc.documentElement, doc)
         try:
             _mod.doModification()
