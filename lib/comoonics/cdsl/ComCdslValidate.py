@@ -25,7 +25,7 @@ version of os.walk() (see L{os} for details), which skips submounts but follows 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 
 import os
 
@@ -80,13 +80,14 @@ class CdslValidate(object):
         self.backupfiles=list()
         from comoonics import ComLog
         from xml.sax import SAXParseException
+        from xml.parsers.expat import ExpatError
         self.logger=ComLog.getLogger("comoonics.cdsl.ComCdslValidate.CdslValidate")
         self.clusterinfo=clusterInfo
         self.cdslrepository=cdslRepository
         try:
             self.cdslrepository.lockresourceRO()
             self.cdslrepository.refresh()
-        except (AttributeError, IOError, OSError, SAXParseException), error:
+        except (AttributeError, IOError, OSError, SAXParseException, ExpatError), error:
             if self.cdslrepository:
                 self.cdslrepository.unlockresource()
                 resource=os.path.join(self.cdslrepository.workingdir, self.cdslrepository.resource)
@@ -213,7 +214,10 @@ class CdslValidate(object):
 
 ##############
 # $Log: ComCdslValidate.py,v $
-# Revision 1.10  2010-05-27 08:47:24  marc
+# Revision 1.11  2010-11-22 10:18:23  marc
+# - fixed bug the validation of empty cluster.conf fails
+#
+# Revision 1.10  2010/05/27 08:47:24  marc
 # - CdslValidate:
 #   - createDefaultRepository: new method to reconstruct repository if not existant or currupt
 #   - backupFileName: new method, generate backupfilename to given filename
