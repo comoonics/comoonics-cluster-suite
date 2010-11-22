@@ -50,6 +50,9 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-15
+- ComDataObject: fixed another bug in ComDataObject with resolvement of refids
+- ComProperties: added type attribute 
 * Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-14
 - fixed a bug with replacement of runtime params %{param..}s ..
 * Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-13
