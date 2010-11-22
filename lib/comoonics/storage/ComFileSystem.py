@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.5 2010-09-21 14:21:31 marc Exp $
+# $Id: ComFileSystem.py,v 1.6 2010-11-22 10:23:09 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
 import os.path
@@ -343,7 +343,7 @@ class gfsFileSystem(FileSystem):
         if __rc != 0:
             raise ComException(__cmd + __ret)
 
-        if __ret == ComSystem.SKIPPED:
+        if __ret[0] == ComSystem.SKIPPED:
             # Just to keep up working when SIMULATING
             self.setAttribute("bsize", "4096")
             self.setAttribute("lockproto", "lock_dlm")
@@ -389,7 +389,10 @@ class nfsFileSystem(FileSystem):
         self.name="nfs"
     
 # $Log: ComFileSystem.py,v $
-# Revision 1.5  2010-09-21 14:21:31  marc
+# Revision 1.6  2010-11-22 10:23:09  marc
+# fixed small test bug
+#
+# Revision 1.5  2010/09/21 14:21:31  marc
 # added NFS Filesystem support
 #
 # Revision 1.4  2010/03/29 14:13:45  marc
