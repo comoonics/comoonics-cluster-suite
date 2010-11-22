@@ -7,7 +7,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDataObject.py,v 1.14 2010-11-21 21:48:19 marc Exp $
+# $Id: ComDataObject.py,v 1.15 2010-11-22 12:05:03 marc Exp $
 #
 # @(#)$File$
 #
@@ -28,7 +28,7 @@ here should be some more information about the module, that finds its way inot t
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComDataObject.py,v $
 
 
@@ -194,10 +194,10 @@ class DataObject(object):
             __xquery+=element.getAttribute("refid")
             __xquery+='"]'
             # cloneNode to be safe
-            __element=xpath.Evaluate(__xquery, doc)[0]
+            __element=XmlTools.evaluateXPath(__xquery, doc)[0]
             ComLog.getLogger("DataObject").debug("found refid " + \
                                                  element.getAttribute("refid"))
-            __childs=xpath.Evaluate('./*', element)
+            __childs=XmlTools.evaluateXPath('./*', element)
             __new=__element.cloneNode(True)
             self.appendChildren(__new, __childs)
             return __new
@@ -221,7 +221,10 @@ class DataObject(object):
         XmlTools.merge_trees_with_pk(dataobject.getElement(), self.element, self.document, pk)
 
 # $Log: ComDataObject.py,v $
-# Revision 1.14  2010-11-21 21:48:19  marc
+# Revision 1.15  2010-11-22 12:05:03  marc
+# fix of refid resolvment with old usage of xpath.
+#
+# Revision 1.14  2010/11/21 21:48:19  marc
 # - fixed bug 391
 #   - moved to upstream XmlTools implementation
 #
