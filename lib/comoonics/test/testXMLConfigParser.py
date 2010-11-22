@@ -13,7 +13,9 @@ class Test(unittest.TestCase):
         print "--------------------- %s -------------------" %text
 
     def setUp(self):
-        self.filename="loggingconfig.xml"
+        import inspect
+        import os.path
+        self.filename=os.path.join(os.path.dirname(inspect.getfile(self.__class__)), "loggingconfig.xml")
         self.cp=ConfigParser()
         self.cp.read(self.filename)
         self.loggers=["atix", "atix.atix1", "atix.atix2"]

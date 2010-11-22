@@ -27,6 +27,8 @@ class testComLog(unittest.TestCase):
     
     def testlogger(self):
         import logging
+        import inspect
+        import os.path
         from comoonics import ComLog
         _mylogger=logging.getLogger("comoonics.ComLog")
         logging.basicConfig()
@@ -51,7 +53,7 @@ class testComLog(unittest.TestCase):
         for _filename in _filenames:
             logging.shutdown()
             print("Testing configfile %s" %_filename)
-            ComLog.fileConfig(_filename, None, )
+            ComLog.fileConfig(os.path.join(os.path.dirname(inspect.getfile(self.__class__)), _filename), None, )
             rootlogger=ComLog.getLogger()
             self.__testLogger("root", rootlogger)
             print("handlernames: %s" %rootlogger.manager.loggerDict.keys())

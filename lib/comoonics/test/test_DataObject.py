@@ -6,12 +6,12 @@ class test_DataObject(unittest.TestCase):
 
     def __init__(self, testMethod="runTest"):
         import os.path
+        import inspect
         super(test_DataObject, self).__init__(testMethod)
 
 
         #parse the document
-        print self.__class__.__name__
-        self.doc = comoonics.XmlTools.parseXMLFile(os.path.join(os.path.dirname(sys.argv[0]), "example_config.xml"))
+        self.doc = comoonics.XmlTools.parseXMLFile(os.path.join(os.path.dirname(inspect.getfile(self.__class__)), "example_config.xml"))
 
         from comoonics.ComDataObject import DataObject
         self.obj=DataObject(self.doc.documentElement, self.doc)
