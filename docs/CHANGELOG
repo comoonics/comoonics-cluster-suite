@@ -50,7 +50,7 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
-* Thu Dez 09 2010 MG <grimme@atix.de>, 0.1-16
+* Thu Dec 09 2010 MG <grimme@atix.de>, 0.1-16
   XmlTools:
   would still return 4Dom implementation as default instead of default from xml.dom (minidom). 
   Now xml.dom.getDOMImplemenation will be called right away
