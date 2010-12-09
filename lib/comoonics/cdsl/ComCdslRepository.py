@@ -27,10 +27,9 @@ management (modifying, creating, deleting).
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.29 $"
+__version__ = "$Revision: 1.30 $"
 
 import fcntl # needed for filelocking
-import re
 
 import xml.dom
 
@@ -42,7 +41,6 @@ from comoonics.ComPath import Path
 
 from comoonics.cdsl import stripleadingsep, dirtrim
 
-import os
 import os.path
 
 log = ComLog.getLogger("comoonics.cdsl.ComCdslRepository")
@@ -478,11 +476,9 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             self.unlockresource()
 
     def _createEmptyDocumentStructure(self, **keys):
+        import comoonics.XmlTools
         #create xml and include path to dtd
-        try:
-            implementation = xml.dom.getDOMImplementation("4DOM")
-        except:
-            implementation = xml.dom.getDOMImplementation()
+        implementation=comoonics.XmlTools.getDOMImplementation()
         self.dtd=keys.get("dtd", None)
         doct=None
         if self.dtd!=None and os.path.exists(self.dtd):
@@ -1307,7 +1303,11 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
 
 ###############
 # $Log: ComCdslRepository.py,v $
-# Revision 1.29  2010-11-21 21:44:47  marc
+# Revision 1.30  2010-12-09 14:51:34  marc
+# - ComoonicsCdslRepository._createEmptyDocument:
+#    - removed the 4Dom dependency
+#
+# Revision 1.29  2010/11/21 21:44:47  marc
 # - fixed bug 391
 #   - moved to upstream XmlTools implementation
 #
