@@ -22,7 +22,7 @@ class Test(unittest.TestCase):
         _doc = comoonics.XmlTools.parseXMLString(_xml)
         _path=Path(_doc.documentElement, _doc)
         _path.mkdir()
-        _path.pushd()
+        _path.pushd(_path.getPath())
         for _modification in _doc.documentElement.getElementsByTagName("modification"):
             try:
                 _modification=ComModification.getModification(_modification, _doc)
@@ -79,5 +79,9 @@ class Test(unittest.TestCase):
 """ %self.__tmpdir)
 
 if __name__ == "__main__":
+    import logging
+    from comoonics import ComLog
+    logging.basicConfig()
+    ComLog.getLogger().setLevel(logging.DEBUG)
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
