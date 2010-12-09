@@ -50,6 +50,10 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Thu Dez 09 2010 MG <grimme@atix.de>, 0.1-16
+  XmlTools:
+  would still return 4Dom implementation as default instead of default from xml.dom (minidom). 
+  Now xml.dom.getDOMImplemenation will be called right away
 * Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-15
 - ComDataObject: fixed another bug in ComDataObject with resolvement of refids
 - ComProperties: added type attribute 
@@ -87,6 +91,11 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Thu Dec 09 2010 MG <grimme@atix.de>, 0.1-36
+- fixed bug that com-mkcdslinventory would create an empty .cdsl_inventory.xml on RHEL5 (eventually on other systems)
+  this is dependent to the 4Dom implemenation being removed and will happen on all distributions supporting the 4Dom 
+  XML Implementation.
+  Means please update!
 * Sun Nov 22 2010 MG <grimme@atix.de>, 0.1-35
 - fixed bug with wrong validation of empty .cdsl_inventory.xml.
 * Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-34
