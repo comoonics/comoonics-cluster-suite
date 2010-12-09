@@ -4,7 +4,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.16 2010-11-21 21:48:53 marc Exp $
+# $Id: XmlTools.py,v 1.17 2010-12-09 14:58:22 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -181,10 +181,7 @@ def getDOMImplementation(*params):
 #            import Ft.Xml.Domlette
 #            impl=Ft.Xml.Domlette.implementation
 #        except (ImportError, TypeError):
-        try:
-            impl=xml.dom.getDOMImplementation("4DOM")
-        except (ImportError, TypeError):
-            impl=xml.dom.getDOMImplementation()
+        impl=xml.dom.getDOMImplementation()
     return impl
 
 def parseXMLFile(xmlfile, validate=False):
@@ -242,6 +239,9 @@ def toPrettyXMLFP(node, filep, ident="\t", newl="\n"):
             filep.write(node.nodeValue+newl)
         elif isinstance(node, xml.dom.minidom.Node):
             node.writexml(filep, "", ident, newl)
+        else:
+            from xml.dom.ext import PrettyPrint
+            PrettyPrint(node, stream=filep)
     except ImportError:
         try:
             import Ft.Xml.cDomlette
@@ -416,7 +416,11 @@ def xpathsplit(_xpath):
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.16  2010-11-21 21:48:53  marc
+# Revision 1.17  2010-12-09 14:58:22  marc
+# - getDOMImplemenation:
+#   - would still return 4Dom implementation as default instead of default from xml.dom (minidom). Now xml.dom.getDOMImplemenation will be called right away
+#
+# Revision 1.16  2010/11/21 21:48:53  marc
 # - fixed bug 391
 #   - moved to upstream XmlTools implementation
 #   - finished implementation of XmlTools
