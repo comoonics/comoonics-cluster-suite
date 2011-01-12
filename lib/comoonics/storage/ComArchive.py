@@ -10,7 +10,7 @@ here should be some more information about the module, that finds its way inot t
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComArchive.py,v $
 
 import os
@@ -81,13 +81,13 @@ class Archive(DataObject):
         ''' returns a DOM representation of the next defined file
             <file name="filename.xml"/>
         '''
+        from comoonics import XmlTools
         file=self.getNextFileObj()
         # there is no nextElement
         if file == None:
             return None
 
-        reader = Sax2.Reader()
-        doc = reader.fromStream(file)
+        doc=XmlTools.parseXMLFP(file)
         self.ahandler.closeAll()
         return doc.documentElement
 
@@ -487,7 +487,10 @@ ArchiveHandlerFactory=ArchiveHandlerFactoryClass()
 
 ##################
 # $Log: ComArchive.py,v $
-# Revision 1.4  2010-11-16 11:23:07  marc
+# Revision 1.5  2011-01-12 14:22:33  marc
+# moved to current xml implemenation
+#
+# Revision 1.4  2010/11/16 11:23:07  marc
 # - fixed bug with old XML implementation
 #
 # Revision 1.3  2010/03/08 12:30:48  marc
