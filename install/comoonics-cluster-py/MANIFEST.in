@@ -1,4 +1,6 @@
 include *.txt
 recursive-include examples *.txt *.py
 include man/com-*.gz
+include lib/comoonics/cluster/test/*
+include lib/comoonics/cluster/helper/test/*
 prune test/

@@ -1,2 +1,13 @@
 include *.txt
+include lib/comoonics/test/test_Exceptions.py
+include lib/comoonics/test/testComPath.py
+include lib/comoonics/test/loggingconfig-file.xml
+include lib/comoonics/test/test_ComLog.py
+include lib/comoonics/test/loggingconfig.xml
+include lib/comoonics/test/loggingconfig.ini
+include lib/comoonics/test/test_DataObject.py
+include lib/comoonics/test/testxpath.xml
+include lib/comoonics/test/test_ComProperties.py
+include lib/comoonics/test/testXmlTools.py
+include lib/comoonics/test/example_config.xml
 prune test/

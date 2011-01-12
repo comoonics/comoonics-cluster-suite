@@ -50,6 +50,10 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-17
+  fixed bug (#398) in evaluateXPath that would cause a bug with old xml implementation 
+  (python 2.4 and xml.dom) that would return Attributes as Attr not as value. But expected as value.
+  Sideeffect was that e.g. com-dsh would not work.
 * Thu Dec 09 2010 MG <grimme@atix.de>, 0.1-16
   XmlTools:
   would still return 4Dom implementation as default instead of default from xml.dom (minidom). 
@@ -91,6 +95,8 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-37
+- rebase
 * Thu Dec 09 2010 MG <grimme@atix.de>, 0.1-36
 - fixed bug that com-mkcdslinventory would create an empty .cdsl_inventory.xml on RHEL5 (eventually on other systems)
   this is dependent to the 4Dom implemenation being removed and will happen on all distributions supporting the 4Dom 
@@ -216,6 +222,11 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-31
+- rebase
+* Thu Dec 16 2010 MG <grimme@atix.de>, 0.1-30
+- fixed bug#392 where com-dsh does not work cause attributes where returned wrongly 
+  (deps to new XML implementation). 
 * Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-29
 - introduced raw flag for get method. Defaults to True.
 * Sun Nov 21 2010 MG <grimme@atix.de>, 0.1-28
@@ -277,6 +288,11 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-12
+- added auto logging configuration to help being more verbose 
+* Thu Dec 16 2010 MG <grimme@atix.de>, 0.1-11
+  - added logging.basicConfig() so that comoonics debug is shown if 
+    debuglevel is more the 2 (-vvv or --verbose --verbose --verbose)
 * Thu Jun 17 2010 MG <grimme@atix.de>, 0.1-10
   - fixed upstream bugs in com-dsh
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-9
@@ -482,6 +498,8 @@ comoonics-ec-admin-py:
   - initial revision
 
 comoonics-ec-base-py:
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-5
+- rebase
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-4
   - better simulation code
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
@@ -492,6 +510,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-54
+- fixed bug #397 in ComFileModification.py where copying of files would not work.
 * Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-53
 - fixed xml issue with ComArchive.. to usage of XmlTools
 * Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-52
@@ -675,6 +695,9 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-13
+- fixed bug #397 in ComFile.py where ComFile.glob would not clone the File-Object for each globbed 
+  File-Object but recreate it and forget about unknown attributes.
 * Tue Nov 16 2010 MG <grimme@atix.de>, 0.1-12
 - fixed bugs with old xml implementation
 * Tue Sep 21 2010 MG <grimme@atix.de>, 0.1-11
@@ -707,6 +730,8 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-8
+- rebase
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-7
   - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-6
