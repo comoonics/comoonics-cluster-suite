@@ -6,12 +6,10 @@ Classes to automatically collect informations of this system.
 
 
 # here is some internal information
-# $Id: ComSystemInformation.py,v 1.7 2007-09-07 14:47:42 marc Exp $
+# $Id: ComSystemInformation.py,v 1.8 2011-01-12 09:59:17 marc Exp $
 #
 import re
 import os
-from xml.dom.ext.reader import Sax2
-from xml.xpath          import Evaluate
 
 from comoonics import ComLog
 from comoonics import ComSystem
@@ -20,7 +18,7 @@ from comoonics.ComExceptions import ComException
 class SystemInformationNotFound(ComException):
     pass
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/Attic/ComSystemInformation.py,v $
 
 class SystemType(object):
@@ -304,12 +302,11 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
         else:
             return object.__new__(RedhatClusterSystemInformation, *args, **kwds)
     def __init__(self, *args, **kwds):
+        from comoonics import XmlTools
         super(RedhatClusterSystemInformation, self).__init__(*args, **kwds)
         self.features.append("redhatcluster")
         if not kwds and not args:
-            reader=Sax2.Reader(validate=0)
-            f_cluster_conf=file(self.REDHAT_CLUSTER_CONF)
-            self.cluster_conf=reader.fromStream(f_cluster_conf)
+            self.cluster_conf=XmlTools.parseXMLFile(self.REDHAT_CLUSTER_CONF)
             self.type=SystemTypes.CLUSTER
             self.name=self.getClusterName()
         else:
@@ -323,7 +320,8 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
               |
               -> RedhatCluster->getClusterName()
         """
-        return Evaluate(self.XPATH_CLUSTERNAME, self.cluster_conf)[0].nodeValue
+        from comoonics import XmlTools
+        return XmlTools.evaluateXPath(self.XPATH_CLUSTERNAME, self.cluster_conf)[0].nodeValue
 
     check=staticmethod(check)
 
@@ -403,7 +401,10 @@ if __name__ == '__main__':
     __test()
 
 # $Log: ComSystemInformation.py,v $
-# Revision 1.7  2007-09-07 14:47:42  marc
+# Revision 1.8  2011-01-12 09:59:17  marc
+# - fixed bug with old XML usage
+#
+# Revision 1.7  2007/09/07 14:47:42  marc
 # -added report method for sysreport
 # - added features
 #
