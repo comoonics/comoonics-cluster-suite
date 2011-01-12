@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFile.py,v 1.5 2010-11-16 11:23:34 marc Exp $
+# $Id: ComFile.py,v 1.6 2011-01-12 09:57:14 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFile.py,v $
 
 from comoonics.ComDataObject import DataObject
@@ -24,7 +24,7 @@ class GlobNotSupportedException(ComException):
 class File(DataObject):
     TAGNAME="file"
     ATTRNAME="name"
-    def _createElement(filename, document):
+    def _createElement(filename, document, element=None):
         """
         Create an empty file element. If document is given the document is the bases.
         @param filename: the filename to be given to the file
@@ -32,21 +32,26 @@ class File(DataObject):
         @param document: the xml.dom.Document to use for creating a new element. If None it will be 
                          automatically created
         @type  document: xml.dom.Document
+        @param element:  if given the element will be used as bases for creating the file element. Default: None (empty element will be created)
+        @type  element:  xml.dom.Element
         @return: The element and the document being created
         @rtype:  [xml.dom.Element, xml.dom.Document] 
         """
         import xml.dom
+        from comoonics import XmlTools
         if not document:
             impl=xml.dom.getDOMImplementation()
             document=impl.createDocument(None, File.TAGNAME, None)
-            element=document.documentElement
+            relement=document.documentElement
+        elif not element:
+            relement=document.createElement(File.TAGNAME)
         else:
-            element=document.createElement(File.TAGNAME)
-        element.setAttribute(File.ATTRNAME, filename)
-        return (element, document)
+            relement=XmlTools.clone_node(element, document)
+        relement.setAttribute(File.ATTRNAME, filename)
+        return (relement, document)
     _createElement=staticmethod(_createElement)
 
-    def globFilename(filename, doc):
+    def globFilename(filename, doc, element=None):
         """
         Creates a list of File elements for the given filename. The filename is expanded via the 
         glob.glob method.
@@ -54,6 +59,8 @@ class File(DataObject):
         @type  filename: String
         @param doc: the DOM document to be used to create the elements
         @type  doc: xml.dom.Document
+        @param element: the file element from where this filename comes from (optional). Default: None => the element will not be used
+        @type  element: xml.dom.Element
         @return: a list of Elements being globalized via glob.glob.
         @rtype:  list<xml.dom.Element>
         """
@@ -68,8 +75,8 @@ class File(DataObject):
                 filenames=glob.glob(filename)
                 if filenames:
                     for _filename in filenames:
-                        (element, doc)=File._createElement(_filename, doc)
-                        elements.append(element)
+                        (relement, doc)=File._createElement(_filename, doc, element)
+                        elements.append(relement)
             return elements
         except ImportError:
             return elements
@@ -100,7 +107,10 @@ class File(DataObject):
         super(File, self).__init__(element, doc)
         
 # $Log: ComFile.py,v $
-# Revision 1.5  2010-11-16 11:23:34  marc
+# Revision 1.6  2011-01-12 09:57:14  marc
+# - bugfix for #397 that clones the source element instead of create it new and forget about unknown attributes.
+#
+# Revision 1.5  2010/11/16 11:23:34  marc
 # fixed bug with globs being applied on implicit skripts
 #
 # Revision 1.4  2010/09/21 14:20:44  marc
