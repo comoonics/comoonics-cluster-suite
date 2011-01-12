@@ -8,7 +8,7 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: RedHatClusterHelper.py,v 1.3 2010-11-21 21:45:28 marc Exp $
+# $Id: RedHatClusterHelper.py,v 1.4 2011-01-12 09:47:10 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,7 +30,7 @@ of clusterrepositories
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/helper/RedHatClusterHelper.py,v $
 
 from comoonics import ComLog
@@ -72,6 +72,7 @@ class RedHatClusterHelper(object):
         self.output=buf.getvalue()
         
     def queryStatusElement(self, **kwds):
+        import xml.dom
         self.__setfromkwds("clusterstatus_cmd", kwds, self.clusterstatus_cmd)
         self.__setfromkwds("clusterstatus_opts", kwds, self.clusterstatus_opts)
         asValue=self.__getfromkwds("asvalue", kwds, True)
@@ -91,7 +92,10 @@ class RedHatClusterHelper(object):
                 if asValue:
                     _tmp2=list()
                     for i in range(len(_tmp1)):
-                        _tmp2.append(_tmp1[i])
+                        if isinstance(_tmp1[i], xml.dom.Node) and _tmp1[i].nodeType == xml.dom.Node.ATTRIBUTE_NODE:
+                            _tmp2.append(_tmp1[i].value)
+                        else:
+                            _tmp2.append(_tmp1[i])
                     return delimitor.join(_tmp2)
                 else:
                     return comoonics.XmlTools.toPrettyXML(_tmp1[0])
