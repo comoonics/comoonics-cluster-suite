@@ -1368,6 +1368,7 @@ def main (argv):
     if options.verbose > 2:
         import logging
         from comoonics import ComLog
+        logging.basicConfig()
         ComLog.setLevel(logging.DEBUG)
         logger=ComLog.getLogger(appname)
         
