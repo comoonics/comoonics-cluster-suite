@@ -11,7 +11,7 @@ import os.path
 
 class Test(unittest.TestCase):
     dirs= [ "test", "test/test", "test/test2" ]
-    tmpdir=tempfile.mkdtemp()
+    tmpdir=os.path.realpath(tempfile.mkdtemp())
     
     def setUp(self):
         self.revdirs=list(self.dirs)
@@ -31,7 +31,7 @@ class Test(unittest.TestCase):
         path=Path()
         self.assertEquals(path.getPath(), oldcwd, "Currentpath %s does not equals Path currentpath %s." %(path, oldcwd))
         path.pushd(self.tmpdir)
-        self.assertEquals(path.getPath(), self.tmpdir, "Currentpath %s does not equals Path currentpath %s." %(path, self.tmpdir))
+        self.assertEquals(os.path.realpath(path.getPath()), self.tmpdir, "Currentpath %s does not equals Path currentpath %s." %(path, self.tmpdir))
         for _dir in self.dirs:
             olddir=path.getPath()
             print "%s <==> %s" %(olddir, _dir)

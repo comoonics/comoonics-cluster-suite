@@ -85,7 +85,7 @@ xmls = [ """<?xml version='1.0' encoding='UTF-8'?>
 </a>
 """
 ]
-xpaths=[ ("node/@name", [ "lilr629" ], "myname"), 
+xpaths=[ ("//node/@name", [ "lilr629" ], "myname"), 
          ("/localclone/destdisks/disk/@name", [ "/dev/sda1" ], "mydisk" ) ]
 class Test_XmlTools(unittest.TestCase):
     

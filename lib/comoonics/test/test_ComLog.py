@@ -35,7 +35,7 @@ class testComLog(unittest.TestCase):
         _mylogger.setLevel(logging.DEBUG)
         #from comoonics.db.ComDBLogger import DBLogger
         #registerHandler("DBLogger", DBLogger)
-        _filenames=("loggingconfig.ini", "loggingconfig.xml")
+        _filenames=("loggingconfig.ini")
         ComLog.getLogger().info("Testing ComLog:")
         loggers={"test1": logging.DEBUG,
                  "test2": logging.INFO,
@@ -52,7 +52,7 @@ class testComLog(unittest.TestCase):
         print("ComLog._classregistry: %s" %ComLog._classregistry)
         for _filename in _filenames:
             logging.shutdown()
-            print("Testing configfile %s" %_filename)
+            print("Testing configfile %s/%s cwd: %s" %(os.path.dirname(inspect.getfile(self.__class__)), _filename, os.path.curdir))
             ComLog.fileConfig(os.path.join(os.path.dirname(inspect.getfile(self.__class__)), _filename), None, )
             rootlogger=ComLog.getLogger()
             self.__testLogger("root", rootlogger)
