@@ -25,6 +25,7 @@ fi
 
 failedbuilds=""
 successfullbuilds=""
+_DEFINES=""
 for file in $files; do
 	[ -f "$file" ] || file="dist/${file}.spec"
     package=${file#dist/}
