@@ -4,7 +4,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.17 2010-12-09 14:58:22 marc Exp $
+# $Id: XmlTools.py,v 1.18 2011-01-12 10:06:08 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -56,8 +56,14 @@ class ElementFilter(object):
 
 def evaluateXPath(path, element):
     try:
+        import xml.dom
         from xml.xpath import Evaluate
-        return Evaluate(path, element)
+        result=Evaluate(path, element)
+        if type(result) == list:
+            for i in range(len(result)):
+                if isinstance(result[i], xml.dom.Node) and result[i].nodeType == xml.dom.Node.ATTRIBUTE_NODE:
+                    result[i]=result[i].value
+        return result
     except ImportError:
         # Implementation for etree
         from lxml.etree import XPath, fromstring, tounicode
@@ -416,7 +422,12 @@ def xpathsplit(_xpath):
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.17  2010-12-09 14:58:22  marc
+# Revision 1.18  2011-01-12 10:06:08  marc
+# fixed bug (#398) in evaluateXPath that would cause a bug with old xml implementation (python 2.4 and xml.dom) that would return Attributes as Attr not as value. But expected as value.
+#
+# Sideeffect was that e.g. com-dsh would not work.
+#
+# Revision 1.17  2010/12/09 14:58:22  marc
 # - getDOMImplemenation:
 #   - would still return 4Dom implementation as default instead of default from xml.dom (minidom). Now xml.dom.getDOMImplemenation will be called right away
 #
