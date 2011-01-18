@@ -695,6 +695,9 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Tue Jan 18 2011 MG <grimme@atix.de>, 0.1-14
+- ComArchive.py (Line 89):
+   - Another use of old XML implementation fixed.
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-13
 - fixed bug #397 in ComFile.py where ComFile.glob would not clone the File-Object for each globbed 
   File-Object but recreate it and forget about unknown attributes.
