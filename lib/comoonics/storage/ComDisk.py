@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.7 2010-06-09 08:16:51 marc Exp $
+# $Id: ComDisk.py,v 1.8 2011-01-26 13:04:06 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
@@ -111,6 +111,9 @@ class HostDisk(Disk):
         super(HostDisk, self).__init__(element, doc)
         self.log.debug("__init__")
         self.devicename=None
+        self.stabilizedfile="/proc/partitions"
+        self.stabilizedtype="hash"
+        self.stabilizedgood=2
 
     def is_lvm(self):
         return hasattr(self, "volumegroup") and hasattr(self, "logicalvolume")
@@ -263,6 +266,7 @@ class HostDisk(Disk):
             phelper.add_partition(disk, type, size, flags)
 
         disk.commit()
+        self.commit()
 
         #dev.sync()
         #dev.close()
@@ -350,8 +354,11 @@ class HostDisk(Disk):
         """ rereads the partition table of a disk """
         __cmd = CMD_SFDISK + " -R " + self.getDeviceName() + " >/dev/null 2>&1"
         if ComSystem.execLocal(__cmd):
+            self.commit()
             return False
-        return True
+        else:
+            self.commit()
+            return True
 
     def restorePartitionTable(self, filename):
         """ writes partition table stored in <filename> to Disk.
@@ -362,6 +369,7 @@ class HostDisk(Disk):
         __cmd = self.getRestoreStdin(True) + " < " + filename
         __out = ComSystem.execLocalOutput(__cmd, True, "")
         self.log.debug("restorePartitionTable( " + filename + "):\n " + __out)
+        self.commit()
 
     def getRestoreStdin(self, force=False):
         """ returns command string to restore a partition table
@@ -373,6 +381,15 @@ class HostDisk(Disk):
             __cmd.append("--force")
         __cmd.append(self.getDeviceName())
         return " ".join(__cmd)
+
+    def commit(self):
+        """ Method that waits for synchronized commits on underlying devices
+        """
+        try:
+            from comoonics import stabilized
+            stabilized.stabilized(file=self.stabilizedfile, type=self.stabilizedtype, good=self.stabilizedgood)
+        except ImportError:
+            warnings.warn("Could not import a stabilization functionality to synchronized changed disk devices with depending kernel. You might think of installing comoonics-storage-py.")
 
 # Initing the resolvers
 try:
@@ -386,7 +403,10 @@ except ImportError:
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
 
 # $Log: ComDisk.py,v $
-# Revision 1.7  2010-06-09 08:16:51  marc
+# Revision 1.8  2011-01-26 13:04:06  marc
+# Fixed bug that in a kvm virtualized environment the devices of repartitioned disks would not appear in time (synchronizing /proc/partitions).
+#
+# Revision 1.7  2010/06/09 08:16:51  marc
 # - exception when pyparted is not installed
 #
 # Revision 1.6  2010/04/23 10:58:37  marc
