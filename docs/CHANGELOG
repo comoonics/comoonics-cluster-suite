@@ -288,6 +288,20 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Wed Feb 02 2011 MG <grimme@atix.de>, 0.1-13
+- com-dsh:
+  - added nolocalhost option:
+    if specified the host on which com-dsh is executed will be referred by it hostname instead of localhost
+  - added support for default settings in configfiles
+    all parameter can now be specified in configfiles following this syntax
+    [com-dsh]
+    <parameter>: <value>
+    ..
+    Where <parameter> is the long command line parameter without leading "--".
+    The files will be search for in the following locations:
+    ENVIRONMENT["COMOONICS_CLUSTER_TOOLS_CFG"]
+    ~/.comoonics/cluster-tools.cfg
+    /etc/comoonics/cluster-tools.cfg
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-12
 - added auto logging configuration to help being more verbose 
 * Thu Dec 16 2010 MG <grimme@atix.de>, 0.1-11
