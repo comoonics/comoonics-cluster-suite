@@ -6,7 +6,7 @@ Created on Apr 28, 2009
 import sys
 sys.path.append('/usr/lib/python%s/site-packages/oldxml' % sys.version[:3])
 import unittest
-import setup
+import baseSetup as setup
 
 class test_Cdsl(unittest.TestCase):
     def test_A_CdslDestPaths(self):
@@ -132,20 +132,20 @@ class test_Cdsl(unittest.TestCase):
             for __cdsl in  repository.getCdsls():
                 self.assertTrue(__cdsl.exists(), "The still existant %s cdsl %s does not exist any more." %(__cdsl.type, __cdsl))
 
+from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+import os
+#import sys;sys.argv = ['', 'Test.testName']
+olddir=os.path.realpath(os.curdir)
+os.chdir(setup.tmppath)
+setupCluster=setup.SetupCluster()        
+repository=ComoonicsCdslRepository(clusterinfo=setupCluster.clusterinfo, root=setup.tmppath, usenodeids="True")  
+setupCdsls=setup.SetupCDSLs(repository)
+repository.buildInfrastructure(setupCluster.clusterinfo)
+setupCdsls.setupCDSLInfrastructure(setup.tmppath, repository, setupCluster.clusterinfo)
 if __name__ == "__main__":
-    from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
-    import os
-    #import sys;sys.argv = ['', 'Test.testName']
-    olddir=os.curdir
-    os.chdir(setup.tmppath)
-    setupCluster=setup.SetupCluster()        
-    repository=ComoonicsCdslRepository(clusterinfo=setupCluster.clusterinfo, root=setup.tmppath, usenodeids="True")  
-    setupCdsls=setup.SetupCDSLs(repository)
-    repository.buildInfrastructure(setupCluster.clusterinfo)
-    setupCdsls.setupCDSLInfrastructure(setup.tmppath, repository, setupCluster.clusterinfo)
     module=setup.MyTestProgram(module=test_Cdsl(methodName='run'))
     if module.result.wasSuccessful():
         setupCdsls.cleanUpInfrastructure(setup.tmppath, repository, setupCluster.clusterinfo)
         setup.cleanup()
     os.chdir(olddir)
-    sys.exit(not module.result.wasSuccessful())    
+    sys.exit(module.result.wasSuccessful())    

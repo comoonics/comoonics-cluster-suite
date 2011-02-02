@@ -2,7 +2,7 @@ import sys
 sys.path.append('/usr/lib/python%s/site-packages/oldxml' % sys.version[:3])
 
 import unittest
-import setup
+import baseSetup
 from comoonics.ComPath import Path
 import os
 
@@ -95,7 +95,7 @@ class test_CdslRepository(unittest.TestCase):
         _dirs=setupCDSLRepository.results.keys()
         _dirs.sort()
         setupCDSLRepository.cdslRepository1.buildInfrastructure(setupCluster.clusterinfo)
-        self.cwd.pushd(setup.tmppath)
+        self.cwd.pushd(baseSetup.tmppath)
         for _path in _dirs:
             _cdsl=None
             try:
@@ -123,7 +123,7 @@ class test_CdslRepository(unittest.TestCase):
         """
         from comoonics.cdsl.ComCdsl import Cdsl
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
-        self.cwd.pushd(setup.tmppath)
+        self.cwd.pushd(baseSetup.tmppath)
         _dirs=setupCDSLRepository.results.keys()
         _dirs.sort()
         setupCDSLRepository.cdslRepository4.buildInfrastructure()
@@ -150,9 +150,9 @@ class test_CdslRepository(unittest.TestCase):
 
     def testBuildInfrastructure1(self):
         setupCDSLRepository.cdslRepository1.buildInfrastructure(setupCluster.clusterinfo)
-        self.cwd.pushd(os.path.join(setup.tmppath, setupCDSLRepository.cdslRepository1.getMountpoint()))
+        self.cwd.pushd(os.path.join(baseSetup.tmppath, setupCDSLRepository.cdslRepository1.getMountpoint()))
         self.assertTrue(os.path.isdir(setupCDSLRepository.cdslRepository1.getTreePath()), "Cdsltree %s is no directory!" %setupCDSLRepository.cdslRepository1.getTreePath())
-        self.assertEquals(setupCDSLRepository.cdslRepository1.getTreePath(True), os.path.join(setup.tmppath, setupCDSLRepository.cdslRepository1.getTreePath()), "Cdsltree %s!=%s." %(setupCDSLRepository.cdslRepository1.getTreePath(True), os.path.join(setup.tmppath, setupCDSLRepository.cdslRepository1.getTreePath())))
+        self.assertEquals(setupCDSLRepository.cdslRepository1.getTreePath(True), os.path.realpath(os.path.join(baseSetup.tmppath, setupCDSLRepository.cdslRepository1.getTreePath())), "Cdsltree %s!=%s." %(setupCDSLRepository.cdslRepository1.getTreePath(True), os.path.join(baseSetup.tmppath, setupCDSLRepository.cdslRepository1.getTreePath())))
         self.assertTrue(os.path.isdir(setupCDSLRepository.cdslRepository1.getSharedTreepath()), "Cdsl sharedtree %s is no directory!" %setupCDSLRepository.cdslRepository1.getSharedTreepath())
         self.assertTrue(os.path.isdir(setupCDSLRepository.cdslRepository1.getLinkPath()), "Cdsl link %s is no directory" %setupCDSLRepository.cdslRepository1.getLinkPath())
         for _node in setupCluster.clusterinfo.getNodes():
@@ -168,9 +168,9 @@ class test_CdslRepository(unittest.TestCase):
         Test without clusterinfo
         """
         setupCDSLRepository.cdslRepository4.buildInfrastructure()
-        self.cwd.pushd(os.path.join(setup.tmppath, setupCDSLRepository.cdslRepository4.getMountpoint()))
+        self.cwd.pushd(os.path.join(baseSetup.tmppath, setupCDSLRepository.cdslRepository4.getMountpoint()))
         self.assertTrue(os.path.isdir(setupCDSLRepository.cdslRepository4.getTreePath()), "Cdsltree %s is no directory!" %setupCDSLRepository.cdslRepository1.getTreePath())
-        self.assertEquals(setupCDSLRepository.cdslRepository4.getTreePath(True), os.path.join(setup.tmppath, setupCDSLRepository.cdslRepository4.getMountpoint(), setupCDSLRepository.cdslRepository4.getTreePath()), "Cdsltree %s!=%s." %(setupCDSLRepository.cdslRepository1.getTreePath(True), os.path.join(setup.tmppath, setupCDSLRepository.cdslRepository1.getTreePath())))
+        self.assertEquals(setupCDSLRepository.cdslRepository4.getTreePath(True), os.path.realpath(os.path.join(baseSetup.tmppath, setupCDSLRepository.cdslRepository4.getMountpoint(), setupCDSLRepository.cdslRepository4.getTreePath())), "Cdsltree %s!=%s." %(setupCDSLRepository.cdslRepository1.getTreePath(True), os.path.join(baseSetup.tmppath, setupCDSLRepository.cdslRepository1.getTreePath())))
         self.assertTrue(os.path.isdir(setupCDSLRepository.cdslRepository4.getSharedTreepath()), "Cdsl sharedtree %s is no directory!" %setupCDSLRepository.cdslRepository1.getSharedTreepath())
         self.assertTrue(os.path.isdir(setupCDSLRepository.cdslRepository4.getLinkPath()), "Cdsl link %s is no directory" %setupCDSLRepository.cdslRepository1.getLinkPath())
         for _node in range(1, int(setupCDSLRepository.cdslRepository4.getMaxnodeidnum())+1):
@@ -183,7 +183,7 @@ class test_CdslRepository(unittest.TestCase):
     def testVersionException(self):
         from comoonics.cdsl.ComCdslRepository import CdslVersionException, ComoonicsCdslRepository
         try:
-            setupCDSLRepository.cdslRepository7 = ComoonicsCdslRepository(clusterinfo=setupCluster.clusterinfo, root=os.path.join(setup.tmppath, "repo7"))
+            setupCDSLRepository.cdslRepository7 = ComoonicsCdslRepository(clusterinfo=setupCluster.clusterinfo, root=os.path.join(baseSetup.tmppath, "repo7"))
             self.assert_("CdslVersionException not risn. Error")
         except CdslVersionException:
             pass
@@ -193,10 +193,10 @@ class test_CdslRepository(unittest.TestCase):
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         from comoonics import XmlTools
         from comoonics.cdsl import stripleadingsep
-        fromsource=os.path.join(os.getcwd(), "cdsl4.xml")
+        fromsource=os.path.join(baseSetup.testpath, "cdsl4.xml")
         cwd=Path()
-        cwd.pushd(setup.tmppath)
-        repository=comoonics.cdsl.migration.migrate(None, ComoonicsCdslRepository.version, fromresource=fromsource, root=setup.tmppath, mountpoint="repo8", ignoreerrors=True)
+        cwd.pushd(baseSetup.tmppath)
+        repository=comoonics.cdsl.migration.migrate(None, ComoonicsCdslRepository.version, fromresource=fromsource, root=baseSetup.tmppath, mountpoint="repo8", ignoreerrors=True)
         oldelement=XmlTools.parseXMLFile(fromsource)
         wanttocdsls=oldelement.documentElement.getElementsByTagName("cdsl")
         for i in range(len(wanttocdsls)):
@@ -210,11 +210,11 @@ class test_CdslRepository(unittest.TestCase):
         cwd.popd()
             
 if __name__ == "__main__":
-    setupCluster=setup.SetupCluster()        
-    setupCDSLRepository=setup.SetupCDSLRepository(setupCluster.clusterinfo)  
+    setupCluster=baseSetup.SetupCluster()        
+    setupCDSLRepository=baseSetup.SetupCDSLRepository(setupCluster.clusterinfo)  
     #import sys;sys.argv = ['', 'Test.testName']
-    module=setup.MyTestProgram(module=test_CdslRepository(methodName='run'))
-    setupCDSLRepository.cleanUpInfrastructure(setup.tmppath)
-    setup.cleanup()
-    sys.exit(not module.result.wasSuccessful())
+    module=baseSetup.MyTestProgram(module=test_CdslRepository(methodName='run'))
+    setupCDSLRepository.cleanUpInfrastructure(baseSetup.tmppath)
+    baseSetup.cleanup()
+    sys.exit(module.result.wasSuccessful())
     

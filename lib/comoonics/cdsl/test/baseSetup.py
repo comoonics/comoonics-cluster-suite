@@ -10,12 +10,13 @@ ComSystem.__EXEC_REALLY_DO="continue"
 
 testpath=os.path.dirname(sys.argv[0])
 for _module in sys.modules.keys():
-    if _module.endswith("test_Cdsl"):
-        testpath=os.path.dirname(sys.modules[_module].__file__)
+    if _module.endswith("baseSetup"):
+        testpath=os.path.realpath(os.path.dirname(sys.modules[_module].__file__))
                 
 import tempfile
-tmppath=tempfile.mkdtemp("", "test_Cdsl")
+tmppath=os.path.realpath(tempfile.mkdtemp("", "test_Cdsl"))
 print "Tmppath: %s" %tmppath
+print "Testpath: %s" %(testpath)
 
 class SetupCluster:
     def __init__(self):
@@ -92,8 +93,9 @@ class SetupCDSLRepository(SetupBase):
         os.mkdir(os.path.join(tmppath, "repo4/repo5/repo6"))
         os.mkdir(os.path.join(tmppath, "repo7"))
         os.mkdir(os.path.join(tmppath, "repo8"))
+        # Need for testing migration!!
         os.makedirs(os.path.join(tmppath, "repo7", "var/lib/cdsl"))
-        shutil.copyfile("cdsl4.xml", os.path.join(tmppath, "repo7", ComoonicsCdslRepository.default_resources[1]))
+        shutil.copyfile(os.path.join(testpath, "cdsl4.xml"), os.path.join(tmppath, "repo7", ComoonicsCdslRepository.default_resources[1]))
         
         wpath=Path()
         wpath.pushd(tmppath)

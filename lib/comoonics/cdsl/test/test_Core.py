@@ -1,5 +1,5 @@
 import unittest
-import setup
+import baseSetup as setup
 
 setupCluster=setup.SetupCluster()        
 setupCDSLRepository=setup.SetupCDSLRepository(setupCluster.clusterinfo)  
