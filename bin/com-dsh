@@ -131,7 +131,7 @@ mutex = threading.RLock()
 
 # NOTE: If you experience difficulty with the prompt being detected on the
 # remote host, adjust the CMD_PRMPT variable to match your syntax.
-CMD_PRMPT          = re.compile('^.*?[$#%].*$\Z', re.M)
+CMD_PRMPT          = re.compile('^.*?[$#%>].*$\Z', re.M)
 CMD_PRMPT_INT      = re.compile('^[\S@]*?[$].*$\Z', re.M)
 CONNECTION_REFUSED = re.compile('^\s*?Connection refused.*\n.*?[^ ][$#%]$\Z',
                                 re.M)
