@@ -8,7 +8,7 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: ComClusterInfo.py,v 1.15 2010-11-21 21:45:28 marc Exp $
+# $Id: ComClusterInfo.py,v 1.16 2011-02-03 14:41:21 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,7 +30,7 @@ of clusterrepositories
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 
@@ -129,9 +129,12 @@ class RedHatClusterInfo(ClusterInfo):
         @param clusterRepository: clusterRepository to use
         @type clusterRepository: L{RedhatClusterRepository}
         """
-        from helper import RedHatClusterHelper
         super(RedHatClusterInfo, self).__init__(clusterRepository)
-        self.helper=RedHatClusterHelper()
+        from helper import RedHatClusterHelper, HelperNotSupportedError
+        try:
+            self.helper=RedHatClusterHelper()
+        except HelperNotSupportedError:
+            self.helper=None
         self.addNonStatic("name", xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_clustat_cluster, "@"+RedHatClusterRepository.attribute_clustat_cluster_name))
 #        self.addNonStatic(RedhatClusterInfo, "id")
         self.addNonStatic("generation",         xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_clustat_cluster, "@"+RedHatClusterRepository.attribute_clustat_cluster_generation))
@@ -147,7 +150,7 @@ class RedHatClusterInfo(ClusterInfo):
             _pathroot=RedHatClusterRepository.getDefaultClustatXPath()
             
         result=""
-        if xpathsplit(_pathroot)[0] == RedHatClusterRepository.element_clustat:
+        if xpathsplit(_pathroot)[0] == RedHatClusterRepository.element_clustat and self.helper:
             if self.non_statics.get(param, None) != None:
                 result=self.helper.queryStatusElement(query= xpathjoin(_pathroot, self.non_statics.get(param)))
             else:
@@ -333,7 +336,10 @@ class ComoonicsClusterInfo(RedHatClusterInfo):
         raise ClusterMacNotFoundException("Cannot find device with given mac: %s" %(str(mac)))
 
 # $Log: ComClusterInfo.py,v $
-# Revision 1.15  2010-11-21 21:45:28  marc
+# Revision 1.16  2011-02-03 14:41:21  marc
+# - also work with no helper class
+#
+# Revision 1.15  2010/11/21 21:45:28  marc
 # - fixed bug 391
 #   - moved to upstream XmlTools implementation
 #

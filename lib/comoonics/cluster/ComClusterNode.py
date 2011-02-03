@@ -8,7 +8,7 @@ by a clusterrepository.
 """
 
 # here is some internal information
-# $Id: ComClusterNode.py,v 1.13 2010-11-21 21:45:28 marc Exp $
+# $Id: ComClusterNode.py,v 1.14 2011-02-03 14:41:36 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,13 +30,12 @@ by a clusterrepository.
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNode.py,v $
 
 import os
 
-from ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository
-from ComClusterInfo import ClusterObject
+from ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository, ClusterObject
 from ComClusterNodeNic import ComoonicsClusterNodeNic
 
 from comoonics import ComLog
@@ -70,8 +69,6 @@ class ClusterNode(ClusterObject):
     
     def __init__(self, element, doc=None):
         super(ClusterNode, self).__init__(element, doc)
-        from helper import RedHatClusterHelper
-        self.helper=RedHatClusterHelper()
     
     def getName(self):
         """placeholder for getName method"""
@@ -82,7 +79,7 @@ class ClusterNode(ClusterObject):
         pass
     def isActive(self):
         """placeholder for isActvie method. Should return True if node is actively joined to the given cluster"""
-        return False                
+        return True                
 
 class RedHatClusterNode(ClusterNode):
     """
@@ -95,6 +92,11 @@ class RedHatClusterNode(ClusterNode):
     
     def __init__(self, element, doc=None):
         super(RedHatClusterNode, self).__init__(element, doc)
+        from helper import RedHatClusterHelper, HelperNotSupportedError
+        try:
+            self.helper=RedHatClusterHelper()
+        except HelperNotSupportedError:
+            self.helper=None
         self.addNonStatic("state")
         self.addNonStatic("local")
         self.addNonStatic("estranged")
@@ -103,10 +105,12 @@ class RedHatClusterNode(ClusterNode):
         self.addNonStatic("qdisk")
 
     def query(self, param, *params, **keys):
-        if self.non_statics.get(param, None) != None:
+        if self.non_statics.get(param, None) != None and self.helper:
             return self.helper.queryStatusElement(query=xpathjoin(self.xpath_clustat, self.element_nodes, self.element_node+'['+self.attribute_node_name+'="'+self.getName()+'"]', self.non_statics.get(param)))
-        else:
+        elif self.helper:
             return self.helper.queryStatusElement(query=os.path.join(self.clustat_pathroot %self.getName(), "@"+param))
+        else:
+            return None
 
     def getName(self):
         """
@@ -133,7 +137,7 @@ class RedHatClusterNode(ClusterNode):
         """
         @return: True if clusternode is active
         """
-        return self.state=='1'
+        return self.state==None or self.state=='1'
 
 class ComoonicsClusterNode(RedHatClusterNode):
     """
@@ -294,7 +298,10 @@ class ComoonicsClusterNode(RedHatClusterNode):
         return _tmp
 
 # $Log: ComClusterNode.py,v $
-# Revision 1.13  2010-11-21 21:45:28  marc
+# Revision 1.14  2011-02-03 14:41:36  marc
+# - also work with no helper class
+#
+# Revision 1.13  2010/11/21 21:45:28  marc
 # - fixed bug 391
 #   - moved to upstream XmlTools implementation
 #
