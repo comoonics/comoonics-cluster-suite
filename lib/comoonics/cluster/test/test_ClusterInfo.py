@@ -12,6 +12,9 @@ class test_ClusterInfo(baseClusterTestClass):
         import os.path
         from comoonics.cluster.ComClusterRepository import ClusterRepository
         from comoonics.cluster.ComClusterInfo import ClusterInfo
+        import logging
+        from comoonics import ComSystem
+        ComSystem.setExecMode(ComSystem.SIMULATE)
         super(test_ClusterInfo, self).init()
         #create comclusterRepository Object
         self.clusterRepository = ClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
@@ -20,9 +23,6 @@ class test_ClusterInfo(baseClusterTestClass):
         self.clusterInfo = ClusterInfo(self.clusterRepository)  
 
         # setup the cashes for clustat for redhat cluster
-        import logging
-        from comoonics import ComSystem
-        ComSystem.setExecMode(ComSystem.SIMULATE)
         ComLog.setLevel(logging.DEBUG)
         self.clusterInfo.helper.setSimOutput()
         self.nics=list()
