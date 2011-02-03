@@ -8,12 +8,14 @@ from comoonics.cluster.helper import RedHatClusterHelper
 class test_RedHatClusterHelper(unittest.TestCase):
     OUTPUT_TEST_FILE="clustat.xml"
     TEST_QUERIES={ "/clustat/@version": "4.1.1",
-                           "/clustat/cluster/@generation": "900",
-                           "/clustat/quorum/@quorate": "1",
-                           "/clustat/nodes/node[1]/@name": "gfs-node1",
-                           "/clustat/groups/group[1]/@name": "service:vmware_ip",
-                           "/clustat/nodes/node[1]/@state": "1" }
+                   "/clustat/cluster/@generation": "900",
+                   "/clustat/quorum/@quorate": "1",
+                   "/clustat/nodes/node[1]/@name": "gfs-node1",
+                   "/clustat/groups/group[1]/@name": "service:vmware_ip",
+                   "/clustat/nodes/node[1]/@state": "1" }
     def setUp(self):
+        from comoonics import ComSystem
+        ComSystem.setExecMode(ComSystem.SIMULATE)
         from comoonics import ComLog
         import logging
         import inspect
@@ -34,8 +36,6 @@ class test_RedHatClusterHelper(unittest.TestCase):
         
     # tests querying a status element of a cluster helper
     def testQueryStatusElement(self):
-        from comoonics import ComSystem
-        ComSystem.setExecMode(ComSystem.SIMULATE)
         for _query, _result in self.TEST_QUERIES.items():
             self.assertEqual(self.helper.queryStatusElement(query=_query, output=self.TEST_OUTPUT), _result)
 

@@ -8,7 +8,7 @@ of clusterrepositories
 
 
 # here is some internal information
-# $Id: RedHatClusterHelper.py,v 1.4 2011-01-12 09:47:10 marc Exp $
+# $Id: RedHatClusterHelper.py,v 1.5 2011-02-03 14:42:17 marc Exp $
 #
 # @(#)$File$
 #
@@ -30,11 +30,15 @@ of clusterrepositories
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/helper/RedHatClusterHelper.py,v $
 
 from comoonics import ComLog
+from comoonics import ComSystem
 import comoonics.XmlTools
+import warnings
+import os.path
+from HelperNotSupported import HelperNotSupportedError
 
 class RedHatClusterHelper(object):
     defaultclusterstatus_cmd= "/usr/sbin/clustat"
@@ -43,8 +47,12 @@ class RedHatClusterHelper(object):
     log = ComLog.getLogger("comoonics.cluster.helper.RedHatClusterHelper")
 
     def __init__(self):
-        self.clusterstatus_cmd=RedHatClusterHelper.defaultclusterstatus_cmd
-        self.clusterstatus_opts=RedHatClusterHelper.defaultclusterstatus_opts
+        if os.path.isfile(RedHatClusterHelper.defaultclusterstatus_cmd) or ComSystem.isSimulate():
+            self.clusterstatus_cmd=RedHatClusterHelper.defaultclusterstatus_cmd
+            self.clusterstatus_opts=RedHatClusterHelper.defaultclusterstatus_opts
+        else:
+            raise HelperNotSupportedError("The helperclass RedHatClusterHelper is not supported in this environment.")
+            
     def __getfromkwds(self, __kwd, __kwds, __default):
         if not __default:
             __default=getattr(self, __kwd, None)
@@ -100,6 +108,8 @@ class RedHatClusterHelper(object):
                 else:
                     return comoonics.XmlTools.toPrettyXML(_tmp1[0])
         except ComSystem.ExecLocalException, error:
-            self.log.warning("Could not query the running cluster. No active values will be available. Error %s" %error)
+            warnings.warn("Could not query the running cluster with %s. No active values will be available." %self.clusterstatus_cmd)
+            self.log.debug("Error: %s" %error)
+            return None
 
     

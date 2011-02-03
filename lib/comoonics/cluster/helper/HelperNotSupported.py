@@ -1,10 +1,12 @@
-"""
+'''
+Created on Feb 3, 2011
 
-Comoonics cluster configuration helper package
+@author: marc
+'''
 
-Provides helper classes that are clusterdependent and will be used by base package. 
-Those should never be used outside the comoonics.cluster package.
-"""
+# here is some internal information
+# $Id: HelperNotSupported.py,v 1.1 2011-02-03 14:42:17 marc Exp $
+#
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -24,11 +26,10 @@ Those should never be used outside the comoonics.cluster package.
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from RedHatClusterHelper import RedHatClusterHelper
-from HelperNotSupported import HelperNotSupportedError
+class HelperNotSupportedError(RuntimeError): pass
 
-##########
-# $Log: __init__.py,v $
-# Revision 1.4  2011-02-03 14:42:17  marc
+###########
+# $Log: HelperNotSupported.py,v $
+# Revision 1.1  2011-02-03 14:42:17  marc
 # raise HelperNotSupported if helper cannot be instanciated.
 #
