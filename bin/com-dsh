@@ -131,7 +131,7 @@ mutex = threading.RLock()
 
 # NOTE: If you experience difficulty with the prompt being detected on the
 # remote host, adjust the CMD_PRMPT variable to match your syntax.
-CMD_PRMPT          = re.compile('^.*?[^ ][$#%].*$\Z', re.M)
+CMD_PRMPT          = re.compile('^.*?[$#%].*$\Z', re.M)
 CMD_PRMPT_INT      = re.compile('^[\S@]*?[$].*$\Z', re.M)
 CONNECTION_REFUSED = re.compile('^\s*?Connection refused.*\n.*?[^ ][$#%]$\Z',
                                 re.M)
@@ -207,7 +207,7 @@ def command_options (appname, usage):
                        "verbose": "0",
                        "ALL": "False",
                        "nocluster": "False",
-                       "ignorefailed": "False",
+                       "exitfailed": "False",
                        "clusterconf": clusterconf,
                        "ask": "False",
                        
@@ -252,9 +252,9 @@ def command_options (appname, usage):
     host_options.add_option("-H", "--hostfile", action="append", type="string",
                             dest="hostfiles", metavar="<FILE>",
                             help="Adds all hosts in <FILE> to the hostlist.")
-    host_options.add_option("-i", "--ignorefailed", action="store_true",
-                            dest="ign_failed",
-                            help="Continue even if some hosts fail basic " + \
+    host_options.add_option("-e", "--exitfailed", action="store_true",
+                            dest="exit_failed",
+                            help="Exit if some hosts fail basic " + \
                             "connectivity tests.")
     host_options.add_option("-n", action="append", type="string", dest="nodes",
                             metavar="<NODE>",help="Adds <NODE> to the " + \
@@ -1355,7 +1355,7 @@ def test_connectivity (hlist, options):
         threads.join()
 
     if badhosts:
-        if not options.ign_failed:
+        if options.exit_failed:
             print >> sys.stderr, "ERROR :: Could not connect to: %s" % (
                                 badhosts)
             sys.exit(1)
