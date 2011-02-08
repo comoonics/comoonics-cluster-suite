@@ -1,5 +1,12 @@
 include *.txt
 recursive-include examples *.txt *.py
 include man/*.gz
-include lib/comoonics/enterprisecopy/test/*
+include lib/comoonics/enterprisecopy/test/testCatifModification.py
+include lib/comoonics/enterprisecopy/test/testCopyModification.py
+include lib/comoonics/enterprisecopy/test/testLVMCopyObject.py
+include lib/comoonics/enterprisecopy/test/testMessage.py
+include lib/comoonics/enterprisecopy/test/testPathCopyObject.py
+include lib/comoonics/enterprisecopy/test/testPathModificationset.py
+include lib/comoonics/enterprisecopy/test/testSCSIRequirement.py
+include lib/comoonics/enterprisecopy/test/testSysrqModification.py
 prune test/
