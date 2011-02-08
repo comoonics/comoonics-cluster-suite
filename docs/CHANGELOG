@@ -222,6 +222,8 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Thu Feb 03 2011 MG <grimme@atix.de>, 0.1-32
+- allow classes to work even without helper class (makes com-dsh working everywhere)
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-31
 - rebase
 * Thu Dec 16 2010 MG <grimme@atix.de>, 0.1-30
@@ -288,6 +290,10 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Thu Feb 03 2011 MG <grimme@atix.de>, 0.1-14
+- com-dsh
+  - changed option ignorefailed to exitfailed. Means default is to ignore failed hosts. Can be switched back with --exitfailed
+  - changed prompt checker to work also on systems with different prompt (SLES10).
 * Wed Feb 02 2011 MG <grimme@atix.de>, 0.1-13
 - com-dsh:
   - added nolocalhost option:
@@ -524,6 +530,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Thu Feb 03 2011 MG <grimme@atix.de>, 0.1-55
+- Issue warning and exit if com-ec cannot import libxslt and libxml2 but don't make it rpm dependent.
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-54
 - fixed bug #397 in ComFileModification.py where copying of files would not work.
 * Mon Nov 22 2010 MG <grimme@atix.de>, 0.1-53
@@ -709,6 +717,12 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Tue Feb 08 2011 MG <grimme@atix.de>, 0.1-16
+- ComDisk.py
+  - removed factory constructor that was not necessarily needed.
+- ComDevice.py
+  - getMountList()
+    added support for subprocess for python > 2.5
 * Wed Jan 26 2011 MG <grimme@atix.de>, 0.1-15
 - ComDisk.py (HostDisk)
   - Fixed bug that in a kvm virtualized environment the devices of repartitioned disks 
