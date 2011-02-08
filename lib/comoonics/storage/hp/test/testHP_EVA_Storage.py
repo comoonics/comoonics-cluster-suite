@@ -10,9 +10,8 @@ class Test(unittest.TestCase):
     
     def setUp(self):
         from comoonics.storage.hp.ComHP_EVA_Storage import HP_EVA_Storage
-        from xml.dom.ext.reader import Sax2
-        from comoonics.storage.ComDisk import Disk
-        reader=Sax2.Reader(validate=0)
+        from comoonics import XmlTools
+        from comoonics.storage.ComDisk import StorageDisk
         #mylogger.debug("xml: %s" %(match.group(1)))
         xml_dump="""
         <disk name="Virtual Disks/atix/sourcedisk">
@@ -22,8 +21,8 @@ class Test(unittest.TestCase):
             </properties>
         </disk>
 """
-        doc=reader.fromString(xml_dump)
-        self.disk=Disk(doc.documentElement, doc)
+        doc=XmlTools.parseXMLString(xml_dump)
+        self.disk=StorageDisk(doc.documentElement, doc)
         self.storage=HP_EVA_Storage(system="127.0.0.1/EVA5000", username="Administrator", password="Administrator", autoconnect=True, cmd="../ComHP_EVA_SSSU_Sim.py")
         xml_dump="""
         <disk name="Virtual Disks/atix/sourcedisk_snap">
@@ -32,8 +31,8 @@ class Test(unittest.TestCase):
             </mapping>
         </disk>
 """
-        doc=reader.fromString(xml_dump)
-        self.snapdisk=Disk(doc.documentElement, doc)
+        doc=XmlTools.parseXMLString(xml_dump)
+        self.snapdisk=StorageDisk(doc.documentElement, doc)
 
     def testDiskProperties(self):
         results={"size": "10" , "disk_group": "146er" } 

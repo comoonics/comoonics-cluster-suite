@@ -28,11 +28,10 @@ class Test(unittest.TestCase):
 
     def _testDiskDump(self, dump):
         try:
-            from comoonics.storage.ComDisk import Disk
-            from xml.dom.ext.reader import Sax2
-            reader=Sax2.Reader(validate=0)
-            doc=reader.fromString(dump)
-            Disk(doc.documentElement, doc)
+            from comoonics.storage.ComDisk import StorageDisk
+            from comoonics import XmlTools
+            doc=XmlTools.parseXMLString(dump)
+            StorageDisk(doc.documentElement, doc)
         except:
             self.fail("Could not create Disk for dump %s" %dump)
 
