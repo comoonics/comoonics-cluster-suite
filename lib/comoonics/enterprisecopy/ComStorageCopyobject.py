@@ -3,16 +3,16 @@ CopyObject implementation for Storage implementations.
 """
 
 # here is some internal information
-# $Id: ComStorageCopyobject.py,v 1.1 2010-03-08 12:30:48 marc Exp $
+# $Id: ComStorageCopyobject.py,v 1.2 2011-02-08 13:04:19 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComStorageCopyobject.py,v $
 
 from comoonics.enterprisecopy.ComCopyObject import CopyObjectJournaled
 from comoonics import ComLog
-from comoonics.storage.ComDisk import Disk
+from comoonics.storage.ComDisk import StorageDisk
 
 class StorageCopyObject(CopyObjectJournaled):
     __logStrLevel__="StorageCopyObject"
@@ -23,7 +23,7 @@ class StorageCopyObject(CopyObjectJournaled):
         self.addToUndoMap(self.storage.__class__.__name__, "add_clone", "delete_clone")
         self.addToUndoMap(self.storage.__class__.__name__, "add_snapshot", "delete_snapshot")
         self.addToUndoMap(self.storage.__class__.__name__, "map_luns", "unmap_luns")
-        self.disk=Disk(self.getElement().getElementsByTagName("disk")[0], self.getDocument())
+        self.disk=StorageDisk(self.getElement().getElementsByTagName("disk")[0], self.getDocument())
 
     def prepareAsSource(self):
         ''' prepare CopyObject as source '''
@@ -71,7 +71,10 @@ mylogger=ComLog.getLogger(StorageCopyObject.__logStrLevel__)
 
 ########################
 # $Log: ComStorageCopyobject.py,v $
-# Revision 1.1  2010-03-08 12:30:48  marc
+# Revision 1.2  2011-02-08 13:04:19  marc
+# - removed unnecessary factory constructur for StorageDisk
+#
+# Revision 1.1  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2007/03/26 08:12:22  marc

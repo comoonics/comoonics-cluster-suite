@@ -3,22 +3,22 @@ Comoonics storage modification module
 
 """
 # here is some internal information
-# $Id: ComStorageModification.py,v 1.1 2010-03-08 12:30:48 marc Exp $
+# $Id: ComStorageModification.py,v 1.2 2011-02-08 13:04:19 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComStorageModification.py,v $
 
 from comoonics.enterprisecopy.ComModification import ModificationJournaled
-from comoonics.storage.ComDisk import Disk
+from comoonics.storage.ComDisk import StorageDisk
 from comoonics import ComLog
 
 class StorageModification(ModificationJournaled):
     __logStrLevel__= "StorageModification"
     def __init__(self, element, doc, *args, **kwds):
         super(StorageModification, self).__init__(element, doc)
-        self.disk=Disk(element, doc)
+        self.disk=StorageDisk(element, doc)
         self.action=self.storage=None
         if kwds:
             for kwd in kwds:
@@ -44,7 +44,10 @@ class StorageModification(ModificationJournaled):
 mylogger=ComLog.getLogger(StorageModification.__logStrLevel__)
 
 # $Log: ComStorageModification.py,v $
-# Revision 1.1  2010-03-08 12:30:48  marc
+# Revision 1.2  2011-02-08 13:04:19  marc
+# - removed unnecessary factory constructur for StorageDisk
+#
+# Revision 1.1  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2007/03/26 08:14:10  marc
