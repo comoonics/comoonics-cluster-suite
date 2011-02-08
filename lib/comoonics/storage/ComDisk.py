@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.8 2011-01-26 13:04:06 marc Exp $
+# $Id: ComDisk.py,v 1.9 2011-02-08 13:05:02 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
@@ -32,15 +32,6 @@ CMD_DMSETUP = "/sbin/dmsetup"
 CMD_KPARTX = "/sbin/kpartx"
 
 class Disk(DataObject):
-    """ Abstract Disk Baseclass that creates a disk a StorageDisk or HostDisk on demand """
-    def __new__(cls, *args, **kwds):
-        if cls==Disk:
-            cls=StorageDisk
-            element=args[0]
-            name=element.getAttribute("name")
-            if name.startswith("/"):
-                cls=HostDisk
-        return object.__new__(cls, *args, **kwds)
     def __init__(self, element, doc=None):
         """ default Constructur """
         super(Disk, self).__init__(element, doc)
@@ -403,7 +394,10 @@ except ImportError:
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
 
 # $Log: ComDisk.py,v $
-# Revision 1.8  2011-01-26 13:04:06  marc
+# Revision 1.9  2011-02-08 13:05:02  marc
+# - removed the factory constructor for ComDisk that would automatically detect if ComStorageDisk or ComHostDisk is needed.
+#
+# Revision 1.8  2011/01/26 13:04:06  marc
 # Fixed bug that in a kvm virtualized environment the devices of repartitioned disks would not appear in time (synchronizing /proc/partitions).
 #
 # Revision 1.7  2010/06/09 08:16:51  marc
