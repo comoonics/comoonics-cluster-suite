@@ -7,15 +7,16 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDevice.py,v 1.3 2010-03-08 12:30:48 marc Exp $
+# $Id: ComDevice.py,v 1.4 2011-02-08 13:05:56 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDevice.py,v $
 
 import os
 import re
+import sys
 
 from comoonics.ComExceptions import ComException
 from ComDisk import HostDisk
@@ -63,11 +64,25 @@ class Device(HostDisk):
         if not os.path.isfile("/proc/mounts"):
             raise ComException("/proc/mounts not found.")
 
-        [ i, o ]=os.popen2("cat /proc/mounts")
+        if sys.version[:3] < "2.5":
+            [ i, o ]=os.popen2("cat /proc/mounts")
+        else:
+            import subprocess
+            p = subprocess.Popen(["cat /proc/mounts"], shell=True, 
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                             close_fds=True)
+            p.wait()
+            i=p.returncode
+            o=p.stdout
+            
         return o.readlines()
 
 # $Log: ComDevice.py,v $
-# Revision 1.3  2010-03-08 12:30:48  marc
+# Revision 1.4  2011-02-08 13:05:56  marc
+# - getMountList
+#   - extended to use subprocess for python > 2.4
+#
+# Revision 1.3  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2010/02/09 21:48:51  mark
