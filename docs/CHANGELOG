@@ -290,6 +290,10 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Thu Feb 10 2011 MG <grimme@atix.de>, 0.1-14
+- com-dsh
+  - implemented sequential option to make commands being executed not in parallel
+  - implemented waitbeforestart option to add a timeout after each host has been executed.
 * Thu Feb 03 2011 MG <grimme@atix.de>, 0.1-14
 - com-dsh
   - changed option ignorefailed to exitfailed. Means default is to ignore failed hosts. Can be switched back with --exitfailed
