@@ -220,6 +220,8 @@ def command_options (appname, usage):
                        "ssh_pubkey": "none",
                        "sudo": "False",
                        "nolocalhost": "False",
+                       "sequential": "True",
+                       "waitbeforestart": "0",
                        
                        # for com-dcp
                        "scp_mode": "get",
@@ -281,6 +283,12 @@ def command_options (appname, usage):
     # Shell Options
     if appname == "com-dsh" :
         shell_options = OptionGroup(cmd_parser, "Shell Options")
+        shell_options.add_option("--sequential", action="store_false", 
+                                 dest="parallel",
+                                 help="Switches from executing the commands in parallel to sequential.")
+        shell_options.add_option("--waitbeforestart", type="int",
+                                 dest="startwait",
+                                 help="Wait the given seconds before starting the command on the next node. Only available in parallel mode.")
         shell_options.add_option("--dryrun", action="store_true",
                                  dest="dryrun",
                                  help="Lists nodes where the command will " + \
@@ -674,11 +682,20 @@ def host_loop (command, options, hostlist, password, pass_root, win_width):
         " >> ~/.ssh/authorized_keys && /bin/echo \"Key installed\""
 
     # Host loop
+    if not options.parallel:
+        if options.verbose > 3:
+            print "Sequential mode detected."
     for host in hostlist:
         host_thread = Hostthread(command, options, host, password, pass_root,
                                  win_width)
         host_thread_list.append(host_thread)
         host_thread.start()
+        if not options.parallel:
+            host_thread.join()
+        if options.startwait>0:
+            if options.verbose >= 4:
+                print "Waiting %i seconds." %options.startwait
+            time.sleep(options.startwait)
     for thread in host_thread_list:
         thread.join()
     return output_list, error_list
