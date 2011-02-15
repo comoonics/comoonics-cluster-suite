@@ -290,7 +290,10 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
-* Thu Feb 10 2011 MG <grimme@atix.de>, 0.1-14
+* Sun Feb 8 2011 MG <grimme@atix.de>, 0.1-16
+- com-dsh
+  - fixed bug in telnet execution with no username been given.
+* Thu Feb 10 2011 MG <grimme@atix.de>, 0.1-15
 - com-dsh
   - implemented sequential option to make commands being executed not in parallel
   - implemented waitbeforestart option to add a timeout after each host has been executed.
