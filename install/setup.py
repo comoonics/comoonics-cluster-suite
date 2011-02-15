@@ -6,7 +6,7 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.13 2011-02-15 10:00:03 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.14 2011-02-15 14:57:37 marc Exp $"
 
 oldglobals=globals()
 from distutils.core import setup
@@ -1250,14 +1250,15 @@ Those are classes used by more other packages.
 #      "author_email":"hlawatschek@atix.de",
       "url":"http://www.open-sharedroot.org/development/comoonics-base-py",
       "package_dir" :  { "": "lib/"},
-      "py_modules" :   [ "comoonics.ComDataObject", 
-                       "comoonics.ComExceptions",
-                       "comoonics.DictTools",
-                       "comoonics.ComProperties",
-                       "comoonics.ComPath",
-                       "comoonics.ComLog", 
-                       "comoonics.ComSystem", 
-                       "comoonics.XmlTools" ],
+      "packages": [ "comoonics" ],
+#      "py_modules" :   [ "comoonics.ComDataObject", 
+#                       "comoonics.ComExceptions",
+#                       "comoonics.DictTools",
+#                       "comoonics.ComProperties",
+#                       "comoonics.ComPath",
+#                       "comoonics.ComLog", 
+#                       "comoonics.ComSystem", 
+#                       "comoonics.XmlTools" ],
     },
     "comoonics-cdsl-py": { 
       "name": "comoonics-cdsl-py",
@@ -1373,9 +1374,10 @@ Base libraries used for comoonics enterprise copy.
 """,
       "url":"http://www.open-sharedroot.org/development/comoonics-ec-base-py",
       "package_dir" :  { "": "lib/"},
-      "py_modules" :   [ "comoonics.ComJournaled", 
-                       "comoonics.ComMetadataSerializer",
-                       "comoonics.ComUtils" ],
+      "packages": [ "comoonics.ecbase" ],
+#      "py_modules" :   [ "comoonics.ecbase.ComJournaled", 
+#                       "comoonics.ecbase.ComMetadataSerializer",
+#                       "comoonics.ecbase.ComUtils" ],
     },
     "comoonics-ec-py": {
       "name":"comoonics-ec-py",
@@ -1479,12 +1481,13 @@ Those are classes used by more other packages.
 """,
       "url":"http://www.open-sharedroot.org/development/comoonics-tools-py",
       "package_dir" :  { "": "lib/"},
-      "py_modules" :   [ "comoonics.AutoDelegator", 
-                       "comoonics.lockfile",
-                       "comoonics.odict",
-                       "comoonics.stabilized",
-                       "comoonics.XMLConfigParser",
-                       "comoonics.ComSystemInformation" ],
+      "packages": [ "comoonics.tools" ],
+#      "py_modules" :   [ "comoonics.AutoDelegator", 
+#                       "comoonics.lockfile",
+#                       "comoonics.odict",
+#                       "comoonics.stabilized",
+#                       "comoonics.XMLConfigParser",
+#                       "comoonics.ComSystemInformation" ],
       "scripts":       [ "bin/stabilized" ],
     },
     "mgrep": {
