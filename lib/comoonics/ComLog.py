@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComLog.py,v 1.16 2010-11-21 21:48:19 marc Exp $
+# $Id: ComLog.py,v 1.17 2011-02-15 15:00:24 marc Exp $
 #
 # @(#)$File$
 #
@@ -27,7 +27,7 @@ here should be some more information about the module, that finds its way inot t
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/ComLog.py,v $
 
 import logging
@@ -120,7 +120,7 @@ def fileConfig(fname, defaults=None, _vars=None):
     #print os.path.splitext(fname)
     from xml.dom import Node
     if isinstance(fname, Node) or os.path.splitext(fname)[1] == ".xml":
-        from XMLConfigParser import ConfigParser
+        from comoonics.tools.XMLConfigParser import ConfigParser
     else:
         from ConfigParser import ConfigParser
 
@@ -281,7 +281,10 @@ def fileConfig(fname, defaults=None, _vars=None):
 _mylogger=logging.getLogger("comoonics.ComLog")
 
 # $Log: ComLog.py,v $
-# Revision 1.16  2010-11-21 21:48:19  marc
+# Revision 1.17  2011-02-15 15:00:24  marc
+# - import for XMLConfigParser from comoonics.tools
+#
+# Revision 1.16  2010/11/21 21:48:19  marc
 # - fixed bug 391
 #   - moved to upstream XmlTools implementation
 #
