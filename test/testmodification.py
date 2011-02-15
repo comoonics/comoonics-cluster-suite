@@ -6,7 +6,6 @@ import os
 sys.path.append("../lib")
 
 from comoonics import ComDevice
-from comoonics import ComUtils
 from comoonics import ComDataObject
 from comoonics.enterprisecopy import ComModificationset
 
@@ -16,6 +15,7 @@ from comoonics.enterprisecopy import ComModificationset
 #from Ft.Xml.Domlette import implementation, PrettyPrint
 
 import xml.dom
+from comoonics.ecbase import ComUtils
 from xml.dom import EMPTY_NAMESPACE
 from xml.dom.ext import PrettyPrint
 from xml.dom.ext.reader import Sax2

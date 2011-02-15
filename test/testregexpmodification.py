@@ -13,7 +13,7 @@ from xml.dom.ext.reader import Sax2
 from xml import xpath
 
 
-from comoonics import ComUtils
+from comoonics.ecbase import ComUtils
 from comoonics.enterprisecopy import ComRegexpModification
 
 def printDom(doc):

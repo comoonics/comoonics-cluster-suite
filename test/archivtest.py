@@ -15,7 +15,7 @@ from xml import xpath
 
 from comoonics import ComArchiv
 from comoonics import ComSystem
-from comoonics import ComUtils
+from comoonics.ecbase import ComUtils
 
 # create Reader object
 reader = Sax2.Reader()

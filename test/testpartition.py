@@ -14,7 +14,7 @@ from xml import xpath
 
 
 from comoonics import ComDisk
-from comoonics import ComUtils
+from comoonics.ecbase import ComUtils
 from comoonics.enterprisecopy import ComCopyset
 
 

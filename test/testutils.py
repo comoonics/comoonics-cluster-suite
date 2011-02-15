@@ -5,7 +5,7 @@ sys.path.append("../lib")
 
 
 
-from comoonics.ComUtils import *
+from comoonics.ecbase.ComUtils import *
 one="1"
 
 lines=["eine eins", "eine zwei", "keine drei"]

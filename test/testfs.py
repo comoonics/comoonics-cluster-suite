@@ -5,7 +5,7 @@ import copy
 sys.path.append("../lib")
 
 from comoonics import ComDevice
-from comoonics import ComUtils
+from comoonics.ecbase import ComUtils
 from comoonics import ComFileSystem
 from comoonics import ComDataObject
 from comoonics.enterprisecopy import ComCopyset
