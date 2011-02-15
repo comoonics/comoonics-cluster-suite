@@ -6,8 +6,9 @@ distributions)."""
 
 # This module should be kept compatible with Python 2.1.
 
-__revision__ = "$Id: setup.py,v 1.12 2011-01-12 10:16:16 marc Exp $"
+__revision__ = "$Id: setup.py,v 1.13 2011-02-15 10:00:03 marc Exp $"
 
+oldglobals=globals()
 from distutils.core import setup
 import sys, os, string
 import glob
@@ -32,10 +33,13 @@ class PydevTestRunner:
     __py_extensions = ["*.py", "*.pyw"]
     __exclude_files = ["__init__.*"]
 
-    def __init__(self, test_dir, test_filter=None, verbosity=2, tests=None):
+    def __init__(self, test_dir, test_filter=None, verbosity=2, tests=None, testfile_filter=None):
         self.test_dir = test_dir
         self.__adjust_path()
         self.test_filter = self.__setup_test_filter(test_filter)
+        self.testfile_filter=testfile_filter
+        if not self.testfile_filter:
+            self.testfile_filter=list()
         self.verbosity = verbosity
         self.tests = tests
 
@@ -101,10 +105,13 @@ class PydevTestRunner:
         else: #handle dir
             return s.replace("\\", "/").replace("/", ".")
 
+    def __file_is_not_filtered(self, fname):
+        return fname in self.testfile_filter
+
     def __add_files(self, pyfiles, root, files):
         """ if files match, appends them to pyfiles. used by os.path.walk fcn """
         for fname in files:
-            if self.__is_valid_py_file(fname):
+            if not self.__file_is_not_filtered(fname) and self.__is_valid_py_file(fname):
                 name_without_base_dir = self.__unixify(os.path.join(root, fname))
                 pyfiles.append(name_without_base_dir)
         return
@@ -122,7 +129,6 @@ class PydevTestRunner:
                 else:
                     # jython2.1 is too old for os.walk!
                     os.path.walk(base_dir, self.__add_files, pyfiles)
-
             elif os.path.isfile(base_dir):
                 pyfiles.append(base_dir)
 
@@ -298,7 +304,7 @@ class PydevTestRunner:
         sys.stdout.write("Finding files...\n")
         files = self.find_import_files()
         sys.stdout.write('%s %s\n' % (self.test_dir, '... done'))
-        sys.stdout.write("Importing test modules ... ")
+        sys.stdout.write("Importing test modules %s ... " %files)
         modules = self.find_modules_from_files(files)
         sys.stdout.write("done.\n")
         sys.stdout.write("Testfilter: %s\n" %self.test_filter)
@@ -986,15 +992,19 @@ class bdist_rpm_fedora (Command):
 
 class test (Command):
 
-    description = "build everything needed to install"
+    description = "tests everything needed to be installed"
 
     user_options = [
         ('build-base=', 'b',
          "base directory for build library"),
         ('test-base=', 't',
          "test directory for test library"),
-        ('test-filter=', 'f',
-         'which testfiles should be used.')
+        ('testfile-filter=', 'f',
+         'which testfiles should be filtered'),
+        ('testclass-filter=', 'c',
+         'which testfiles classe should be filtered.'),
+        ('testfile-exec=', 't',
+         'execute the files being listed here instead of interpreting those')
         ]
 
     boolean_options = []
@@ -1007,11 +1017,22 @@ class test (Command):
         self.build_base = os.path.join('build', 'lib')
         self.test_base="test"
         self.debug = None
-        self.test_filter=None
+        self.testclass_filter=list()
+        self.testfile_filter=list()
+        self.testfile_exec=list()
 
     def finalize_options (self):
-        if self.test_filter and isinstance(self.test_filter, basestring):
-            self.test_filter=[ self.test_filter ]
+        if self.testclass_filter and isinstance(self.testclass_filter, basestring):
+            self.testclass_filter=[ self.testclass_filter ]
+        if self.testfile_filter and isinstance(self.testfile_filter, basestring):
+            self.testfile_filter=[ self.testfile_filter ]
+        if self.testfile_exec and isinstance(self.testfile_exec, basestring):
+            self.testfile_exec=self._resolve_glob(self.testfile_exec)
+            self.testfile_filter.extend(self.testfile_exec)
+
+    def _resolve_glob(self, searchstring):
+        import glob
+        return glob.glob(searchstring)
 
     def _build_modulepaths(self):
         import os
@@ -1026,17 +1047,6 @@ class test (Command):
                 pathnames.append(os.sep.join(package.split(".")))
         return pathnames
 
-    def _get_testfiles(self):
-        import glob
-        import os.path
-        testclasses=list()
-        for modulepath in self._build_modulepaths():
-            path=os.path.join("lib", modulepath, self.test_base)
-            print "Path: %s" %path
-            for testclass in glob.glob(os.path.join(path, "test*.py")):
-                testclasses.append(testclass)
-        return testclasses
-
     def _get_testdir(self):
         import glob
         import os.path
@@ -1048,6 +1058,72 @@ class test (Command):
                 testdirs.append(path)
         return testdirs
 
+    def newglobals(self, filetoexec):
+        #patch provided by: Scott Schlesier - when script is run, it does not 
+        #use globals from pydevd:
+        #This will prevent the pydevd script from contaminating the namespace for the script to be debugged
+        
+        #pretend pydevd is not the main module, and
+        #convince the file to be debugged that it was loaded as main
+        #sys.modules['setup'] = sys.modules['__main__']
+        #sys.modules['setup'].__name__ = 'setup'            
+        
+        from imp import new_module
+        m = new_module('__main__')
+        #sys.modules['__main__'] = m
+        m.__file__ = filetoexec
+        myglobals = m.__dict__
+        return m, myglobals
+
+    def execfile(self, filetoexec, oglobals=None, mylocals=None):
+#        oldglobals=dict()
+#        for key in globals().keys():
+#            oldglobals[key]=globals()[key]
+        if oglobals is None:
+            m, oglobals=self.newglobals(filetoexec)
+        if mylocals is None: 
+            mylocals = oglobals        
+            
+        #Predefined (writable) attributes: __name__ is the module's name; 
+        #__doc__ is the module's documentation string, or None if unavailable; 
+        #__file__ is the pathname of the file from which the module was loaded, 
+        #if it was loaded from a file. The __file__ attribute is not present for 
+        #C modules that are statically linked into the interpreter; for extension modules 
+        #loaded dynamically from a shared library, it is the pathname of the shared library file. 
+
+
+        #I think this is an ugly hack, bug it works (seems to) for the bug that says that sys.path should be the same in
+        #debug and run.
+        msys=__import__("sys", oglobals, mylocals)
+        oglobals["sys"]=msys
+        if m.__file__.startswith(oglobals["sys"].path[0]):
+            #print >> sys.stderr, 'Deleting: ', sys.path[0]
+            del oglobals["sys"].path[0]
+        
+        #now, the local directory has to be added to the pythonpath
+        #sys.path.insert(0, os.getcwd())
+        #Changed: it's not the local directory, but the directory of the file launched
+        #The file being run ust be in the pythonpath (even if it was not before)
+        oglobals["sys"].path.insert(0, os.path.split(filetoexec)[0])
+        
+        oldargv=sys.argv
+        oglobals["sys"].argv=[ filetoexec, ]
+        # for completness, we'll register the pydevd.reader & pydevd.writer threads
+        try:
+            execfile(filetoexec, oglobals, mylocals) #execute the script
+#            sys.modules['__main__']=sys.modules['setup']
+#            sys.modules['__main__'].__name__ = '__main__'
+        except SystemExit, se:
+            if se and se.code!=0 and se.code!=True:
+                raise se
+ #       for key in oldglobals.keys():
+ #           globals()[key]=oldglobals[key]
+            
+        for key in globals().keys():
+            if not key in oldglobals.keys():
+                del globals()[key]
+        sys.argv=oldargv
+    
     def run (self):
         print "test:Hello world!"
         print "I'm: %s"%self.distribution
@@ -1055,22 +1131,25 @@ class test (Command):
         print "test_base: %s" %self.test_base
         print "Modulepath: %s" %self._build_modulepaths()
         print "Testdir: %s" %self._get_testdir()
-        print "Testclassfilter: %s" %self.test_filter
+        print "Testexecfiles: %s" %self.testfile_exec
+        print "Testfilefilter: %s" %self.testfile_filter
+        print "Testclassfilter: %s" %self.testclass_filter
+        testdirs=self._get_testdir()
         mypath=list()
         mypath.append(os.path.join(os.getcwd(),self.build_base))
+        if testdirs and len(testdirs)>0:
+            mypath.extend(testdirs)
         mypath.extend(sys.path)
         sys.path=mypath
         print "Paths: %s" %sys.path
-        testdirs=self._get_testdir()
+#        if self.testfile_exec and len(self.testfile_exec)>0:
+#            for testfile_exec in self.testfile_exec:
+#                print "Executing testfile %s" %testfile_exec
+#                self.execfile(testfile_exec)
         if testdirs and len(testdirs)>0:
-            result=PydevTestRunner(testdirs, self.test_filter, 3, None).run_tests()
+            result=PydevTestRunner(testdirs, self.testclass_filter, 3, None, self.testfile_filter).run_tests()
             if len(result.errors) + len(result.failures):
                 raise IOError("Error test failed: %s" %result)
-        #for testclass in self._get_testfiles():
-        #    print "--------------------------------------"
-        #    print "Testing file %s" %testclass
-        #    execfile(testclass)
-        #    print "--------------------------------------"
 
 # Should become a command!
 def buildmanpages(setupcfg):
