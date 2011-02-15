@@ -50,6 +50,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-18
+- changes for tools rebase to comoonics.tools package
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-17
   fixed bug (#398) in evaluateXPath that would cause a bug with old xml implementation 
   (python 2.4 and xml.dom) that would return Attributes as Attr not as value. But expected as value.
@@ -525,6 +527,8 @@ comoonics-ec-admin-py:
   - initial revision
 
 comoonics-ec-base-py:
+* Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-6
+- moved to package comoonics.ecbase
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-5
 - rebase
 * Tue Apr 13 2010 MG <grimme@atix.de>, 0.1-4
@@ -537,6 +541,10 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-57
+- changes for ecbase rebase to comoonics.ecbase package
+* Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-56
+- changes for ecbase rebase to comoonics.ecbase package
 * Thu Feb 03 2011 MG <grimme@atix.de>, 0.1-55
 - Issue warning and exit if com-ec cannot import libxslt and libxml2 but don't make it rpm dependent.
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-54
@@ -724,6 +732,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-17
+- changes for ecbase rebase to comoonics.ecbase package
 * Tue Feb 08 2011 MG <grimme@atix.de>, 0.1-16
 - ComDisk.py
   - removed factory constructor that was not necessarily needed.
@@ -772,6 +782,8 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-9
+- moved to package comoonics.tools.
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-8
 - rebase
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-7
