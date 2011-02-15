@@ -63,17 +63,17 @@ Example Configuration for the HP_EVA implementation:
 
 
 # here is some internal information
-# $Id: ComStorageCopyset.py,v 1.1 2010-03-08 12:30:48 marc Exp $
+# $Id: ComStorageCopyset.py,v 1.2 2011-02-15 14:52:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComStorageCopyset.py,v $
 
 from comoonics.enterprisecopy.ComCopyset import Copyset
 from comoonics.storage.ComStorage import Storage
 from comoonics.enterprisecopy.ComStorageCopyobject import StorageCopyObject
-from comoonics.ComJournaled import JournaledObject
+from comoonics.ecbase.ComJournaled import JournaledObject
 from comoonics import ComLog
 
 class StorageCopyset(Copyset):
@@ -106,7 +106,10 @@ mylogger=ComLog.getLogger(StorageCopyset.__logStrLevel__)
 
 ########################
 # $Log: ComStorageCopyset.py,v $
-# Revision 1.1  2010-03-08 12:30:48  marc
+# Revision 1.2  2011-02-15 14:52:47  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.1  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2007/03/26 08:12:56  marc

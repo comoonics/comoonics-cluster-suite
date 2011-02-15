@@ -6,7 +6,7 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComScsi.py,v 1.3 2010-03-08 12:30:48 marc Exp $
+# $Id: ComScsi.py,v 1.4 2011-02-15 14:54:52 marc Exp $
 #
 
 
@@ -17,7 +17,7 @@ import os
 
 from comoonics import ComLog
 from comoonics import ComSystem
-from comoonics import ComUtils
+from comoonics.ecbase import ComUtils
 from comoonics.ComExceptions import ComException
 
 class SCSI:
@@ -66,7 +66,10 @@ class SCSI:
             ComSystem.execLocal( "echo \""+__bus+"\" \""+ __target+"\" \""+ __lun+ "\" > "+__syspath+"/"+__host+"/scan")
 
 # $Log: ComScsi.py,v $
-# Revision 1.3  2010-03-08 12:30:48  marc
+# Revision 1.4  2011-02-15 14:54:52  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.3  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.2  2010/02/09 21:48:51  mark

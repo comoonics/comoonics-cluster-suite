@@ -6,17 +6,17 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComArchiveCopyObject.py,v 1.11 2010-11-22 10:21:17 marc Exp $
+# $Id: ComArchiveCopyObject.py,v 1.12 2011-02-15 14:52:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComArchiveCopyObject.py,v $
 
 from comoonics import ComLog, ComSystem
 from ComCopyObject import CopyObjectJournaled
 from comoonics.ComExceptions import ComException
-from comoonics.ComMetadataSerializer import MetadataSerializer
+from comoonics.ecbase.ComMetadataSerializer import MetadataSerializer
 from comoonics.storage.ComArchive import Archive
 
 class ArchiveCopyObject(CopyObjectJournaled):
@@ -73,7 +73,10 @@ class ArchiveCopyObject(CopyObjectJournaled):
 
 #################
 # $Log: ComArchiveCopyObject.py,v $
-# Revision 1.11  2010-11-22 10:21:17  marc
+# Revision 1.12  2011-02-15 14:52:47  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.11  2010/11/22 10:21:17  marc
 # - moved xml usage of old type to XmlTools
 #
 # Revision 1.10  2010/03/08 12:30:48  marc

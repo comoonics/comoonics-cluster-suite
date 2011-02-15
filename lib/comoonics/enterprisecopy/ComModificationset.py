@@ -7,15 +7,15 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComModificationset.py,v 1.7 2010-03-08 12:30:48 marc Exp $
+# $Id: ComModificationset.py,v 1.8 2011-02-15 14:52:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComModificationset.py,v $
 
 from comoonics.ComDataObject import DataObject
-from comoonics.ComJournaled import JournaledObject
+from comoonics.ecbase.ComJournaled import JournaledObject
 from comoonics import ComLog
 from comoonics.enterprisecopy import ComModification
 from comoonics.enterprisecopy.ComRequirement import Requirements
@@ -111,7 +111,10 @@ class ModificationsetJournaled(Modificationset, JournaledObject):
         self.replayJournal()
 
 # $Log: ComModificationset.py,v $
-# Revision 1.7  2010-03-08 12:30:48  marc
+# Revision 1.8  2011-02-15 14:52:47  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.7  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.6  2007/09/07 14:38:56  marc

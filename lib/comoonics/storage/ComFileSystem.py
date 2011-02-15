@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.6 2010-11-22 10:23:09 marc Exp $
+# $Id: ComFileSystem.py,v 1.7 2011-02-15 14:54:52 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
 import os.path
@@ -19,7 +19,7 @@ import exceptions
 
 from comoonics import ComLog
 from comoonics import ComSystem
-from comoonics import ComUtils
+from comoonics.ecbase import ComUtils
 from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject, NotImplementedYetException
 
@@ -389,7 +389,10 @@ class nfsFileSystem(FileSystem):
         self.name="nfs"
     
 # $Log: ComFileSystem.py,v $
-# Revision 1.6  2010-11-22 10:23:09  marc
+# Revision 1.7  2011-02-15 14:54:52  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.6  2010/11/22 10:23:09  marc
 # fixed small test bug
 #
 # Revision 1.5  2010/09/21 14:21:31  marc

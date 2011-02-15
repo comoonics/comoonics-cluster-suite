@@ -6,16 +6,16 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComCopyObject.py,v 1.9 2010-03-08 12:30:48 marc Exp $
+# $Id: ComCopyObject.py,v 1.10 2011-02-15 14:52:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComCopyObject.py,v $
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
-from comoonics.ComJournaled import JournaledObject
+from comoonics.ecbase.ComJournaled import JournaledObject
 from comoonics import ComLog
 from ComRequirement import Requirements
 
@@ -130,7 +130,10 @@ class CopyObjectJournaled(CopyObject, JournaledObject):
         """
         self.replayJournal()
 # $Log: ComCopyObject.py,v $
-# Revision 1.9  2010-03-08 12:30:48  marc
+# Revision 1.10  2011-02-15 14:52:47  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.9  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.8  2008/03/12 09:40:53  marc

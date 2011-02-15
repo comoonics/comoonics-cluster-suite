@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDevice.py,v 1.4 2011-02-08 13:05:56 marc Exp $
+# $Id: ComDevice.py,v 1.5 2011-02-15 14:54:52 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDevice.py,v $
 
 import os
@@ -42,7 +42,7 @@ class Device(HostDisk):
         """ returns first mountpoint of device and fstype if mounted
         returns None if not mounted
         """
-        from comoonics import ComUtils
+        from comoonics.ecbase import ComUtils
         lines=self.getMountList()
         exp="^" + self.getDevicePath() + " (/.*?) .*"
         self.getLog().debug(exp)
@@ -78,7 +78,10 @@ class Device(HostDisk):
         return o.readlines()
 
 # $Log: ComDevice.py,v $
-# Revision 1.4  2011-02-08 13:05:56  marc
+# Revision 1.5  2011-02-15 14:54:52  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.4  2011/02/08 13:05:56  marc
 # - getMountList
 #   - extended to use subprocess for python > 2.4
 #

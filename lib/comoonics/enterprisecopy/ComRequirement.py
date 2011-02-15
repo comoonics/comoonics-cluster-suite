@@ -6,16 +6,16 @@ here should be some more information about the module, that finds its way inot t
 """
 
 # here is some internal information
-# $Id: ComRequirement.py,v 1.4 2007-09-07 14:41:55 marc Exp $
+# $Id: ComRequirement.py,v 1.5 2011-02-15 14:52:47 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComRequirement.py,v $
 
 from comoonics.ComDataObject import DataObject
 from comoonics.ComExceptions import ComException
-from comoonics.ComJournaled import JournaledObject
+from comoonics.ecbase.ComJournaled import JournaledObject
 from comoonics import ComLog
 
 class UnsupportedRequirementException(ComException): pass
@@ -166,7 +166,10 @@ class Requirements(object):
 
 ###################################
 # $Log: ComRequirement.py,v $
-# Revision 1.4  2007-09-07 14:41:55  marc
+# Revision 1.5  2011-02-15 14:52:47  marc
+# - changes for ecbase rebase to comoonics.ecbase package
+#
+# Revision 1.4  2007/09/07 14:41:55  marc
 # -added registry implementation.
 # -logging
 #
