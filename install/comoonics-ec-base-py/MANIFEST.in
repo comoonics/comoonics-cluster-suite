@@ -1,4 +1,7 @@
 include *.txt
 recursive-include examples *.txt *.py
 include man/*.gz
+include lib/comoonics/ecbase/test/*.py
+include lib/comoonics/ecbase/test/*.xml
+include lib/comoonics/ecbase/test/*.conf
 prune test/
