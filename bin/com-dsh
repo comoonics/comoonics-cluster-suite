@@ -1067,7 +1067,10 @@ def sess_remote (options):
                                       port_exception.group(1)))
     elif options.proto.lower() == "telnet":               # Spawn TELNET Session
         if port_exception == None:
-            session = pexpect.spawn ('telnet %s' % (options.host))
+            if options.user:
+                session = pexpect.spawn ('telnet -l %s %s' % (options.user, options.host))
+            else:
+                session = pexpect.spawn ('telnet %s' % (options.host))
         else:
             session = pexpect.spawn ('telnet %s %s' % (port_exception.group(1),
                                                        port_exception.group(2)))
