@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComDisk.py,v 1.9 2011-02-08 13:05:02 marc Exp $
+# $Id: ComDisk.py,v 1.10 2011-02-17 09:06:58 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDisk.py,v $
 
 import os
@@ -123,6 +123,11 @@ class HostDisk(Disk):
 
     def exists(self):
         return ComSystem.execMethod(os.path.exists, self.getDeviceName())
+
+    def sameSize(self):
+        """ 
+        """
+        return self.getAttributeBoolean("samesize", False)
 
     def getDeviceName(self):
         """ returns the Disks device name (e.g. /dev/sda) """
@@ -251,7 +256,10 @@ class HostDisk(Disk):
         # create new partitions
         for com_part in self.getAllPartitions():
             type=com_part.getPartedType()
-            size=com_part.getPartedSizeOptimum(dev)
+            if self.sameSize():
+                size=com_part.getPartedSize(dev)
+            else:
+                size=com_part.getPartedSizeOptimum(dev)
             flags=com_part.getPartedFlags()
             self.log.debug("creating partition: size: %i" % size )
             phelper.add_partition(disk, type, size, flags)
@@ -377,7 +385,7 @@ class HostDisk(Disk):
         """ Method that waits for synchronized commits on underlying devices
         """
         try:
-            from comoonics import stabilized
+            from comoonics.tools import stabilized
             stabilized.stabilized(file=self.stabilizedfile, type=self.stabilizedtype, good=self.stabilizedgood)
         except ImportError:
             warnings.warn("Could not import a stabilization functionality to synchronized changed disk devices with depending kernel. You might think of installing comoonics-storage-py.")
@@ -394,7 +402,11 @@ except ImportError:
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
 
 # $Log: ComDisk.py,v $
-# Revision 1.9  2011-02-08 13:05:02  marc
+# Revision 1.10  2011-02-17 09:06:58  marc
+# - added samesize functionality to createPartition that would not try to guess the optimal size but take what exactly what is specified.
+# - fixed import for stabilized
+#
+# Revision 1.9  2011/02/08 13:05:02  marc
 # - removed the factory constructor for ComDisk that would automatically detect if ComStorageDisk or ComHostDisk is needed.
 #
 # Revision 1.8  2011/01/26 13:04:06  marc
