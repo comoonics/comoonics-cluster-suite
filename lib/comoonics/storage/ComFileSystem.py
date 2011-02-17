@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.7 2011-02-15 14:54:52 marc Exp $
+# $Id: ComFileSystem.py,v 1.8 2011-02-17 13:14:26 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
 import os.path
@@ -165,7 +165,7 @@ class FileSystem(DataObject):
         """ return the label on device (virtual method)
         device: ComDevice.Device
         """
-        pass
+        return ""
 
 #    def getBlockSize(self):
 #        """ return the blocksize defined in filesystem element
@@ -234,8 +234,12 @@ class extFileSystem(FileSystem):
         log.debug("labelDevice: " +  __cmd + ": " + __ret)
         if __rc:
             raise ComException(__cmd + __ret)
+        self.setAttribute("label", label)
 
     def getLabel(self, device):
+        return self.getAttribute("label", self.getLabelFromDevice(device))
+
+    def getLabelFromDevice(self, device):
         # BUG: Cannot function!!!!
         __devicePath= device.getDevicePath()
         __cmd = self.labelCmd + " " + __devicePath
@@ -389,7 +393,10 @@ class nfsFileSystem(FileSystem):
         self.name="nfs"
     
 # $Log: ComFileSystem.py,v $
-# Revision 1.7  2011-02-15 14:54:52  marc
+# Revision 1.8  2011-02-17 13:14:26  marc
+# add support for labels.
+#
+# Revision 1.7  2011/02/15 14:54:52  marc
 # - changes for ecbase rebase to comoonics.ecbase package
 #
 # Revision 1.6  2010/11/22 10:23:09  marc
