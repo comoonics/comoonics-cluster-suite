@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.17 2010-03-08 12:30:48 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.18 2011-02-17 13:14:04 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -175,6 +175,8 @@ class FilesystemCopyset(Copyset):
     def prepareDest(self):
         # do things like mkfs, mount
         self.dest.prepareAsDest()
+        if self.source.filesystem.getLabel(self.source.device) != "" and self.dest.filesystem.getLabel(self.dest.device) == "":
+            self.dest.filesystem.labelDevice(self.dest.device, self.source.filesystem.getLabel(self.source.device))
 
 #    def copyFsAttributes(self):
 #        """ copy all Attributes from source to dest that are not defined
@@ -261,7 +263,10 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.17  2010-03-08 12:30:48  marc
+# Revision 1.18  2011-02-17 13:14:04  marc
+# added support for labeled filesystems
+#
+# Revision 1.17  2010/03/08 12:30:48  marc
 # version for comoonics4.6-rc1
 #
 # Revision 1.16  2010/02/09 21:48:24  mark
