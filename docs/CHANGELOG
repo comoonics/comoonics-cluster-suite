@@ -292,7 +292,7 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
-* Sun Feb 8 2011 MG <grimme@atix.de>, 0.1-16
+* Sun Feb 13 2011 MG <grimme@atix.de>, 0.1-16
 - com-dsh
   - fixed bug in telnet execution with no username been given.
 * Thu Feb 10 2011 MG <grimme@atix.de>, 0.1-15
@@ -732,6 +732,10 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Thu Feb 17 2011 MG <grimme@atix.de>, 0.1-18
+- ComDisk.py
+   - added samesize functionality to createPartition that would not try to guess the optimal size but take what exactly what is specified.
+   - fixed import for stabilized
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-17
 - changes for ecbase rebase to comoonics.ecbase package
 * Tue Feb 08 2011 MG <grimme@atix.de>, 0.1-16
