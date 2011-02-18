@@ -51,8 +51,11 @@ class test_ClusterInfo(baseClusterTestClass):
         self.assertEqual(_tmp1, _tmp2)
     
     # Methods from RedhatClusterinfo
-    def testQueryvalue(self):
+    def testQueryvalue1(self):
         self.assertEqual(self.createNodeList("name"), self.clusterInfo.queryValue("/cluster/clusternodes/clusternode/@name"))
+        
+    def testQueryvalue2(self):
+        self.assertEqual(len(self.createNodeList("name")), self.clusterInfo.queryValue("count(/cluster/clusternodes/clusternode/@name)")[0])
         
     def testQueryxml(self):
         _tmp1 = "name"
