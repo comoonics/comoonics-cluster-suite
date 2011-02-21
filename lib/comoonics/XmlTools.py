@@ -4,7 +4,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.18 2011-01-12 10:06:08 marc Exp $
+# $Id: XmlTools.py,v 1.19 2011-02-21 16:25:19 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -59,10 +59,14 @@ def evaluateXPath(path, element):
         import xml.dom
         from xml.xpath import Evaluate
         result=Evaluate(path, element)
-        if type(result) == list:
+        if hasattr(result,'__iter__'):
             for i in range(len(result)):
                 if isinstance(result[i], xml.dom.Node) and result[i].nodeType == xml.dom.Node.ATTRIBUTE_NODE:
                     result[i]=result[i].value
+        elif result==False or result==True:
+            return result
+        else:
+            result=[result]
         return result
     except ImportError:
         # Implementation for etree
@@ -71,12 +75,18 @@ def evaluateXPath(path, element):
         buf=toPrettyXML(element)
         elist=XPath(path).evaluate(fromstring(buf))
         nodelist=list()
-        for eelement in elist:
-            # either the returnlist is a stringlist or a element list
-            if isinstance(eelement, basestring):
-                nodelist.append(eelement)
-            else:
-                nodelist.append(parseXMLString(tounicode(eelement)).documentElement)
+        # if is iterable
+        if hasattr(elist,'__iter__'):
+            for eelement in elist:
+                # either the returnlist is a stringlist or a element list
+                if isinstance(eelement, basestring):
+                    nodelist.append(eelement)
+                else:
+                    nodelist.append(parseXMLString(tounicode(eelement)).documentElement)
+        elif elist==False or elist==True:
+            return elist
+        else:
+            nodelist.append(elist)
         return nodelist
 
 def overwrite_element_with_xpaths(element, xpaths):
@@ -422,7 +432,10 @@ def xpathsplit(_xpath):
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.18  2011-01-12 10:06:08  marc
+# Revision 1.19  2011-02-21 16:25:19  marc
+# - fixed a bug in evaluateXPath that a query that returns False would be given through.
+#
+# Revision 1.18  2011/01/12 10:06:08  marc
 # fixed bug (#398) in evaluateXPath that would cause a bug with old xml implementation (python 2.4 and xml.dom) that would return Attributes as Attr not as value. But expected as value.
 #
 # Sideeffect was that e.g. com-dsh would not work.
