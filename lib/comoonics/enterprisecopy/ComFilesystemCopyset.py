@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyset.py,v 1.18 2011-02-17 13:14:04 marc Exp $
+# $Id: ComFilesystemCopyset.py,v 1.19 2011-02-21 16:23:53 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyset.py,v $
 
 import xml.dom
@@ -227,6 +227,9 @@ class FilesystemCopyset(Copyset):
         ComLog.getLogger(__logStrLevel__).debug("doCopy: instance(self.source: %s), instance(self.dest: %s)" %(self.source.__class__, self.dest.__class__))
         ComLog.getLogger(__logStrLevel__).debug("doCopy: isinstance(%s, PathCopyObject): %s" %(self.source.__class__, isinstance(self.source, PathCopyObject)))
         if isinstance(self.source, FilesystemCopyObject) or isinstance(self.source, PathCopyObject):
+            if isinstance(self.source, FilesystemCopyObject):
+                if not self.source.filesystem.isCopyable():
+                    return True
             mountpoint=self.source.getMountpoint().getAttribute("name")
             ComLog.getLogger(__logStrLevel__).debug("doCopy: isinstance(%s, PathCopyObject): %s" %(self.dest.__class__, isinstance(self.dest, PathCopyObject)))
             if isinstance(self.dest, FilesystemCopyObject) or isinstance(self.dest, PathCopyObject):
@@ -251,6 +254,8 @@ class FilesystemCopyset(Copyset):
         # 3. copy archive to fs
         elif isinstance(self.source, ArchiveCopyObject):
             if isinstance(self.dest, FilesystemCopyObject) or isinstance(self.dest, PathCopyObject):
+                if self.dest.filesystem.copyable:
+                    return True
 #                try:
                 archive=self.source.getDataArchive()
                 mountpoint=self.dest.getMountpoint().getAttribute("name")
@@ -263,7 +268,10 @@ class FilesystemCopyset(Copyset):
                            %( self.source.__class__.__name__, self.dest.__class__.__name__))
 
 # $Log: ComFilesystemCopyset.py,v $
-# Revision 1.18  2011-02-17 13:14:04  marc
+# Revision 1.19  2011-02-21 16:23:53  marc
+# - implemented functionality that a filesystem would be queried if it allows copying or not (e.g. swap does not)
+#
+# Revision 1.18  2011/02/17 13:14:04  marc
 # added support for labeled filesystems
 #
 # Revision 1.17  2010/03/08 12:30:48  marc

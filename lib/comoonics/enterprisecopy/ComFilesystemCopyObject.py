@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFilesystemCopyObject.py,v 1.13 2011-02-17 13:13:49 marc Exp $
+# $Id: ComFilesystemCopyObject.py,v 1.14 2011-02-21 16:23:53 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/enterprisecopy/ComFilesystemCopyObject.py,v $
 
 from comoonics.storage.ComDevice import Device
@@ -83,7 +83,9 @@ class FilesystemCopyObject(CopyObjectJournaled):
         options=options.split(",")
         if options and "fsck" in options and not self.device.isMounted(self.mountpoint):
             self.filesystem.checkFs(self.device)
-        if options and "skipmount" in options:
+        if not self.filesystem.isCopyable():
+            FilesystemCopyObject.log.debug("prepareAsSource: skipping mount not copyable")
+        elif options and "skipmount" in options:
             FilesystemCopyObject.log.debug("prepareAsSource: skipping mount because specified")
         else:
             if not self.device.isMounted(self.mountpoint):
@@ -109,7 +111,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.filesystem.mount(self.device, self.mountpoint)
         if self.filesystem.hasAttribute("label"):
             self.filesystem.labelDevice(self.device, self.filesystem.getLabel(self.device))
-        self.journal(self.filesystem, "mount", [self.mountpoint])
+        if self.filesystem.needsNoMountpoint():
+            self.journal(self.filesystem, "mount", [self.device])
+        else:
+            self.journal(self.filesystem, "mount", [self.mountpoint])
 
     def cleanupSource(self):
         self.log.debug("cleanupSource()")
@@ -149,7 +154,10 @@ class FilesystemCopyObject(CopyObjectJournaled):
         self.getFileSystem().setAttributes(__attr)
 
 # $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.13  2011-02-17 13:13:49  marc
+# Revision 1.14  2011-02-21 16:23:53  marc
+# - implemented functionality that a filesystem would be queried if it allows copying or not (e.g. swap does not)
+#
+# Revision 1.13  2011/02/17 13:13:49  marc
 # added support for labeled filesystems
 #
 # Revision 1.12  2010/09/21 14:17:44  marc
