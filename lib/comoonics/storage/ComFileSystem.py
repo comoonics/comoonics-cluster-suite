@@ -7,11 +7,11 @@ here should be some more information about the module, that finds its way inot t
 
 
 # here is some internal information
-# $Id: ComFileSystem.py,v 1.8 2011-02-17 13:14:26 marc Exp $
+# $Id: ComFileSystem.py,v 1.9 2011-02-21 16:24:34 marc Exp $
 #
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComFileSystem.py,v $
 
 import os.path
@@ -35,6 +35,9 @@ CMD_E2LABEL="e2label"
 CMD_E2FSCK="e2fsck"
 CMD_TUNEFSOCFS="tunefs.ocfs2 -L"
 CMD_OCFS2FSCK="ocfs2.fsck"
+CMD_SWAPMKFS="mkswap"
+CMD_SWAPON="swapon"
+CMD_SWAPOFF="swapoff"
 
 def getFileSystem(element, doc):
     """factory method to ceate a FileSystem object
@@ -53,6 +56,8 @@ def getFileSystem(element, doc):
         return ocfs2FileSystem(element, doc)
     if __type == "nfs":
         return nfsFileSystem(element, doc)
+    if __type == "swap":
+        return swapFileSystem(element, doc)
     raise exceptions.NotImplementedError()
 
 
@@ -83,6 +88,10 @@ class FileSystem(DataObject):
         self.partedFileSystemType = None
         self.cmd_fsck=None
         self.cmd_mkfs=None
+        self.copyable=True
+        self.nomountpoint=False
+        self.cmd_mount=CMD_MOUNT
+        self.cmd_umount=CMD_UMOUNT
 
     def mount(self, device, mountpoint):
         """ mount a filesystem
@@ -101,8 +110,7 @@ class FileSystem(DataObject):
         if __exclusive and __exclusive != "" and os.path.exists(__exclusive):
             raise ComException("lockfile " + __exclusive + " exists!")
 
-        __cmd = CMD_MOUNT + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
-                " " + device.getDevicePath() + " " + __mp
+        __cmd = self.mkmountcmd(device, mountpoint)
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("mount:" + __cmd + ": " + __ret)
         if __rc != 0:
@@ -111,11 +119,15 @@ class FileSystem(DataObject):
             __fd=open(__exclusive, 'w')
             __fd.write(device.getDevicePath() + " is mounted ")
 
+    def mkmountcmd(self, device, mountpoint):
+        return self.cmd_mount + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
+                " " + device.getDevicePath() + " " + mountpoint.getAttribute("name")
+
     def umountDev(self, device):
         """ umount a filesystem with the use of the device name
         device: ComDevice.Device
         """
-        __cmd = CMD_UMOUNT + " " + device.getDevicePath()
+        __cmd = self.cmd_umount + " " + device.getDevicePath()
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("umount:" + __cmd + ": " + __ret)
         if __rc != 0:
@@ -126,7 +138,7 @@ class FileSystem(DataObject):
         """ umount a filesystem with the use of the mountpoint
         mountpoint: ComMountPoint.MountPoint
         """
-        __cmd = CMD_UMOUNT + " " + mountpoint.getAttribute("name")
+        __cmd = self.cmd_umount + " " + mountpoint.getAttribute("name")
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("umount: " + __cmd + ": " + __ret)
         if __rc != 0:
@@ -179,6 +191,17 @@ class FileSystem(DataObject):
         e.g ext3 is formattable, proc is not
         """
         return self.formattable
+
+    def isCopyable(self):
+        """ return if this filesystem type can be copied
+        e.g. swap is not copyable but ext3.
+        """
+        return self.copyable
+
+    def needsNoMountpoint(self):
+        """ returns True if that filesystem does not need a mountpoint (e.g. swap)
+        """
+        return self.nomountpoint
 
     def getMaxSizeMB(self):
         """ returns maximum size of the filesystem in MB """
@@ -294,6 +317,31 @@ class ocfs2FileSystem(extFileSystem):
         self.labelCmd = CMD_TUNEFSOCFS
         self.setFsckCmd(CMD_OCFS2FSCK + " -y")
 
+class swapFileSystem(FileSystem):
+    """ Swap Filesystem """
+    def __init__(self, element, doc):
+        FileSystem.__init__(self, element, doc)
+        self.name="swap"
+        self.setMkfsCmd(CMD_SWAPMKFS)
+        self.labelCmd=CMD_SWAPMKFS+ " -l "
+        
+        self.formattable=1
+        self.nomountpoint=True
+        self.copyable=False
+        self.cmd_mount=CMD_SWAPON
+        self.cmd_umount=CMD_SWAPOFF
+        
+    def formatDevice(self, device):
+        __devicePath = device.getDevicePath()
+        __cmd = self.getMkfsCmd() + " " + __devicePath
+        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
+        log.debug("formatDevice: "  + __cmd + ": " + __ret)
+        if __rc != 0:
+            raise ComException(__cmd + __ret)
+
+    def mkmountcmd(self, device, mountpoint):
+        return self.cmd_mount+" "+device.getDevicePath()
+        
 class gfsFileSystem(FileSystem):
     """ The Global Filesystem - gfs """
     def __init__(self, element, doc):
@@ -393,7 +441,12 @@ class nfsFileSystem(FileSystem):
         self.name="nfs"
     
 # $Log: ComFileSystem.py,v $
-# Revision 1.8  2011-02-17 13:14:26  marc
+# Revision 1.9  2011-02-21 16:24:34  marc
+# - added class SwapFilesystem
+# - added general query for isCopyable
+# - made commands more flexible
+#
+# Revision 1.8  2011/02/17 13:14:26  marc
 # add support for labels.
 #
 # Revision 1.7  2011/02/15 14:54:52  marc
