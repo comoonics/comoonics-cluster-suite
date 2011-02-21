@@ -2,7 +2,7 @@
 """
 Binary to query clusterconfiguration
 """
-__version__ = "$Revision: 1.23 $"
+__version__ = "$Revision: 1.24 $"
 __description__="""
 Binary to query clusterconfiguration
 """
@@ -58,10 +58,10 @@ def printResult(result, options, params, paramsparsestring="\%\([a-zA-Z0-9_]+\)"
         else:
             if not options.nowarnings and options.properties:
                 warnings.warn("Properties output selected but a queryvalue is returned. Properties can only be output with paths that lead to elements.")
-            logger.debug("replacing %s in result %s" %(params, result))
-            count=len(re.findall(paramsparsestring, result))
+            logger.debug("replacing %s in result %s" %(params, str(result)))
+            count=len(re.findall(paramsparsestring, str(result)))
             if count > 0:
-                outbuf.write(result %params)
+                outbuf.write(str(result) %params)
             else:
                 outbuf.write(result)
 
@@ -360,7 +360,10 @@ Command: %s
 sys.exit(errors)
 ###########
 # $Log: com-queryclusterconf,v $
-# Revision 1.23  2010-11-22 10:16:25  marc
+# Revision 1.24  2011-02-21 16:25:56  marc
+# result will be forced to be converted in string.
+#
+# Revision 1.23  2010/11/22 10:16:25  marc
 # - fixed bug with replacing runtime parameters %{params..}
 #
 # Revision 1.22  2010/11/21 21:49:26  marc
