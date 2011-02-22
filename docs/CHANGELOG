@@ -50,6 +50,11 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Fri Feb 18 2011 MG <grimme@atix.de>, 0.1-19
+- XmlTools.py:
+  - evaluateXpath: will now handle not iterable structures (if queried for a number, string) and return a list 
+      with one element (the return)
+  - evaluateXPath: will also honor queries that could not be found with a False
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-18
 - changes for tools rebase to comoonics.tools package
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-17
@@ -224,6 +229,9 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Fri Feb 18 2011 MG <grimme@atix.de>, 0.1-33
+- com-queryclusterconf
+  - Now also return numbers as queryresult
 * Thu Feb 03 2011 MG <grimme@atix.de>, 0.1-32
 - allow classes to work even without helper class (makes com-dsh working everywhere)
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-31
@@ -541,6 +549,12 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Sun Feb 19 2011 MG <grimme@atix.de>, 0.1-59
+- ComFilesystemCopyObject.py/ComFilesystemCopyset.py:
+  - implemented support for swap
+* Thu Feb 17 2011 MG <grimme@atix.de>, 0.1-58
+- ComFilesystemCopyObject.py/ComFilesystemCopyset.py:
+  - implemented labeling if supported.
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-57
 - changes for ecbase rebase to comoonics.ecbase package
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-56
@@ -732,8 +746,12 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Sun Feb 19 2011 MG <grimme@atix.de>, 0.1-19
+- ComFilesystemCopyObject.py/ComFilesystemCopyset.py:
+  - implemented support for swap
 * Thu Feb 17 2011 MG <grimme@atix.de>, 0.1-18
 - ComDisk.py
+   - took labeling for ext based filesystem into place
    - added samesize functionality to createPartition that would not try to guess the optimal size but take what exactly what is specified.
    - fixed import for stabilized
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-17
