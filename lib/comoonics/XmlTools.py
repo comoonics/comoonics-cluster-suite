@@ -4,7 +4,7 @@ Collection of xml tools
 
 __version__= "$Revision $"
 
-# $Id: XmlTools.py,v 1.19 2011-02-21 16:25:19 marc Exp $
+# $Id: XmlTools.py,v 1.20 2011-02-28 14:29:22 marc Exp $
 # @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
@@ -63,7 +63,7 @@ def evaluateXPath(path, element):
             for i in range(len(result)):
                 if isinstance(result[i], xml.dom.Node) and result[i].nodeType == xml.dom.Node.ATTRIBUTE_NODE:
                     result[i]=result[i].value
-        elif result==False or result==True:
+        elif type(result)==bool:
             return result
         else:
             result=[result]
@@ -83,7 +83,7 @@ def evaluateXPath(path, element):
                     nodelist.append(eelement)
                 else:
                     nodelist.append(parseXMLString(tounicode(eelement)).documentElement)
-        elif elist==False or elist==True:
+        elif type(elist)==bool:
             return elist
         else:
             nodelist.append(elist)
@@ -432,7 +432,10 @@ def xpathsplit(_xpath):
 
 #################
 # $Log: XmlTools.py,v $
-# Revision 1.19  2011-02-21 16:25:19  marc
+# Revision 1.20  2011-02-28 14:29:22  marc
+# - evaluateXPath: fixed a bug with boolean return codes.
+#
+# Revision 1.19  2011/02/21 16:25:19  marc
 # - fixed a bug in evaluateXPath that a query that returns False would be given through.
 #
 # Revision 1.18  2011/01/12 10:06:08  marc
