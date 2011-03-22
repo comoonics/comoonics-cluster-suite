@@ -64,6 +64,11 @@ class test_ClusterInfo(baseClusterTestClass):
         node=self.clusterInfo.queryXml(_query)[0]
         self.assertEquals(node.getAttribute(_tmp1), _tmp2, "%s==%s->%s != %s->%s" %(_query, node.getAttribute("name"), node.getAttribute("value"), _tmp1, _tmp2))
         
+    def testQueryxml2(self):
+        _query='/cluster/doesnotexist'
+        result=self.clusterInfo.queryXml(_query)
+        self.assertEquals(result, [], "Query %s should return false as result but does not. %s" %(_query, result))
+        
     def testQueryProperties(self):
         from comoonics.ComDataObject import DataObject
         import comoonics.XmlTools
