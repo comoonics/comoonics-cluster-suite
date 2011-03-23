@@ -5,7 +5,7 @@
 import time
 from ComPlugin import Plugin
 from comoonics.ComSysreport import Sysreport
-from comoonics.ComSystemInformation import SystemInformation
+from comoonics.tools.ComSystemInformation import SystemInformation
 from comoonics.ComPath import Path
 
 # here is some internal information
