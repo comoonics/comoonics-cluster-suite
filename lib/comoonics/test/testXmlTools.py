@@ -5,7 +5,6 @@ Created on Jul 14, 2009
 '''
 import unittest
 from comoonics import XmlTools
-from StringIO import StringIO
 
 xmls = [ """<?xml version='1.0' encoding='UTF-8'?>
 <localclone>
