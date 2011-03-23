@@ -153,6 +153,8 @@ def merge_trees_with_pk(source, dest, doc, pk="name", filter=None, onlyone=False
         #logger.debug("merge_trees_with_pk xpath: %s/@%s='%s'" %(tagname, pk, pkval))
         try:
             _path=evaluateXPath(tagname+"/@"+pk+"='"+pkval+"'", dest)
+            if hasattr(_path, "__iter__") and _path[0] == False:
+                _path=False
         except:
             #ComLog.debugTraceLog(logger)
             _path=False
