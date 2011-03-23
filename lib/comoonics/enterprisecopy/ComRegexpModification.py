@@ -39,41 +39,41 @@ class RegexpModification(FileModification):
         ComSystem.execMethod(self.doRegexpModifications, file, save)
 
     def doRegexpModifications(self, file, save=True, dest=None):
-        __search = self.getAttribute("search")
-        __replace = self.getAttribute("replace")
+        search = self.getAttribute("search")
+        replace = self.getAttribute("replace")
         if self.hasAttribute("options"):
-            __options = self.getREOptions(self.getAttribute("options"))
+            options = self.getREOptions(self.getAttribute("options"))
         else:
-            __options = self.DEFAULT_OPTIONS
+            options = self.DEFAULT_OPTIONS
         if save:
-            __cmd = list()
-            __cmd.append(CMD_CP)
-            __cmd.append(file.getAttribute("name"))
-            __cmd.append(file.getAttribute("name")+self.SAVESTRING)
-            __rc, __ret = ComSystem.execLocalStatusOutput(" ".join(__cmd))
-            if __rc:
-                RegexpModification.logger.error(" ".join(__cmd) + " " + __ret)
+            cmd = list()
+            cmd.append(CMD_CP)
+            cmd.append(file.getAttribute("name"))
+            cmd.append(file.getAttribute("name")+self.SAVESTRING)
+            rc, ret = ComSystem.execLocalStatusOutput(" ".join(cmd))
+            if rc:
+                RegexpModification.logger.error(" ".join(cmd) + " " + ret)
             else:
-                RegexpModification.logger.debug(" ".join(__cmd) + " " + __ret)
+                RegexpModification.logger.debug(" ".join(cmd) + " " + ret)
         try:
             if file.hasAttribute("sourcefile"):
-                __source=open(file.getAttribute("sourcefile"))
+                source=open(file.getAttribute("sourcefile"))
             else:
-                __source=open(file.getAttribute("name"))
-            __lines=__source.readlines()
-            __source.close()
+                source=open(file.getAttribute("name"))
+            lines=source.readlines()
+            source.close()
             if not dest:
-                __dest=open(file.getAttribute("name"), 'w')
+                dest2=open(file.getAttribute("name"), 'w')
             else:
-                __dest=dest
-            if __options | re.MULTILINE:
-                __dest.write(re.compile(__search, __options).sub(__replace, "".join(__lines)))
+                dest2=dest
+            if options | re.MULTILINE:
+                dest2.write(re.compile(search, options).sub(replace, "".join(lines)))
             else:
-                for line in __lines:
-                    __dest.write(re.compile(__search, __options).sub(__replace, line))
+                for line in lines:
+                    dest2.write(re.compile(search, options).sub(replace, line))
 
             if not dest:
-                __dest.close()
+                dest2.close()
         except IOError, ioe:
             RegexpModification.logger.error(ioe)
 
