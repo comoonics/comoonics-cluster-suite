@@ -29,6 +29,7 @@ class PathCopyObject(CopyObjectJournaled):
         __init__(path=path, source=True, dest=True)
         """
         PathCopyObject.logger.debug("__init__()")
+        self.origpath=None
         if (len(params)==2 and not isinstance(params[0], xml.dom.Node)) or (kwds and kwds.has_key("path") and (kwds.has_key("source") or kwds.has_key("dest"))):
             _path=None
             _source=(len(params)==2 and params[1]==True) or (kwds and kwds.has_key("source") and kwds["source"]==True)
@@ -65,19 +66,19 @@ class PathCopyObject(CopyObjectJournaled):
         ComSystem.execMethod(self.path.mkdir)
         ComSystem.execMethod(self.path.pushd, self.path.getPath())
         if not ComSystem.isSimulate():
-            self.journal(self.path, "pushd", self.path.getPath())
+            self.journal(self.path, "pushd")
         PathCopyObject.logger.debug("prepareAsSource() CWD: " + os.getcwd())
 
     def __cleanup(self):
         import os
-        oldpath=self.path.getPath()
+        oldpath=self.getPath().getPath()
         self.replayJournal()
         self.commitJournal()
         #os.chdir(self.cwd)
         #umount Filesystem
         #if self.umountfs:
         #    self.filesystem.umountDir(self.mountpoint)
-        PathCopyObject.logger.debug("__cleanup: remove: %s" %self.getAttribute("remove", "false"))
+        PathCopyObject.logger.debug("__cleanup: remove: %s" %self.getPath().getAttribute("remove", "false"))
         self.path.remove(oldpath)
         PathCopyObject.logger.debug("doPost() CWD: " + os.getcwd())
         self.path.setPath(self.origpath)
