@@ -175,7 +175,7 @@ class FilesystemCopyset(Copyset):
     def prepareDest(self):
         # do things like mkfs, mount
         self.dest.prepareAsDest()
-        if self.source.filesystem.getLabel(self.source.device) != "" and self.dest.filesystem.getLabel(self.dest.device) == "":
+        if isinstance(self.source, FilesystemCopyObject) and self.source.filesystem.getLabel(self.source.device) != "" and self.dest.filesystem.getLabel(self.dest.device) == "":
             self.dest.filesystem.labelDevice(self.dest.device, self.source.filesystem.getLabel(self.source.device))
 
 #    def copyFsAttributes(self):
