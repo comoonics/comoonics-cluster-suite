@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE enterprisecopy SYSTEM "/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy name="sysreport-redhat">
+	<modificationset type="path" name="sysreport-head">
+		<path name="/tmp/sysreport-redhat" id="basepath">
+   			<modification type="message">
+   				<text>
+
+This utility will go through and collect some detailed information
+about the hardware and setup of your $release_name system.
+This information will be used to diagnose problems with your system
+and will be considered confidential information.  Red Hat will use
+this information for diagnostic purposes ONLY.
+
+Please wait while we collect information about your system.
+
+This process may take a while to complete....
+No changes will be made to your system during this process.
+
+NOTE: You can safely ignore a failed message. This only means a file
+we were checking for did not exist.
+
+If your system hangs while gathering rpm information, please abort
+the script with CTRL-C and run it again after adding -norpm to the
+sysreport command line
+</text>
+   			</modification>
+   		</path>
+   	</modificationset>
+	<modificationset type="path" name="sysreport-redhat-base">
+		<path name="/tmp/sysreport-redhat">
+			<modification type="catiffile">
+				<requirement type="message" message="Collecting system configuration information:" order="pre"/>
+				<file name="/etc/sysconfig"/>
+			</modification>
+			<modification type="regexp" search="(.*Password=)(.*)" replace="$1" nobackup="1">
+				<file name="etc/sysconfig/rhn/up2date"/>
+			</modification>
+		</path>
+	</modificationset>
+	<modificationset type="path" name="sysreport-redhat-rhn">
+		<path name="/tmp/sysreport-redhat">
+			<modification type="message">
+				<text>
+Getting information about RHN
+				</text>
+			</modification>
+			<!--
+RHNDIR=/etc/sysconfig/rhn
+/bin/mkdir -p $ROOT/$RHNDIR 2>/dev/null
+catiffile "/etc/rhn"
+if [ -f $RHNDIR/systemid ] ; then
+  echo -n "Gathering systemid information:"
+  if [ -x /usr/bin/xsltproc ] ; then
+    /usr/bin/xsltproc $UTILDIR/text.xsl $RHNDIR/systemid > $ROOT/$RHNDIR/systemid 2>/dev/null
+    echo_success
+  else
+    catiffile "$RHNDIR/systemid"
+  fi
+fi
+-->
+			<modification type="catiffile">
+				<file name="/etc/rhn"/>
+				<file name="/etc/sysconfig/rhn"/>
+			</modification>
+			<!-- Get hardware profile information (for verification with system state and RHN)-->
+			<modification type="catifexec"><requirement type="message" message="Gathering RHN hardware profile information"/><command name="/usr/share/rhn/up2date_client/hardware.py"/></modification>
+			<modification type="catifexec"><requirement type="message" message="Gathering schema version"/><command name="/usr/bin/rhn-schema-version"/></modification>
+			<modification type="catifexec"><requirement type="message" message="Gathering database charactersets"/><command name="/usr/bin/rhn-charsets"/></modification>
+		</path>
+	</modificationset>
+	<modificationset type="path" name="sysreport-redhat-selinux">
+		<path name="/tmp/sysreport-redhat">
+			<modification type="message">
+				<text>
+Gathering information on SELinux setup
+				</text>
+			</modification>
+			<modification type="catifexec"><command name="selinuxconfig"/></modification>
+			<modification type="catifexec"><command name="sestatus"/></modification>
+			<modification type="catifexec"><command name="rpm -q -V selinux-policy-targeted" log="selinux-policy-targeted"/></modification>
+			<modification type="catifexec"><command name="rpm -q -V selinux-policy-strict" log="selinux-policy-strict"/></modification>
+			<modification type="catifexec">
+				<requirement type="message" message="Collecting information about chkconfig --list:" order="pre"/>
+				<command name="chkconfig --list"/>
+			</modification>
+			<modification type="catiffile">
+				<requirement type="message" message="Collecting information about /etc/rc.d:" order="pre"/>
+				<file name="/etc/rc.d"/>
+			</modification>
+			<modification type="catifexec">
+				<command name="ls /etc/rc.d/rc*.d/" log="./etc/rc.d/ls-output"/>
+			</modification>
+		</path>
+	</modificationset>
+	<copyset type="filesystem" name="save-sysreport">
+		<source type="path">
+			<path name="/tmp/sysreport-redhat" remove="true"/>
+		</source>
+		<destination type="backup">
+			<metadata>
+				<archive name='/tmp/meta-sysreport.tar' format='tar' type='file' compression='none'>
+					<file name='./path.xml'/>
+				</archive>
+			</metadata>
+			<data>
+				<archive name='/tmp/sysreport-redhat.tgz' format='tar' type='file' compression='gzip'/>
+			</data>
+		</destination>
+	</copyset>
+</enterprisecopy>
