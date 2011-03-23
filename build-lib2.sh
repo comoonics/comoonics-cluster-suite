@@ -15,6 +15,8 @@ BEGIN { changelogfound=0; }
 }
 ' < docs/CHANGELOG)
 
+    distribution_name=$(cat $(dirname $0)/comoonics-release)
+
 	for file in $(find $INSTALLDIR -maxdepth 1 -type f); do
   		cp $file $(basename $file)
 	done
@@ -24,10 +26,10 @@ BEGIN { changelogfound=0; }
 	done
 	
 	if [ $# -eq 0 ]; then
-		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --spec-only --changelog="${CHANGELOG}"
-		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --source-only --changelog="${CHANGELOG}"
+		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --spec-only --changelog="${CHANGELOG}" --distribution-name="$distribution_name"
+		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --source-only --changelog="${CHANGELOG}" --distribution-name="$distribution_name"
 	else
-		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm $@ --changelog="${CHANGELOG}"
+		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm $@ --changelog="${CHANGELOG}" --distribution-name="$distribution_name"
 	fi
 	
 	for file in $(find $INSTALLDIR -maxdepth 1 -type f); do
