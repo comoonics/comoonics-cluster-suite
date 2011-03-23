@@ -5,7 +5,6 @@ Created on 17.03.2011
 '''
 import unittest
 from comoonics import ComSystem
-from comoonics import ComLog
 import logging
 
 class Test(unittest.TestCase):
@@ -18,7 +17,7 @@ class Test(unittest.TestCase):
         print("tmpdir: %s" %self.tmpdir)
 
         self.systeminformation=SystemInformation()
-        self.sysreportdir="../../../../sysreport"
+        self.sysreportdir="."
         print "sysreportdir: %s, cwd: %s" %(self.sysreportdir, os.path.realpath(os.path.curdir))
         self.sysreport=Sysreport(self.systeminformation, self.tmpdir, None, self.sysreportdir)
 
