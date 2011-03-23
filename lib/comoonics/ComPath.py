@@ -131,7 +131,7 @@ class Path(DataObject):
 
         if path and ((self.__created.has_key(path) and self.__created[path] and self.getAttribute("remove", "false") == "true") or force):
             Path.logger.debug("remove %s, %s" %(path, self.__created))
-            out=ComSystem.execLocalOutput("rm -rf %s" %str(path), True)
+            ComSystem.execLocalOutput("rm -rf %s" %str(path), True)
             if self.__created.has_key(path):
                 del self.__created[path]
     def exists(self, path=None):
