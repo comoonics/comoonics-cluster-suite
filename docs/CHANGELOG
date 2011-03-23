@@ -11,6 +11,8 @@ WARNING:
 CHANGES:
 
 comoonics-assistant-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-7
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-6
   - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-5
@@ -26,6 +28,8 @@ comoonics-assistant-py:
   - initial revision
 
 comoonics-backup-legato-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-8
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-7
   - first version for comoonics-4.6-rc1.
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-6
@@ -42,6 +46,8 @@ comoonics-backup-legato-py:
    initial revision
 
 comoonics-backup-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-4
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
   - first version for comoonics-4.6-rc1.
 * Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-2
@@ -50,6 +56,12 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-21
+  - added Group System Environment/Base
+  - moved ComSysreport from here to comoonics.tools
+  - XmlTools.merge_trees_with_pk: fixed bug with evaluateXPath returning eventually a list of booleans
+* Tue Mar 15 2011 MG <grimme@atix.de>, 0.1-20
+- ComSysreport: fixed imports for ComoonicsSystemInformation 
 * Fri Feb 18 2011 MG <grimme@atix.de>, 0.1-19
 - XmlTools.py:
   - evaluateXpath: will now handle not iterable structures (if queried for a number, string) and return a list 
@@ -102,6 +114,9 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-38
+  - added Group System Environment/Base
+  - Fixed bug with com-mkcdslinventory --mountpoint with a leading / to be stripped off
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-37
 - rebase
 * Thu Dec 09 2010 MG <grimme@atix.de>, 0.1-36
@@ -229,6 +244,9 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-34
+  - added Group System Environment/Base
+  - exit with an error if query fails
 * Fri Feb 18 2011 MG <grimme@atix.de>, 0.1-33
 - com-queryclusterconf
   - Now also return numbers as queryresult
@@ -300,6 +318,8 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-17
+  - added Group System Environment/Base
 * Sun Feb 13 2011 MG <grimme@atix.de>, 0.1-16
 - com-dsh
   - fixed bug in telnet execution with no username been given.
@@ -353,6 +373,8 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-26
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-25
   - first version for comoonics-4.6-rc1.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-24
@@ -394,103 +416,9 @@ comoonics-cmdb-py:
 * Mon Mar 05 2007 MG <grimme@atix.de>, 0.1-1
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
-comoonics-cs-py:
-* Mon Jul 06 2009 MG <grimme@atix.de>, 0.1-57
-   - smaller bugfixes
-   - Made python 2.6 compatible
-* Mon Aug 04 2008 MG <grimme@atix.de>, 0.1-56
-    - fixed broken com-dsh to use new cluster functions
-* Tue Jun 24 2008 MH <hlawatschek@atix.de>, 0.1-55
-   - added support for RHEL5.2ish lvdisplay output
-* Thu Apr 10 2008 MG <grimme@atix.de>, 0.1-54
-   - added lockfile
-* Fri Feb 29 2008 MH <hlawatschek@atix.de>, 0.1-53
-   - ComLVM bug fixes in generic constructors
-* Wed Feb 27 2008 MG <grimme@atix.de>, 0.1-52
-   - ComLVM BUG#199 where creation of clustered volumegroups would yield problems with nodes not running the cluster
-   - ComLVM BUG#198 where clustered flag might occure without reason should also be fixed
-   - ComLVM support for simulation mode
-* Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-51
-   - BUG#191 rewrote options support for FilesystemCopyset via properties (small Bugfix) 
-* Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-50
-   - BUG#191 rewrote options support for FilesystemCopyset via properties 
-* Fri Jan 25 2008 MG <grimme@atix.de>, 0.1-49
-   - BUG#191 removed ACL support 
-* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-48
-   - rebuild for rpmspecfile updates
-   - fixed BUG BZ#189, support for selinux, xattrs and acls
-   - fixed BUG BZ#188, wrong lvm cache file for new lvm versions
-* Mon Oct 08 2007 MG <grimme@atix.de>, 0.1-47:
-   - FA: stabilized
-* Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-46:
-   - FA: AutoDelegator
-* Tue Sep 13 2007 MG <grimme@atix.de>, 0.1-45:
-   - fixed Bug BZ#111, where partitions where not created when devicemapper in use
-* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-44:
-   - mainainance release aas 43 might have been installed (was in preview)
-* Wed Aug 22 2007 MG <grimme@atix.de>, 0.1-43:
-   - fixed BZ #89 (com-dsh timeout, options)
-   - fixed BZ #88 (ComLVM cluster flag)
-   - fixed BZ #86 (ArchiveRequirement and cpio don't work if tmpdir has files)
-   - fixed BZ #70 (com-dsh would not work if node is away or quorum available)
-   - fixed BZ #72 (/dev/mapper problems with autodetection)
-   - logging
-* Mon Aug 06 2007 MG <grimme@atix.de>, 0.1-42:
-   - added method to simulate a command in ComSystem
-   - fixed BZ #72
-* Mon Jul 23 2007 MG <grimme@atix.de>, 0.1-41:
-   - made stable order for com-gfs_tool counters so that the output is always the same independent from version of
-     gfs_tools
-* Thu Jul 19 2007 MG <grimme@atix.de>, 0.1-40:
-   - added com-gfs_tool and ComGFS for better usage of gfs_tool
-* Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-39:
-    - removed importing of dblogger
-* Tue Jun 19 2007 MG <grimme@atix.de>, 0.1-38:
-    - testing in Properties
-    - loglevel in LVM and minor bugs
-* Fri Jun 15 2007 MG <grimme@atix.de>, 0.1-37
-    - fixed bug in logging (disabled loggers with fileconfig)
-    - fixed bug in ComDataObject (getAttribute) will return string not boolean when empty.
-* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-36
-    - another minor bug in setLevel
-* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-35
-    - cannot remember
-* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-34
-    - fixed Bug in ComLog.logTrace
-* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-33:
-    - XMLConfigParser: removed debugging
-* Wed Jun 13 2007 MG <grimme@atix.de>, 0.1-33:
-    - GetOpts: fixed error newer occured (include sys)
-    - XMLConfigParser: initial revision
-    - ComLog: added fileConfig to support logging config via XML (see XMLConfigParser)
-    - Properties:  added Properties.items(), added Property.getValue(), better Boolean handling
-* Wed Apr 23 2007 MH <hlawatschek@atix.de>, 0.1-32:
-    - bug fixes
-* Wed Apr 11 2007 MG <grimme@atix.de>, 0.1-31:
-    - SystemInformation.updateSoftware moved to the right place (minor)
-    - Journal support for modules (major)
-* Wed Apr 04 2007 MG <grimme@atix.de>, 0.1-30:
-    - Fix for ComParted to detect the right partition size with special geometry
-    - Fix for LVM to be able to resolve PVs via Devices
-    - Bugfix in LVM Handling of Disks
-* Mon Apr 02 2007 MG <grimme@atix.de>, 0.1-29:
-    fix in ComSystemInformation to make name setable
-* Fri Mar 16 2007 MH <hlawatschek@atix.de>, 0.1.27:
-	added /bin/cl_checknodes
-* Wed Mar 14 2007 MH <hlawatschek@atix.de>, 0.1.26:
-	added sleep after partition creation (Fixes bz #36)
-	bug fix in XmlTool.py
-* Wed Feb 28 2007 MH <hlawatschek@atix.de>, 0.1.23:
-	added mountpoint mkdir option (default) (Fixes bz 24)
-* Tue Feb 27 2007 MH <hlawatschek@atix.de>, 0.1.22:
-    added support for dm_multipath
-    some bugfixes
-* Fri Feb 09 2007 MG <grimme@atix.de>, 0.1-21:
-   added com-dsh
-* Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
-   added properties (ComProperties)
-
 comoonics-db-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-15
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-14
   - first version for comoonics-4.6-rc1.
 * Tue Dec 02 2008 MG <grimme@atix.de>, 0.1-13
@@ -513,6 +441,8 @@ comoonics-db-py
    initial revision
   
 comoonics-dr-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-8
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-7
   - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-6
@@ -525,6 +455,8 @@ comoonics-dr-py:
   - initial revision
 
 comoonics-ec-admin-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-5
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-4
   - first version for comoonics-4.6-rc1.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-3
@@ -535,6 +467,8 @@ comoonics-ec-admin-py:
   - initial revision
 
 comoonics-ec-base-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-7
+  - added Group System Environment/Base
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-6
 - moved to package comoonics.ecbase
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-5
@@ -549,6 +483,12 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-60
+  - added Group System Environment/Base
+  - ComFilesystemCopyset::FilesystemCopyset.prepareDest: only label if this is a filesystem
+  - ComPathCopyObject::PathCopyObject.
+       __prepare: remove parameter to pushd journal as popd does not need one
+       __cleanup: make the remove attribute in Path really work 
 * Sun Feb 19 2011 MG <grimme@atix.de>, 0.1-59
 - ComFilesystemCopyObject.py/ComFilesystemCopyset.py:
   - implemented support for swap
@@ -674,12 +614,19 @@ comoonics-ec-py:
   changed that modset and copysets can be mixed not for copysets then modsets.
 
 comoonics-fenceacksv-plugins-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-5
+  - added Group System Environment/Base
+  - ComSysreportPlugin: import SystemInformation from comoonics.tools not comoonics
+* Tue Mar 15 2011 MG <grimme@atix.de>, 0.1-4
+- ComSysreportReport: fixed imports for ComoonicsSystemInformation 
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
   - first version for comoonics-4.6-rc1.
 * Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1
   initial revision
 
 comoonics-fenceacksv-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-4
+  - added Group System Environment/Base
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
   - first version for comoonics-4.6-rc1.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
@@ -688,19 +635,16 @@ comoonics-fenceacksv-py
   initial revision
 
 comoonics-installation-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-3
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-2
   - first version for comoonics-4.6-rc1.
 * Tue May 20 2008 MG <grimme@atix.de>, 0.1-1
   initial revision
 
-comoonics-pythonosfix-py
-* Thu Jan 24 2008 MG <grimme@atix.de>, 0.1-2
-   - rebuild for rpmspecfile updates
-   - fixed BUG BZ#189, support for selinux, xattrs and acls
-* Thu Sep 04 2007 AO <offermann@atix.de>, 0.1-1:
-  initial revision
-
 comoonics-scsi-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-5
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-4
   - first version for comoonics-4.6-rc1.
 * Tue Feb 16 2010 MG <grimme@atix.de>, 0.1-3
@@ -711,12 +655,16 @@ comoonics-scsi-py
   initial revision
 
 comoonics-search-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-3
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-2
   - first version for comoonics-4.6-rc1.
 * Tue Sep 25 2007 MG <grimme@atix.de>, 0.1-1:
   initial revision
 
 comoonics-storage-hp-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-11
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-10
   - first version for comoonics-4.6-rc1.
 * Fri Feb 12 2010 MG <grimme@atix.de>, 0.1-9
@@ -746,6 +694,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-20
+  - added Group System Environment/Base
 * Sun Feb 19 2011 MG <grimme@atix.de>, 0.1-19
 - ComFilesystemCopyObject.py/ComFilesystemCopyset.py:
   - implemented support for swap
@@ -804,6 +754,9 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-10
+  - added Group System Environment/Base
+  - moved ComSysreport from comoonics to comoonics.tools
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-9
 - moved to package comoonics.tools.
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-8
@@ -824,6 +777,8 @@ comoonics-tools-py
   initial release
 
 mgrep
+* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-4
+  - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
   - first version for comoonics-4.6-rc1.
 * Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
