@@ -15,6 +15,10 @@ class Test(unittest.TestCase):
         registerModification("catifexec", CatifexecModification)
         self.__tmpdir=tempfile.mkdtemp()
 
+    def tearDown(self):
+        from comoonics import ComSystem
+        ComSystem.execLocal("rm -rf %s" %self.__tmpdir)
+
     def _testXML(self, _xml):
         import comoonics.XmlTools
         from comoonics.ComPath import Path
@@ -28,18 +32,29 @@ class Test(unittest.TestCase):
                 _modification=ComModification.getModification(_modification, _doc)
                 _modification.doModification()
             except Exception, e:
-                self.assert_("Caught exception %s during Catif modification %s" %(e, _modification))
+                self.fail("Caught exception %s during Catif modification %s" %(e, _modification))
         _path.popd()
         
-    def testCatifExecModification(self):
+    def testCatifExecModification1(self):
         self._testXML(
 """
 <path name="%s">
    <modification type="catifexec">
-      <command name="/usr/bin/pstree"/>
+      <command name="/usr/bin/pstree -A -l"/>
    </modification>
 </path>
 """ %self.__tmpdir)
+        
+    def testCatifExecModification2(self):
+        self._testXML(
+"""
+<path name="%s">
+   <modification type="catifexec">
+      <command name="ps -www -e -O euser,pid,ppid,tty,%%cpu,%%mem,rss,vsz,start_time,time,state,wchan:50,cmd"/>
+   </modification>
+</path>
+""" %self.__tmpdir)
+
     def testCatiffileModification1(self):
         self._testXML(
 """
