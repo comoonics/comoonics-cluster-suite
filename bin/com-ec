@@ -65,7 +65,7 @@ def setWarnings():
 
 def applyValues(element, values):
     from comoonics import XmlTools
-    return XmlTools.overwrite_element_with_xpaths(element, values)
+    return XmlTools.overwrite_attributes_with_xpaths(element, values)
 
 from optparse import OptionParser
 
