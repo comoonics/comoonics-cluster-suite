@@ -17,4 +17,5 @@ if [ -n "$failedbuilds" ]; then
 	exit 1
 fi
 touch .lastbuild
-rpm --resign dist/*.rpm
+rpm --resign dist/*.src.rpm
+rpm -ivh dist/*.src.rpm
