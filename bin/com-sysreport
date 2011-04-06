@@ -20,12 +20,15 @@ import sys
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
-from comoonics.tools.poptparse import PersistentOptionParser, OptionGroup
 from comoonics.tools.ComSysreport import Sysreport, SYSREPORT_TEMPLATEBASE
 from comoonics.tools.ComSystemInformation import SystemInformation
-from comoonics.tools import get_defaultsenvkey, get_defaultsfiles
 from comoonics import ComLog, ComSystem
 from comoonics.ComPath import Path
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.tools import get_defaultsenvkey, get_defaultsfiles
+except ImportError:
+    from optparse import OptionParser, OptionGroup
 
 import tempfile
 import logging
@@ -37,7 +40,11 @@ ComLog.setLevel(logging.INFO)
 tmpdir=Path(tempfile.mkdtemp())
 sysreport_templatesbase=SYSREPORT_TEMPLATEBASE
 DELIMITER=","
-parser = PersistentOptionParser(description=__description__, prog="com-sysreport", globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
+try:
+    parser = OptionParser(description=__description__, prog="com-sysreport", 
+                          globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
+except (NameError, TypeError):
+    parser = OptionParser(description=__description__, prog="com-sysreport") 
 parser.disable_interspersed_args()
 
 parser.add_option("-v", "--verbose", dest="verbose", action="store_true", help="Toggle debugging")

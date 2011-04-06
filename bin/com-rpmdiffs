@@ -20,8 +20,11 @@ from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
 from comoonics.cmdb.ComSource import Source
 from comoonics.cmdb.Reports import getReport, getReportkeys
 from comoonics.cmdb.Packages import Package
-from comoonics.tools.poptparse import PersistentOptionParser, OptionGroup
-from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
+except ImportError:
+    from optparse import OptionParser, OptionGroup
 
 import logging
 import logging.handlers
@@ -29,7 +32,10 @@ logging.basicConfig()
 log=ComLog.getLogger(sys.argv[0])
 
 usage="usage: %prog [options] sourcename sourcename|searchstring [sourcename]*"
-cmd_parser=PersistentOptionParser(description=__description__, prog="com-rpmdiffs", globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
+try:
+    cmd_parser=OptionParser(description=__description__, prog="com-rpmdiffs", globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
+except (TypeError, NameError):
+    cmd_parser=OptionParser(description=__description__, prog="com-rpmdiffs")
 cmd_parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="toggle verbose mode and be more helpful")
 cmd_parser.add_option("-y", "--syslog", action="store", type="string", dest="syslog", default=None, help="Forward logmessages to given syslogserver.")
 db_options=OptionGroup(cmd_parser, "Database Options")
@@ -44,7 +50,7 @@ search_options=OptionGroup(cmd_parser, "Search Options")
 search_options.add_option("-c", "--category", action="store_true", dest="category", default=False, help="Set to search for a categories. Default: %default.")
 search_options.add_option("-m", "--master", action="store", type="string", dest="master", default=None, help="Compare a master with others. Default: %default.")
 search_options.add_option("-s", "--search", action="append", type="string", dest="search", default=list(), help="search for string. Default: %default.")
-search_options.add_option("-g", "--global", action="store_false", dest="sglobal", default=True, help="Search in all columns for the given search string. Default: %default.")
+search_options.add_option("-g", "--noglobal", action="store_false", dest="sglobal", default=True, help="Search in all columns for the given search string. Default: %default.")
 search_options.add_option("-w", "--where", action="store_true", dest="where", default=False, help="Interpret search sting as valid where clause without where. Default: %default.")
 cmd_parser.add_option_group(search_options)
 

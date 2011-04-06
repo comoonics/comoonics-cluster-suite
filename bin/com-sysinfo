@@ -19,8 +19,11 @@ from comoonics.ComExceptions import ComException
 from comoonics.tools.ComSystemInformation import SystemInformation
 import logging
 from datetime import timedelta
-from comoonics.tools.poptparse import PersistentOptionParser, OptionGroup, make_option
-from comoonics.tools import get_defaultsenvkey, get_defaultsfiles
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup, make_option
+    from comoonics.tools import get_defaultsenvkey, get_defaultsfiles
+except ImportError:
+    from optparse import OptionParser, OptionGroup, make_option
 logging.basicConfig()
 
 version="0.1"
@@ -30,8 +33,11 @@ ComLog.setLevel(logging.INFO)
 usage="usage: %prog [options] [systemname]*"
 cmd_options= [ make_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="toggle verbose mode to be more helpful"),
                make_option("-y", "--syslog", action="store", type="string", dest="syslog", default="", help="Forward logmessages to given syslogserver")]
-cmd_parser = PersistentOptionParser(option_list=cmd_options, usage=usage, version="Version %s" %(version), 
-                          globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
+try:
+    cmd_parser = OptionParser(option_list=cmd_options, usage=usage, version="Version %s" %(version), 
+                              globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
+except (NameError, TypeError):
+    cmd_parser = OptionParser(option_list=cmd_options, usage=usage, version="Version %s" %(version)) 
 sysinfo_options = OptionGroup(cmd_parser, "System Information Options")
 sysinfo_options.add_option("-i", "--installedsoftware", action="store_true", default=False, dest="installedsoftware", help="Also query the installed software.")
 db_options = OptionGroup(cmd_parser, "Database Options")

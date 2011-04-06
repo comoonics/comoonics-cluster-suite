@@ -19,7 +19,12 @@ sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
 
 from comoonics import ComLog
 from comoonics import ComSystem, ComLog, ComExceptions
-from comoonics import GetOpts
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
+except ImportError:
+    from optparse import OptionParser, OptionGroup
+    
 from comoonics.cmdb.ComDSL import DSL
 from comoonics.cmdb.ComDSLStages import DSLStages
 import logging.handlers
@@ -29,6 +34,7 @@ import logging
 import rpm
 
 log=ComLog.getLogger(sys.argv[0])
+logging.basicConfig()
 
 def rpm2header(rpmname):
     # rpm.ts is an alias for rpm.TransactionSet
@@ -40,85 +46,56 @@ def rpm2header(rpmname):
     return hdr
 
 ComLog.setLevel(logging.INFO)
-def line(str=None):
-    print
-    print "--------------------"+str+"---------------------------------"
 
-class Config(GetOpts.BaseConfig):
-    hostname="mysql-server.gallien.atix"
-    user="atix"
-    password="atix"
-    database="atix_cmdb"
-    stage=0
-    syslog=None
+try:
+    cmd_parser=OptionParser(description=__description__, version=__version, usage="%prog channeldir channelname channelversion",
+                              globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], 
+                              localdefaultsenvkey=get_defaultsenvkey())
+except (NameError, TypeError):
+    cmd_parser=OptionParser(description=__description__, version=__version__, usage="%prog channeldir channelname channelversion [tablename]") 
 
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
-        self.database=GetOpts.Option("database", "Sets the databasename", self.database, False, "d")
-        self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
-        self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
-        self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
-        self.stage=GetOpts.Option("stage", "Sets the stage for these rpms", self.stage, False, "s")
-        self.syslog=GetOpts.Option("syslog", "Forward logmessages to given syslogserver", self.syslog, False, "y")
-        self.values=dict()
-        self.setAdditionalParams("channeldir channelname channelversion [tablename]")
-    def do(self, args_proper):
-        import os.path
-        if len(args_proper) >= 1:
-            self.channeldir=args_proper[0]
-            self.headerfile="%s/headers/header.info" % self.channeldir
-        else:
-            return 1
+cmd_parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="toggle verbose mode and be more helpful")
+cmd_parser.add_option("-y", "--syslog", action="store", type="string", dest="syslog", default=None, help="Forward logmessages to given syslogserver.")
+db_options = OptionGroup(cmd_parser, "Database Options")
+db_options.add_option("-q", "--querydatabase", action="store_true", default=False, dest="querydatabase", help="Query a database instead of localhost on the fly.")
+db_options.add_option("-d", "--database", action="store", type="string", dest="database", default="cmdb", help="Sets the databasename")
+db_options.add_option("-H", "--hostname", action="store", type="string", dest="hostname", default="localhost", help="Sets the hostname for the database server")
+db_options.add_option("-u", "--username", action="store", type="string", dest="username", help="Sets the database username")
+db_options.add_option("-p", "--password", action="store", type="string", dest="password", help="Sets the database server password to the username")
+db_options.add_option("-t", "--table", action="store", type="string", dest="table", default="dsl", help="Which table to be taken.")
+cmd_parser.add_option_group(db_options)
 
-        if len(args_proper) >= 2:
-            self.channel=args_proper[1]
-        else:
-            return 1
+opts, args=cmd_parser.parse_args()
 
-        if len(args_proper) >= 3:
-            self.channelversion=args_proper[2]
-        else:
-            return 1
+if len(args) != 3:
+    cmd_parser.exit(1, "Wrong number of parameters. Three parameters are required. See %prog --help for more information.")
 
-        self.table="dsl"
-        if len(args_proper) >= 4:
-            self.table=args_proper[3]
-        return 0
-
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
-
+channeldir=args[0]
+channel=args[1]
+channelversion=args[2]
+headerfile="%s/headers/header.info" % self.channeldir
 ComSystem.setExecMode("")
 ComSystem.__EXEC_REALLY_DO=""
 
-config=Config()
-ret=config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    config.usage()
-    sys.exit(ret)
-
-dsl=DSL(hostname=config.hostname, user=config.user, password=config.password, database=config.database)
+dsl=DSL(hostname=opts.hostname, user=opts.user, password=opts.password, database=opts.database)
 dslstages=DSLStages(dbhandle=dsl.db)
 
-if config.syslog:
-    sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+if opts.syslog:
+    sysloghandler=logging.handlers.SysLogHandler((opts.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
     sysloghandler.setLevel(logging.INFO)
     dsl.log.addHandler(sysloghandler)
     dslstages.log.addHandler(sysloghandler)
     dslstages.dblog.addHandler(sysloghandler)
 
-header=open(config.headerfile, "r")
+header=open(opts.headerfile, "r")
 
 for line in header:
     line=line.splitlines(False)[0]
     srpm=line.split(":")[1]
     (srpm,file)=srpm.split("=")
-    rpmhdr=rpm2header(config.channeldir+"/"+file)
-    dsl.updateRPM(rpmhdr, file, config.channel, config.channelversion, config.channeldir)
-    dslstages.updateRPM(rpmhdr, config.channel, config.channelversion, int(config.stage))
+    rpmhdr=rpm2header(opts.channeldir+"/"+file)
+    dsl.updateRPM(rpmhdr, file, channel, channelversion, channeldir)
+    dslstages.updateRPM(rpmhdr, channel, channelversion, int(opts.stage))
 
 dsl.db.commit()
 
