@@ -16,136 +16,96 @@ import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
 from comoonics import ComSystem, ComLog, ComExceptions
-from comoonics import GetOpts
 from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
+from comoonics.cmdb.ComSource import Source
+from comoonics.cmdb.Reports import getReport, getReportkeys
+from comoonics.cmdb.Packages import Package
+from comoonics.tools.poptparse import PersistentOptionParser, OptionGroup
+from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
 
 import logging
 import logging.handlers
-
+logging.basicConfig()
 log=ComLog.getLogger(sys.argv[0])
 
-def line(str=None):
-    print
-    print "--------------------"+str+"---------------------------------"
+usage="usage: %prog [options] sourcename sourcename|searchstring [sourcename]*"
+cmd_parser=PersistentOptionParser(description=__description__, prog="com-rpmdiffs", globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
+cmd_parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="toggle verbose mode and be more helpful")
+cmd_parser.add_option("-y", "--syslog", action="store", type="string", dest="syslog", default=None, help="Forward logmessages to given syslogserver.")
+db_options=OptionGroup(cmd_parser, "Database Options")
+db_options.add_option("-d", "--database", action="store", type="string", dest="database", default="cmdb", help="Sets the databasename")
+db_options.add_option("-H", "--hostname", action="store", type="string", dest="hostname", default="localhost", help="Sets the hostname for the database server")
+db_options.add_option("-u", "--username", action="store", type="string", dest="username", help="Sets the database username")
+db_options.add_option("-p", "--password", action="store", type="string", dest="password", help="Sets the database server password to the username")
+db_options.add_option("-t", "--table", action="store", type="string", dest="table", default="software_cmdb", help="Which table to be taken.")
+cmd_parser.add_option_group(db_options)
 
-class Config(GetOpts.BaseConfig):
-    hostname="mysql-server.gallien.atix"
-    user="atix"
-    password="atix"
-    database="atix_cmdb"
-    category="unknown"
-    table="software_cmdb"
-    category=False
-    master=None
-    sourcenames=list()
-    search=False
-    limitup=0
-    limitdown=0
-    orderby=None
-    onlydiffs=False
-    onlynotinstalled=False
-    installed=False
-    searchstring=""
-    select=None
-    dublicates=False
-    syslog=None
+search_options=OptionGroup(cmd_parser, "Search Options")
+search_options.add_option("-c", "--category", action="store_true", dest="category", default=False, help="Set to search for a categories. Default: %default.")
+search_options.add_option("-m", "--master", action="store", type="string", dest="master", default=None, help="Compare a master with others. Default: %default.")
+search_options.add_option("-s", "--search", action="append", type="string", dest="search", default=list(), help="search for string. Default: %default.")
+search_options.add_option("-g", "--global", action="store_false", dest="sglobal", default=True, help="Search in all columns for the given search string. Default: %default.")
+search_options.add_option("-w", "--where", action="store_true", dest="where", default=False, help="Interpret search sting as valid where clause without where. Default: %default.")
+cmd_parser.add_option_group(search_options)
 
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
-        self.database=GetOpts.Option("database", "Sets the databasename", self.database, False, "d")
-        self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
-        self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
-        self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
-        self.category=GetOpts.Option("category", "Set for search as categories", self.category, False, "c")
-        self.master=GetOpts.Option("master", "Compare a master with others", self.master, False, "m")
-        self.search=GetOpts.Option("search", "search for only one source", self.search, False, "1")
-        self.dublicates=GetOpts.Option("dublicates", "search for dublicates", self.dublicates, False, "b")
-        self.select=GetOpts.Option("select", "select only given colunms", self.select, False, "S")
-        self.searchstring=GetOpts.Option("searchstring", "search for string", self.searchstring, False, "s")
-        self.limitup=GetOpts.Option("limitup", "limitup from", self.limitup, False, "L")
-        self.limitdown=GetOpts.Option("limitdown", "limitto to", self.limitdown, False, "l")
-        self.orderby=GetOpts.Option("orderby", "Orderbystring without ORDER BY", self.orderby, False, "o")
-        self.onlydiffs=GetOpts.Option("onlydiffs", "Only display differences. But not uninstalled software", self.onlydiffs, False, "O")
-        self.onlynotinstalled=GetOpts.Option("onlynotinstalled", "Only display differenceds", self.onlynotinstalled, False, "N")
-        self.installed=GetOpts.Option("installed", "Also display equal packages", self.installed, False, "i")
-        self.syslog=GetOpts.Option("syslog", "Forward logmessages to given syslogserver", self.syslog, False, "y")
-        self.values=dict()
-        self.setAdditionalParams("sourcename sourcename|searchstring [[sourcename]..]")
-    def do(self, args_proper):
-        if len(args_proper) >= 2 or (len(args_proper) == 1 and (self.search or self.master or self.category)):
-            for arg in args_proper:
-                self.sourcenames.append(arg)
-        else:
-            return 1
-        return 0
-
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
+report_options=OptionGroup(cmd_parser, "Output Report Options")
+report_options.add_option("--reporttype", action="store", type="string", dest="reporttype", default=None, help="Select a valid report type. Default: %default.")
+report_options.add_option("--reportslist", action="store_true", dest="reportslist", default=False, help="List all available reports.")
+report_options.add_option("--from", action="store", type="int", dest="limitfrom", default=0, help="from result x. Default: %default.")
+report_options.add_option("--to", action="store", type="int", dest="limitto", default=0, help="to result y. Default: %default.")
+cmd_parser.add_option_group(report_options)
 
 ComLog.setLevel(logging.INFO)
+opts, args=cmd_parser.parse_args()
+if opts.verbose:
+    ComLog.setLevel(logging.DEBUG)
 
-config=Config()
+#if len(args) == 0:
+#    cmd_parser.exit(1, "No sourcename entered. Please use -h/--help to see cmdline options.")
 
-ret=config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    config.usage()
-    sys.exit(ret)
-
-
-software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table)
-
-if config.syslog:
-    sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+if opts.syslog:
+    sysloghandler=logging.handlers.SysLogHandler((opts.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
     software_cmdb.log.addHandler(sysloghandler)
 
-def formatRow(row, colnames):
-    orderedrow=list()
-    for colname in colnames:
-        orderedrow.append(str(row[colname]))
-    return ', '.join(orderedrow)
-
-def formatColNames(row):
-    return ', '.join(row)
-
-colnames=None
 where=None
-select=None
 
-if config.select:
-    select=config.select.split(",")
-if len(config.sourcenames)>1 and config.search and (not config.searchstring or config.searchstring==""):
-    config.searchstring=config.sourcenames[1]
-if config.searchstring:
-    where=["name LIKE \"%"+config.searchstring+"%\""]
-if config.category and not config.search and not config.master:
-   colnames=software_cmdb.getColnamesForDiffCategory(config.sourcenames[0], (not config.onlynotinstalled or not config.onlydiffs) and config.installed)
-   rs=software_cmdb.getDiffsFromCategory(config.sourcenames[0], None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
-elif not config.search and not config.master and not config.category:
-   rs=software_cmdb.getDiffsFromSources(config.sourcenames, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
-   colnames=software_cmdb.getColnamesForDiff(config.sourcenames, (not config.onlynotinstalled or not config.onlydiffs) and config.installed)
-elif not config.category and not config.search and config.master:
-   rs=software_cmdb.getDiffsFromSourcesByMaster(config.sourcenames, config.master, None, config.limitdown, config.limitup, where, config.orderby, not config.onlynotinstalled, not config.onlydiffs, config.installed)
-   colnames=software_cmdb.getColnamesForMaster((not config.onlynotinstalled or not config.onlydiffs) and config.installed)
-elif config.search and not config.master:
-    colnames=SoftwareCMDB.SELECT_FOR_SOFTWARE
-    if config.dublicates:
-        rs=software_cmdb.getSoftwareDublicates(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
+if len(opts.search) > 0:
+    if opts.sglobal and not opts.where:
+        where=map(lambda search: "("+" OR ".join(map(lambda colname: colname +" LIKE \"%"+search+"%\"", Package.PACKAGE_PROPERTY_NAMES))+")", opts.search)
+    elif not opts.where:
+        where=map(lambda search: "name = \""+search+"\"", opts.search)
     else:
-        rs=software_cmdb.getSoftware(config.sourcenames[0], SoftwareCMDB.SELECT_FOR_SOFTWARE, config.limitdown, config.limitup, where, config.orderby)
-if rs:
-    ComLog.getLogger().debug("Got %u rows" % rs.num_rows())
-    row=rs.fetch_row(1,1)
-    if not colnames:
-        colnames=row[0].keys()
-    if not select:
-        select=colnames
-    print formatColNames(select)
-    while row:
-        print formatRow(row[0], select)
-        row=rs.fetch_row(1,1)
+        where=opts.search
+if opts.limitfrom>opts.limitto:
+    cmd_parser.exit("To (%u) must be bigger then from (%u).\n" %(opts.limitfrom, opts.limitto)) 
+
+if opts.master and not opts.reporttype:
+    opts.reporttype="masterdiffs/text/plain"
+elif not opts.reporttype:
+    opts.reporttype="diffs/text/plain"
+
+if opts.reportslist:
+    print "\n".join(getReportkeys())
+elif not args:
+    cmd_parser.exit(2, "No argument given. At least one argument for a source is required. See %s --help\n" %cmd_parser.prog)
+else:
+    software_cmdb=SoftwareCMDB(hostname=opts.hostname, user=opts.username, password=opts.password, database=opts.database, table=opts.table)
+    if opts.category and not opts.master:
+        dbsource=Source(dbhandle=software_cmdb.db)
+        sources=dbsource.getSourcesForCategory(args[0])        
+    elif opts.master or not opts.category:
+        sources=args
+    else:
+        cmd_parser.exit(2, "%s called with wrong parameters. Please check with -h/--help." %cmd_parser.get_prog_name())
+
+    packages=software_cmdb.getPackages(sources, opts.master, None, 0, 0, where)
+    differences=packages.differences()
+    reporter=getReport(opts.reporttype)()
+    if opts.limitfrom <=0:
+        opts.limitfrom=1
+    if opts.limitto <=0:
+        opts.limitto=0
+    reporter.report(master=opts.master, packages=differences, frompackage=opts.limitfrom-1, topackage=opts.limitto-1)
 
 ##########
 # $Log$

@@ -19,70 +19,75 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
-from comoonics.ComSystemInformation import SystemInformation
+from comoonics.tools.ComSystemInformation import SystemInformation
 from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
 from comoonics.cmdb.ComDSL import DSL
 from comoonics.cmdb.ComSource import Source
-from comoonics import GetOpts
+from comoonics.tools.poptparse import PersistentOptionParser, OptionGroup, make_option
+from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
 
 import logging
+logging.basicConfig()
+version="0.1"
 
 ComLog.setLevel(logging.INFO)
 
-def line(str=None):
-    print
-    print "--------------------"+str+"---------------------------------"
+usage="usage: %prog [options] [category] [rpmfiles]"
+cmd_options= [ make_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="toggle verbose mode to be more helpful"),
+               make_option("-y", "--syslog", action="store", type="string", dest="syslog", default="", help="Forward logmessages to given syslogserver")]
+cmd_parser = PersistentOptionParser(option_list=cmd_options, usage=usage, version="Version %s" %(version), 
+                                    globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], 
+                                    localdefaultsenvkey=get_defaultsenvkey())
+packages2db_options = OptionGroup(cmd_parser, "package 2 DB options")
+packages2db_options.add_option("-a", "--action", action="store", type="choice", choices=["update", "remove" ], default="update", dest="action", 
+                               help="What kind of action should be applied. Possible values are: update, add. Default is: %default.")
+packages2db_options.add_option("-c", "--category", action="store", type="string", default=None, dest="category", 
+                               help="Either specify category over this option or give it as first argument. Default is: %default.")
+cmd_parser.add_option_group(packages2db_options)
+db_options = OptionGroup(cmd_parser, "Database Options")
+db_options.add_option("-q", "--querydatabase", action="store_true", default=False, dest="querydatabase", help="Query a database instead of localhost on the fly.")
+db_options.add_option("-d", "--database", action="store", type="string", dest="database", default="cmdb", help="Sets the databasename")
+db_options.add_option("-H", "--hostname", action="store", type="string", dest="hostname", default="localhost", help="Sets the hostname for the database server")
+db_options.add_option("-u", "--username", action="store", type="string", dest="username", help="Sets the database username")
+db_options.add_option("-p", "--password", action="store", type="string", dest="password", help="Sets the database server password to the username")
+db_options.add_option("-t", "--table", action="store", type="string", dest="table", default="software_cmdb", help="Which table to be taken.")
+cmd_parser.add_option_group(db_options)
 
-class Config(GetOpts.BaseConfig):
-    hostname="mysql-server.gallien.atix"
-    user="atix"
-    password="atix"
-    database="atix_cmdb"
-    category="unknown"
-    table="dsl"
+options, args=cmd_parser.parse_args()
+argsindex=0
+if options.verbose:
+    ComLog.setLevel(logging.DEBUG)
+if args:
+    category=args[argsindex]
+    argsindex+=1
+elif options.category:
+    category=options.category
+else:
+    cmd_parser.exit(1, "You need to give at least one parameter as argument for the category of this system to be recognized with.\n")
+if options.querydatabase:
+    if not args[argsindex]:
+        cmd_parser.exit(2, "If you want to query a system from database you need to specify the systemname.\n")
+    sname=args[argsindex]
+    argsindex+=1
+if len(args) > 1:
+    rpmfiles=args[argsindex:]
+else:
     rpmfiles=list()
-    syslog=None
 
-    def __init__(self, systeminformation):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
-        self.database=GetOpts.Option("database", "Sets the databasename", self.database, False, "d")
-        self.user=GetOpts.Option("user", "Sets the database username", self.user, False, "u")
-        self.hostname=GetOpts.Option("hostname", "Sets the database server hostname", self.hostname, False, "H")
-        self.password=GetOpts.Option("password", "Sets the database server hostname", self.password, False, "p")
-        self.syslog=GetOpts.Option("syslog", "Forward logmessages to given syslogserver", self.syslog, False, "y")
-        self.values=dict()
-        self.name=systeminformation.getName()
-        self.setAdditionalParams("[category=%s] [rpmfiles=%s]" %(self.category, self.rpmfiles))
-    def do(self, args_proper):
-        import os.path
-#        if len(args_proper) >= 1:
-#            self.name=args_proper[0]
-        if len(args_proper) >= 1:
-            self.category=args_proper[0]
-        if len(args_proper) >= 2:
-            self.rpmfiles=list(args_proper[1:])
-        return 0
+software_cmdb=SoftwareCMDB(hostname=options.hostname, user=options.username, password=options.password, 
+                           database=options.database, table=options.table)
+dsl=DSL(dbhandle=software_cmdb.db, table="dsl")
+source=Source(dbhandle=software_cmdb.db)
+if options.querydatabase:
+    systeminformation=source.getSourceAsSysteminformation(sname)
+else:
+    systeminformation=SystemInformation()
+source.setLogsource(systeminformation.getName())
+dsl.setLogsource(systeminformation.getName())
+software_cmdb.setLogsource(systeminformation.getName())
 
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
-
-systeminformation=SystemInformation()
-config=Config(systeminformation)
-
-ret=config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    config.usage()
-    sys.exit(ret)
-
-software_cmdb=SoftwareCMDB(hostname=config.hostname, user=config.user, password=config.password, database=config.database, table=config.table, logsource=systeminformation.getName())
-dsl=DSL(dbhandle=software_cmdb.db, table="dsl", logsource=systeminformation.getName())
-source=Source(dbhandle=software_cmdb.db, logsource=systeminformation.getName())
-
-if config.syslog:
-    sysloghandler=logging.handlers.SysLogHandler((config.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+if options.syslog:
+    sysloghandler=logging.handlers.SysLogHandler((options.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
     sysloghandler.setLevel(logging.INFO)
     software_cmdb.log.addHandler(sysloghandler)
     dsl.log.addHandler(sysloghandler)
@@ -91,34 +96,40 @@ if config.syslog:
     dsl.dblog.addHandler(sysloghandler)
     source.dblog.addHandler(sysloghandler)
 
-line("Updating Systeminformation of "+systeminformation.getName())
+if options.action=="update":
 
-source.updateSystemInformation(systeminformation, config.category)
+    print("Updating Systeminformation of "+systeminformation.getName())
 
-line("Updating RPMS of "+systeminformation.getName()+ " filter: %s" %(config.rpmfiles))
+    source.updateSystemInformation(systeminformation, category)
 
-if not config.rpmfiles or len(config.rpmfiles) == 0:
-    rpms=systeminformation.getInstalledSoftware()
-else:
-    rpms=list()
-    for rpmname in config.rpmfiles:
-        rpms+=systeminformation.getInstalledSoftware(rpmname)
+    print("Updating RPMS of "+systeminformation.getName()+ " filter: %s" %(rpmfiles))
 
-rpmnames=list()
-for rpm_hdr in rpms:
-    rpmnames.append(rpm_hdr["name"])
+    if not rpmfiles or len(rpmfiles) == 0:
+        rpms=systeminformation.getInstalledSoftware()
+    else:
+        rpms=list()
+        for rpmname in rpmfiles:
+            rpms+=systeminformation.getInstalledSoftware(rpmname)
 
-software_cmdb.cleanTMP(config.name)
-for rpm_hdr in rpms:
-    (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
+    rpmnames=list()
+    for rpm_hdr in rpms:
+        rpmnames.append(rpm_hdr["name"])
+
+    software_cmdb.cleanTMP(systeminformation.getName())
     try:
-        software_cmdb.updateRPM(rpm_hdr, config.name, channelname, channelversion, rpmnames.count(rpm_hdr["name"]))
+        for rpm_hdr in rpms:
+            (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
+            software_cmdb.updateRPM(rpm_hdr, systeminformation.getName(), channelname, channelversion, rpmnames.count(rpm_hdr["name"]))
     except:
         software_cmdb.dblog.log(logging.WARN, "Exception occured during update of rpm %s-%s-%s-%s." %(rpm_hdr["name"], rpm_hdr["version"], rpm_hdr["release"], rpm_hdr["arch"]), exc_info=True)
-software_cmdb.deleteNotInTmp(config.name, config.rpmfiles)
-#software_cmdb.cleanTMP(config.name)
-
-software_cmdb.db.commit()
+    software_cmdb.deleteNotInTmp(systeminformation.getName(), rpmfiles)
+    software_cmdb.cleanTMP(systeminformation.getName())
+    software_cmdb.db.commit()
+elif options.action=="remove":
+    source.removeSystemInformation(systeminformation, category)
+    software_cmdb.clean(systeminformation.getName())
+    source.dbloghandler.cleanLogs(systeminformation.getName())
+    software_cmdb.db.commit()
 
 # $Log: rpm2db.py,v $
 # Revision 1.1  2006/08/08 08:32:38  marc
