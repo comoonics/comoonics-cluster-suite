@@ -89,19 +89,39 @@ def evaluateXPath(path, element):
             nodelist.append(elist)
         return nodelist
 
-def overwrite_element_with_xpaths(element, xpaths):
-    """ Overwrites all node values referred with the xpaths and the given values. Xpaths has to be a map with
+def overwrite_attributes_with_xpaths(_element, xpaths):
+    """ Overwrites all attribute values referred with the xpaths and the given values. Xpaths has to be a map with
         xpath as key and value as value. All other referred nodetypes are silently ignored.
     """
+    element=_element
     for xpath in xpaths.keys():
         try:
-            logger.debug("overwrite_element_with_xpaths xpath %s=%s, rootnode: %s, type(element): %s, class(element): %s" %(xpath, xpaths[xpath], element, type(element), element.__class__))
-            if isinstance(element, Node):
-                sets = evaluateXPath(xpath, element)
-                logger.debug("overwrite_element_with_xpaths found %u matches. overwriting." %len(sets))
-                for _set in sets:
-                    if not isinstance(_set, basestring):
+            logger.debug("overwrite_attributes_with_xpaths xpath %s=>%s, rootnode: %s, type(element): %s, class(element): %s" %(xpath, xpaths[xpath], _element, type(_element), _element.__class__))
+            if isinstance(_element, Node):
+                try:
+                    from xml.xpath import Evaluate
+                    element=clone_node(element)
+                    sets=Evaluate(xpath, element)
+                    for _set in sets:
                         _set.nodeValue=xpaths[xpath]
+                    logger.debug("overwrite_attributes_with_xpaths found %u matches. overwriting." %len(sets))
+                except ImportError:
+                    # Implementation for etree
+                    from lxml.etree import fromstring, tounicode
+                    # returns a list of _ElementStringResult
+                    buf=toPrettyXML(element)
+                    element=fromstring(buf)
+                    sets=element.xpath(xpath)
+                    import re
+                    try:
+                        attrname=re.match('.*/@(.+)$', xpath).group(1)
+                        for _set in sets:
+                            _set.getparent().set(attrname, xpaths[xpath])
+                        buf=tounicode(element)
+                        element=parseXMLString(buf).documentElement
+                        logger.debug("overwrite_attributes_with_xpaths found %u matches. overwriting." %len(sets))
+                    except:
+                        warnings.warn("Could not exclude attribute name from xpath %s" %xpath)
             else:
                 import libxml2
                 ctxt = element.xpathNewContext()
