@@ -20,9 +20,10 @@ import sys
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
-from optparse import OptionParser
-from comoonics.ComSysreport import Sysreport, SYSREPORT_TEMPLATEBASE
-from comoonics.ComSystemInformation import SystemInformation
+from comoonics.tools.poptparse import PersistentOptionParser, OptionGroup
+from comoonics.tools.ComSysreport import Sysreport, SYSREPORT_TEMPLATEBASE
+from comoonics.tools.ComSystemInformation import SystemInformation
+from comoonics.tools import get_defaultsenvkey, get_defaultsfiles
 from comoonics import ComLog, ComSystem
 from comoonics.ComPath import Path
 
@@ -36,21 +37,27 @@ ComLog.setLevel(logging.INFO)
 tmpdir=Path(tempfile.mkdtemp())
 sysreport_templatesbase=SYSREPORT_TEMPLATEBASE
 DELIMITER=","
-parser = OptionParser(description=__description__)
+parser = PersistentOptionParser(description=__description__, prog="com-sysreport", globaldefaultsfile=get_defaultsfiles()[0], localdefaultsfile=get_defaultsfiles()[1], localdefaultsenvkey=get_defaultsenvkey())
 parser.disable_interspersed_args()
-parser.add_option("-p", "--part", dest="part",
-                  help="select one or more parts to be executed (delimiter is %s). Select with --validparts" %(DELIMITER), default=None)
-parser.add_option("-t", "--tmpdir", dest="tmpdir", help="Where to write the report to (tmpdir)", default=tmpdir.getPath())
-parser.add_option("", "--templatebase", dest="templatebase", default=sysreport_templatesbase)
-parser.add_option("-D", "--destination", dest="tarfile", help="Tarfile to use for this sysreport")
-parser.add_option("-d", "--debug", dest="debug", action="store_true", help="Toggle debugging")
+
+parser.add_option("-v", "--verbose", dest="verbose", action="store_true", help="Toggle debugging")
 parser.add_option("-a", "--ask", dest="ask", action="store_true", help="Toggle ASK-mode")
-parser.add_option("", "--valid-parts", dest="validparts", action="store_true", help="displays all possible parts to be executed")
-parser.add_option("-X", "--xml", dest="xml", action="store_true", help="displays the xml to be executed.")
-parser.add_option("-H", "--no-head", dest="headset", action="store_false", default=True, help="Does not exectue the head set")
-parser.add_option("-S", "--no-saveset", dest="saveset", action="store_false", default=True, help="Does not exectue the save set and therefore does not create the result tar and leafs everything in the tmpdir.")
+sysreport_options=OptionGroup(parser, "Sysreport generation related settings")
+sysreport_options.add_option("-p", "--part", dest="part",
+                  help="select one or more parts to be executed (delimiter is %s). Select with --validparts" %(DELIMITER), default=None)
+sysreport_options.add_option("-t", "--tmpdir", dest="tmpdir", help="Where to write the report to (tmpdir)", default=tmpdir.getPath())
+sysreport_options.add_option("", "--templatebase", dest="templatebase", default=sysreport_templatesbase)
+sysreport_options.add_option("", "--valid-parts", dest="validparts", action="store_true", help="displays all possible parts to be executed")
+parser.add_option_group(sysreport_options)
+
+sysreport_output=OptionGroup(parser, "Sysreport oputput related settings")
+sysreport_output.add_option("-D", "--destination", dest="tarfile", help="Tarfile to use for this sysreport", default="/tmp/com-sysreport.tar.gz")
+sysreport_output.add_option("-X", "--xml", dest="xml", action="store_true", help="displays the xml to be executed.")
+sysreport_output.add_option("-H", "--no-head", dest="headset", action="store_false", default=True, help="Does not exectue the head set")
+sysreport_output.add_option("-S", "--no-saveset", dest="saveset", action="store_false", default=True, help="Does not exectue the save set and therefore does not create the result tar and leafs everything in the tmpdir.")
+parser.add_option_group(sysreport_output)
 (options, args) = parser.parse_args()
-if options.debug:
+if options.verbose:
     ComLog.setLevel(logging.DEBUG)
 if options.ask:
     ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
@@ -63,10 +70,10 @@ if options.validparts:
     names.sort()
     print (DELIMITER+" ").join(names)
 elif options.xml:
-    from xml.dom.ext import PrettyPrint
+    from comoonics import XmlTools
     element=sysreport.enterprisecopy
     element=sysreport.overwriteDestination()
-    PrettyPrint(element)
+    print XmlTools.toPrettyXML(element)
 else:
     sysreport.doSets(options.part, options.headset, options.saveset)
     if options.saveset:
@@ -75,7 +82,7 @@ else:
         result=options.tmpdir
     print "You will find the sysreport with all information that could be gathered in %s" %result
 
-if tmpdir.exists():
+if tmpdir.exists() and options.saveset:
     #print "Cleaning up in %s" %tmpdir
     tmpdir.remove(None, True)
 
