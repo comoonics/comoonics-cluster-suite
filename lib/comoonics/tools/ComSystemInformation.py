@@ -208,10 +208,11 @@ class RPMLinuxSystemInformation(LinuxSystemInformation):
                 ComSystem.execLocalOutput("%s -qf $(which rpm)" %(RPMLinuxSystemInformation.RPM_CMD))
                 ret= True
             elif kwds.has_key("operatingsystem") and  \
-                (re.compile("linux", re.I).search(kwds["operatingsystem"]) or \
+                (re.compile("suse", re.I).search(kwds["operatingsystem"]) or \
                  re.compile("centos", re.I).search(kwds["operatingsystem"]) or \
                  re.compile("fedora", re.I).search(kwds["operatingsystem"]) or \
-                 re.compile("redhat", re.I).search(kwds["operatingsystem"])):
+                 re.compile("redhat", re.I).search(kwds["operatingsystem"]) or \
+                 re.compile("red hat", re.I).search(kwds["operatingsystem"])):
                 ret=True
         finally:
             return ret
@@ -252,6 +253,7 @@ class RedhatSystemInformation(RPMLinuxSystemInformation):
             elif kwds.has_key("operatingsystem") and \
                  (re.compile("centos", re.I).search(kwds["operatingsystem"]) or \
                   re.compile("fedora", re.I).search(kwds["operatingsystem"]) or \
+                  re.compile("red hat", re.I).search(kwds["operatingsystem"]) or \
                   re.compile("redhat", re.I).search(kwds["operatingsystem"])):
                 ret=True
         finally:
@@ -340,7 +342,7 @@ class RHOpensharedrootSystemInformation(RedhatClusterSystemInformation):
 #                else:
 #                    SystemInformation.log.debug("FAILED")
             else:
-                if kwds.has_key("type") and kwds["type"]=="osrrhcluster":
+                if kwds.has_key("type") and kwds["type"]=="osrcluster":
                     ret=True
         finally:
             return ret
@@ -356,49 +358,6 @@ class RHOpensharedrootSystemInformation(RedhatClusterSystemInformation):
             self.type=SystemTypes.CLUSTER
 
     check=staticmethod(check)
-
-def __test_sysinfo(systeminformation):
-    print systeminformation.__class__
-    print systeminformation
-    print "Features: %s" %systeminformation.getFeatures()
-
-def __test():
-    systeminformation=SystemInformation()
-    print "Systeminformation: "
-    __test_sysinfo(systeminformation)
-
-    print "Intializing from kwds:"
-    systems=[
-              { "type":      "single",
-                "name":             "gfs-node1",
-                "category":         "development",
-                "architecture":     "i686",
-                "operatingsystem": "CentOS release 4.4 (Final)",
-                "kernelversion":   "2.6.9-42.0.3.ELsmp"},
-              { "type":             "cluster",
-                "name":             "vmware_cluster",
-                "category":         "production",
-                "architecture":     "i686",
-                "operatingsystem": "CentOS release 4.4 (Final)",
-                "kernelversion":   "2.6.9-34.0.1.ELsmp"},
-              { "type":             "osrrhcluster",
-                "name":             "osr_cluster",
-                "category":         "production",
-                "architecture":     "i686",
-                "operatingsystem": "CentOS release 4.4 (Final)",
-                "kernelversion":   "2.6.9-34.0.1.ELsmp"}
-              ]
-    for system in systems:
-        print "system: %s" %(system)
-        systeminformation=SystemInformation(**system)
-        __test_sysinfo(systeminformation)
-
-#    for hdr in systeminformation.getInstalledSoftware():
-#        print hdr["name"]
-
-if __name__ == '__main__':
-    ComSystem.__EXEC_REALLY_DO=""
-    __test()
 
 # $Log: ComSystemInformation.py,v $
 # Revision 1.1  2011-02-15 14:58:21  marc
