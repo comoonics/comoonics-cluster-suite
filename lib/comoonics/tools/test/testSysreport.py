@@ -15,16 +15,22 @@ class Test(unittest.TestCase):
         from comoonics.tools.ComSysreport import Sysreport
         self.tmpdir=tempfile.mkdtemp()
         print("tmpdir: %s" %self.tmpdir)
-
         self.systeminformation=SystemInformation()
-        self.sysreportdir="."
+        self.sysreportdir=os.path.dirname(__file__)
         print "sysreportdir: %s, cwd: %s" %(self.sysreportdir, os.path.realpath(os.path.curdir))
         self.sysreport=Sysreport(self.systeminformation, self.tmpdir, None, self.sysreportdir)
 
     def testName(self):
-        tests2execute=[u'sysreport-linux-base', u'sysreport-linux-network', u'sysreport-linux-network-enhanced', u'sysreport-linux-boot', u'sysreport-linux-proc', u'sysreport-linux-logs', u'sysreport-linux-filesystem']
-        result=self.sysreport.getSetNames()
-        self.assertEquals(tests2execute, result, "Tests2execute should be %s but is %s." %(tests2execute, result))
+        possibletests2execute=[u'sysreport-redhat-base', u'sysreport-redhat-rhn', u'sysreport-redhat-selinux', u'sysreport-rpm', u'sysreport-linux-base', u'sysreport-linux-network', u'sysreport-linux-network-enhanced', u'sysreport-linux-boot', u'sysreport-linux-proc', u'sysreport-linux-logs', u'sysreport-linux-filesystem']
+        tests2execute=self.sysreport.getSetNames()
+        found=0
+        for test2execute in tests2execute:
+            if test2execute not in possibletests2execute:
+                self.fail("Test %s in not in possibletests2execute %s." %(test2execute, possibletests2execute))
+            else:
+                found+=1
+        if found < len(tests2execute):
+            self.fail("Could not find all tests in possibletests. %s != %s" %(tests2execute, possibletests2execute))
 
     def testDoSets1(self):
         self.__testDoSet('sysreport-linux-base')
