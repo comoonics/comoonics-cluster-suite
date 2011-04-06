@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+      i18n:domain="plone">
+
+<body>
+
+<metal:leftcolumn define-macro="left_column">
+  <div metal:define-macro="homebase_portlet">
+	<div class="type-node">
+	<dl class="portlet" id="portlet-comoonics">
+	<dt class="portletHeader"><a href="/luci/comoonics" tal:content="user/getUserName"></a></dt>
+
+	<dd class="portletItemSingle">
+	<ul class="portletCluConfigTree cluConfigTreeLevel0">
+		<tal:portal repeat="c python:data.get('children',[])">
+			<li tal:condition="not: c/currentItem" class="cluConfigTreeItem visualNoMarker">
+			<div tal:condition="not: c/currentItem">
+				<a class="visualIconPadding"
+					tal:attributes="href c/absolute_url;
+						title c/Description |nothing"
+					tal:content="c/Title|nothing">Title</a>
+			</div>
+			</li>
+
+			<li tal:condition="c/currentItem" class="cluConfigTreeCurrentItem visualNoMarker">
+				<div tal:condition="c/currentItem">
+					<a class="visualIconPadding"
+						tal:attributes="href c/absolute_url;
+							title c/Description |nothing"
+						tal:content="c/Title|nothing">Title</a>
+				</div>
+			</li>
+		</tal:portal>
+	</ul>
+	</dd>
+	</dl>
+	</div>
+  </div>
+</metal:leftcolumn>
+
+</body>
+</html>

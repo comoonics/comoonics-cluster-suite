@@ -1,0 +1,190 @@
+<metal:page define-macro="master">
+
+<metal:doctype define-slot="doctype">
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+</metal:doctype>
+
+<metal:block define-slot="top_slot" />
+
+<metal:block use-macro="here/global_defines/macros/defines" />
+<metal:block use-macro="here/comoonics/globals/macros/defines" />
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      lang="en"
+      tal:attributes="lang language;
+                      xml:lang language">
+
+<head metal:use-macro="here/header/macros/html_header">
+   <metal:fillbase fill-slot="base">
+      <metal:baseslot define-slot="base">
+         <base href="" tal:attributes="href here/renderBase" />
+      </metal:baseslot>
+   </metal:fillbase>
+
+   <metal:headslot fill-slot="head_slot"
+      tal:define="lang language;
+                  charset site_properties/default_charset|string:utf-8">
+
+      <metal:cache use-macro="here/global_cache_settings/macros/cacheheaders">
+         Get the global cache headers located in global_cache_settings.
+      </metal:cache>
+
+      <metal:headslot define-slot="head_slot" />
+<tal:comment replace="nothing"> A slot where you can insert elements in the header from a template </tal:comment>
+   </metal:headslot>
+
+   <metal:cssslot fill-slot="css_slot">
+<tal:comment replace="nothing"> A slot where you can insert CSS in the header from a template </tal:comment>
+
+      <style type="text/css">
+	     <!-- @import url(comoonicsportlet.css); -->
+      </style>
+      <style type="text/css">
+         <!-- @import url(/luci/homebase/luci_homebase.css); -->
+      </style>
+
+      <tal:block tal:omit-tag=""
+	   tal:define="global data python:here.comoonicsControl(request)"/>
+
+	  <metal:cssslot define-slot="css_slot" />
+   </metal:cssslot>
+
+   <metal:javascriptslot fill-slot="javascript_head_slot">
+      <script type="text/javascript" src="/luci/conga.js"></script>
+      <script type="text/javascript" src="/luci/comoonics/comoonics.js"></script>
+      <tal:comment replace="nothing"> A slot where you can insert javascript in the header from a template </tal:comment>
+      <metal:javascriptslot define-slot="javascript_head_slot" />
+   </metal:javascriptslot>
+</head>
+
+<body tal:attributes="class here/getSectionFromURL;
+						dir python:test(isRTL, 'rtl', 'ltr')">
+
+   <div id="visual-portal-wrapper">
+
+   <div id="portal-top" i18n:domain="plone">
+
+   <div id="portal-header">
+      <a class="hiddenStructure"
+         accesskey="2"
+         tal:attributes="href string:${request/ACTUAL_URL}#documentContent"
+         i18n:translate="label_skiptocontent">Skip to content.</a>
+
+      <a class="hiddenStructure"
+         accesskey="6"
+         tal:attributes="href string:${request/ACTUAL_URL}#portlet-navigation-tree"
+         i18n:translate="label_skiptonavigation">Skip to navigation</a>
+
+      <a metal:use-macro="here/global_logo/macros/portal_logo">
+         The portal logo, linked to the portal root
+      </a>
+
+      <div metal:use-macro="here/global_sections/macros/portal_tabs" tal:condition="not: isAnon" /></div>
+
+      <div metal:use-macro="here/global_personalbar/macros/personal_bar">
+         The personal bar. (log in, logout etc...)
+      </div>
+
+      <div class="visualClear"><!-- --></div>
+
+      <table id="portal-columns">
+         <tbody>
+            <tr>
+<tal:comment replace="nothing">Start of the left column</tal:comment>
+               <td id="portal-column-one"
+                   metal:define-slot="column_one_slot"
+                   tal:define="lccond1 sl;lccond2 isAnon"
+                   tal:condition="python:lccond1 and not lccond2">
+                  <div class="visualPadding">
+                     <metal:portlets define-slot="portlets_one_slot">
+                        <metal:leftportlets use-macro="here/comoonics_portlet_fetcher/macros/left_column">
+                           This instruction gets the portlets (boxes) for the left column.
+                        </metal:leftportlets>
+                     </metal:portlets>
+                     &nbsp;
+                  </div>
+               </td>
+<tal:comment replace="nothing"> End of the left column </tal:comment>
+
+<tal:comment replace="nothing"> Start of main content block </tal:comment>
+               <td id="portal-column-content"
+                tal:define="global type  request/type | request/form/type | nothing;
+                            global ptype request/pagetype | request/form/pagetype | string:cmdb;
+                            contentmacro  string:here/content-${ptype}/macros/main">
+                  <metal:block define-slot="content">
+                     <div id="content"
+                        metal:define-macro="content">
+
+                        <div class="documentContent" id="region-content">
+                           <a name="documentContent"></a>
+                           <metal:bodytext metal:define-slot="main" tal:content="nothing">
+                              Page body text
+                           </metal:bodytext>
+
+                           <metal:main_form use-macro='python:path(contentmacro)' tal:on-error="string: Username is not defined!">
+                              <h1 tal:content="string:${cname}"></h1>
+				              com.oonics
+			               </metal:main_form>
+
+	                       <tal:block tal:condition="python: request.SESSION.has_key('checkRet')"
+		                    tal:define="ret python: request.SESSION.get('checkRet')">
+
+                              <div class="retmsgs" id="retmsgsdiv" tal:condition="python:(ret and 'messages' in ret and len(ret['messages']))">
+			                     <div class="hbclosebox">
+				                    <a href="javascript:hide_element('retmsgsdiv');"><img src="x.png" class="closeBox" title="dismiss"></a>
+                                 </div>
+			                     <p class="retmsgs">Status messages:</p>
+			                     <ul class="statusmsg">
+				                    <tal:block tal:repeat="e python:ret['messages']">
+					                  <li class="statusmsg" tal:content="python:e" />
+				                    </tal:block>
+                                 </ul>
+		                      </div>
+
+		                      <div id="errmsgsdiv" class="errmsgs" tal:condition="python:(ret and 'errors' in ret and len(ret['errors']))">
+                                 <div class="hbclosebox">
+                                    <a class="hbclosebox" href="javascript:hide_element('errmsgsdiv');"><img src="x.png" class="closeBox" title="dismiss"></a>
+                                 </div>
+                                 <p class="errmsgs">The following errors occurred:</p>
+                                 <ul class="statusmsg">
+                                    <tal:block tal:repeat="e python:ret['errors']">
+                                       <li class="statusmsg" tal:content="python:e" />
+                                    </tal:block>
+                                 </ul>
+                              </div>
+	                       </tal:block>
+                        </div>
+                     </div>
+                  </metal:block>
+               </td>
+
+<tal:comment replace="nothing"> End of main content block </tal:comment>
+
+            </tr>
+         </tbody>
+      </table>
+
+<tal:comment replace="nothing"> end column wrapper </tal:comment>
+
+      <div class="visualClear"><!-- --></div>
+
+      <hr class="netscape4" />
+
+      <metal:block i18n:domain="plone">
+
+         <metal:footer use-macro="here/footer/macros/portal_footer">
+            Footer
+         </metal:footer>
+
+         <metal:colophon use-macro="here/colophon/macros/colophon">
+            The colophon area - contains details about the production of
+            the site. Typically "powered by" buttons, standards, tools used.
+         </metal:colophon>
+      </metal:block>
+
+   </div>
+   </div>
+</body>
+</html>
+</metal:page>

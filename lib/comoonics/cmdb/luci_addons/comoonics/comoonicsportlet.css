@@ -1,0 +1,75 @@
+div.resultTableTop {
+	padding-top: +1em;
+	padding-bottom: +.5em;
+}
+
+div.resultTableEnd {
+	padding-top: +.5em;
+	padding-bottom: +1em;
+}
+
+table.resultTable {
+	background: #dee7ec;
+}
+
+thead.resultTable {
+	background: #dee7ec;
+}
+
+td.resultTable {
+	margin: 0em;
+	padding: 0em 1em .33em 0em;
+	text-align: left;
+}
+
+th.resultTable {
+	padding-top: +1em;
+	padding-bottom: +.5em;
+	text-align: center;
+	margin-bottom: .75em;
+	line-height: 115%;
+	padding: .5em;
+}
+
+tfoot.resultTable {
+	margin-top: .75em;
+	padding: .5em;
+}
+
+#diffs_0_0 {
+    background: #ffffff;
+}
+#diffs_0_1 {
+    background: #ffffff;
+}
+#diffs_1_0 {
+    background: #EDEEF2;
+}
+#diffs_1_1 {
+    background: #EDEEF2;
+}
+#diffs_2_0 {
+    background: #AFBADF;
+}
+#diffs_2_1 {
+    background: #AFBADF;
+}
+#diffs_3_0 {
+    background: #95A2DF;
+}
+#diffs_3_1 {
+    background: #95A2DF;
+}
+
+#installed1 {
+    background: #ffffff;
+}
+#installed2 {
+    background: #DFDFDF;
+}
+#notinstalled1 {
+    background: #AFBADF;
+}
+#notinstalled2 {
+    background: #95A2DF;
+}

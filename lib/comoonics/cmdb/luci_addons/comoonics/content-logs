@@ -1,0 +1,76 @@
+<html xmlns:tal="http://xml.zope.org/namespaces/tal"
+   xml:lang="en"
+   lang="en">
+
+   <head>
+       <title id="pagetitle" tal:content="title">content-systeminformation</title>
+   </head>
+
+   <body>
+       <metal:content-log-main metal:define-macro="main">
+           <h2 class="homebase"><span tal:replace="comoonics_cmdb_title">Comoonics CMDB</span> - Logviewer <span tal:replace="request/searchfor|nothing"/></h2>
+           <tal:block tal:define="
+               searchstring request/form/searchstring | request/searchstring | nothing;
+               limitfrom    request/form/limitfrom | request/limitfrom | string: 0;
+               limitlength  request/form/limitlength | request/limitlength | string: 20;
+               sourcename   request/form/sourcename | request/sourcename | nothing">
+               <form name="cmdbform" action="" method="get">
+                   <input name="limitfrom"   type="hidden" value="0"/>
+                   <input name="pagetype" type="hidden"
+                       tal:attributes="value request/form/pagetype | request/pagetype | ptype" />
+                   <input name="type" type="hidden"
+                       tal:attributes="value request/form/type | request/type | type" />
+                   <table id="systemsTable" class="systemsTable" cellspacing="0">
+                       <thead class="systemsTable">
+                           <tr class="systemsTable">
+                               <td class="systemsTable">
+                                   <div class="systesTableTop">
+                                       <tal:block metal:use-macro="here/content-cmdb/macros/select-source"/>
+                                   </div>
+                               </td>
+                               <td class="systemsTable">
+                                   <div class="systesTableTop">
+                                       Displaycount:
+                                       <input type="text" size="3"
+                                           name="limitlength"
+                                           tal:attributes="value limitlength"/><br/>
+                                   </div>
+                               </td>
+                           </tr>
+                           <tr class="systemsTable">
+                               <td class="SystemTable">
+                                   <div class="systemsTableEnd">
+                                       <strong>Search for:</strong>
+                                       <input type="text" size="30" name="searchstring" tal:attributes="value searchstring"/>
+                                   </div>
+                               </td>
+                               <td class="systemsTable">
+                                   <div class="systesTableTop">
+                                   </div>
+                               </td>
+                           </tr>
+                       </thead>
+                   </table>
+                   <table border="0">
+                      <tr>
+                         <td>
+                            <tal:block metal:use-macro="here/content-cmdb/macros/submit-button"/>
+                         </td>
+                         <td>
+                            <tal:block metal:use-macro="here/content-cmdb/macros/export-button"/>
+                         </td>
+                      </tr>
+                   </table>
+                   <hr/>
+               </form>
+               <tal:block tal:define="
+                   thelist  python:here.getLogsFromSources(sourcename, searchstring, int(limitfrom), int(limitlength));
+                   colnames python:here.getColnamesForLogs(sourcename);
+                   ">
+                   <tal:block metal:use-macro="here/content-cmdb/macros/display-list"/>
+               </tal:block>
+               <tal:block metal:use-macro="here/content-cmdb/macros/result-navigation"/>
+           </tal:block>
+       </metal:content-log-main>
+   </body>
+</html>

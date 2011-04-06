@@ -1,0 +1,14 @@
+<html xmlns:tal="http://xml.zope.org/namespaces/tal"
+    xml:lang="en"
+    lang="en">
+
+    <head>
+        <title id="pagetitle">globals</title>
+    </head>
+
+    <body>
+        <metal:comoonicscmdbdefines metal:define-macro="defines"
+               tal:define="global comoonics_cmdb_title string: Hilti HRRC RHEL">
+        </metal:comoonicscmdbdefines>
+    </body>
+</html>

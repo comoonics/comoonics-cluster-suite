@@ -1,0 +1,242 @@
+<html>
+
+<head>
+	<title id="pagetitle" tal:content="title">The title</title>
+</head>
+
+<body>
+
+   <metal:content-cmdb metal:define-macro="main">
+      <h2 class="homebase"><span tal:replace="comoonics_cmdb_title">Comoonics CMDB</span> Software Management</h2>
+      <p class="hbText">Select one of the actions from the left.</p>
+   </metal:content-cmdb>
+
+   <metal:result-navigation metal:define-macro="result-navigation">
+      <table border="0" tal:define="
+         limitfrom    request/form/limitfrom | request/limitfrom | string: 0;
+         limitlength  request/form/limitlength | request/limitlength | string: 20;
+         req          python:here.parseRequest(request);
+         ">
+         <tbody>
+            <tr>
+               <td>
+                  <form name="cmdbprev" action="" method="get">
+                     <input type="hidden" name="limitfrom"   tal:attributes="value python: int(limitfrom)-int(limitlength)"/>
+                     <input type="hidden" name="limitlength" tal:attributes="value python: limitlength"/>
+                     <tal:block tal:repeat="paramname python: req.keys()">
+                        <tal:block tal:condition='python:test(paramname!="limitlength" and paramname != "limitfrom")'>
+                           <tal:block tal:repeat="paramvalue python: req[paramname]">
+                              <input type="hidden" tal:attributes="name paramname;
+                                 value python: paramvalue"/>
+                           </tal:block>
+                        </tal:block>
+                     </tal:block>
+                     <tal:block tal:condition="python:test(int(limitfrom)&gt;0)">
+                        <input type="hidden" name="Submit" value="Submit"/>
+                        <button type="button" value="&lt;%lt;" onclick="document.cmdbprev.submit()">
+                           <img alt="&lt;&lt;" src="arrow_left.png"/>
+                           <img alt="&lt;&lt;" src="arrow_left.png"/>
+                        </button>
+                     </tal:block>
+                     <tal:block tal:condition="python:test(int(limitfrom)&lt;=0)">
+                        <button type="button" value="&lt;%lt;" disabled="disabled">
+                           <img alt="&lt;&lt;" src="arrow_left.png"/>
+                           <img alt="&lt;&lt;" src="arrow_left.png"/>
+                        </button>
+                     </tal:block>
+                  </form>
+               </td>
+               <td>
+                  <form name="cmdbnext" action="" method="get">
+                     <input type="hidden" name="limitfrom"   tal:attributes="value python: int(limitlength)+int(limitfrom)"/>
+                     <input type="hidden" name="limitlength" tal:attributes="value python: limitlength"/>
+                     <tal:block tal:repeat="paramname python: req.keys()">
+                        <tal:block tal:condition='python:test(paramname!="limitlength" and paramname != "limitfrom")'>
+                           <tal:block tal:repeat="paramvalue python: req[paramname]">
+                              <input type="hidden" tal:attributes="name paramname;
+                                 value python: paramvalue"/>
+                           </tal:block>
+                        </tal:block>
+                     </tal:block>
+                     <input type="hidden" name="Submit" value="Submit"/>
+                     <button type="button" value="&gt;%gt;" onclick="document.cmdbnext.submit()">
+                        <img alt="&gt;&gt;" src="arrow_right.png"/>
+                        <img alt="&gt;&gt;" src="arrow_right.png"/>
+                     </button>
+                  </form>
+               </td>
+            </tr>
+         </tbody>
+      </table>
+   </metal:result-navigation>
+
+   <metal:select-source metal:define-macro="select-source"
+      tal:define="ptype request/form/pagetype | request/pagetype | string: cmdb">
+      <strong>Source Name: </strong>
+      <tal:block tal:condition='python:test(ptype=="rpmsearch" or ptype=="logs")'>
+         <select class="hbInputSys" id="sourcename" name="sourcename"/>
+      </tal:block>
+      <tal:block tal:condition='python:test(ptype!="rpmsearch" and ptype!="logs")'>
+         <select class="hbInputSys" id="sourcename" name="sourcename" multiple="multiple"/>
+      </tal:block>
+      <tal:block tal:repeat="sname python:here.getSourcesForCMDB()">
+         <tal:block tal:condition="python:test(here.compareSourceNames(sname, sourcename))">
+            <option selected="selected"><span tal:replace="sname"/></option>
+         </tal:block>
+         <tal:block tal:condition="python:test(not here.compareSourceNames(sname, sourcename))">
+            <option><span tal:replace="sname"/></option>
+         </tal:block>
+      </tal:block>
+   </metal:select-source>
+
+   <metal:select-master metal:define-macro="select-master"
+      tal:define="ptype request/form/pagetype | request/pagetype | string: cmdb">
+      <strong>Master Name: </strong>
+      <select class="hbInputSys" id="mastername" name="mastername"/>
+      <tal:block tal:repeat="mname python:here.getSourcesForCMDB()">
+         <tal:block tal:condition="python:test(here.compareSourceNames(mname, mastername))">
+            <option selected="selected"><span tal:replace="mname"/></option>
+         </tal:block>
+         <tal:block tal:condition="python:test(not here.compareSourceNames(mname, mastername))">
+            <option><span tal:replace="mname"/></option>
+         </tal:block>
+      </tal:block>
+   </metal:select-master>
+
+   <metal:select-category metal:define-macro="select-category">
+      <strong>Category Name: </strong>
+      <tal:block tal:condition='python:test(ptype=="rpmsearch")'>
+         <select class="hbInputSys" id="sourcename" name="sourcename"/>
+      </tal:block>
+      <tal:block tal:condition='python:test(ptype!="rpmsearch")'>
+         <select class="hbInputSys" id="sourcename" name="sourcename" multiple="multiple"/>
+      </tal:block>
+      <tal:block tal:repeat="sname python:here.getCategoriesForCMDB()">
+         <tal:block tal:condition="python:test(here.compareSourceNames(sname, sourcename))">
+            <option selected="selected"><span tal:replace="sname"/></option>
+         </tal:block>
+         <tal:block tal:condition="python:test(not here.compareSourceNames(sname, sourcename))">
+            <option><span tal:replace="sname"/></option>
+         </tal:block>
+      </tal:block>
+   </metal:select-category>
+
+   <metal:select-detail metal:define-macro="select-detail"
+      tal:define="
+      detail    detail|request/form/detail|request/detail|string:'';
+      searchfor searchfor|request/form/searchfor|request/searchform|string: source;
+      ">
+      <tal:block tal:condition='python:test(ptype=="rpmcompare")'>
+         <tal:block tal:repeat="mydetail python:here.getDetailsForCMDBCompare(searchfor)">
+            <tal:block tal:condition="python:test(here.compareSourceNames(detail, mydetail))">
+               <input type="checkbox" name="detail" tal:attributes="value mydetail" checked="checked"/><span tal:replace="mydetail"/><br/>
+            </tal:block>
+            <tal:block tal:condition="python:test(not here.compareSourceNames(detail, mydetail))">
+               <input type="checkbox" name="detail" tal:attributes="value mydetail"/><span tal:replace="mydetail"/><br/>
+            </tal:block>
+         </tal:block>
+      </tal:block>
+   </metal:select-detail>
+
+   <metal:display-search metal:define-macro="display-search"
+      tal:define="searchfor  request/form/searchfor | request/searchfor | string: source;
+                  searchstring searchstring | request/form/searchstring | request/searchstring | nothing;
+                  mastername mastername | request/form/mastername | request/mastername | nothing;
+                  detail     detail | request/form/detail | request/detail | nothing;
+                  converter  converter | request/form/converter | request/converter | string:coladddiffs/dict;
+                  allvalues  allvalues | python:here.getSoftwareForCMDBSearch(sourcename, searchstring, int(limitfrom), int(limitlength), searchfor, mastername, detail, converter);
+                  rows       rows | python:allvalues['value'];
+                  colnames   colnames | python:allvalues['colnames'];
+                  ">
+      <table class="resultTable" tal:condition="python:test(rows and len(rows)>0)">
+         <thead class="resultTable">
+            <tr class="resultTable">
+               <tal:block tal:repeat="colname colnames">
+                  <tal:block tal:condition="python:test(colname != 'id')">
+                     <th class="resultTable">
+                        <div class="resultTable"><span tal:content="colname"/></div>
+                     </th>
+                  </tal:block>
+               </tal:block>
+            </tr>
+         </thead>
+         <tbody>
+            <tal:block tal:repeat="row rows" tal:define="css_id string:no_id">
+               <tal:block tal:condition="python:test(here.getMyattr(row, 'id')!=None)"
+                  tal:define="css_id python: here.getMyattr(row, 'id', 'marc')">
+                  <tr class="resultTable" tal:attributes="id css_id">
+                     <tal:block tal:repeat="colname colnames">
+                        <tal:block tal:condition="python:test(colname != 'id')">
+                           <td class="resultTable" tal:attributes="id css_id">
+                              <div class="resultTable" tal:attributes="id css_id"><span tal:content="python:row[colname]"/></div>
+                           </td>
+                        </tal:block>
+                     </tal:block>
+                  </tr>
+               </tal:block>
+               <tal:block tal:condition="python:test(here.getMyattr(row, 'diffs')!=None)"
+                  tal:define="css_id python: here.getMyattr(row, 'diffs')">
+                  <tr class="resultTable" tal:attributes="id css_id">
+                     <tal:block tal:repeat="colname python:row.keys()">
+                        <td class="resultTable" tal:attributes="id css_id">
+                           <div class="resultTable" tal:attributes="id css_id"><span tal:content="python:row[colname]"/></div>
+                        </td>
+                     </tal:block>
+                  </tr>
+               </tal:block>
+            </tal:block>
+         </tbody>
+      </table>
+   </metal:display-search>
+
+   <metal:display-list metal:define-macro="display-list"
+      tal:define="
+      thelist      thelist | python: None;
+      colnames     colnames | python: None;
+      ">
+      <table class="resultTable">
+         <thead class="resultTable">
+            <tr class="resultTable">
+               <tal:block tal:repeat="colname python: colnames">
+                  <th class="resultTable">
+                     <div class="resultTable"><span tal:content="colname"/></div>
+                  </th>
+               </tal:block>
+            </tr>
+         </thead>
+         <tbody>
+            <tal:block tal:repeat="row thelist">
+               <tr class="resultTable" tal:define="
+                     id python:here.getMyattr(row, 'cssid', 'noid');
+                     " tal:attributes="id id">
+                  <tal:block tal:repeat="colname colnames" tal:attributes="id id">
+                     <td class="resultTable" tal:attributes="id id">
+                        <div class="resultTable" tal:attributes="id id"><span tal:content="python:here.getMyattr(row, colname)"/></div>
+                     </td>
+                  </tal:block>
+               </tr>
+            </tal:block>
+         </tbody>
+      </table>
+   </metal:display-list>
+
+   <metal:submit-button metal:define-macro="submit-button">
+      <div class="hbSubmit" id="hbSubmit">
+         <input type="hidden" name="Submit" value="Submit"/>
+         <input type="button" name="Submit" value="Submit" onclick="validateAndSubmit()"/>
+      </div>
+   </metal:submit-button>
+   <metal:export-button metal:define-macro="export-button">
+      <div class="hbSubmit" id="hbSubmit">
+         <input type="hidden" name="Export" value="Export"/>
+         <input type="button" name="Export" value="Export" tal:attributes="onclick string:validateExportAndSubmit()"/>
+      </div>
+   </metal:export-button>
+   <metal:exportname-button metal:define-macro="exportname-button">
+      <div class="hbSubmit" id="hbSubmit">
+         <input type="hidden" name="ExportName" value="ExportName"/>
+         <input type="button" name="ExportName" value="ExportName" tal:attributes="onclick string:validateExportNameAndSubmit()"/>
+      </div>
+   </metal:exportname-button>
+</body>
+</html>

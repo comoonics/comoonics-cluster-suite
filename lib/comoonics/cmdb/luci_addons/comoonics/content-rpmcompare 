@@ -1,0 +1,119 @@
+<html xmlns:tal="http://xml.zope.org/namespaces/tal"
+   xml:lang="en"
+   lang="en">
+
+   <head>
+       <title id="pagetitle" tal:content="title">content-rpmsearch</title>
+   </head>
+
+   <body>
+       <metal:content-rpmsearch-main metal:define-macro="main">
+           <h2 class="homebase"><span tal:replace="comoonics_cmdb_title">Comoonics CMDB</span> Software Management - RPM Compare for <span tal:replace="request/searchfor|nothing"/></h2>
+           <tal:block tal:define="
+               sourcename   request/form/sourcename | request/sourcename | nothing;
+               mastername   request/form/mastername | request/mastername | nothing;
+               searchfor    request/form/searchfor | request/searchfor | string: source;
+               limitfrom    request/form/limitfrom | request/limitfrom | string: 0;
+               limitlength  request/form/limitlength | request/limitlength | string: 20;
+               searchstring request/form/searchstring | request/searchstring | nothing;
+               converter    request/form/converter | request/converter | string:coladddiffs/dict;
+               okButton    request/form/Submit | request/Submit | nothing">
+               <form name="cmdbform" action="" method="get">
+                   <input name="limitfrom"   type="hidden" value="0"/>
+                   <input name="searchfor"   type="hidden" tal:attributes="value searchfor"/>
+                   <input name="pagetype" type="hidden"
+                       tal:attributes="value request/form/pagetype | request/pagetype | ptype" />
+                   <input name="type" type="hidden"
+                       tal:attributes="value request/form/type | request/type | type" />
+                   <tal:block tal:condition="python: searchfor=='source'">
+                      <input name="converter" type="hidden"
+                          tal:attributes="value request/form/converter | request/converter | string:coladddiffs/dict" />
+                      <input name="report" type="hidden"
+                          tal:attributes="value request/form/report | request/report | string:diffs/text/csv" />
+                   </tal:block>
+                   <tal:block tal:condition="python: searchfor=='category'">
+                      <input name="converter" type="hidden"
+                          tal:attributes="value request/form/converter | request/converter | string:coladddiffs/dict" />
+                      <input name="reporter" type="hidden"
+                          tal:attributes="value request/form/report | request/report | string:diffs/text/csv" />
+                   </tal:block>
+                   <tal:block tal:condition="python: searchfor=='master'">
+                      <input name="converter" type="hidden"
+                          tal:attributes="value request/form/converter | request/converter | string:coladdmasterdiffs/dict" />
+                      <input name="reporter" type="hidden"
+                          tal:attributes="value request/form/report | request/report | string:masterdiffs/text/csv" />
+                   </tal:block>
+                   <table id="systemsTable" class="systemsTable" cellspacing="0">
+                       <thead class="systemsTable">
+                           <tr class="systemsTable">
+                               <td class="systemsTable">
+                                   <div class="systemsTableTop">
+                                       <tal:block tal:condition="python: searchfor=='source'">
+                                           <tal:block metal:use-macro="here/content-cmdb/macros/select-source"/>
+                                       </tal:block>
+                                       <tal:block tal:condition="python: searchfor=='category'">
+                                           <tal:block metal:use-macro="here/content-cmdb/macros/select-category"/>
+                                       </tal:block>
+                                       <tal:block tal:condition="python: searchfor=='master'">
+                                           <tal:block metal:use-macro="here/content-cmdb/macros/select-source"/>
+                                       </tal:block>
+                                   </div>
+                               </td>
+                               <td class="systemsTable">
+                                   <div class="systesTableTop">
+                                       Displaycount:
+                                       <input type="text" size="3"
+                                           name="limitlength"
+                                           tal:attributes="value limitlength"/>
+                                   </div>
+                               </td>
+                               <td>
+                               </td>
+                           </tr>
+                           <tr class="systemsTable">
+                               <td class="SystemTable">
+                                   <div class="systemsTableEnd">
+                                       <strong>Search for:</strong>
+                                       <input type="text" size="30" name="searchstring" tal:attributes="value searchstring"/>
+                                   </div>
+                               </td>
+                               <td>
+                                   <div class="systemsTable">
+                                       <tal:block tal:condition="python: searchfor=='master'">
+                                           <tal:block metal:use-macro="here/content-cmdb/macros/select-master"/>
+                                       </tal:block>
+                                   </div>
+                               </td>
+<!--                               <td>
+                                   <div class="systemsTable">
+                                       <tal:block tal:condition="python: searchfor!='source'">
+                                           <tal:block metal:use-macro="here/content-cmdb/macros/select-detail"/>
+                                       </tal:block>
+                                   </div>
+                               </td>-->
+                           </tr>
+                       </thead>
+                   </table>
+                   <table border="0">
+                      <tr>
+                         <td>
+                            <tal:block metal:use-macro="here/content-cmdb/macros/submit-button"/>
+                         </td>
+                          <td>
+                              <tal:block metal:use-macro="here/content-cmdb/macros/export-button"/>
+                          </td>
+                          <td>
+                              <tal:block metal:use-macro="here/content-cmdb/macros/exportname-button"/>
+                          </td>
+                      </tr>
+                   </table>
+                   <hr/>
+               </form>
+               <tal:block tal:condition="okButton">
+                   <tal:block metal:use-macro="here/content-cmdb/macros/display-search"/>
+                   <tal:block metal:use-macro="here/content-cmdb/macros/result-navigation"/>
+               </tal:block>
+           </tal:block>
+       </metal:content-rpmsearch-main>
+   </body>
+</html>
