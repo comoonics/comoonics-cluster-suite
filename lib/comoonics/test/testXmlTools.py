@@ -128,14 +128,35 @@ class Test_XmlTools(unittest.TestCase):
                 result=XmlTools.evaluateXPath(xpath, doc)
                 self.assertEquals(result, expectedresult, "Result of xpath %s in document does not equals the expected result: %s != %s" %(xpath, result, expectedresult))
         
-    def __test_overwrite_element_with_xpaths(self):
+    def test_overwrite_attributes_with_xpaths(self):
         for doc in self.docs:
             if len(doc) > 1:
                 (doc, xpathtest)=doc
                 (xpath, expectedresult, newvalue) = xpathtest
-                xml2=XmlTools.overwrite_element_with_xpaths(doc.documentElement, { xpath: newvalue })
-                buf=XmlTools.toPrettyXML(doc)
-                self.assertEquals(buf.replace("\n", "").replace(" ", ""), XmlTools.toPrettyXML(doc).replace("\n", "").replace(" ", ""))
+                xml2=XmlTools.overwrite_attributes_with_xpaths(doc.documentElement, { xpath: newvalue })
+                buf=XmlTools.toPrettyXML(xml2)
+                self.assertEquals(buf.replace("\n", "").replace(" ", "").replace('<?xmlversion="1.0"?>', ""), 
+                                  XmlTools.toPrettyXML(doc).replace("\n", "").replace(" ", "").replace('<?xmlversion="1.0"?>', "").replace("lilr629", "myname").replace("/dev/sda1", "mydisk"))
+
+    def test_overwrite_attributes_with_xpaths2(self):
+        doc="""<a>
+   <b name="hallo"/>
+   <b name="hallo2"/>
+   <c name="hallo3"/>
+   <c name2="hallo4"/>
+   <c name="hallo5"/>
+</a>
+"""
+        edoc="""<a>
+   <b name="hallo"/>
+   <b name="hallo"/>
+   <c name="marc"/>
+   <c name2="hallo4"/>
+   <c name="marc"/>
+</a>
+"""
+        rdoc=XmlTools.overwrite_attributes_with_xpaths(XmlTools.parseXMLString(doc), {"//b/@name": "hallo", "/a/c/@name": "marc"})
+        self.failUnlessEqual(XmlTools.toPrettyXML(rdoc).replace("\n", "").replace(" ", "").replace("\t", ""), edoc.replace("\n", "").replace(" ", "").replace("\t", ""))   
 
     def testGetTextFromElement1(self):
         doc=self.docs[2][0]
