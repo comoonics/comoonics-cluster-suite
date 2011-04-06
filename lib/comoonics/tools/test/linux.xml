@@ -90,10 +90,10 @@
                 <requirement type="message" message="Collecting information about X:" order="pre"/>
                 <file name="/etc/X11"/>
             </modification>
-            <modification type="catiffile">
+<!--            <modification type="catiffile">
                 <requirement type="message" message="Gathering sysctl information (/proc/sys):" order="pre"/>
                 <file name="/proc/sys"/>
-            </modification>
+            </modification>-->
             <modification type="catiffile">
                 <requirement type="message" message="Gathering sysctl information (/etc/sysctl.conf):" order="pre"/>
                 <file name="/etc/sysctl.conf"/>
