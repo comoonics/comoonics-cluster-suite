@@ -3,9 +3,9 @@
 An Autodelegator class copied the from O'Reilly Python Cookbook
 """
 
-import ComLog
+from comoonics import ComLog
 
-logger=ComLog.getLogger("comoonics.AutoDelegator")
+logger=ComLog.getLogger("comoonics.tools.AutoDelegator")
 
 class AutoDelegator(object):
     delegates=list()
@@ -15,7 +15,7 @@ class AutoDelegator(object):
     def __getattr__(self, key, _super=False, with_delegator=True):
         #logger.debug("__getattr__(%s, %s)" %(key, _super))
         if _super:
-               _attr=super(AutoDelegator, self).__getattr__(self, key)
+            _attr=super(AutoDelegator, self).__getattr__(self, key)
         if key not in self.do_not_delegate:
             try:
                 if not with_delegator:
