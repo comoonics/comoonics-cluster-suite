@@ -7,7 +7,6 @@ FIXME: Should become a singleton based on table, dbname, user, pw
 # $Id: ComBaseDB.py,v 1.7 2007-04-12 12:20:38 marc Exp $
 #
 
-import MySQLdb
 import logging
 
 from comoonics import ComLog
@@ -85,11 +84,15 @@ class BaseDB(DBConnection):
         super(BaseDB, self).__init__(**kwds)
         self.tablename=kwds["tablename"]
         self.dblog=logging.getLogger("DB::"+self.__class__.__name__)
+        self.dbloghandler=None
         if hasattr(self, "logsource"):
-            self.dblog.addHandler(DBLogger(dbhandle=self.db, logsource=getattr(self, "logsource")))
-        else:
-            self.dblog.addHandler(DBLogger(dbhandle=self.db))
+            self.setLogsource(kwds.get("logsource", None))
+            self.dblog.addHandler(self.dbloghandler)
         self.dblog.setLevel(DBLogger.DB_LOG_LEVEL)
+
+    def setLogsource(self, logsource=None):
+        self.dbloghandler=DBLogger(dbhandle=self.db, logsource=logsource)
+        self.dblog.addHandler(self.dbloghandler)
 
     def escapeSQL(self, toescape):
         ret=None
@@ -151,14 +154,6 @@ class BaseDB(DBConnection):
                     _return=2
                 rows=rs.fetch_row(1, 2)
         return _return
-
-def test():
-    testlist=[ "a", "b", "c", "d" ]
-    print "Testing Binoperator with: "
-    print BaseDB.BinOperatorFromList(testlist, "!=")
-
-if __name__=="__main__":
-    test()
 
 ########################
 # $Log: ComBaseDB.py,v $
