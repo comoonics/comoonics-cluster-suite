@@ -100,9 +100,7 @@ class CatifModification(Modification):
         self.catiflogger.debug(__cmd)
         #__out=ComSystem.execLocalOutput(__cmd)
         self.__cmd=__cmd
-        (__out,__rc)=pexpect.run(__cmd, timeout=-1, withexitstatus=1)
-        if _log:
-            _log.write("".join(__out))
+        (__out,__rc)=pexpect.run(__cmd, timeout=-1, withexitstatus=1, logfile=_log)
         if __rc!=0:
             raise ExecLocalException(__cmd, __rc, __out, None)
         self.catiflogger.info("%s: OK(%u)" %(__cmd, __rc))
