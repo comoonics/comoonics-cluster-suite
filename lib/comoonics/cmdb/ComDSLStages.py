@@ -7,7 +7,6 @@ Methods for filling and getting informations from the definte software library s
 # $Id: ComDSLStages.py,v 1.2 2007-04-02 11:17:04 marc Exp $
 #
 
-import os
 from comoonics.cmdb.ComBaseDB import BaseDB
 from comoonics import ComLog
 from comoonics.db.ComDBLogger import DBLogger
