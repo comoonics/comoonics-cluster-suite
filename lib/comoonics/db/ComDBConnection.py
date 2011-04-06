@@ -142,9 +142,12 @@ class DBConnection(object):
         return rs
 
     def execQuery(self, query):
-        self.db.query(query)
+        ret=self.db.query(query)
         rs=self.db.store_result()
-        return rs
+        if rs:
+            return rs
+        else:
+            return ret
 
     def close(self):
         self.db.close()
