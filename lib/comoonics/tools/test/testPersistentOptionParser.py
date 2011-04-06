@@ -5,6 +5,7 @@ Created on 25.03.2011
 '''
 import unittest
 from comoonics.tools.poptparse import PersistentOptionParser, make_option
+import os.path
 
 class TestPersistentOptionParser(unittest.TestCase):
 
@@ -18,8 +19,8 @@ class TestPersistentOptionParser(unittest.TestCase):
                   make_option("--param6", action="store", type="string", default="default6")]
                  
         self.parser=PersistentOptionParser(usage="testapp [options]", option_list=options, prog="testapp")
-        self.parser.setLocalDefaultsFilename("./testapp-local.cfg")
-        self.parser.setGlobalDefaultsFilename("./testapp.cfg")
+        self.parser.setLocalDefaultsFilename(os.path.join(os.path.dirname(__file__), "testapp-local.cfg"))
+        self.parser.setGlobalDefaultsFilename(os.path.join(os.path.dirname(__file__), "testapp.cfg"))
 
     def tearDown(self):
         pass
