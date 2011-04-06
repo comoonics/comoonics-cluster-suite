@@ -27,7 +27,7 @@ import sys
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
-from comoonics.sos.ComSOSReport import sosreport, SosreportException
+from comoonics.sos.sosreport import sosreport, SosreportException
 from optparse import OptionParser, Option
 import signal
 from threading import activeCount
