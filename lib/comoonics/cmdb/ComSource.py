@@ -7,10 +7,9 @@ Methods for filling and getting informations for sources for CMDB
 # $Id: ComSource.py,v 1.3 2007-04-02 11:16:00 marc Exp $
 #
 
-import os
 from comoonics.cmdb.ComBaseDB import BaseDB
 from comoonics import ComLog
-from comoonics.ComSystemInformation import RedhatClusterSystemInformation
+from comoonics.tools.ComSystemInformation import SystemInformation,RedhatClusterSystemInformation
 from comoonics.db.ComDBLogger import DBLogger
 
 class Source(BaseDB):
@@ -40,7 +39,6 @@ class Source(BaseDB):
         rs=self.selectQuery(selectquery)
         row=rs.fetch_row(1,1)
         while row:
-            from comoonics.ComSystemInformation import SystemInformation
             sysinfos.append(SystemInformation(**row[0]))
             row=rs.fetch_row(1,1)
         return sysinfos
@@ -50,8 +48,7 @@ class Source(BaseDB):
         rs=self.selectQuery(selectquery)
         if rs.num_rows > 0:
             row=rs.fetch_row(1,1)
-            from comoonics.ComSystemInformation import SystemInformation
-            systeminformation=SystemInformation(**row[0])
+            return SystemInformation(**row[0])
         else:
             return None
 
@@ -85,17 +82,7 @@ class Source(BaseDB):
         return sources
 
     def updateSystemInformation(self, sysinfo, category):
-        values=dict()
-        if isinstance(sysinfo, RedhatClusterSystemInformation):
-            source_type="cluster"
-        else:
-            source_type="single"
-#        values["uptime"]=sysinfo.getUptime()
-#        values["source_type"]=source_type
-#        values["category"]=category
-#        values["architecture"]=sysinfo.getArchitecture()
-#        values["operating_system"]=sysinfo.getOperatingsystem()
-#        values["kernel_version"]=sysinfo.getKernelversion()
+        source_type=sysinfo.getType()
         ret=super(Source, self).updateRPM("INSERT INTO %s VALUES(\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", NOW());" % (self.tablename, source_type, sysinfo.getName(), category, sysinfo.getArchitecture(), sysinfo.getOperatingsystem(), sysinfo.getKernelversion(), sysinfo.getUptime()),
                   "UPDATE %s SET source_type=\"%s\", category=\"%s\", architecture=\"%s\", operating_system=\"%s\", kernel_version=\"%s\", uptime=\"%s\", lastimport=Now() WHERE name=\"%s\";" % (self.tablename, source_type, category, sysinfo.getArchitecture(), sysinfo.getOperatingsystem(), sysinfo.getKernelversion(), sysinfo.getUptime(), sysinfo.getName()),
                   "SELECT name, source_type, category, architecture, operating_system, kernel_version, uptime FROM %s WHERE name=\"%s\";" %(self.tablename, sysinfo.getName()), None)
@@ -103,6 +90,11 @@ class Source(BaseDB):
             self.dblog.log(DBLogger.DB_LOG_LEVEL, "Added new system %s, %s (table: %s)" %(sysinfo.getName(), category, self.tablename))
         elif ret>1:
             self.dblog.log(DBLogger.DB_LOG_LEVEL, "Updated existing system %s, %s (table: %s)" %(sysinfo.getName(), category, self.tablename))
+
+    def removeSystemInformation(self, sysinfo, category):
+        query="DELETE FROM %s WHERE name=\"%s\" AND category=\"%s\" AND architecture=\"%s\" " %(self.tablename, sysinfo.getName(), category, sysinfo.getArchitecture())
+        self.log.debug(query)
+        self.execQuery(query)
 
 ######################
 # $Log: ComSource.py,v $
