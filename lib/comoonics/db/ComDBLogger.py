@@ -35,12 +35,14 @@ class DBLogger(logging.Handler):
         database: the database to use
         """
         logging.Handler.__init__(self)
+        self.logsource=None
         self.tablename="logs"
         if kwds and kwds.has_key("dbhandle"):
             self.dbconnection=DBConnection(dbhandle=kwds["dbhandle"])
         elif kwds and kwds.has_key("hostname") and kwds.has_key("user") and kwds.has_key("password") and kwds.has_key("database"):
             self.dbconnection=DBConnection(hostname=kwds["hostname"], user=kwds["user"], password=kwds["password"], database=kwds["database"])
         elif kwds:
+            
             raise TypeError, "At least 1 or 4 keyword/value pairs expected. Give are " %len(kwds.keys())
         if kwds:
             for key in kwds.keys():
@@ -52,7 +54,7 @@ class DBLogger(logging.Handler):
             self.dbconnection=DBConnection(hostname=args[0], user=args[1], password=args[2], database=args[3])
         elif args:
             raise TypeError, "Either 1 or 4-5 parameters expected. Given are %u" %len(args)
-        if not hasattr(self,"logsource"):
+        if not hasattr(self,"logsource") or not self.logsource:
             self.logsource=socket.gethostname()
 
     def getLogs(self, sourcenames, **kwds):
@@ -74,6 +76,12 @@ class DBLogger(logging.Handler):
         self.log.debug("getLogs(%s): %s" %(sourcenames, query))
         return self.dbconnection.selectQuery(query)
 
+    def cleanLogs(self, sourcenames, **kwds):
+        if isinstance(sourcenames, basestring):
+            sourcenames=[sourcenames]
+        query="DELETE FROM %s WHERE (%s) AND (%s)" %(self.tablename, " OR ".join(map(lambda sname: "logsource=\"%s\"" %sname, sourcenames)), kwds.get("where", "True"))
+        ret=self.dbconnection.execQuery(query)
+        self.log.debug("cleanLogs: query=%s, ret=%s" %(query, ret))
 
     def LogRecordToInsert(self, record):
         exc_info=None
