@@ -56,6 +56,11 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-22
+  - XMLTools: 
+     * overwrite_attributes_with_xpath
+         - added lxml implementation
+         - rewrite
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-21
   - added Group System Environment/Base
   - moved ComSysreport from here to comoonics.tools
@@ -373,6 +378,13 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-27
+  - rewrite of everything
+  - added Packages module to represent collection of software packages and packages as well as detecting differences
+    between Packages.
+  - added Report and Convert pattern to give a way to convert packages to other formats (dicts, lists, ..) or 
+    to outputchannels (Report) to different formatis like (plain/text, plain/csv, ..)
+  - Sources can now be cleaned up 
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-26
   - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-25
@@ -417,6 +429,8 @@ comoonics-cmdb-py:
     first rpm cmdb version (TAG CMDB_STABLE_0_1)
 
 comoonics-db-py
+* Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-16
+  - DBLogger: cleanLogs to clean logs of given source from logtable. 
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-15
   - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-14
@@ -483,6 +497,9 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-61
+  - CatifModification
+    * _cmd: logging is done via pexpect where possible
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-60
   - added Group System Environment/Base
   - ComFilesystemCopyset::FilesystemCopyset.prepareDest: only label if this is a filesystem
@@ -754,6 +771,13 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-11
+  - SystemInformation
+    - better detection of distribution
+  - poptparser (new)
+    - PersistentOptionParser that makes use of ConfigParser to provide default configuration files for OptionParsers
+  - Sysreport
+    - fixed overwriteDestination to be working properly
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-10
   - added Group System Environment/Base
   - moved ComSysreport from comoonics to comoonics.tools
