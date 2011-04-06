@@ -110,7 +110,7 @@ class Sysreport(object):
         for _templatefile in self.templatefiles:
             _file=open(os.path.join(self.sysreport_templatesbase, _templatefile),"r")
             doc=XmlTools.parseXMLFP(_file)
-            # Initially create ret_doc
+            # Initially create ret_doc. Cannot do it before cause we need the doc
             if not ret_doc:
                 ret_doc=XmlTools.getDOMImplementation().createDocument(None, doc.documentElement.tagName, None)
                 ret_element=ret_doc.documentElement
@@ -142,7 +142,11 @@ class Sysreport(object):
 
     def overwriteDestination(self):
         from comoonics import XmlTools
-        XmlTools.overwrite_element_with_xpaths(self.enterprisecopy.getElement(), self.getOverwriteMap())
+        self.enterprisecopy=EnterpriseCopy(XmlTools.overwrite_attributes_with_xpaths(self.enterprisecopy.getElement(), self.getOverwriteMap()), self.enterprisecopy.getDocument())
+        for setname in self.sets:
+            for myset in self.enterprisecopy.allsets:
+                if myset.hasAttribute("name") and myset.getAttribute("name"):
+                    self.sets[setname]=myset
         return self.enterprisecopy.getElement()
 
     def getSetNames(self):
