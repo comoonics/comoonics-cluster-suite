@@ -1,9 +1,0 @@
-.lastbuild
-*.pyc
-setup.py
-MANIFEST
-build
-dist
-epydoc
-doc2man.py
-LICENSE.txt
