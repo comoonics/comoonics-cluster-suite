@@ -1,6 +1,6 @@
 #!/bin/bash
 RPMBUILDDIR=${1:-$(rpmbuild --showrc | grep ": _topdir" | awk '{print $3}')}
-RPMFILTER=${2:-comoonics-bootimage*}
+RPMFILTER=${2:-comoonics-*-py*}
 
 usage() {
   cat <<EOF
