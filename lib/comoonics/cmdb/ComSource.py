@@ -9,7 +9,10 @@ Methods for filling and getting informations for sources for CMDB
 
 from comoonics.cmdb.ComBaseDB import BaseDB
 from comoonics import ComLog
-from comoonics.tools.ComSystemInformation import SystemInformation,RedhatClusterSystemInformation
+try:
+    from comoonics.tools.ComSystemInformation import SystemInformation
+except ImportError:
+    from comoonics.ComSystemInformation import SystemInformation
 from comoonics.db.ComDBLogger import DBLogger
 
 class Source(BaseDB):
