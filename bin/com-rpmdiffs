@@ -66,13 +66,6 @@ opts, args=cmd_parser.parse_args()
 if opts.verbose:
     ComLog.setLevel(logging.DEBUG)
 
-#if len(args) == 0:
-#    cmd_parser.exit(1, "No sourcename entered. Please use -h/--help to see cmdline options.")
-
-if opts.syslog:
-    sysloghandler=logging.handlers.SysLogHandler((opts.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
-    software_cmdb.log.addHandler(sysloghandler)
-
 where=None
 
 if len(opts.search) > 0:
@@ -83,7 +76,8 @@ if len(opts.search) > 0:
     else:
         where=opts.search
 if opts.limitfrom>opts.limitto:
-    cmd_parser.exit("To (%u) must be bigger then from (%u).\n" %(opts.limitfrom, opts.limitto)) 
+    sys.stderr.write("To (%u) must be bigger then from (%u).\n" %(opts.limitfrom, opts.limitto))
+    sys.exit(1) 
 
 if opts.master and not opts.reporttype:
     opts.reporttype="masterdiffs/text/plain"
@@ -93,16 +87,23 @@ elif not opts.reporttype:
 if opts.reportslist:
     print "\n".join(getReportkeys())
 elif not args:
-    cmd_parser.exit(2, "No argument given. At least one argument for a source is required. See %s --help\n" %cmd_parser.prog)
+    sys.stderr.write("No argument given. At least one argument for a source is required. See %s --help\n" %cmd_parser.prog)
+    sys.exit(2)
 else:
     software_cmdb=SoftwareCMDB(hostname=opts.hostname, user=opts.username, password=opts.password, database=opts.database, table=opts.table)
+
+    if opts.syslog:
+        sysloghandler=logging.handlers.SysLogHandler((opts.syslog, logging.handlers.SYSLOG_UDP_PORT), logging.handlers.SysLogHandler.LOG_USER)
+        software_cmdb.log.addHandler(sysloghandler)
+
     if opts.category and not opts.master:
         dbsource=Source(dbhandle=software_cmdb.db)
         sources=dbsource.getSourcesForCategory(args[0])        
     elif opts.master or not opts.category:
         sources=args
     else:
-        cmd_parser.exit(2, "%s called with wrong parameters. Please check with -h/--help." %cmd_parser.get_prog_name())
+        sys.stderr.write("%s called with wrong parameters. Please check with -h/--help." %cmd_parser.get_prog_name())
+        sys.exit(3)
 
     packages=software_cmdb.getPackages(sources, opts.master, None, 0, 0, where)
     differences=packages.differences()

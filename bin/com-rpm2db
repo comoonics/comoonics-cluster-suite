@@ -19,7 +19,10 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
-from comoonics.tools.ComSystemInformation import SystemInformation
+try:
+    from comoonics.tools.ComSystemInformation import SystemInformation
+except ImportError:
+    from comoonics.ComSystemInformation import SystemInformation
 from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
 from comoonics.cmdb.ComDSL import DSL
 from comoonics.cmdb.ComSource import Source
@@ -69,10 +72,12 @@ if args:
 elif options.category:
     category=options.category
 else:
-    cmd_parser.exit(1, "You need to give at least one parameter as argument for the category of this system to be recognized with.\n")
+    sys.stderr.write("You need to give at least one parameter as argument for the category of this system to be recognized with.\n")
+    sys.exit(1)
 if options.querydatabase:
     if not args[argsindex]:
-        cmd_parser.exit(2, "If you want to query a system from database you need to specify the systemname.\n")
+        sys.stderr.write("If you want to query a system from database you need to specify the systemname.\n")
+        sys.exit(2)
     sname=args[argsindex]
     argsindex+=1
 if len(args) > 1:
@@ -122,12 +127,12 @@ if options.action=="update":
         rpmnames.append(rpm_hdr["name"])
 
     software_cmdb.cleanTMP(systeminformation.getName())
-    try:
-        for rpm_hdr in rpms:
+    for rpm_hdr in rpms:
+        try:
             (channelname, channelversion)=dsl.getChannelVersion(rpm_hdr)
             software_cmdb.updateRPM(rpm_hdr, systeminformation.getName(), channelname, channelversion, rpmnames.count(rpm_hdr["name"]))
-    except:
-        software_cmdb.dblog.log(logging.WARN, "Exception occured during update of rpm %s-%s-%s-%s." %(rpm_hdr["name"], rpm_hdr["version"], rpm_hdr["release"], rpm_hdr["arch"]), exc_info=True)
+        except:
+            software_cmdb.dblog.log(logging.WARN, "Exception occured during update of rpm %s-%s-%s-%s." %(rpm_hdr["name"], rpm_hdr["version"], rpm_hdr["release"], rpm_hdr["arch"]), exc_info=True)
     software_cmdb.deleteNotInTmp(systeminformation.getName(), rpmfiles)
     software_cmdb.cleanTMP(systeminformation.getName())
     software_cmdb.db.commit()

@@ -16,7 +16,10 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
-from comoonics.tools.ComSystemInformation import SystemInformation
+try:
+    from comoonics.tools.ComSystemInformation import SystemInformation
+except ImportError:
+    from comoonics.ComSystemInformation import SystemInformation
 import logging
 from datetime import timedelta
 try:
@@ -52,11 +55,12 @@ cmd_parser.add_option_group(db_options)
 options, args = cmd_parser.parse_args()
 
 if options.querydatabase and not args:
-    cmd_parser.exit(1, """Query database is selected but no systemname given. 
+    sys.stderr.write("""Query database is selected but no systemname given. 
 Please enter at least one systemname to be queried.
 
 If unsure get help with com-sysinfo --help.
 """)
+    sys.exit(1)
 
 if options.verbose:
     ComLog.setLevel(logging.DEBUG)
