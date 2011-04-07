@@ -25,17 +25,24 @@ from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
 from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 from comoonics.cdsl.ComCdslValidate import CdslValidate
-from comoonics.cdsl import dirtrim, commonoptparseroptions
+from comoonics.cdsl import dirtrim, commonoptparseroptions, get_defaultsfiles, get_defaultsenvkey
 
 ComLog.setLevel(logging.INFO)
 import logging
 
 logging.basicConfig()
 logger=ComLog.getLogger("com-cdslinvchk")
-
-from optparse import OptionParser
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+except ImportError:
+    from optparse import OptionParser
 
 parser = OptionParser(description=__doc__)
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
 parser.add_option("-U", "--update", dest="update", default=False, action="store_true", help="Also updates the repository")
 parser.add_option("-f", "--filesystem", dest="filesystem", default=False, action="store_true", help="Validates a given path (--path) on the filesystem instead of the repository")
 parser.add_option("-p", "--path", dest="path", default=".", help="Set the path to be searched. Defaults to the base cdslpath.")

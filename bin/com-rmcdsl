@@ -22,19 +22,28 @@ from comoonics.ComExceptions import ComException
 from comoonics.cluster import parseClusterConf
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository
-from comoonics.cdsl import commonoptparseroptions, dirtrim
+from comoonics.cdsl import commonoptparseroptions, dirtrim, get_defaultsfiles, get_defaultsenvkey
 from comoonics.cdsl.ComCdsl import CdslDoesNotExistException
 from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 
-class CdslNotExistsException(ComException):pass
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+except ImportError:
+    from optparse import OptionParser
 
-from optparse import OptionParser
+class CdslNotExistsException(ComException):pass
 
 usage = "usage: %prog [options] fullpathtofile"
 parser = OptionParser(usage=usage, description=__doc__)
 parser=commonoptparseroptions(parser)
 
 parser.add_option("-s", "--symboliconly", dest="symboliconly", default=True, action="store_true", help="Only removes the symbolic links but not the data itself")
+
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
 
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()

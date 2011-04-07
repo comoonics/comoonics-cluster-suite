@@ -57,24 +57,17 @@ import sys
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
-from comoonics.cluster.tools import pexpect
+from comoonics.cluster.tools import pexpect, get_defaultsfiles, get_defaultsenvkey
 import fileinput, fcntl, getpass, os, re
 import socket, struct, sys, termios, threading, time
-from optparse import OptionParser, OptionGroup, make_option
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup, make_option
+except:
+    from optparse import OptionParser, OptionGroup, make_option
 
 #                                                                            }}}
 # ------------------------------------------------------------------------------
 # Configuration                                                              {{{
-
-# Default host list for the -a option.
-default_dir = "/etc/comoonics"
-defaultgroup_dir = os.path.join(default_dir, "groups")
-home_dir = os.path.join(os.environ['HOME'], ".comoonics")
-homegroup_dir = os.path.join(home_dir, "groups")
-
-allgroup_file = os.path.join(defaultgroup_dir, "all")
-globalcfgdefault_file= os.path.join(default_dir, "cluster-tools.cfg") 
-localcfgdefault_file= os.path.join(home_dir, "cluster-tools.cfg") 
 
 # Default shell protocol to use RSH, SSH or Telnet.
 proto = "SSH"
@@ -151,48 +144,6 @@ USER_PROMPT        = re.compile('^\s*?[Uu]ser:$\Z', re.M)
 # ------------------------------------------------------------------------------
 # Functions
 
-def get_defaultfiles(envkey="COMOONICS_CLUSTER_TOOLS_CFG", globaldefaultfile=None, localdefaultfile=None):
-    """
-    Returns a list of default files that could be found. Empty list if no default file could be found.
-    The list is ordered so that the order is globalfile, localfile, envfile
-    It looks out for the following files.
-       ENVIRONMENT["COMOONICS_CLUSTER_TOOLS_CFG"]
-       ~/.comoonics/comoonics-cluster-tools.cfg (localdefaultfile)
-       /etc/comoonics/comoonics-cluster-tools.cfg (globaldefaultfile)
-    """
-    defaultfiles=list()
-    if not globaldefaultfile:
-        globaldefaultfile=globalcfgdefault_file
-    if not localdefaultfile:
-        localdefaultfile=localcfgdefault_file
-    
-    if os.path.isfile(globaldefaultfile):
-        defaultfiles.append(globaldefaultfile)
-    if os.path.isfile(localdefaultfile):
-        defaultfiles.append(localdefaultfile)
-    if os.environ.has_key(envkey) and os.path.isfile(os.environ[envkey]):
-        defaultfiles.append(os.environ[envkey])
-        
-    return defaultfiles
-
-def get_defaults(appname, defaultparameters):
-    """
-    Looks out for defaultfiles that overwrite all default settings for the command line parameters.
-    The location of the files is as follows (latest to be found has precedence):
-       ENVIRONMENT["COMOONICS_CLUSTER_TOOLS_CFG"]
-       ~/.comoonics/comoonics-cluster-tools.cfg
-       /etc/comoonics/comoonics-cluster-tools.cfg
-    The configurationfile itself is a ConfigParser file that is compatible to any ini file.
-    All command line options can appear there without a "--" in front.
-    Even those settings can be overwritten with a section for each command being called.
-    """
-    import ConfigParser
-    config = ConfigParser.ConfigParser(defaultparameters)
-    config.read(get_defaultfiles())
-    if not config.has_section(appname):
-        config.add_section(appname)
-    return config
-
 def command_options (appname, usage):
     """
     Function: command_options
@@ -203,48 +154,20 @@ def command_options (appname, usage):
 
     # Options
     # list of long command line parameter without -- and value in string.
-    defaultparameters={"timeout": "4",
-                       "verbose": "0",
-                       "ALL": "False",
-                       "nocluster": "False",
-                       "exitfailed": "False",
-                       "clusterconf": clusterconf,
-                       "ask": "False",
-                       
-                       # for com-dsh
-                       "dryrun": "False",
-                       "pass": "False",
-                       "proto": proto,
-                       "ssh_hostkey": ssh_hostkey,
-                       "ssh_keytype": "dsa",
-                       "ssh_pubkey": "none",
-                       "sudo": "False",
-                       "nolocalhost": "False",
-                       "sequential": "True",
-                       "waitbeforestart": "0",
-                       
-                       # for com-dcp
-                       "scp_mode": "get",
-                       "scp_local": "",
-                       "scp_remote": "",
-                       "recursive": "False",
-                       "scp_proto": "scp",
-                       }
-    defaults=get_defaults(appname, defaultparameters)
     cmd_options = [make_option("--timeout", action="store", type="int",
-                               dest="timeout", metavar="<SEC>",
+                               dest="timeout", metavar="<SEC>", default=4,
                                help="Set timeout."),
-                   make_option("-v", "--verbose", action="count",
+                   make_option("-v", "--verbose", action="count", default=0,
                                dest="verbose", help="Verbose (may be " + \
                                " specified up to 5 times (i.e. -vvvvv))."),
-                   make_option("-A", "--ask", action="store_true", 
+                   make_option("-A", "--ask", action="store_true", default=False,
                                dest="ask", help="Sets in ask mode to ask user which commands would be executed.")]
     cmd_parser = OptionParser(option_list=cmd_options, usage=usage,
                               version="Version: %s" % (version))
 
     # Host Options
     host_options = OptionGroup(cmd_parser, "Host Options")
-    host_options.add_option("-a", "--ALL", action="store_true",
+    host_options.add_option("-a", "--ALL", action="store_true", default=False,
                             dest="allgroup",
                             help="Add all nodes in %s to the hostlist."
                             % (allgroup_file))
@@ -255,7 +178,7 @@ def command_options (appname, usage):
                             dest="hostfiles", metavar="<FILE>",
                             help="Adds all hosts in <FILE> to the hostlist.")
     host_options.add_option("-e", "--exitfailed", action="store_true",
-                            dest="exit_failed",
+                            dest="exit_failed", default=False, 
                             help="Exit if some hosts fail basic " + \
                             "connectivity tests.")
     host_options.add_option("-n", action="append", type="string", dest="nodes",
@@ -267,11 +190,11 @@ def command_options (appname, usage):
     cmd_parser.add_option_group(host_options)
     cluster_options = OptionGroup(cmd_parser, "Cluster Options")
     cluster_options.add_option("-N", "--nocluster", action="store_true",
-                            dest="nocluster",
+                            dest="nocluster", default=False, 
                             help="Disables automatic cluster detection.")
-    cluster_options.add_option("-c", "--clusterconf", type="string", 
+    cluster_options.add_option("-c", "--clusterconf", type="string", default=cluster_conf,
                                dest="clusterconf", help="Overwrites the default clusterconf file")
-    cluster_options.add_option("-L", "--nolocalhost", action="store_false",
+    cluster_options.add_option("-L", "--nolocalhost", action="store_true", default=False,
                                dest="localhost", help="Use nodename instead of localhost for localnode.")
     cmd_parser.add_option_group(cluster_options)
 
@@ -284,17 +207,17 @@ def command_options (appname, usage):
     if appname == "com-dsh" :
         shell_options = OptionGroup(cmd_parser, "Shell Options")
         shell_options.add_option("--sequential", action="store_false", 
-                                 dest="parallel",
+                                 dest="parallel", default=True,
                                  help="Switches from executing the commands in parallel to sequential.")
         shell_options.add_option("--waitbeforestart", type="int",
-                                 dest="startwait",
+                                 dest="startwait", default=0,
                                  help="Wait the given seconds before starting the command on the next node. Only available in parallel mode.")
         shell_options.add_option("--dryrun", action="store_true",
-                                 dest="dryrun",
+                                 dest="dryrun", default=False,
                                  help="Lists nodes where the command will " + \
                                       "be executed but DOES NOT run it.")
         shell_options.add_option("--pass", action="store_true",
-                                 dest="usepass",
+                                 dest="usepass", default=False,
                                  help="Prompt for login account password " + \
                                       "(default is to assume SSH or RSH is " + \
                                       "handling authentication through " + \
@@ -308,65 +231,54 @@ def command_options (appname, usage):
         # SSH Options
         ssh_options = OptionGroup(cmd_parser, "SSH Options")
         ssh_options.add_option("--ssh_hostkey", action="store", type="string",
-                               dest="ssh_hostkey",
+                               dest="ssh_hostkey", default=ssh_hostkey, 
                                metavar="<ACTION>", help="SSH Host Key " + \
                                "Checking. Options: accept, ask, or strict")
         ssh_options.add_option("--ssh_keytype", action="store", type="string",
-                               dest="ssh_keytype",
+                               dest="ssh_keytype", default="dsa",
                                metavar="<TYPE>", help="SSH Key type for " + \
                                "gen, install or revoke. Options: RSA or DSA.")
         ssh_options.add_option("--ssh_pubkey", action="store", type="string",
-                               dest="ssh_pubkey",
+                               dest="ssh_pubkey", default="none",
                                metavar="<ACTION>", help="SSH Public Key " + \
                                "management. Options: gen, install, or revoke.")
 
         cmd_parser.add_option_group(ssh_options)
         
-        user_options.add_option("-s", "--sudo", action="store_true",
+        user_options.add_option("-s", "--sudo", action="store_true", dest="sudo", default=True,
                                 help="After logging in, switch to root user.")
 
     # SCP Options
     if appname == "com-dcp" :
         scp_options = OptionGroup(cmd_parser, "SCP Options")
         scp_options.add_option("--scp_mode", action="store", type="string",
-                               dest="scp_mode", metavar="<MODE>",
+                               dest="scp_mode", metavar="<MODE>", default="get",
                                help="SCP Mode: Get or Send")
         scp_options.add_option("--scp_local", action="store", type="string",
-                               dest="scp_local",
+                               dest="scp_local",  default="",
                                metavar="<TARGET>",
                                help="SCP local file or directory to send or" + \
                                " store received file(s) in.")
         scp_options.add_option("--scp_remote", action="store", type="string",
-                               dest="scp_remote",
+                               dest="scp_remote", default="",
                                metavar="<TARGET>",
                                help="SCP remote file to get, or directory" + \
                                " to store received file(s) in.")
         scp_options.add_option("-r", "--recursive", action="store_true",
-                               dest="scp_recursive",
+                               dest="scp_recursive", default=False,
                                help="Recursively copy directories.")
         scp_options.add_option("--scp_proto", action="store", type="string",
-                               dest="scp_proto",
+                               dest="scp_proto", default="scp",
                                metavar="<PROTO>", help="SCP PROTO: SCP or RCP")
         cmd_parser.add_option_group(scp_options)
 
     cmd_parser.add_option_group(user_options)
+    try:
+        cmd_parser.setGlobalDefaultsFilename(getdefaultsfiles[0])
+        cmd_parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+    except (TypeError, NameError):
+        pass
     cmd_parser.disable_interspersed_args()
-    defaultdict=dict()
-    if defaults.has_section(appname):
-        for key in defaults.options(appname):
-            if cmd_parser.has_option("--"+key):
-                option=cmd_parser.get_option("--"+key)
-                if option.action=="store_true":
-                    defaultdict[option.dest]=defaults.getboolean(appname, key)
-                elif option.action=="store_false":
-                    defaultdict[option.dest]=not defaults.getboolean(appname, key)
-                elif option.type == "int" or option.type=="long" or option.action=="count":
-                    defaultdict[option.dest]=defaults.getint(appname, key)
-                elif option.type == "float":
-                    defaultdict[option.dest]=defaults.getfloat(appname, key)
-                elif option.type == "string" or option.type == "choice":
-                    defaultdict[option.dest]=defaults.get(appname, key)            
-    cmd_parser.set_defaults(**defaultdict)
     return cmd_parser
 
 def display_output (list_good, host_output, list_connfail, list_sessfail,

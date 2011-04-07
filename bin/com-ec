@@ -35,7 +35,11 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 
 from comoonics.storage import ComLVM
 from comoonics import ComSystem, ComLog
-from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset
+from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset, get_defaultsfiles, get_defaultsenvkey
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+except ImportError:
+    from optparse import OptionParser, OptionGroup
 
 import os.path
 #define some variables
@@ -67,23 +71,30 @@ def applyValues(element, values):
     from comoonics import XmlTools
     return XmlTools.overwrite_attributes_with_xpaths(element, values)
 
-from optparse import OptionParser
-
 parser = OptionParser(description=__doc__, usage="usage: %prog [options] xmlfilename [name=value]*")
 # Flags
-parser.add_option("-d", "--debug",      dest="debug",      default=False, action="store_true", help="toggle debugmode and be more helpful")
-parser.add_option("-n", "--novalidate", dest="novalidate", default=True, action="store_true", help="novalidate don't validate the xml. Handle with care!!!")
+parser.add_option("-v", "--verbose",      dest="debug",      default=False, action="store_true", help="toggle debugmode and be more helpful")
 parser.add_option("-a", "--ask",        dest="ask",        default=False, action="store_true", help="ask before any being command executed")
 parser.add_option("-U", "--noundo",     dest="noundo",     default=False, action="store_true", help="don't do the undoing if anything goes wrong")
-parser.add_option("-X", "--onlydisplay",dest="onlydisplay",default=False, action="store_true", help="only display the resulting dom as xml")
 parser.add_option("-S", "--simulate",   dest="simulate",   default=False, action="store_true", help="don't execute anything just simulate. Only valid for developer. It might not do what you expect!")
 
 # Options
-parser.add_option("-c", "--copyset",         dest="copyset",         action="append", help="<name>|all: only do all or the given copy set")
-parser.add_option("-m", "--modificationset", dest="modificationset", action="append", help="<name>|all: only do all or the given modification set")
-parser.add_option("-s", "--set",             dest="sets",             action="append", help="Execute the given sets. Multiple allowed")
+ec_options=OptionGroup(parser, "Copyset Options")
+ec_options.add_option("-c", "--copyset",         dest="copyset",         action="append", help="<name>|all: only do all or the given copy set")
+ec_options.add_option("-m", "--modificationset", dest="modificationset", action="append", help="<name>|all: only do all or the given modification set")
+ec_options.add_option("-s", "--set",             dest="sets",             action="append", help="Execute the given sets. Multiple allowed")
+parser.add_option_group(ec_options)
 
-parser.add_option("-x", "--xslt",            dest="xslt",            help="preconvert xmlfile with given xsltfile.")
+xml_options=OptionGroup(parser, "XML/XSLT Options")
+xml_options.add_option("-x", "--xslt",            dest="xslt",            help="preconvert xmlfile with given xsltfile.")
+xml_options.add_option("-X", "--onlydisplay",dest="onlydisplay",default=False, action="store_true", help="only display the resulting dom as xml")
+xml_options.add_option("-n", "--novalidate", dest="novalidate", default=True, action="store_true", help="novalidate don't validate the xml. Handle with care!!!")
+parser.add_option_group(xml_options)
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
 
 (options, args) = parser.parse_args()
 

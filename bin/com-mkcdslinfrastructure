@@ -23,11 +23,13 @@ from comoonics import ComLog
 import comoonics.cluster
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository
-from comoonics.cdsl import commonoptparseroptions, dirtrim
-from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository, CdslVersionException
-# from comoonics import GetOpts
+from comoonics.cdsl import commonoptparseroptions, dirtrim, get_defaultsfiles, get_defaultsenvkey
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+except ImportError:
+    from optparse import OptionParser
 
-from optparse import OptionParser
+from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository, CdslVersionException
 
 parser = OptionParser(description=__doc__)
 parser=commonoptparseroptions(parser)
@@ -47,6 +49,12 @@ parser.add_option("-p", "--get", default=None, dest="get", help="Get a specified
 parser.add_option("-l", "--list", default=False, dest="list", action="store_true", help="List all parameters from the cdsl infrastructure.")
 parser.add_option("-R", "--recursive", default=True, dest="recursive", action="store_true", help="Toggle if what to be done will be done recursive. Means also for subrepositories. Default: True")
 parser.add_option("-f", "--force", default=False, dest="force", action="store_true", help="Toggle if what to be done will be forced if necessary. Default is: False.")
+
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
 
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()

@@ -28,9 +28,11 @@ from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
 from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 from comoonics.cdsl.ComCdsl import ComoonicsCdsl
-from comoonics.cdsl import dirtrim, commonoptparseroptions
-
-from optparse import OptionParser
+from comoonics.cdsl import dirtrim, commonoptparseroptions, get_defaultsfiles, get_defaultsenvkey
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+except ImportError:
+    from optparse import OptionParser
 
 usage = "usage: %prog [options] fullpathtofile"
 parser = OptionParser(usage=usage, description=__doc__)
@@ -44,6 +46,12 @@ parser.add_option("-u", "--updateinventory", dest="updateinventory", default=Fal
    if cdsl with given target does not exist in inventoryfile, add entry
    if it does not exist on filesystem but in inventoryfile, delete entry
    if it exists in inventoryfile but verifies from filesystem, update entry""")
+
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
 
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()

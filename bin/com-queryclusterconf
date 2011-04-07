@@ -23,8 +23,10 @@ import comoonics.cluster
 from comoonics.cluster.ComClusterInfo import ClusterInfo
 from comoonics.cluster.ComClusterRepository import ClusterRepository, ClusterMacNotFoundException, RedHatClusterRepository
 from comoonics.cluster.ComQueryMap import QueryMap
-
-from optparse import OptionParser
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+except ImportError:
+    from optparse import OptionParser
 
 def printResult(result, options, params, paramsparsestring="\%\([a-zA-Z0-9_]+\)", outbuf=None):
     from comoonics.ComDataObject import DataObject
@@ -150,6 +152,12 @@ parser.add_option("-s", "--seperator", dest="seperator", default=None, help="How
 parser.add_option("-V", "--validate", dest="validate", default=False, action="store_true", help="Validate the cluster configuration if possible")
 parser.add_option("-P", "--prefix", dest="prefix", default="", help="The query result is prefixed by this given string. Default: \"\"")
 parser.add_option("-S", "--suffix", dest="suffix", default="", help="The query result is suffixed by this given string. Default: \"\\n\"")
+
+try:
+    parser.setGlobalDefaultsFilename(comoonics.cluster.get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(comoonics.cluster.get_defaultsfiles()[1], comoonics.cluster.get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
 
 ComLog.setLevel(logging.INFO)
 logger=ComLog.getLogger("com-queryclusterconf")
