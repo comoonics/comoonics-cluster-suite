@@ -79,6 +79,17 @@ def commonoptparseroptions(parser):
     parser.add_option("-c", "--clusterconf", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf())
     return parser
 
+def get_defaultsfiles():
+    import os.path
+    default_dir = "/etc/comoonics"
+    home_dir = os.path.join(os.environ['HOME'], ".comoonics")
+    globalcfgdefault_file= os.path.join(default_dir, "cluster.cfg") 
+    localcfgdefault_file= os.path.join(home_dir, "cluster.cfg")
+    return globalcfgdefault_file, localcfgdefault_file
+
+def get_defaultsenvkey():
+    return "COMOONICS_CLUSTER_CFG" 
+
 ###############
 # $Log: __init__.py,v $
 # Revision 1.11  2010-11-21 21:45:28  marc

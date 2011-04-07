@@ -321,6 +321,17 @@ def commonoptparseroptions(parser):
     parser.add_option("-m", "--mountpoint", dest="mountpoint", default="", help="set the mountpoint for this fs if any.")
     return parser
 
+def get_defaultsfiles():
+    import os.path
+    default_dir = "/etc/comoonics"
+    home_dir = os.path.join(os.environ['HOME'], ".comoonics")
+    globalcfgdefault_file= os.path.join(default_dir, "cdsl.cfg") 
+    localcfgdefault_file= os.path.join(home_dir, "cdsl.cfg")
+    return globalcfgdefault_file, localcfgdefault_file
+
+def get_defaultsenvkey():
+    return "COMOONICS_CDSL_CFG" 
+
 #################
 # $Log: __init__.py,v $
 # Revision 1.12  2010-06-17 08:23:37  marc
