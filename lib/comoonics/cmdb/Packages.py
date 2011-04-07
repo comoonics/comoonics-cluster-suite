@@ -267,7 +267,7 @@ class Packages:
 
     def sort(self):
         sorted=copy.copy(self.packages.values())
-        sorted.sort(cmp=lambda pkg1, pkg2: cmp(pkg1.hashstring().lower(), pkg2.hashstring().lower()))
+        sorted.sort(lambda pkg1, pkg2: cmp(pkg1.hashstring().lower(), pkg2.hashstring().lower()))
         return sorted
 
     def cmp(self, packages, deep=False):
