@@ -4,4 +4,5 @@ include man/*.gz
 include lib/comoonics/tools/test/*.py
 include lib/comoonics/tools/test/*.xml
 include lib/comoonics/tools/test/*.conf
+include lib/comoonics/tools/test/*.cfg
 prune test/
