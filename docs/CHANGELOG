@@ -122,6 +122,7 @@ comoonics-cdsl-py:
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-38
   - added Group System Environment/Base
   - Fixed bug with com-mkcdslinventory --mountpoint with a leading / to be stripped off
+  - Implemented PersistentOptionParser for all commands.
 * Wed Jan 12 2011 MG <grimme@atix.de>, 0.1-37
 - rebase
 * Thu Dec 09 2010 MG <grimme@atix.de>, 0.1-36
@@ -252,6 +253,7 @@ comoonics-cluster-py:
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-34
   - added Group System Environment/Base
   - exit with an error if query fails
+  - Implemented PersistentOptionParser for all commands.
 * Fri Feb 18 2011 MG <grimme@atix.de>, 0.1-33
 - com-queryclusterconf
   - Now also return numbers as queryresult
@@ -325,6 +327,7 @@ comoonics-cluster-py:
 comoonics-cluster-tools-py:
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-17
   - added Group System Environment/Base
+  - Implemented PersistentOptionParser for all commands.
 * Sun Feb 13 2011 MG <grimme@atix.de>, 0.1-16
 - com-dsh
   - fixed bug in telnet execution with no username been given.
@@ -385,6 +388,7 @@ comoonics-cmdb-py:
   - added Report and Convert pattern to give a way to convert packages to other formats (dicts, lists, ..) or 
     to outputchannels (Report) to different formatis like (plain/text, plain/csv, ..)
   - Sources can now be cleaned up 
+  - Implemented PersistentOptionParser for all commands.
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-26
   - added Group System Environment/Extras
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-25
@@ -498,8 +502,9 @@ comoonics-ec-base-py:
 
 comoonics-ec-py:
 * Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-61
+  - Implemented PersistentOptionParser for all commands.
   - CatifModification
-    * _cmd: logging is done via pexpect where possible
+    - cmd: logging is done via pexpect where possible
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-60
   - added Group System Environment/Base
   - ComFilesystemCopyset::FilesystemCopyset.prepareDest: only label if this is a filesystem
@@ -778,6 +783,7 @@ comoonics-tools-py
     - PersistentOptionParser that makes use of ConfigParser to provide default configuration files for OptionParsers
   - Sysreport
     - fixed overwriteDestination to be working properly
+  - Implemented PersistentOptionParser for all commands.
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-10
   - added Group System Environment/Base
   - moved ComSysreport from comoonics to comoonics.tools
