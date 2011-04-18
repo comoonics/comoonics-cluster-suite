@@ -1391,27 +1391,27 @@ Comoonics Enterprisecopy utilities and libraries written in Python
       "packages": [ "comoonics.enterprisecopy" ],
       "scripts": [ "bin/com-ec" ]
     },    
-    "comoonics-fenceacksv-plugins-py": {
-      "name":"comoonics-fenceacksv-plugins-py",
+    "comoonics-imsd-plugins-py": {
+      "name":"comoonics-imsd-plugins-py",
       "version":"0.1",
-      "description":"Comoonics Fenceacksv plugins written in Python",
+      "description":"Comoonics imsd plugins written in Python",
       "long_description":""" 
-Comoonics Fenceacksv plugins written in Python
+Comoonics imsd plugins written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-fenceacksv-plugins-py",
-      "package_dir" :  { "comoonics.fenceacksv.plugins": "lib/comoonics/fenceacksv/plugins"},
-      "packages": [ "comoonics.fenceacksv.plugins" ],
+      "url":"http://www.open-sharedroot.org/development/comoonics-imsd-plugins-py",
+      "package_dir" :  { "comoonics.imsd.plugins": "lib/comoonics/imsd/plugins"},
+      "packages": [ "comoonics.imsd.plugins" ],
     },    
-    "comoonics-fenceacksv-py": {
-      "name":"comoonics-fenceacksv-py",
+    "comoonics-imsd-py": {
+      "name":"comoonics-imsd-py",
       "version":"0.1",
-      "description":"Comoonics Fenceacksv utilities and libraries written in Python",
+      "description":"Comoonics imsd utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Fenceacksv utilities and libraries written in Python
+Comoonics imsd utilities and libraries written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-fenceacksv-py",
-      "package_dir" :  { "comoonics.fenceacksv": "lib/comoonics/fenceacksv"},
-      "packages": [ "comoonics.fenceacksv" ],
+      "url":"http://www.open-sharedroot.org/development/comoonics-imsd-py",
+      "package_dir" :  { "comoonics.imsd": "lib/comoonics/imsd"},
+      "packages": [ "comoonics.imsd" ],
     },    
     "comoonics-installation-py": {
       "name":"comoonics-installation-py",
