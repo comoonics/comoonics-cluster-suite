@@ -56,9 +56,16 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Mon Apr 18 2011 MG <grimme@atix.de>, 0.1-23
+  - XmlTools:
+    - overwrite_attributes_with_xpath:
+      - removed cloning of node
+    - returnDocumentNodefromNode: new function that returns the Document of a given xml.dom.Node
+    - clone_node: use xml.dom.Node.cloneNode(deep=1) if available.
+       - if no document available autocreate more effective.
 * Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-22
   - XMLTools: 
-     * overwrite_attributes_with_xpath
+     - overwrite_attributes_with_xpath
          - added lxml implementation
          - rewrite
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-21
@@ -250,6 +257,14 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Mon Apr 18 2011 MG <grimme@atix.de>, 0.1-35
+  - __init__.py: 
+    - fixed default querymap
+    - rewrite of optparser options as default for commands
+  - com-queryclusterconf
+    - use PersistentOptionparser if available
+    - rewrite options to be better grouped and sensible
+    - special case for attribute output when not using pretty to not quote anything.
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-34
   - added Group System Environment/Base
   - exit with an error if query fails
@@ -635,26 +650,15 @@ comoonics-ec-py:
 * Wed Feb 07 2007 MG <grimme@atix.de>, 0.1-17 :
   changed that modset and copysets can be mixed not for copysets then modsets.
 
-comoonics-fenceacksv-plugins-py
-* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-5
-  - added Group System Environment/Base
-  - ComSysreportPlugin: import SystemInformation from comoonics.tools not comoonics
-* Tue Mar 15 2011 MG <grimme@atix.de>, 0.1-4
-- ComSysreportReport: fixed imports for ComoonicsSystemInformation 
-* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
-  - first version for comoonics-4.6-rc1.
-* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1
-  initial revision
+comoonics-imsd-plugins-py
+* Mon Apr 18 2011 MG <grimme@atix.de>, 0.1-2
+  - fixed bug with ComSysreportPlugin for wrong path for sysreport templates.
+* Tue Apr 07 2011 MG <grimme@atix.de>, 0.1-1
+  - renamed from  comoonics-fenceacksv-plugins-py
 
-comoonics-fenceacksv-py
-* Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-4
-  - added Group System Environment/Base
-* Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-3
-  - first version for comoonics-4.6-rc1.
-* Tue Sep 29 2009 MG <grimme@atix.de>, 0.1-2
-  Fixed deps
-* Mon Sep 10 2007 MG <grimme@atix.de>, 0.1-1:
-  initial revision
+comoonics-imsd-py
+* Tue Apr 07 2011  MG <grimme@atix.de>, 0.1-1
+  - renamed from comoonics-fenceacksv-py 
 
 comoonics-installation-py
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-3
