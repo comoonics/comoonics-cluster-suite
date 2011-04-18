@@ -8,9 +8,7 @@ Class to represent the sysreport of Red Hat in a more general way
 # $Id: ComSysreport.py,v 1.1 2007-09-07 14:44:41 marc Exp $
 #
 
-from ComSystemInformation import SystemInformation
 from comoonics import ComLog
-from comoonics import ComSystem
 from comoonics.enterprisecopy.ComEnterpriseCopy import EnterpriseCopy
 
 SYSREPORT_TEMPLATEBASE="/usr/share/sysreport/templates"
