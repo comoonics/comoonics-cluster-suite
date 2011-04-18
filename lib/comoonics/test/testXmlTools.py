@@ -148,15 +148,15 @@ class Test_XmlTools(unittest.TestCase):
 </a>
 """
         edoc="""<a>
-   <b name="hallo"/>
-   <b name="hallo"/>
+   <b name="marc"/>
+   <b name="marc"/>
    <c name="marc"/>
    <c name2="hallo4"/>
    <c name="marc"/>
 </a>
 """
-        rdoc=XmlTools.overwrite_attributes_with_xpaths(XmlTools.parseXMLString(doc), {"//b/@name": "hallo", "/a/c/@name": "marc"})
-        self.failUnlessEqual(XmlTools.toPrettyXML(rdoc).replace("\n", "").replace(" ", "").replace("\t", ""), edoc.replace("\n", "").replace(" ", "").replace("\t", ""))   
+        rdoc=XmlTools.overwrite_attributes_with_xpaths(XmlTools.parseXMLString(doc), {"//b/@name": "marc", "/a/c/@name": "marc"})
+        self.failUnlessEqual(XmlTools.toPrettyXML(rdoc).replace("\n", "").replace(" ", "").replace("\t", "").replace('<?xmlversion="1.0"?>', ""), edoc.replace("\n", "").replace(" ", "").replace("\t", ""))   
 
     def testGetTextFromElement1(self):
         doc=self.docs[2][0]
