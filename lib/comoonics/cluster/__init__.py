@@ -39,7 +39,7 @@ except:
 try:
     querymapfile=os.environ["QUERYMAPFILE"]
 except:
-    querymapfile="/etc/comoonics/cluster_query_mappings.txt"
+    querymapfile="/etc/comoonics/querymap.cfg"
 
 def parseClusterConf(_clusterconf=clusterconf, _validate=False):
     if not _clusterconf:
@@ -71,12 +71,13 @@ def commonoptparseroptions(parser):
     Sets the give optparser to the common options needed by all cdsl commands.
     """
     import logging
-    from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
+    from ComClusterRepository import RedHatClusterRepository
     
     logging.basicConfig()
     
-    parser.add_option("-d", "--verbose", action="callback", callback=setDebug, help="Quiet, does not show any output")
-    parser.add_option("-c", "--clusterconf", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf())
+    parser.add_option("-v", "--verbose", action="callback", callback=setDebug, help="Be more chatty. Default is to talk only about important things.")
+    parser.add_option("-c", "--clusterconf", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf(), 
+                      help="Overwrite cluster configurationfile. Default: %default.")
     return parser
 
 def get_defaultsfiles():
