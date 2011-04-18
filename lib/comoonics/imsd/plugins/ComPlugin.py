@@ -38,7 +38,7 @@ class Plugin(object):
     """
     Plugin Interface
     """
-    logger=ComLog.getLogger("comoonics.fenceacksv.plugins.ComPlugin.Plugin")
+    logger=ComLog.getLogger("comoonics.imsd.plugins.ComPlugin.Plugin")
     def __init__(self, _name=None, stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr):
         self._commands=dict()
         self._commands_help=dict()
@@ -113,18 +113,5 @@ class DummyPlugin(Plugin):
             _params.append("%s" %params[i])
         print >>self.stdout, "dummy called params: %s!!" %','.join(_params)
         return 0
-
-def _test():
-    _plugin=DummyPlugin()
-    print "Help of plugin %s: " %_plugin.getName()
-    print _plugin.help()
-    for _command in _plugin.getCommands():
-        print "Help of command %s:" %_command
-        print _plugin.help(_command)
-        _plugin.doCommand(_command, ["param1", "param2"])
-        _plugin.doCommand(_command, "param1", "param2")
-
-if __name__=="__main__":
-    _test()
 ##############
 # $Log $

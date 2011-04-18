@@ -4,7 +4,7 @@
 
 import time
 from ComPlugin import Plugin
-from comoonics.ComSysreport import Sysreport
+from comoonics.tools.ComSysreport import Sysreport
 from comoonics.tools.ComSystemInformation import SystemInformation
 from comoonics.ComPath import Path
 
@@ -24,20 +24,21 @@ sysreport or just execute differents part of the sysreport.
     TEMPLATE_DIR="/usr/share/sysreport/templates"
     TIMEFORMAT="%Y%m%d-%H%M%S"
     TMPDIR="/var/spool/sysreport-%s"
-    def __init__(self, templatedir=TEMPLATE_DIR):
+    def __init__(self, templatedir=TEMPLATE_DIR, tmpdir=None, tarfile=None):
         super(SysreportPlugin, self).__init__("sysreport")
-        self.tmpdir=self._getTmpdir()
-        self.tarfile=self._getTarfile()
+        if tmpdir:
+            self.tmpdir=tmpdir
+        if tarfile:
+            self.tarfile=tarfile
         self.templatedir=templatedir
         self.sysreport=None
         self.addCommand("sysreport", self.doSysreport)
         self.addCommand("sysreportshowparts", self.doSysreportShowParts)
 
-    def _getTmpdir(self):
-        _tmpdir=self.TMPDIR %time.strftime(self.TIMEFORMAT)
-        return Path(_tmpdir)
-    def _getTarfile(self):
-        return "/tmp/sysreport-%s.tar.gz" %time.strftime(self.TIMEFORMAT)
+    def getTmpdir(self):
+        return getattr(self, "tmpdir", self.TMPDIR %time.strftime(self.TIMEFORMAT))
+    def getTarfile(self):
+        return getattr(self, "tarfile", "/tmp/sysreport-%s.tar.gz" %time.strftime(self.TIMEFORMAT))
 
     def setupSysreport(self, shell=None):
         if not shell:
@@ -48,7 +49,7 @@ sysreport or just execute differents part of the sysreport.
             _sysinfo=shell.sysinfo
         if not self.sysreport:
             print >>self.stdout,  "Setting up sysreport.."
-            self.sysreport=Sysreport(_sysinfo, self.tmpdir.getPath(), None, self.templatedir)
+            self.sysreport=Sysreport(_sysinfo, self.tmpdir, None, self.templatedir)
             print >>self.stdout,  "OK"
 
     def doSysreport(self, *params, **kwds):
@@ -62,26 +63,24 @@ tarfile: is the tarfile the report should be stored in.
 tmpdir: is the path where temporary files will be stored.
         """
         SysreportPlugin.logger.debug("doSysreport(params: %s, kwds: %s)" %(params, kwds))
-        _tarfile=self.tarfile
-        _tmpdir=self._getTmpdir().getPath()
-        _saveset=True
-        _headset=True
-        _shell=None
-        _parts=None
+        saveset=True
+        headset=True
+        shell=None
+        parts=None
         if params and len(params)>0:
-            _tarfile=params[-1]
-            _parts=params[:-1]
+            self.tarfile=params[-1]
+            parts=params[:-1]
         elif kwds:
-            _tarfile=kwds.get("tarfile", _tarfile)
-            _tmpdir=kwds.get("tmpdir", _tmpdir)
-            _parts=kwds.get("part", None)
-            _headset=not kwds.has_key("noheadset")
-            _saveset=not kwds.has_key("nosaveset")
-            _shell=kwds.get("shell", None)
-        self.setupSysreport(kwds.get("shell", None))
-        self.sysreport.destination=_tmpdir
-        self.sysreport.tarfile=_tarfile
-        self.sysreport.doSets(_parts, _headset, _saveset)
+            self.tarfile=kwds.get("tarfile", self.getTarfile())
+            self.tmpdir=kwds.get("tmpdir", self.getTmpdir())
+            parts=kwds.get("part", None)
+            headset=not kwds.has_key("noheadset")
+            saveset=not kwds.has_key("nosaveset")
+            shell=kwds.get("shell", None)
+        self.setupSysreport(shell)
+        self.sysreport.destination=self.getTmpdir()
+        self.sysreport.tarfile=self.getTarfile()
+        self.sysreport.doSets(parts, headset, saveset)
 
     def doSysreportShowParts(self, *params, **kwds):
         """
@@ -101,7 +100,7 @@ def _test():
     ComSystem.__EXEC_REALLY_DO=""
     ComLog.setLevel(logging.DEBUG)
 
-    _validcommands=["sysreport-show-parts"]
+    _validcommands=["sysreportshowparts"]
     _plugin=SysreportPlugin("../../../../sysreport")
     print "Help of plugin %s: " %_plugin.getName()
     print _plugin.help()
