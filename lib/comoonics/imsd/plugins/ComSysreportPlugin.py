@@ -6,7 +6,6 @@ import time
 from ComPlugin import Plugin
 from comoonics.tools.ComSysreport import Sysreport
 from comoonics.tools.ComSystemInformation import SystemInformation
-from comoonics.ComPath import Path
 
 # here is some internal information
 # $Id: ComSysreportPlugin.py,v 1.1 2007-09-07 14:42:28 marc Exp $
@@ -26,10 +25,8 @@ sysreport or just execute differents part of the sysreport.
     TMPDIR="/var/spool/sysreport-%s"
     def __init__(self, templatedir=TEMPLATE_DIR, tmpdir=None, tarfile=None):
         super(SysreportPlugin, self).__init__("sysreport")
-        if tmpdir:
-            self.tmpdir=tmpdir
-        if tarfile:
-            self.tarfile=tarfile
+        self.tmpdir=tmpdir
+        self.tarfile=tarfile
         self.templatedir=templatedir
         self.sysreport=None
         self.addCommand("sysreport", self.doSysreport)
