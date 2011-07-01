@@ -32,7 +32,9 @@ class KSObject(object):
         return "KSObject"
     def toHash(self):
         _hash=dict()
-        for _attr in self.__dict__.keys():
+        keys=self.__dict__.keys()
+        keys.sort()
+        for _attr in keys:
             _ignore=False
             for _ignore_attr in self.IGNORE_ATTRS:
                 if isinstance(_ignore_attr, basestring):
@@ -145,23 +147,28 @@ class OSRCluster(KSObject):
         return len(self.nodeslist)+1
     
 class OSRClusterNode(KSObject):
-    def __init__(self, _osrcluster, _nodename="unknownnodename", _rootvol=None, _nodeid=None):
+    def __init__(self, _osrcluster, _nodename="unknownnodename", _rootvol=None, _rootfstype=None, _nodeid=None):
         KSObject.__init__(self)
         self.IGNORE_ATTRS.append("cluster")
         self.IGNORE_ATTRS.append("netdevs")
         self.IGNORE_ATTRS.append("netdevslist")
+        self.IGNORE_ATTRS.append("filesystemlist")
         self.MAP_ATTRS["nodename"]="name"
         self.MAP_ATTRS["rootvol"]="name"
+        self.MAP_ATTRS["rootfstype"]="fstype"
         self.PARENTS_FOR_ATTRS["rootvol"]=["com_info", "rootvolume" ]
+        self.PARENTS_FOR_ATTRS["rootfstype"]=["com_info", "rootvolume" ]
         self.cluster=_osrcluster
         self.nodename=_nodename
         self.rootvol=_rootvol
+        self.rootfstype=_rootfstype
         if _nodeid==None:
             self.nodeid=str(self.cluster.getNextNodeId())
         else:
             self.nodeid=_nodeid
         self.netdevs=dict()
         self.netdevslist=list()
+        self.filesystemlist=list()
     
     def toHash(self):
         _hash=super(OSRClusterNode, self).toHash()
@@ -172,7 +179,14 @@ class OSRClusterNode(KSObject):
             _hash["com_info"]=dict()
             
         _hash["com_info"]["eth"]=_netdevs
+        if len(self.filesystemlist)>0:
+            _hash["com_info"]["filesystems"]=dict()
+        for filesystem in self.filesystemlist:
+            _hash["com_info"]["filesystems"]["filesystem"]=filesystem.toHash()
         return _hash
+    
+    def addFilesystem(self, filesystem):
+        self.filesystemlist.append(filesystem)
     
     def addNetdev(self, _clusternodenetdev):
         self.netdevs[_clusternodenetdev.devname]=_clusternodenetdev
@@ -198,9 +212,13 @@ class OSRClusterNode(KSObject):
         tmp="osrclusternode "
         if self.rootvol != None:
             tmp=tmp+"--rootvol=%s " %self.rootvol
+        if self.rootfstype != None:
+            tmp=tmp+"--rootfstype=%s " %self.rootfstype
         tmp=tmp+" "+self.nodename
         for _netdev in self.netdevslist:
             tmp+="\n%s" %_netdev
+        for filesystem in self.filesystemlist:
+            tmp+="\n%s" %filesystem
         return tmp
 
 class OSRClusterNodeNetdev(KSObject):
@@ -218,41 +236,23 @@ class OSRClusterNodeNetdev(KSObject):
         """
         return "osrclusternodenetdev %s %s" %(self.node.nodename, self.devname)
 
-def test(clustername="testcluster", numnodes=5, usehostnames=False, rootvolume="/dev/vg_testcluster_sr/lv_sharedroot", netdev="eth0"):
-    logging.basicConfig()
-    from xml.dom.ext import PrettyPrint
-    defaults = {"cluster":{"config_version":"1", "name":"clurcent5",
-                                "cman":{"expected_votes":"1", "two_node":"0"},
-                                "clusternodes":
-                                         {"clusternode":[
-                                                 {"nodeid":"N", "name":"gfs-nodeN", "votes":"1",
-                                                  "com_info":{
-                                                      "rootvolume":{"name":"/dev/VG_SHAREDROOT/LV_SHAREDROOT"},
-                                                      "eth":[{"ip":"10.0.0.0", "name":"eth0"}],
-                                                      "fenceackserver":{"passwd":"XXX", "user":"root"}},
-                                                  "fence":{"method":{"name":"1"}}}]},
-                                "fencedevices":{},
-                                "rm":{"failoverdomains":{},"resources":{}}}}
-    log.setLevel(logging.DEBUG)
-    log.debug("Setting up cluster %s" %clustername)
-    osrcluster=OSRCluster(clustername, usehostnames, numnodes)
-    for i in range(1, 6):
-        _node=OSRClusterNode(osrcluster, "name%u" %i, rootvolume)
-        _node.rootvol=rootvolume
-        _node.addNetdev(OSRClusterNodeNetdev(_node, netdev))
-        _node.getNetdev(netdev).mac="00:00:00:xx:0%u" %i
-        _node.getNetdev(netdev).ip="dhcp"
-        osrcluster.addNode(_node)
-    log.debug("Cluster: %s" %osrcluster)
-    log.debug("Cluster as hash: %s" %osrcluster.toHash())
-    from comoonics.cluster.ComClusterRepository import ClusterRepository
-    _tmp=ClusterRepository(None,None,osrcluster.toHash(),defaults)
-    
-    log.debug("To cluster.conf: ")
-    PrettyPrint(_tmp.getDocument())
+class OSRClusterNodeFilesystem(KSObject):
+    def __init__(self, node, fstype, source, dest, mountopts="defaults"):
+        KSObject.__init__(self)
+        self.IGNORE_ATTRS.append("node")
+        self.source=source
+        self.dest=dest
+        self.fstype=fstype
+        self.mountopts=mountopts
+        self.node=node
+        
+    def __str__(self):
+        """
+        Will look as follows in the kickstartfile:
+        osrclusternodefilesystem nodename fstype source dest [mountopts]
+        """
+        return "osrclusternodefilesystem %s %s %s %s" %(self.node.nodename, self.fstype, self.source, self.dest, self.mountopts)
 
-if __name__ == "__main__":
-    test()
 ####################################
 # $Log: osrcluster.py,v $
 # Revision 1.3  2008-06-04 10:28:56  marc
