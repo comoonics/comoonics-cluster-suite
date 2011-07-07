@@ -323,7 +323,7 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
               -> RedhatCluster->getClusterName()
         """
         from comoonics import XmlTools
-        return XmlTools.evaluateXPath(self.XPATH_CLUSTERNAME, self.cluster_conf)[0].nodeValue
+        return XmlTools.evaluateXPath(self.XPATH_CLUSTERNAME, self.cluster_conf)[0]
 
     check=staticmethod(check)
 
