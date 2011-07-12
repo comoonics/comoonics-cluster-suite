@@ -14,13 +14,15 @@
 
 import os
 import kudzu
-from comoonics import ComLog
+from comoonics import ComLog, ComSystem
 log=ComLog.getLogger("comoonics:installation:nfs")
 try:
     from fsset import FileSystemType
     import flags
     import iutil
     import commands
+    import logging
+    anacondalog = logging.getLogger("anaconda")
     class nfsFileSystem(FileSystemType):
         def __init__(self):
             from flags import flags
@@ -37,9 +39,13 @@ try:
             self.packages=None
             self.maxSizeMB=16*1024*1024
             self.packages=[ "portmap" ]
-        
+                
         def formatDevice(self, entry, progress, chroot="/"):
-            log.debug("nfsFileSystem: skipping nfs format")
+            self.mount(entry.device.getDevice(), entry.mountpoint, instroot=chroot)
+            log.debug("nfsFileSystem: Erasing all content on %s, %s/%s..." %(entry.device.getDevice(), chroot, entry.mountpoint))
+            commands.getstatusoutput("rm -rf %s/%s/*" %(chroot, entry.mountpoint))
+            self.umount(entry.device, "%s/%s" %(chroot, entry.mountpoint))
+
         def mount(self, device, mountpoint, readOnly=0, bindMount=0, instroot=""):
             if not self.isMountable():
                 return
@@ -47,13 +53,16 @@ try:
 #            if flags.selinux:
 #                log.info("Could not mount nfs filesystem with selinux context enabled.")
 #                return
-            log.info("Mounting nfs %s => %s" %(device, "%s/%s" %(instroot, mountpoint)))
-            rc,out=commands.getstatusoutput("mount -t nfs -o nolock %s %s/%s" %(device, instroot, mountpoint))
-            if rc==0:
-                return 0
-            else:
-                return 1
-            
+            anacondalog.debug("nfsFileSystem: Mounting nfs %s => %s" %(device, "%s/%s" %(instroot, mountpoint)))
+            ComSystem.execLocalOutput("mount -t nfs -o nolock %s %s/%s" %(device, instroot, mountpoint))
+
+        def umount(self, device, path):
+            log.debug("Umounting nfs filesystem from %s" %path)
+            ComSystem.execLocalOutput("umount %s" %path)
+        
+        def badblocksDevice(self, entry, windowCreator, chroot='/'):
+            return
+        
     from partRequests import PartitionSpec, RequestSpec
     from constants import REQUEST_PREEXIST
     import fsset
@@ -143,19 +152,36 @@ try:
             return None
  
     from fsset import Device
+    import re
     class NFSDevice(Device):
         def __init__(self , device = "none", encryption=None):
             Device.__init__(self, device, encryption)
             # FIXME: Quickhack for size of 6GB should be made more generic later
             self.model="NFSExport"
-            self.deviceOptions="nolock, _netdev"
-    def getDeviceOptions(self):
-        return ["nolock"]
+            self.deviceOptions=",nolock,_netdev"
+            self.crypto = None
     
-    def getExport(self):
-        return self.getDevice()
-    def getLabel(self):
-        return ""
+        def check(self, chroot="/mnt/sysimage"):
+            """
+            Will automatically check if the nfs export is availble or not and also update internal values.
+            """
+            filesystem=fsset.fileSystemTypeGet("nfs")
+            filesystem.mount(self.device, chroot)
+            dfoutput=ComSystem.execLocalOutput("df %s" %chroot )
+            spaces=re.match(self.getExport()+"\W+\s(?P<all>\d+)\s+(?P<used>\d+)\s+(?P<available>\d+)\s", "\n".join(dfoutput[1:]))
+            if spaces:
+                self.size=int(spaces.group("all"))
+                self.used=int(spaces.group("used"))
+                self.available=int(spaces.group("available"))
+            filesystem.umount(self.device, chroot)
+        
+        def getDeviceOptions(self):
+            return self.deviceOptions
+    
+        def getExport(self):
+            return self.getDevice()
+        def getLabel(self):
+            return ""
        
 except:
     pass
