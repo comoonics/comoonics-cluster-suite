@@ -55,23 +55,15 @@ class KSObject(object):
                         if not _node.has_key(_parent):
                             _node[_parent]=dict()
                         _node=_node[_parent]
-                                
-                    _node[_attrname]=getattr(self, _attr)
-                else:
+                    
+                    if getattr(self, _attr):           
+                        _node[_attrname]=getattr(self, _attr)
+                elif getattr(self, _attr):
                     _hash[_attrname]=getattr(self, _attr)
         return _hash
-
-#        _hash = {"cluster":{"name":anaconda.id.osrcluster.clustername,
-#                                    "clusternodes":
-#                                     {"clusternode":[
-#                                       {"nodeid":"1", "name":str(nodename),
-#                                          "com_info":{
-#                                            "rootvolume":{"name":str(self._dsrc_root)},
-#                                            "eth":[{"ip":str(ipAddress),
-#                                                    "name":str(self._netdevice),
-#                                                    "mac":anaconda.id.network.available()[self._netdevice].get('hwaddr')}]}}]}}}
+    
 class OSRCluster(KSObject):
-    def __init__ (self, _clustername="unknown", _usehostname=False, _journals=5):
+    def __init__ (self, _clustername="unknown", _journals=5):
         KSObject.__init__(self)
         #self.netdev = []
         #self.nodename = []
@@ -82,10 +74,8 @@ class OSRCluster(KSObject):
 # FIXME: has to be changed to votes or some better thing        
         self.IGNORE_ATTRS.append("journals")
         self.IGNORE_ATTRS.append("lockproto")
-        self.IGNORE_ATTRS.append("useHostname")
         self.MAP_ATTRS["clustername"]="name"
         self.clustername = _clustername
-        self.useHostname = _usehostname
         self.journals=_journals
         self.lockproto="lock_dlm"
         self.nodes=dict()
@@ -96,12 +86,10 @@ class OSRCluster(KSObject):
     def __str__(self):
         """
         Will look as follows:
-            osrcluster [--usehostname] [--journals=journals] clustername
+            osrcluster [--journals=journals] clustername
         """
         tmp = "osrcluster "
         #tmp = tmp + "--journalnumber=%s " % str(self.nodenumber)
-        if self.useHostname:
-            tmp = tmp + "--usehostname "
         tmp = tmp+"--journals=%s " %self.journals
         #tmp = tmp + "--firstnodename='%s' " % self.nodename[0]
         #tmp = tmp + "--firstnodenetdevice='%s'\n" % self.netdev
@@ -119,6 +107,14 @@ class OSRCluster(KSObject):
         _hash["cluster"]["clusternodes"]["clusternode"]=_nodes       
         return _hash
     
+    def extendKSOptionParser(op):
+        """
+        Default is do nothing.s
+        """
+        op.add_option("--journals", dest="journals", type="int", action="store", default=1)
+        return op
+    extendKSOptionParser=staticmethod(extendKSOptionParser)
+
     def addNode(self, _clusternode):
         """
         Adds a clusternode<<OSRClusterNode>> to the cluster
@@ -153,11 +149,13 @@ class OSRClusterNode(KSObject):
         self.IGNORE_ATTRS.append("netdevs")
         self.IGNORE_ATTRS.append("netdevslist")
         self.IGNORE_ATTRS.append("filesystemlist")
+        self.MAP_ATTRS["scsifailover"]="failover"
         self.MAP_ATTRS["nodename"]="name"
         self.MAP_ATTRS["rootvol"]="name"
         self.MAP_ATTRS["rootfstype"]="fstype"
         self.PARENTS_FOR_ATTRS["rootvol"]=["com_info", "rootvolume" ]
         self.PARENTS_FOR_ATTRS["rootfstype"]=["com_info", "rootvolume" ]
+        self.PARENTS_FOR_ATTRS["scsifailover"]=["com_info", "scsi" ]
         self.cluster=_osrcluster
         self.nodename=_nodename
         self.rootvol=_rootvol
@@ -184,6 +182,16 @@ class OSRClusterNode(KSObject):
         for filesystem in self.filesystemlist:
             _hash["com_info"]["filesystems"]["filesystem"]=filesystem.toHash()
         return _hash
+    
+    def extendKSOptionParser(op):
+        """
+        Default is do nothing.s
+        """
+        op.add_option("--rootvol", dest="rootvol", default=None)
+        op.add_option("--rootfstype", dest="rootfstype", default=None)
+        op.add_option("--scsifailover", dest="scsifailover", default=None)
+        return op
+    extendKSOptionParser=staticmethod(extendKSOptionParser)
     
     def addFilesystem(self, filesystem):
         self.filesystemlist.append(filesystem)
@@ -214,6 +222,8 @@ class OSRClusterNode(KSObject):
             tmp=tmp+"--rootvol=%s " %self.rootvol
         if self.rootfstype != None:
             tmp=tmp+"--rootfstype=%s " %self.rootfstype
+        if hasattr(self, "scsifailover") and self.scsifailover != None:
+            tmp=tmp+"--scsifailover=%s" %self.scsifailover
         tmp=tmp+" "+self.nodename
         for _netdev in self.netdevslist:
             tmp+="\n%s" %_netdev
@@ -222,19 +232,38 @@ class OSRClusterNode(KSObject):
         return tmp
 
 class OSRClusterNodeNetdev(KSObject):
-    def __init__(self, _node, _netdev="eth0"):
+    valid_attrs=[ "master", "slave", "bondingopts", "ip", "netmask", "gateway" ]
+    def __init__(self, _node, _netdev="eth0", **kwds):
         KSObject.__init__(self)
         self.MAP_ATTRS["devname"]="name"
         self.IGNORE_ATTRS.append("node")
+        self.IGNORE_ATTRS.append("valid_attrs")
         self.devname=_netdev
         self.node=_node
-        
+        if kwds:
+            for attr in OSRClusterNodeNetdev.valid_attrs:
+                if kwds.has_attr(attr):
+                    setattr(self, attr, kwds[attr])
+                    
     def __str__(self):
         """
         Will look as follows:
            osrclusternodenetdev nodename devname
         """
-        return "osrclusternodenetdev %s %s" %(self.node.nodename, self.devname)
+        output="osrclusternodenetdev "
+        for attr in OSRClusterNodeNetdev.valid_attrs:
+            if hasattr(self, attr):
+                output+=" --%s=%s" %(attr, getattr(self, attr)) 
+        return output+" %s %s" %(self.node.nodename, self.devname)
+    
+    def extendKSOptionParser(op):
+        """
+        Default is do nothing.s
+        """
+        for attr in OSRClusterNodeNetdev.valid_attrs:
+            op.add_option("--%s" %attr, dest=attr, default=None)
+        return op
+    extendKSOptionParser=staticmethod(extendKSOptionParser)
 
 class OSRClusterNodeFilesystem(KSObject):
     def __init__(self, node, fstype, source, dest, mountopts="defaults"):
@@ -251,7 +280,14 @@ class OSRClusterNodeFilesystem(KSObject):
         Will look as follows in the kickstartfile:
         osrclusternodefilesystem nodename fstype source dest [mountopts]
         """
-        return "osrclusternodefilesystem %s %s %s %s" %(self.node.nodename, self.fstype, self.source, self.dest, self.mountopts)
+        return "osrclusternodefilesystem %s %s %s %s %s" %(self.node.nodename, self.fstype, self.source, self.dest, self.mountopts)
+    
+    def extendKSOptionParser(op):
+        """
+        Default is do nothing.s
+        """
+        return op
+    extendKSOptionParser=staticmethod(extendKSOptionParser)
 
 ####################################
 # $Log: osrcluster.py,v $
