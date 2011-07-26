@@ -1156,7 +1156,7 @@ def sess_su (session, host, pass_root, timeout, verbose):
     """
 
     sulogin = session.sendline ('/bin/su -')
-    sulogin_pl = session.compile_pattern_list([timeout, pexpect.EOF,
+    sulogin_pl = session.compile_pattern_list([pexpect.TIMEOUT, pexpect.EOF,
                  PASSWORD_PROMPT, SU_LOGINFAIL, SU_DEB_LOGINFAIL, CMD_PRMPT])
     sulogin_fail = 0
     sulogin_retry = 0
@@ -1211,7 +1211,7 @@ def sess_suexit (session):
     Exit SU session.
     """
     session.sendline ('exit')
-    session. expect (CMD_PRMPT, timeout=self.timeout)
+    session.expect (CMD_PRMPT, timeout=session.timeout)
 
 def test_connectivity (hlist, options):
     """
