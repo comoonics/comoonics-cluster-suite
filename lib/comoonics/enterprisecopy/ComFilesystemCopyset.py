@@ -254,7 +254,7 @@ class FilesystemCopyset(Copyset):
         # 3. copy archive to fs
         elif isinstance(self.source, ArchiveCopyObject):
             if isinstance(self.dest, FilesystemCopyObject) or isinstance(self.dest, PathCopyObject):
-                if self.dest.filesystem.copyable:
+                if not self.dest.filesystem.copyable:
                     return True
 #                try:
                 archive=self.source.getDataArchive()
