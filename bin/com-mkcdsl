@@ -23,9 +23,7 @@ from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 #from comoonics import GetOpts
 
-from comoonics.cluster import parseClusterConf
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
+from comoonics.cluster import parseClusterConf, getClusterInfo, getClusterRepository
 from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 from comoonics.cdsl.ComCdsl import ComoonicsCdsl
 from comoonics.cdsl import dirtrim, commonoptparseroptions, get_defaultsfiles, get_defaultsenvkey
@@ -64,11 +62,8 @@ else:
     src=args[0]
 
 try:
-    doc=parseClusterConf(options.clusterconf)
-          
-    #create needed cluster objects
-    clusterRepository = ClusterRepository(doc.documentElement,doc)
-    clusterInfo = ClusterInfo(clusterRepository)
+    clusterRepository = getClusterRepository(options.clusterconf)
+    clusterInfo = getClusterInfo(clusterRepository)
     
     #create cdsl objects
     parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, nocreate=True)

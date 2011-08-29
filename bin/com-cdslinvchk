@@ -21,8 +21,7 @@ from comoonics import ComLog
 #from comoonics import GetOpts
 
 import comoonics.cluster
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
+from comoonics.cluster import getClusterInfo, getClusterRepository
 from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 from comoonics.cdsl.ComCdslValidate import CdslValidate
 from comoonics.cdsl import dirtrim, commonoptparseroptions, get_defaultsfiles, get_defaultsenvkey

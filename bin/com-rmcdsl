@@ -19,9 +19,7 @@ from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 #from comoonics import GetOpts
 
-from comoonics.cluster import parseClusterConf
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository
+from comoonics.cluster import parseClusterConf, getClusterInfo, getClusterRepository
 from comoonics.cdsl import commonoptparseroptions, dirtrim, get_defaultsfiles, get_defaultsenvkey
 from comoonics.cdsl.ComCdsl import CdslDoesNotExistException
 from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
@@ -55,8 +53,8 @@ if len(args) != 1:
 try:          
     doc=parseClusterConf(options.clusterconf)
     #create needed cluster objects
-    clusterRepository = ClusterRepository(doc.documentElement,doc)
-    clusterInfo = ClusterInfo(clusterRepository)
+    clusterRepository = getClusterRepository(doc.documentElement,doc)
+    clusterInfo = getClusterInfo(clusterRepository)
 
     cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
 

@@ -19,10 +19,7 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
-import comoonics.cluster
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository, ClusterMacNotFoundException, RedHatClusterRepository
-from comoonics.cluster.ComQueryMap import QueryMap
+from comoonics.cluster import getClusterInfo, getClusterRepository, QueryMap, clusterconf, commonoptparseroptions, querymapfile
 try:
     from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
 except ImportError:
@@ -141,14 +138,14 @@ query_commands are:
     scsifailover nodename    returns the scsifailovertype for the given nodename
         """
 parser = OptionParser(usage=usage, description=__doc__)
-parser=comoonics.cluster.commonoptparseroptions(parser)
+parser=commonoptparseroptions(parser)
 # This is obsolete as it is always true but has to stay because of backwards compatibility
 generalopts=OptionGroup(parser, "General options.")
-generalopts.add_option("-f", "--filename", dest="clusterconf", default=RedHatClusterRepository.getDefaultClusterConf(),
+generalopts.add_option("-f", "--filename", dest="clusterconf", default=clusterconf,
                   help="Overwrite xml file used for input. Default: %default.")
 generalopts.add_option("-Q", "--queriesfile", dest="queriesfile", default=None, 
                        help="If given this file will be read as query file instead of commandlineargs. If - stdin will be used. Default: %default.")
-generalopts.add_option("-m", "--querymapfile", dest="mapfile", default=comoonics.cluster.querymapfile, 
+generalopts.add_option("-m", "--querymapfile", dest="mapfile", default=querymapfile, 
                        help="External file for query mappings. Default: %default")
 generalopts.add_option("-V", "--validate", dest="validate", default=False, action="store_true", help="Validate the cluster configuration if possible.")
 

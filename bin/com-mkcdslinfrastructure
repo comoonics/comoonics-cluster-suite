@@ -21,8 +21,7 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 
 from comoonics import ComLog
 import comoonics.cluster
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository
+from comoonics.cluster import getClusterInfo, getClusterRepository
 from comoonics.cdsl import commonoptparseroptions, dirtrim, get_defaultsfiles, get_defaultsenvkey
 try:
     from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
@@ -70,15 +69,22 @@ else:
 if not options.delete and not options.get and not options.list and not options.migrate:
     options.create=True
 
-doc=comoonics.cluster.parseClusterConf(options.clusterconf)
-#create needed cluster objects
-clusterRepository = ClusterRepository(doc.documentElement,doc)
-clusterInfo = ClusterInfo(clusterRepository)
+clusterRepository = getClusterRepository(options.clusterconf)
+clusterInfo = getClusterInfo(clusterRepository)
 
 try:
-    parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, cdsltree=options.cdsltree, cdsltreeshared=options.cdsltreeshared, cdsllink=options.cdsllink, maxnodeidnum=str(options.maxnodeidnum), usenodeids=str(not options.usenodenames), defaultdir=options.defaultdir, nocreate=not options.create)
+    parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, 
+                                                   cdsltree=options.cdsltree, cdsltreeshared=options.cdsltreeshared, 
+                                                   cdsllink=options.cdsllink, maxnodeidnum=str(options.maxnodeidnum), 
+                                                   usenodeids=str(not options.usenodenames), defaultdir=options.defaultdir, 
+                                                   nocreate=not options.create)
     if options.mountpoint != "" or options.mountpoint != "/":
-        childcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, cdsltree=options.cdsltree, cdsltreeshared=options.cdsltreeshared, cdsllink=options.cdsllink, maxnodeidnum=str(options.maxnodeidnum), usenodeids=str(not options.usenodenames), defaultdir=options.defaultdir, nocreate=not options.create)
+        childcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, 
+                                                      mountpoint=options.mountpoint, cdsltree=options.cdsltree, 
+                                                      cdsltreeshared=options.cdsltreeshared, cdsllink=options.cdsllink, 
+                                                      maxnodeidnum=str(options.maxnodeidnum), 
+                                                      usenodeids=str(not options.usenodenames), 
+                                                      defaultdir=options.defaultdir, nocreate=not options.create)
     else:
         childcdslRepository=parentcdslRepository
     if options.create and not options.onlyinventory:

@@ -1345,12 +1345,11 @@ def getHostsFromCluster(clusterconf, verbose, uselocalhost=True, localhost="loca
     """
     if verbose >= 2:
         print "  Adding hosts to hostlist.."
-    from comoonics.cluster.ComClusterRepository import ClusterRepository
-    from comoonics.cluster.ComClusterInfo import ClusterInfo
+    from comoonics.cluster import getClusterRepository, getClusterInfo
     from comoonics import ComSystem
     
-    repo=ClusterRepository(clusterconf)
-    info=ClusterInfo(repo)
+    repo=getClusterRepository(clusterconf)
+    info=getClusterInfo(repo)
     if ComSystem.isSimulate():
         info.helper.setSimOutput()
         for node in info.getNodes():
