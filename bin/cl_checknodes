@@ -28,10 +28,9 @@ sys.path.append("../lib")
 
 logging.basicConfig()
 
-from comoonics.cluster import parseClusterConf
+from comoonics.cluster import parseClusterConf, commonoptparseroptions
 from comoonics import ComSystem, ComLog
 from xml import xpath
-from comoonics.cluster import commonoptparseroptions
 
 ComSystem.__EXEC_REALLY_DO=""
 
