@@ -135,7 +135,8 @@ class SoftwareCMDB(BaseDB):
         self._clean(name, self.tablename)
     
     def _clean(self, name, tablename):
-        query="DELETE FROM %s WHERE clustername=\"%s\";" %(tablename, name)
+#        query="LOCK TABLES %s; DELETE FROM %s WHERE clustername=\"%s\"; UNLOCK TABLES;" %(tablename, tablename, name)
+        query="DELETE FROM %s WHERE clustername=\"%s\"" %(tablename, name)
         self.dblog.log(DBLogger.DB_LOG_LEVEL, "Cleaning %s for %s" %(tablename, name))
         self.db.query(query)
 
