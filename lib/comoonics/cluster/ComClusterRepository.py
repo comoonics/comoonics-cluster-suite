@@ -37,36 +37,12 @@ __version__ = "$Revision: 1.19 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 from comoonics import ComLog
-from comoonics.ComDataObject import  DataObject
-from comoonics.ComExceptions import ComException
-from comoonics.DictTools import searchDict, createDomFromHash
+from comoonics.DictTools import createDomFromHash
 import comoonics.XmlTools
-
+from comoonics.cluster import ClusterObject, ClusterIdNotFoundException, ClusterMacNotFoundException, ClusterRepositoryConverterNotFoundException
+from comoonics.cluster.ComClusterInfo import ClusterInfo, RedHatClusterInfo, ComoonicsClusterInfo
 log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
 
-class ClusterMacNotFoundException(ComException): pass
-class ClusterIdNotFoundException(ComException): pass
-class ClusterRepositoryConverterNotFoundException(ComException): pass
-
-class ClusterObject(DataObject):
-    non_statics=dict()
-    def __init__(self, *params, **kwds):
-        super(ClusterObject, self).__init__(*params, **kwds)
-        self.non_statics=dict()
-    def isstatic(self, _property):
-        if self.non_statics.has_key(_property):
-            return False
-        return True
-    def addNonStatic(self, name, rest=None):
-        path_end=self.non_statics
-        path_end[name]=rest
-    def query(self, _property, *params, **keys):
-        pass
-    def __getattr__(self, value):
-        if not self.isstatic(value):
-            return self.query(value)
-        else:
-            return DataObject.__getattribute__(self, value)
                 
 class ClusterRepository(ClusterObject):
     """
@@ -75,34 +51,6 @@ class ClusterRepository(ClusterObject):
     log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
     CONVERTERS=dict()
 
-    def __new__(cls, *args, **kwds):
-        """
-        Decides by type of given clustermetainfo which 
-        instance of clusterrepository (general, redhat 
-        or comoonics) has to be created.
-        args = (element,doc,options)
-        """
-        if len(args) >= 1 and isinstance(args[0], basestring):
-            doc=comoonics.XmlTools.parseXMLFile(args[0])
-            if len(comoonics.XmlTools.evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(), doc.documentElement)) > 0:
-                cls = ComoonicsClusterRepository
-            elif len(comoonics.XmlTools.evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), doc.documentElement)) > 0:
-                cls = RedHatClusterRepository
-        if len(args) >= 2:
-            if (args[0] != None):                
-                if comoonics.XmlTools.evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0]) or len(args[2]) == 0:
-                    cls = ComoonicsClusterRepository
-                elif comoonics.XmlTools.evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), args[0]):
-                    cls = RedHatClusterRepository
-                    
-            elif type(args[2]) == dict:
-                if searchDict(args[2],"osr"):
-                    cls = ComoonicsClusterRepository
-                elif searchDict(args[2],RedHatClusterRepository.element_clusternode):
-                    cls = RedHatClusterRepository
-                
-        return object.__new__(cls) #, *args, **kwds)
-    
     def __init__(self, *params, **kwds):
         #node dictionaries depend on clustertype, setting later!
         self.nodeNameMap = {}
@@ -115,6 +63,16 @@ class ClusterRepository(ClusterObject):
             return self.CONVERTERS[_type](self)
         else:
             raise ClusterRepositoryConverterNotFoundException("Could not find converter of clusterrepository for type %s" %_type)
+        
+    def __str__(self):
+        return "%s(nodes: %u)" %(self.__class__.__name__, len(self.nodeIdMap))
+    
+    def getClusterInfoClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        return ClusterInfo
             
 class RedHatClusterRepository(ClusterRepository):
     """
@@ -201,6 +159,13 @@ class RedHatClusterRepository(ClusterRepository):
             _node = ClusterNode(_nodes[i], doc)
             self.nodeNameMap[_node.getName()] = _node
             self.nodeIdMap[_node.getId()] = _node
+    
+    def getClusterInfoClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        return RedHatClusterInfo
             
     def setClusterName(self,name):
         """
@@ -367,12 +332,6 @@ class ComoonicsClusterRepository(RedHatClusterRepository):
             return comoonics.XmlTools.xpathjoin(RedHatClusterRepository.getDefaultClusterNodeXPath()+"["+RedHatClusterRepository.attribute_clusternode_name+"=\""+_nodename+"\"]", ComoonicsClusterRepository.element_comoonics)
     getDefaultComoonicsXPath=staticmethod(getDefaultComoonicsXPath)
 
-    def __init__(self, element=None, doc=None, *options):
-        if ((element == None) and (len(options) == 0)) or ((element != None) and (len(options) != 0)):
-            raise AttributeError("You have to specify element OR filename attribute")
-        else:
-            super(ComoonicsClusterRepository, self).__init__(element, doc, *options)
-
     def createOCFS2ClusterConf(clusterRepository):
         """
         returns a string containing a valid OCFS2 cluster configuration
@@ -415,6 +374,19 @@ cluster:
         return output.getvalue()
     
     createOCFS2ClusterConf=staticmethod(createOCFS2ClusterConf)
+
+    def __init__(self, element=None, doc=None, *options):
+        if ((element == None) and (len(options) == 0)) or ((element != None) and (len(options) != 0)):
+            raise AttributeError("You have to specify element OR filename attribute")
+        else:
+            super(ComoonicsClusterRepository, self).__init__(element, doc, *options)
+    
+    def getClusterInfoClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        return ComoonicsClusterInfo
 
 ClusterRepository.CONVERTERS["ocfs2"]=ComoonicsClusterRepository.createOCFS2ClusterConf
 

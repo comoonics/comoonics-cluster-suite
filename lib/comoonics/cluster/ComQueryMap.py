@@ -24,8 +24,7 @@ Created on Apr 27, 2009
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import ConfigParser
-import comoonics.cluster
-from comoonics.cluster.ComClusterInfo import RedHatClusterInfo
+from comoonics.cluster import querymapfile
 
 class QueryMap(ConfigParser.ConfigParser):
     '''
@@ -34,10 +33,11 @@ class QueryMap(ConfigParser.ConfigParser):
 
     delimitor=" "
 
-    def __init__(self, _querymapfile=comoonics.cluster.querymapfile, _clusterinfo=None):
+    def __init__(self, _querymapfile=querymapfile, _clusterinfo=None):
         '''
         Constructor
         '''
+        from ComClusterInfo import RedHatClusterInfo
         ConfigParser.ConfigParser.__init__(self)
         if isinstance(_clusterinfo, RedHatClusterInfo):
             self.mainsection="redhatcluster"

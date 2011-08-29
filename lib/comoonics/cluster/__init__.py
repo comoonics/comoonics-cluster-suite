@@ -26,11 +26,105 @@ of used cluster configuration by parsing given cluster configuration.
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from comoonics.ComDataObject import DataObject
+from comoonics.ComExceptions import ComException
 
 __version__='$Revision: 1.11 $'
 
-__all__=['clusterconf', 'querymapfile', 'clusterdtd', 'RedHatClusterConst', 'OSRClusterConst']
+#__all__=['clusterconf', 'querymapfile', 'clusterdtd', 'RedHatClusterConst', 'OSRClusterConst', 
+#         'getClusterInfo', 'ClusterMacNotFoundException', 'ClusterInformationNotFound', 'ClusterIdNotFoundException',
+#         'getClusterRepository', 'ClusterObject', 'ClusterRepositoryConverterNotFoundException' ]
 
+
+class ClusterMacNotFoundException(ComException): pass
+class ClusterInformationNotFound(ComException): pass
+class ClusterIdNotFoundException(ComException): pass
+
+class ClusterObject(DataObject):
+    non_statics=dict()
+    def __init__(self, *params, **kwds):
+        super(ClusterObject, self).__init__(*params, **kwds)
+        self.non_statics=dict()
+    def isstatic(self, _property):
+        if self.non_statics.has_key(_property):
+            return False
+        return True
+    def addNonStatic(self, name, rest=None):
+        path_end=self.non_statics
+        path_end[name]=rest
+    def query(self, _property, *params, **keys):
+        pass
+    def __getattr__(self, value):
+        if not self.isstatic(value):
+            return self.query(value)
+        else:
+            return DataObject.__getattribute__(self, value)
+
+def getClusterInfo(clusterRepository):
+    """
+    Factory method to return the fitting instance of the cluster information classes#
+    @param clusterRepository: the relevant cluster repository
+    @type  clusterRepository: L{comoonics.cluster.ComClusterRepository.ClusterRepository}
+    @return:                  the clusterinformation relevant to the clusterRepository
+    @rtype:                   L{ClusterRepository} 
+    """
+    from comoonics.cluster.ComClusterRepository import ClusterRepository
+    if isinstance(clusterRepository, ClusterRepository):
+        cls = clusterRepository.getClusterInfoClass()
+    else:
+        raise ClusterInformationNotFound("Could not find cluster information for cluster repository %s." %(clusterRepository))
+    return cls(clusterRepository)
+
+class ClusterRepositoryConverterNotFoundException(ComException): pass
+
+def getClusterRepository(*args, **kwds):
+    """
+    Factory method to autocreate a fitting cluster repository.
+    The following call semantics are supported:
+    getClusterRepository(filename)
+    getClusterRepository(docelement, doc, options)
+    Parses the given filename as configuration to the given cluster or already accept a parsed configuration. 
+    Right now only xml.dom.Node representation of the cluster configuration is supported.
+    @param filename:   representation of the path to the cluster configuration. If it is a xml file it will be parsed. 
+                       If not an exception is thrown.
+    @type  filename:   L{String} 
+    @param docelement: the already parse configuration as dom document.
+    @type  docelement: L{xml.dom.Element}
+    @param doc:        the document itself.
+    @type  doc:        L{xml.dom.Docuement}
+    @param options:    options see ClusterRepository constructor.
+    @type  options:    L{dict}
+    @return:           The best fitting clusterconfiguration repository class instance
+    @rtype:            L{ComoonicsClusterRepository}, L{RedHatClusterRepository}, ..
+    """
+    from comoonics.XmlTools import evaluateXPath
+    from comoonics.DictTools import searchDict
+    from comoonics.cluster.ComClusterRepository import ClusterRepository, ComoonicsClusterRepository, RedHatClusterRepository
+    repositoryclass=ClusterRepository
+    if len(args) >= 1 and isinstance(args[0], basestring):
+        doc=parseClusterConf(args[0])
+        newargs=[doc.documentElement,doc]
+        newargs.extend(args[1:])
+        args=newargs
+        if len(evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(), doc.documentElement)) > 0:
+            repositoryclass = ComoonicsClusterRepository
+        elif len(evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), doc.documentElement)) > 0:
+            repositoryclass = RedHatClusterRepository
+    if len(args) >= 2:
+        if (args[0] != None):                
+            if evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0]) or len(args[2]) == 0:
+                repositoryclass = ComoonicsClusterRepository
+            elif evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), args[0]):
+                repositoryclass = RedHatClusterRepository
+                
+        elif type(args[2]) == dict:
+            if searchDict(args[2],"osr"):
+                repositoryclass = ComoonicsClusterRepository
+            elif searchDict(args[2],RedHatClusterRepository.element_clusternode):
+                repositoryclass = RedHatClusterRepository
+            
+    return repositoryclass(*args, **kwds) #, *args, **kwds)
+    
 # needed files
 try:
     clusterconf=os.environ["CLUSTERCONF"]
@@ -83,13 +177,15 @@ def commonoptparseroptions(parser):
 def get_defaultsfiles():
     import os.path
     default_dir = "/etc/comoonics"
-    home_dir = os.path.join(os.environ['HOME'], ".comoonics")
+    home_dir = os.path.join(os.environ.get('HOME', ''), ".comoonics")
     globalcfgdefault_file= os.path.join(default_dir, "cluster.cfg") 
     localcfgdefault_file= os.path.join(home_dir, "cluster.cfg")
     return globalcfgdefault_file, localcfgdefault_file
 
 def get_defaultsenvkey():
     return "COMOONICS_CLUSTER_CFG" 
+
+from comoonics.cluster.ComQueryMap import QueryMap
 
 ###############
 # $Log: __init__.py,v $
