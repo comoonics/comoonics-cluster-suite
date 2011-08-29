@@ -5,7 +5,7 @@ import unittest
 import baseSetup
 from comoonics.ComPath import Path
 import os
-
+from comoonics.cdsl import getCdsl
 
 class test_CdslRepository(unittest.TestCase):
     cwd=Path(os.getcwd())
@@ -102,9 +102,9 @@ class test_CdslRepository(unittest.TestCase):
                 _cdsl=setupCDSLRepository.cdslRepository1.getCdsl(_path, setupCDSLRepository.cdslRepository1)
             except CdslNotFoundException:
                 if setupCDSLRepository.results[_path][1] == True:
-                    _cdsl=Cdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo)
+                    _cdsl=getCdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo)
                 elif setupCDSLRepository.results[_path][1] == False:
-                    _cdsl=Cdsl(_path, Cdsl.SHARED_TYPE, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo)
+                    _cdsl=getCdsl(_path, Cdsl.SHARED_TYPE, setupCDSLRepository.cdslRepository1, setupCluster.clusterinfo)
             
             if _cdsl:
                 setupCDSLRepository.cdslRepository1.commit(_cdsl)
@@ -121,7 +121,7 @@ class test_CdslRepository(unittest.TestCase):
         """
         Test without clusterinfo
         """
-        from comoonics.cdsl.ComCdsl import Cdsl
+        from comoonics.cdsl import getCdsl, CDSL_HOSTDEPENDENT_TYPE, CDSL_SHARED_TYPE
         from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
         self.cwd.pushd(baseSetup.tmppath)
         _dirs=setupCDSLRepository.results.keys()
@@ -133,9 +133,9 @@ class test_CdslRepository(unittest.TestCase):
                 _cdsl=setupCDSLRepository.cdslRepository4.getCdsl(_path)
             except CdslNotFoundException:
                 if setupCDSLRepository.results[_path][1] == True:
-                    _cdsl=Cdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, setupCDSLRepository.cdslRepository4)
+                    _cdsl=getCdsl(_path, CDSL_HOSTDEPENDENT_TYPE, setupCDSLRepository.cdslRepository4)
                 elif setupCDSLRepository.results[_path][1] == False:
-                    _cdsl=Cdsl(_path, Cdsl.SHARED_TYPE, setupCDSLRepository.cdslRepository4)
+                    _cdsl=getCdsl(_path, CDSL_SHARED_TYPE, setupCDSLRepository.cdslRepository4)
             
             if _cdsl:
                 setupCDSLRepository.cdslRepository4.commit(_cdsl)

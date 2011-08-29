@@ -34,25 +34,15 @@ import fcntl # needed for filelocking
 import xml.dom
 
 from comoonics import ComLog
-from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
 from comoonics import ComSystem
 from comoonics.ComPath import Path
 
-from comoonics.cdsl import stripleadingsep, dirtrim
+from comoonics.cdsl import stripleadingsep, getCdsl, dirtrim, CdslNotFoundException, CdslVersionException
 
 import os.path
 
 log = ComLog.getLogger("comoonics.cdsl.ComCdslRepository")
-
-class CdslNotFoundException(ComException):
-    def __init__(self, src, repository=None):
-        ComException.__init__(self, src)
-        self.repository=repository
-    def __str__(self):
-        return "Could not find Cdsl \"%s\" in repository %s" %(self.value, self.repository)
-class CdslRepositoryNotConfigfileException(ComException):pass
-class CdslVersionException(ComException): pass
 
 class CdslRepository(DataObject):
     """
@@ -504,7 +494,6 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         return doc
         
     def _readCdslsElement(self, element, ignoreerrors=False):
-        import xml.dom
         self.cdsls=dict()
         self.repositories=dict()
         child=element.firstChild
@@ -530,7 +519,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
                 nodes=self._readNodesElement(child, ignoreerrors)
             child=child.nextSibling
             
-        self.cdsls[_src]=Cdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp, ignoreerrors=ignoreerrors)
+        self.cdsls[_src]=getCdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp, ignoreerrors=ignoreerrors)
 
     def _readNodesElement(self, element, ignoreerrors=False):
         child = element.firstChild
@@ -984,7 +973,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             try:
                 cdsl=self.getCdsl(cdsl)
             except CdslNotFoundException:
-                cdsl=Cdsl(cdsl, guessType(cdsl, self), self, cdsl.clusterinfo)
+                cdsl=getCdsl(cdsl, guessType(cdsl, self), self, cdsl.clusterinfo)
                 if cdsl and cdsl.exists():
                     log.warning("The cdsl %s seems not to be in the repository. Please rebuild database.")
                     raise
@@ -1288,7 +1277,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
 #                log.debug("update: CDSL with source " + src + " does neither exist in inventoryfile nor in filesystem, no need to update inventoryfile")
 #                raise CdslNotFoundException(src, self)
         else:
-            _added=Cdsl(src, _type, self, clusterInfo)
+            _added=getCdsl(src, _type, self, clusterInfo)
         
         return _added
 

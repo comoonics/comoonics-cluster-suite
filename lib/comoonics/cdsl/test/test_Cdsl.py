@@ -121,7 +121,6 @@ class test_Cdsl(unittest.TestCase):
 
     def test_Z_CdslsDelete(self):
         from comoonics.cdsl import cmpbysubdirs
-        from comoonics.ComPath import Path
         _cdslsrev=repository.getCdsls()
         _cdslsrev.sort(cmpbysubdirs)
         _cdslsrev.reverse()
@@ -132,13 +131,13 @@ class test_Cdsl(unittest.TestCase):
             for __cdsl in  repository.getCdsls():
                 self.assertTrue(__cdsl.exists(), "The still existant %s cdsl %s does not exist any more." %(__cdsl.type, __cdsl))
 
-from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+from comoonics.cdsl import getCdslRepository
 import os
 #import sys;sys.argv = ['', 'Test.testName']
 olddir=os.path.realpath(os.curdir)
 os.chdir(setup.tmppath)
 setupCluster=setup.SetupCluster()        
-repository=ComoonicsCdslRepository(clusterinfo=setupCluster.clusterinfo, root=setup.tmppath, usenodeids="True")  
+repository=getCdslRepository(root=setup.tmppath, usenodeids="True")  
 setupCdsls=setup.SetupCDSLs(repository)
 repository.buildInfrastructure(setupCluster.clusterinfo)
 setupCdsls.setupCDSLInfrastructure(setup.tmppath, repository, setupCluster.clusterinfo)

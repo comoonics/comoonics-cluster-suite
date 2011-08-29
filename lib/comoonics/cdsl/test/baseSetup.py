@@ -20,13 +20,9 @@ print "Testpath: %s" %(testpath)
 
 class SetupCluster:
     def __init__(self):
-        import comoonics.cluster
-        from comoonics.cluster.ComClusterRepository import ClusterRepository
-        from comoonics.cluster.ComClusterInfo import ClusterInfo
-        doc=comoonics.cluster.parseClusterConf(os.path.join(testpath, "cluster.conf"))
-    
-        self.clusterRepository = ClusterRepository(doc.documentElement,doc)
-        self.clusterinfo = ClusterInfo(self.clusterRepository)
+        from comoonics.cluster import getClusterRepository, getClusterInfo
+        self.clusterRepository = getClusterRepository(os.path.join(testpath, "cluster.conf"))
+        self.clusterinfo = getClusterInfo(self.clusterRepository)
 
 class SetupBase(object):
     results={ "hd": (
@@ -84,6 +80,7 @@ class SetupCDSLRepository(SetupBase):
     def __init__(self, clusterinfo):
         super(SetupCDSLRepository, self).__init__()
         from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+        from comoonics.cdsl import getCdslRepository
         from comoonics.ComPath import Path
         import shutil
         os.mkdir(os.path.join(tmppath, "repo2"))
@@ -99,16 +96,16 @@ class SetupCDSLRepository(SetupBase):
         
         wpath=Path()
         wpath.pushd(tmppath)
-        self.cdslRepository1 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=tmppath, usenodeids="True")
-        self.cdslRepository2 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=tmppath, mountpoint="repo2", usenodeids="True")
+        self.cdslRepository1 = getCdslRepository(clusterinfo=clusterinfo, root=tmppath, usenodeids="True")
+        self.cdslRepository2 = getCdslRepository(clusterinfo=clusterinfo, root=tmppath, mountpoint="repo2", usenodeids="True")
         self.cdslRepository1.addRepository(self.cdslRepository2)
-        self.cdslRepository3 = ComoonicsCdslRepository(clusterinfo=clusterinfo, root=os.path.join(tmppath,"repo2"), mountpoint="repo3", usenodeids="True")
+        self.cdslRepository3 = getCdslRepository(clusterinfo=clusterinfo, root=os.path.join(tmppath,"repo2"), mountpoint="repo3", usenodeids="True")
         self.cdslRepository2.addRepository(self.cdslRepository3)
         
-        self.cdslRepository4 = ComoonicsCdslRepository(root=tmppath, mountpoint="repo4", usenodeids="True", maxnodeidnum="4")
-        self.cdslRepository5 = ComoonicsCdslRepository(root=os.path.join(tmppath, "repo4"), mountpoint="repo5", usenodeids="True", maxnodeidnum="4")
+        self.cdslRepository4 = getCdslRepository(root=tmppath, mountpoint="repo4", usenodeids="True", maxnodeidnum="4")
+        self.cdslRepository5 = getCdslRepository(root=os.path.join(tmppath, "repo4"), mountpoint="repo5", usenodeids="True", maxnodeidnum="4")
         self.cdslRepository4.addRepository(self.cdslRepository5)
-        self.cdslRepository6 = ComoonicsCdslRepository(root=os.path.join(tmppath, "repo4", "repo5"), mountpoint="repo6", usenodeids="True", maxnodeidnum="4")
+        self.cdslRepository6 = getCdslRepository(root=os.path.join(tmppath, "repo4", "repo5"), mountpoint="repo6", usenodeids="True", maxnodeidnum="4")
         self.cdslRepository5.addRepository(self.cdslRepository6)
         
         wpath.popd()
@@ -153,8 +150,7 @@ class SetupCDSLs(SetupBase):
                 open(os.path.join(_tmppath, _cdsl), "w+")
 
     def setupCDSLInfrastructure(self, path, cdslRepository, clusterinfo):
-        from comoonics.cdsl.ComCdsl import Cdsl
-        from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
+        from comoonics.cdsl import getCdsl, CdslNotFoundException, CDSL_HOSTDEPENDENT_TYPE, CDSL_SHARED_TYPE
         from comoonics.ComPath import Path
         self.repository.buildInfrastructure(clusterinfo)
         _dirs=self.results.keys()
@@ -165,9 +161,9 @@ class SetupCDSLs(SetupBase):
                 _cdsl=self.repository.getCdsl(_path)
             except CdslNotFoundException:
                 if self.results[_path][1] == True:
-                    _cdsl=Cdsl(_path, Cdsl.HOSTDEPENDENT_TYPE, self.repository, clusterinfo)
+                    _cdsl=getCdsl(_path, CDSL_HOSTDEPENDENT_TYPE, self.repository, clusterinfo)
                 elif self.results[_path][1] == False:
-                    _cdsl=Cdsl(_path, Cdsl.SHARED_TYPE, self.repository, clusterinfo)
+                    _cdsl=getCdsl(_path, CDSL_SHARED_TYPE, self.repository, clusterinfo)
             
             if _cdsl:
                 self.repository.commit(_cdsl)

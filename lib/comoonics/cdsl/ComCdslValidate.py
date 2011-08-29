@@ -28,10 +28,10 @@ version of os.walk() (see L{os} for details), which skips submounts but follows 
 __version__ = "$Revision: 1.11 $"
 
 import os
+from comoonics.cdsl import getCdslRepository
 
 class CdslValidate(object):
     def createDefaultRepository(clusterInfo, **keys):
-        from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         repository=keys.get("repository", None)
         if repository:
             keys["resource"]=keys.get("resource", repository.getResource())
@@ -45,7 +45,7 @@ class CdslValidate(object):
             keys["nodeprefix"]=keys.get("nodeprefix", repository.getNodePrefix())
             keys["usenodeids"]=keys.get("usenodeids", repository.getUseNodeids())
             keys["expandstring"]=keys.get("expandstring", repository.getExpandString())
-        return ComoonicsCdslRepository(clusterinfo=clusterInfo, **keys)
+        return getCdslRepository(clusterinfo=clusterInfo, **keys)
     createDefaultRepository=staticmethod(createDefaultRepository)
 
     def backupFileName(filename, idx=0):
@@ -113,9 +113,8 @@ class CdslValidate(object):
         os import error, listdir}). Removed import from method islink(). Uses method 
         ismount which is defined in this module.
         """
-        from comoonics.cdsl.ComCdslRepository import CdslNotFoundException
-        from comoonics.cdsl import ismount, dirtrim
         from comoonics.cdsl.ComCdsl import Cdsl    
+        from comoonics.cdsl import ismount, dirtrim, CdslNotFoundException
         if not filter:
             filter=os.path.islink    
 

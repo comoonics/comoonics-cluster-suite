@@ -33,40 +33,17 @@ import time
 
 from comoonics import ComSystem
 from comoonics import ComLog
-from comoonics.ComExceptions import ComException
 from comoonics.ComDataObject import DataObject
-from comoonics.cdsl import dirtrim
-
-class CdslInitException(ComException):pass
-class CdslUnsupportedTypeException(ComException):pass
-class CdslFileHandlingException(ComException):pass
-class CdslPrefixWithoutNodeidsException(ComException):pass
-class CdslDoesNotExistException(ComException):pass
-class CdslSourcePathIsAlreadyCdsl(ComException): pass
-class CdslAlreadyExists(ComException): pass
-class CdslIsNoCdsl(ComException): pass
-class CdslOfSameType(ComException): pass
+from comoonics.cdsl import dirtrim, getCdsl, CdslUnsupportedTypeException, CdslFileHandlingException, CdslPrefixWithoutNodeidsException, \
+            CdslDoesNotExistException, CdslAlreadyExists, CdslOfSameType, CDSL_HOSTDEPENDENT_TYPE, CDSL_SHARED_TYPE, CDSL_UNKNOWN_TYPE
 
 class Cdsl(DataObject):
     """
     Represents a cdsl as an L{DataObject} and provides methods to commit changes or test cdsls.
     """
-    HOSTDEPENDENT_TYPE="hostdependent"
-    SHARED_TYPE="shared"
-    UNKNOWN_TYPE="unknown"
-    
-    def __new__(cls, *args, **kwds):
-        """
-        Decide which type of Cdsl is needed to create by verifying the type of 
-        given Repository. Can deal with L{ComoonicsCdslRepository}. If an not known type is given, a instance of the 
-        default class L{cdsl} will be created.
-        @return: a new cdsl object 
-        @rtype: depending on type of repository
-        """
-        # Always default to ComoonicsCdsl
-        cls = ComoonicsCdsl
-        return object.__new__(cls) #, *args, **kwds)
-    
+    HOSTDEPENDENT_TYPE=CDSL_HOSTDEPENDENT_TYPE
+    SHARED_TYPE=CDSL_SHARED_TYPE
+    UNKNOWN_TYPE=CDSL_UNKNOWN_TYPE
     def __init__(self, src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None, ignoreerrors=False):
         """
         Constructs a new cdsl-xml-object from given L{CdslRepository} and nodes. The constructor 
@@ -296,7 +273,7 @@ class Cdsl(DataObject):
         except CdslNotFoundException:
             # not in repository so try to build one and check then
             self.logger.debug("isNested: cdsl %s is not in cdsl repo guessing." %_subpath)
-            _tmp=Cdsl(_subpath, guessType(_subpath, self.cdslRepository), self.cdslRepository, None, self.nodes)
+            _tmp=getCdsl(_subpath, guessType(_subpath, self.cdslRepository), self.cdslRepository, None, self.nodes)
             if _tmp and _tmp.exists():
                 return True
         
