@@ -1,6 +1,3 @@
-from comoonics import ComLog
-
-import os
 import os.path
 
 import sys

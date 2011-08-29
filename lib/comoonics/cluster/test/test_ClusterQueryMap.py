@@ -1,4 +1,4 @@
-from comoonics.cluster.ComQueryMap import QueryMap
+from comoonics.cluster import QueryMap
 
 import unittest
 

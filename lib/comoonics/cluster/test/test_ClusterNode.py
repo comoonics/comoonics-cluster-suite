@@ -1,6 +1,8 @@
 from BaseClusterTestClass import baseClusterTestClass
 
 import unittest
+from comoonics.cluster import getClusterRepository, getClusterInfo
+from comoonics import ComSystem
 
 class test_ClusterNode(baseClusterTestClass):
     """
@@ -8,16 +10,13 @@ class test_ClusterNode(baseClusterTestClass):
     """
     def init(self):
         import os.path
-        from comoonics.cluster.ComClusterRepository import ClusterRepository
-        from comoonics.cluster.ComClusterInfo import ClusterInfo
-        from comoonics import ComSystem
         ComSystem.setExecMode(ComSystem.SIMULATE)
         super(test_ClusterNode, self).init()
         #create comclusterRepository Object
-        self.clusterRepository = ClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
+        self.clusterRepository = getClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
 
         #create comclusterinfo object
-        self.clusterInfo = ClusterInfo(self.clusterRepository)  
+        self.clusterInfo = getClusterInfo(self.clusterRepository)  
 
         # setup the cashes for clustat for redhat cluster
         self.clusterInfo.helper.setSimOutput()
