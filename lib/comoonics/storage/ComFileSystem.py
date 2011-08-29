@@ -32,7 +32,9 @@ CMD_GFS_FSCK="gfs_fsck"
 CMD_MOUNT="mount"
 CMD_UMOUNT="umount"
 CMD_E2LABEL="e2label"
+CMD_E4LABEL="e4label"
 CMD_E2FSCK="e2fsck"
+CMD_E4FSCK="e4fsck"
 CMD_TUNEFSOCFS="tunefs.ocfs2 -L"
 CMD_OCFS2FSCK="ocfs2.fsck"
 CMD_SWAPMKFS="mkswap"
@@ -50,6 +52,8 @@ def getFileSystem(element, doc):
         return ext2FileSystem(element, doc)
     if __type == "ext3":
         return ext3FileSystem(element, doc)
+    if __type == "ext4":
+        return ext4FileSystem(element, doc)
     if __type == "gfs":
         return gfsFileSystem(element, doc)
     if __type == "ocfs2":
@@ -307,6 +311,14 @@ class ext3FileSystem(extFileSystem):
         self.name = "ext3"
         self.setMkfsCmd(CMD_MKFS + " -t ext3 ")
 
+class ext4FileSystem(extFileSystem):
+    """ The extended4 filesystem """
+    def __init__(self,element, doc):
+        extFileSystem.__init__(self,element, doc)
+        self.name = "ext4"
+        self.setMkfsCmd(CMD_MKFS + " -t ext4 ")
+        self.setFsckCmd(CMD_E4FSCK+" -y")
+        self.labelCmd = CMD_E4LABEL
 
 class ocfs2FileSystem(extFileSystem):
     """ The ocfs2 filesystem """
