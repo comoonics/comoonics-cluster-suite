@@ -3,7 +3,7 @@ this module tests the functionality of RedHatClusterHelper
 """
 import unittest
 
-from comoonics.cluster.helper import RedHatClusterHelper
+from comoonics.cluster.helper import getClusterHelper
 
 class test_RedHatClusterHelper(unittest.TestCase):
     OUTPUT_TEST_FILE="clustat.xml"
@@ -21,7 +21,7 @@ class test_RedHatClusterHelper(unittest.TestCase):
         import inspect
         import os.path
         ComLog.setLevel(logging.DEBUG)
-        self.helper=RedHatClusterHelper()
+        self.helper=getClusterHelper()
         path=os.path.dirname(inspect.getfile(self.__class__))
         f=open(os.path.join(path, self.OUTPUT_TEST_FILE))
         import StringIO

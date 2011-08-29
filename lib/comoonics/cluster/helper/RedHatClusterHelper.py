@@ -39,8 +39,9 @@ import comoonics.XmlTools
 import warnings
 import os.path
 from HelperNotSupported import HelperNotSupportedError
+from comoonics.cluster.helper import ClusterHelper
 
-class RedHatClusterHelper(object):
+class RedHatClusterHelper(ClusterHelper):
     defaultclusterstatus_cmd= "/usr/sbin/clustat"
     defaultclusterstatus_opts=["-x", "-f"]
 
