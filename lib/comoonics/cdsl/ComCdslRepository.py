@@ -119,6 +119,15 @@ class CdslRepository(DataObject):
         
     def __str__(self):
         return "%s(%u cdsls, resource: %s)" %(self.__class__.__name__, len(self.cdsls.keys()), self.getResource())
+
+    def getNodeIds(self):
+        """
+        Return a list of valid nodeids.
+        This method is abstract as there is no knowledge of node ids here.
+        @return: a list of nodeids
+        @rtype:  L{list} of L{int}
+        """
+        pass
                                    
     def buildInfrastructure(self,clusterinfo):
         """
@@ -348,6 +357,7 @@ class ComoonicsCdslRepository(CdslRepository):
         self.dtd=None
         self.resourcehandle=None
         self.resourcehandlelock=0
+        self.nodeids=list()
         if not keys:
             raise TypeError("comoonics.cdsl.ComCdslRepository.ComoonicsCDSLRepository can only be instanciated with keywords not otherwise.")
         self.root = keys.get("root", "/")
@@ -388,10 +398,12 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
 
     def __str__(self):
         buf=super(ComoonicsCdslRepository, self).__str__()
-        buf=buf[:-1]+", root: %s, mountpoint: %s)" %(self.root, self.getMountpoint())
+        buf=buf[:-1]+", root: %s, mountpoint: %s, childrepos: %s)" %(self.root, self.getMountpoint(), 
+                                                                     ", ".join(map(lambda y: "%s=>%s" %(y[0], y[1]), self.repositories.items())))
         return buf
 
     def _updateFromElement(self, element, document):
+        self.log.debug("_updateFromElement")
         self._readCdslsElement(element, True)
 
     def getWriteResourceName(self):
@@ -506,7 +518,6 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             child=child.nextSibling
             
     def _readCdslElement(self, element, ignoreerrors=False):
-        from ComCdsl import Cdsl
         _src = dirtrim(element.getAttribute(self.cdsl_src_attribute))
         _type = element.getAttribute(self.cdsl_type_attribute)
         _timestamp = element.getAttribute(self.cdsl_time_attribute)
@@ -519,7 +530,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
                 nodes=self._readNodesElement(child, ignoreerrors)
             child=child.nextSibling
             
-        self.cdsls[_src]=getCdsl(_src, _type, self, nodes=nodes,timestamp=_timestamp, ignoreerrors=ignoreerrors)
+        self.cdsls[_src]=getCdsl(_src, _type, self, nodes=nodes, timestamp=_timestamp, ignoreerrors=ignoreerrors, stripsource=False)
 
     def _readNodesElement(self, element, ignoreerrors=False):
         child = element.firstChild
@@ -533,6 +544,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
                 else:
                     nodes.append(child.getAttribute(self.noderef_ref_attribute))
             child=child.nextSibling
+        self._updateNodeIds(nodes)
         return nodes
 
     def _readRepositoriesElement(self, element, ignoreerrors=False):
@@ -548,16 +560,37 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
                 
             child = child.nextSibling
 
+    def _updateNodeIds(self, nodeids):
+        for nodeid in nodeids:
+            if not nodeid in self.nodeids:
+                self.nodeids.append(nodeid)
+        self.nodeids.sort()
+
     def stripsrc(self, _src, join=True, realpath=True):
+        """
+        Strips the given cdsl source path down to the realpath the src resolves to.
+        @param _src: Path to the cdsl source. This one will be stripped down.
+        @type  _src: L{String} 
+        @param join: If given join with current working directory
+        @type  join: L{Boolean}
+        @param realpath: Should this src path be resolved to its realpath. Default: True.
+        @type  realpath: L{Boolean}
+        @return: The resolved source path.
+        @rtype:  L{String}
+        """
 #        cdslRepository.workingdir.pushd()
         from comoonics.cdsl import strippath
-        if join and not _src.startswith(os.sep):
-            _src=os.path.join(os.getcwd(), _src)
-        cwd=Path()
-        cwd.pushd(self.workingdir)
-        if realpath and os.path.exists(_src):
-            _src=os.path.realpath(_src)
         src=_src
+        if join and not src.startswith(os.sep):
+            src=os.path.join(os.getcwd(), src)
+#        cwd=Path()
+#        cwd.pushd(self.workingdir)
+
+        if realpath and os.path.exists(src):
+            path=os.path.dirname(src)
+            base=os.path.basename(src)
+            path=os.path.realpath(path)
+            src=os.path.join(path, base)
         src=stripleadingsep(strippath(strippath(src, self.root), self.getMountpoint()))
         src=stripleadingsep(strippath(src, self.getLinkPath()))
         src=stripleadingsep(strippath(src, self.getSharedTreepath()))
@@ -566,7 +599,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             src=os.sep.join(src.split(os.sep)[1:])
         src=self.unexpand(src)
         self.logger.debug("cdsl stripped %s to %s" %(_src, src))
-        cwd.popd()
+#        cwd.popd()
         return src
                 
     def guessresource():
@@ -690,19 +723,28 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
                 return self.getRepository(mountpoint).getRepositoryForCdsl(src)
         return self
 
-    def getCdsl(self,src, repository=None):
+    def getCdsl(self,src, repository=None, realpath=True, stripsource=True):
         """
         Uses given source to return matching cdsl
         @param src: Path of searched cdsl
         @type src: string
+        @param realpath: Should this src path be resolved to its realpath. Default: True.
+        @type  realpath: L{Boolean}
         @return: cdsl-object belonging to given path
         @rtype: L{ComoonicsCdsl}
         @raise CdslRepositoryNotFound: if the cdsl could not be found in the repository 
         """
-        src=self.stripsrc(src, True, False)
+        if repository and repository.cdsls.has_key(src):
+            return repository.cdsls[src]
+        if self.cdsls.has_key(src):
+            return self.cdsls[src]
+        if stripsource:
+            src=self.stripsrc(src, True, realpath)
         if not repository:
             repository=self.getRepositoryForCdsl(src)
-        src=repository.stripsrc(src, False)
+        # TODO: Think about if this stipping is necessary??
+        if stripsource:
+            src=self.stripsrc(src, False, realpath)
         if repository.cdsls.has_key(src):
             return repository.cdsls[src]
         else:
@@ -745,6 +787,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         
         #modify cdsls of cdslRepository instance
         self.cdsls[cdsl.src] = cdsl
+        self._updateNodeIds(cdsl.getNodenames())
         
         self.writeresource()
         self.unlockresource()
@@ -813,7 +856,7 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         """
         nodes=self._getNodes(clusterinfo)
         if not nodes or len(nodes) == 0:
-            raise TypeError("Either specify a clusterinfo or maxnodeidnums need to be set in order to determine the nodeids need to build the cdsl infrastructure.")
+            raise TypeError("Either specify a clusterinfo or maxnodeidnums need to be set in order to determine the nodeids required to build the cdsl infrastructure.")
         
         path=Path()
         path.pushd(self.workingdir)
@@ -873,7 +916,6 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         if recursive:
             for repository in self.getRepositories().values():
                 repository.removeInfrastructure(clusterinfo, recursive, force, withcdsls)
-                self._removeRepository(repository)
 
         wpath=Path()
         wpath.pushd(self.workingdir)
@@ -1289,63 +1331,3 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         @type root: string
         """
         self.root = root
-
-###############
-# $Log: ComCdslRepository.py,v $
-# Revision 1.30  2010-12-09 14:51:34  marc
-# - ComoonicsCdslRepository._createEmptyDocument:
-#    - removed the 4Dom dependency
-#
-# Revision 1.29  2010/11/21 21:44:47  marc
-# - fixed bug 391
-#   - moved to upstream XmlTools implementation
-#
-# Revision 1.28  2010/11/16 09:54:36  marc
-# - fixed bug with old XML implementation
-#
-# Revision 1.27  2010/08/06 13:16:07  marc
-# - typo in Exception
-#
-# Revision 1.26  2010/06/29 07:52:20  marc
-# - ComCdslRepository.CdslRepository
-#   - if inventoryfile cannot be found try to guess and raise exception only then.
-#   - Fixed migration exception output
-#
-# Revision 1.25  2010/06/17 08:24:58  marc
-# - getCdsl: two times stripsrc
-# - getParent: change to path of cdslrepo
-#
-# Revision 1.24  2010/06/09 07:50:40  marc
-# - ComoonicsCdslRepository.getCdsl: fixed bug that cdsl could not be found in subrepositories
-#
-# Revision 1.23  2010/05/28 09:40:15  marc
-# - ComoonicsCdslRepository
-#   - refresh
-#     - refresh in workingdir as cdsls are relative
-#   - stripsrc
-#     - moved here from Cdsl
-#     - removed dep for clusterinfo
-#   - getCdsl
-#     - uses stripsrc to strip src instead of incomplete
-#   - delete
-#     - delete in workingdir as cdsls are relative
-#   - unexpand
-#     - removed dep to clusterinfo
-#
-# Revision 1.22  2010/05/27 08:43:25  marc
-# - adapted to new upstream Path API
-# - CdslRepository:
-#   - __init__: detect 0 size inventoryfile
-# - ComoonicsCdslRepository
-#   - added defaultdir_default
-#   - attribute workingdir is a string not a Path
-#   - __init__: added parameter nocreate to not create repository if it does not exist but raise Exception
-#   - getWriteResourceName: added method that returns the name of the temporary inventory file to be written to
-#   - lockresourceRW: not truncate existing inventory files but open in write mode (r+ and w+)
-#   - lockresource: some more errors to be detected
-#   - _parseresourceFP: if nolock create a temporary handle but not use self.resourcehandle
-#   - writeresource: first write to getWriteResourceName then move it to old repository
-#   - _createEmptyDocumentStructure: accept given predefined parameters
-#   - commit: exchanged replaceChild to removeChild and all appendChild (better readable)
-#   - guessonerror: simplified perhaps obsolete
-#
