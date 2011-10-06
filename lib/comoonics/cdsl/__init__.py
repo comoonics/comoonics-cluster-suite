@@ -6,8 +6,6 @@ Provides modules to manage cdsls on filesystem and in inventoryfile. Offers
 functionality to create, manipulate and check cdsls on filesystem/in inventoryfile. 
 Discovers needed cdsl type by looking after type of used cluster configuration.
 """
-
-# @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
 # Einsteinstrasse 10, 85716 Unterschleissheim, Germany
@@ -290,7 +288,7 @@ def dirtrim(_dir):
 def setDebug(option, opt, value, parser):
     from comoonics import ComLog
     import logging
-    ComLog.setLevel(logging.DEBUG)
+    ComLog.setLevel(logging.DEBUG, "comoonics.cdsl")
 #    ComLog.getLogger().propagate=1
     
 def setQuiet(option, opt, value, parser):
@@ -343,8 +341,9 @@ class CdslSourcePathIsAlreadyCdsl(ComException): pass
 class CdslAlreadyExists(ComException): pass
 class CdslIsNoCdsl(ComException): pass
 class CdslOfSameType(ComException): pass
+class CdslHasChildren(ComException): pass
 
-def getCdsl(src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=None, ignoreerrors=False):
+def getCdsl(src, type, cdslrepository, clusterinfo=None, nodes=None, timestamp=None, ignoreerrors=False, realpath=True, stripsource=True):
     """
     Constructs a new cdsl-xml-object from given L{CdslRepository} and nodes. The constructor 
     gets the needed nodes either from list (nodes) or from a given L{ClusterInfo} but never 
@@ -361,9 +360,14 @@ def getCdsl(src, _type, cdslRepository, clusterinfo=None, nodes=None, timestamp=
     @type nodes: Array of strings
     @param timestamp: Timestamp to set to cdsl (Default: None), if not set create timestamp from systemtime
     @type timestamp: string
+    @param realpath: Should this src path be resolved to its realpath. Default: True.
+    @type  realpath: L{Boolean}
+    @param stripsource: Should this src path be stripped and checked or taken as is. 
+                        This can be switched of if read from repo (speed up). Default: True.
+    @type  stripsource: L{Boolean}
     """
     from comoonics.cdsl.ComCdsl import ComoonicsCdsl
-    return ComoonicsCdsl(src, _type, cdslRepository, clusterinfo=clusterinfo, nodes=nodes, timestamp=timestamp, ignoreerrors=ignoreerrors)
+    return ComoonicsCdsl(src, type, cdslrepository, clusterinfo=clusterinfo, nodes=nodes, timestamp=timestamp, ignoreerrors=ignoreerrors, realpath=realpath, stripsource=stripsource)
 
 class CdslNotFoundException(ComException):
     def __init__(self, src, repository=None):
@@ -416,38 +420,3 @@ def getCdslRepository(**keys):
 CDSL_HOSTDEPENDENT_TYPE="hostdependent"
 CDSL_SHARED_TYPE="shared"
 CDSL_UNKNOWN_TYPE="unknown"
-#################
-# $Log: __init__.py,v $
-# Revision 1.12  2010-06-17 08:23:37  marc
-# strippath: extended with _fullpath flag
-#
-# Revision 1.11  2010/05/27 08:29:58  marc
-# - guessType: simplified
-# - commonoptparseroptions: added default to inventoryfile
-#
-# Revision 1.10  2010/03/08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.9  2010/02/15 12:54:06  marc
-# - fixed bugs with nested cdsls not being working
-#
-# Revision 1.8  2010/02/07 20:01:26  marc
-# First candidate for new version.
-#
-# Revision 1.7  2009/07/22 08:37:09  marc
-# Fedora compliant
-#
-# Revision 1.6  2009/06/10 14:53:06  marc
-# - first stable version
-# - fixed many bugs
-# - rewrote nearly everything
-# - extensive tests
-#
-# Revision 1.5  2009/06/05 11:57:10  marc
-# - first version with binaries
-# - regression tests passed.
-#
-# Revision 1.4  2009/06/04 13:49:49  marc
-# code review and rewrite.
-# added unittests.
-#

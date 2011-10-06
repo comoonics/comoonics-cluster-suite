@@ -4,7 +4,6 @@ Created on Feb 4, 2010
 @author: marc
 '''
 
-# $Id: MigrationTools.py,v 1.4 2010-11-21 21:44:47 marc Exp $
 #
 # @(#)$File$
 #
@@ -26,10 +25,8 @@ Created on Feb 4, 2010
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __version__ = "$Revision: 1.4 $"
-# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cdsl/migration/MigrationTools.py,v $
 
 from comoonics.cdsl.migration import ConfigfileFormatException
-from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
 from comoonics import ComLog
 
 class MigrationTool(object):
@@ -55,6 +52,7 @@ class DefaultMigrationTool(MigrationTool):
                      'cdsltree': "cdsltree",
                      'default_dir': "defaultdir" }
     def migrate(self, fromversion, toversion, **kwds):
+        from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
         from comoonics.cdsl.ComCdsl import ComoonicsCdsl
         import os.path
         from comoonics import XmlTools
@@ -103,25 +101,3 @@ class DefaultMigrationTool(MigrationTool):
             returnkeys[str(self.defaultsmapping.get(attr.name, attr.name))]=str(attr.value)
         return returnkeys
             
-                
-            
-        
-        
-        
-###############
-# $Log: MigrationTools.py,v $
-# Revision 1.4  2010-11-21 21:44:47  marc
-# - fixed bug 391
-#   - moved to upstream XmlTools implementation
-#
-# Revision 1.3  2010/06/29 07:50:53  marc
-#   - __init__: added logger
-#   - defaultsmapping: adapted to current status
-#   - migrate: debug output default values to be migrated
-#
-# Revision 1.2  2010/04/13 13:24:02  marc
-# - support for ignoreerrors
-#
-# Revision 1.1  2010/02/07 20:01:26  marc
-# First candidate for new version.
-#
