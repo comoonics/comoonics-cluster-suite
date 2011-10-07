@@ -19,7 +19,8 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
-from comoonics.cluster import getClusterInfo, getClusterRepository, QueryMap, clusterconf, commonoptparseroptions, querymapfile
+from comoonics.cluster import getClusterInfo, getClusterRepository, QueryMap, parseClusterConf
+from comoonics.cluster import clusterconf, commonoptparseroptions, querymapfile, get_defaultsfiles, get_defaultsenvkey
 try:
     from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
 except ImportError:
@@ -175,8 +176,8 @@ parser.add_option_group(queryopts)
 parser.add_option_group(outputopts)
 
 try:
-    parser.setGlobalDefaultsFilename(comoonics.cluster.get_defaultsfiles()[0])
-    parser.setLocalDefaultsFilename(comoonics.cluster.get_defaultsfiles()[1], comoonics.cluster.get_defaultsenvkey())
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
 except (TypeError, NameError):
     pass
 
@@ -189,11 +190,11 @@ if len(values)<=0 and not options.queriesfile:
 if not os.path.isfile(options.clusterconf):
     parser.error("Could not find clusterconfiguration file %s" %(options.clusterconf))
 
-doc=comoonics.cluster.parseClusterConf(options.clusterconf, options.validate)
+doc=parseClusterConf(options.clusterconf, options.validate)
 
 #create needed cluster objects
-clusterRepository = ClusterRepository(doc.documentElement,doc)
-clusterInfo = ClusterInfo(clusterRepository)
+clusterRepository = getClusterRepository(doc.documentElement,doc)
+clusterInfo = getClusterInfo(clusterRepository)
 clusterQueryMap = QueryMap(options.mapfile, clusterInfo)
 
 result=None
