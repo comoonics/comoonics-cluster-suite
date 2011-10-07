@@ -77,7 +77,11 @@ class ClusterInfo(ClusterObject):
         """
         self.log.debug("get clusternodes from clusterrepository(active=%s)" %active)
         _nodes=list()
-        for _node in self.clusterRepository.nodeNameMap.values():
+        if self.clusterRepository.nodeIdMap and len(self.clusterRepository.nodeIdMap)>0:
+            nodes=self.clusterRepository.nodeIdMap.values()
+        elif self.clusterRepository.nodeNameMap and len(self.clusterRepository.nodeNameMap)>0:
+            nodes=self.clusterRepository.nodeNameMap.values()
+        for _node in nodes:
             if not active or _node.isActive():
                 _nodes.append(_node)
         return _nodes
@@ -102,6 +106,20 @@ class ClusterInfo(ClusterObject):
             for _node in _nodes:
                 _ids.append(_node.getName())
         return _ids
+
+class SimpleComoonicsClusterInfo(ClusterInfo):
+    """
+    Simple L{ClusterInfo} implementation that does not use any special configuration file (/etc/cluster/cluster.conf) or the like. 
+    But only the the parameters got from the information class L{comoonics.cluster.ComClusterRepository.SimpleComoonicsClusterRepository}.
+    """
+    def __init__(self, clusterRepository):
+        """
+        __init__(clusterRepository)
+        Standard constructor
+        @param clusterRepository: the parent cluster repository
+        @type  clusterRepository: L{comoonics.cluster.ComClusterRepository.SimpleComoonicsClusterRepository}  
+        """
+        super(SimpleComoonicsClusterInfo, self).__init__(clusterRepository)
     
 class RedHatClusterInfo(ClusterInfo):
     """
@@ -117,10 +135,10 @@ class RedHatClusterInfo(ClusterInfo):
         @type clusterRepository: L{RedhatClusterRepository}
         """
         from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
-        from helper import RedHatClusterHelper, HelperNotSupportedError
+        from helper import getClusterHelper, HelperNotSupportedError
         super(RedHatClusterInfo, self).__init__(clusterRepository)
         try:
-            self.helper=RedHatClusterHelper()
+            self.helper=getClusterHelper()
         except HelperNotSupportedError:
             self.helper=None
         self.addNonStatic("name", xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_clustat_cluster, "@"+RedHatClusterRepository.attribute_clustat_cluster_name))
