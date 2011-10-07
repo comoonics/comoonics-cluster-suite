@@ -60,11 +60,6 @@ ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()
 
 try: 
-    doc=comoonics.cluster.parseClusterConf(options.clusterconf)
-          
-    #create needed cluster objects
-    clusterRepository = ClusterRepository(doc.documentElement,doc)
-    clusterInfo = ClusterInfo(clusterRepository)
     cdslRepository=None
     try:
         cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
@@ -77,6 +72,8 @@ try:
         else:
             logger.warn("Reconstructing repository..")
 
+    clusterRepository = ClusterRepository(clusterconf=options.clusterconf, maxnodeidnum=cdslRepository.getMaxnodeidnum())
+    clusterInfo = ClusterInfo(clusterRepository)
     validator=CdslValidate(cdslRepository, clusterInfo, root=options.root, mountpoint=options.mountpoint, resource=options.inventoryfile, cdsltree=options.cdsltree, cdsltreeshared=options.cdsltreeshared, cdsllink=options.cdsllink, maxnodeidnum=str(options.maxnodeidnum), usenodeids=str(not options.usenodenames), defaultdir=options.defaultdir)
 
     _added, _removed=validator.validate(update=options.update, onfilesystem=options.filesystem, filesystempath=options.path, cdsls=options.cdsls, recursive=not options.norecursive)
