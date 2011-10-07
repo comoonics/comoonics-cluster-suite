@@ -51,18 +51,31 @@ Created on 25.03.2011
 @author: marc
 '''
 
-from optparse import *
+from optparse import Option, OptionParser, OptionError
 import sys
 import os.path
 
 class PersistentOption(Option):
+#    def _check_recurring(self):
+#        if hasattr(self, "recurring") and type(getattr(self, "recurring")) == bool:
+#            return True
+#        else:
+#            raise OptionError(
+#                    "recurring is expected as boolean. Got %s"
+#                    % self.recurring)
+#    def __init__(self, *opts, **attrs):
+#        PersistentOption.__init__(self, *opts, **attrs)
+#        self.ATTRS.append("recurring")
+#        self.CHECK_METHODS.append(self._check_recurring)
+
     def check_value(self, opt, value):
         if self.action == "store_true" or self.action =="store_false" and isinstance(value, basestring):
             value=bool(value)
         return Option.check_value(self, opt, value)
+#    def isRecurring(self):
+#        return self.recurring
 
 class PersistentOptionParser(OptionParser):
-    
     def __init__(self,
                  usage=None,
                  option_list=None,
@@ -93,7 +106,6 @@ class PersistentOptionParser(OptionParser):
         self._setDefaultsFilename(filename, 0)
         
     def setLocalDefaultsFilename(self, filename, envkey=None):
-        import os
         self._setDefaultsFilename(filename)
         if envkey and os.environ.has_key(envkey):
             self._setDefaultsFilename(os.environ[envkey])
@@ -111,7 +123,6 @@ class PersistentOptionParser(OptionParser):
         return OptionParser.get_default_values(self)
         
     def _setDefaultsFilename(self, filename, index=None):
-        import os.path
         if filename and os.path.isfile(filename):
             if index==None:
                 self.defaultfiles.append(filename)
