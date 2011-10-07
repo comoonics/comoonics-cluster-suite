@@ -31,13 +31,11 @@ clusternode instances) as an L{DataObject}.
 
 
 __version__ = "$Revision: 1.10 $"
-# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterNodeNic.py,v $
 
-from ComClusterInfo import ClusterObject
-from ComClusterRepository import ComoonicsClusterRepository
+import comoonics.cluster
 from comoonics import ComLog
 
-class ComoonicsClusterNodeNic(ClusterObject):
+class ComoonicsClusterNodeNic(comoonics.cluster.ClusterObject):
     """
     Represents network interfaces (e.g. of comoonics 
     clusternode instances) as an L{DataObject}.
@@ -53,6 +51,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @return: Returns name of interface
         @rtype: string
         """
+        from ComClusterRepository import ComoonicsClusterRepository
         return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_name)
     
     def getMac(self):
@@ -61,6 +60,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @rtype: string
         """
         #optional attribute, return empty string if not set
+        from ComClusterRepository import ComoonicsClusterRepository
         return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_mac, "")
         
     def getIP(self):
@@ -69,6 +69,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @rtype: string
         """
         #optional attribute, return empty string if not set
+        from ComClusterRepository import ComoonicsClusterRepository
         try:
             self.log.debug("get ip attribute: " + self.getAttribute(ComoonicsClusterRepository.attribute_netdev_ip))
             # special case for dhcp we'll return the given ipaddress
@@ -95,6 +96,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         """
         @return: True when NIC is configured via DHCP else False
         """
+        from ComClusterRepository import ComoonicsClusterRepository
         return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_ip)=="dhcp"
     
     def getGateway(self):
@@ -103,6 +105,7 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @rtype: string
         """
         #optional attribute, return empty string if not set
+        from ComClusterRepository import ComoonicsClusterRepository
         return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_gateway, "")
     
     def getNetmask(self):
@@ -111,50 +114,17 @@ class ComoonicsClusterNodeNic(ClusterObject):
         @rtype: string
         """
         #optional attribute, return empty string if not set
+        from ComClusterRepository import ComoonicsClusterRepository
         return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_netmask, "")
     
     def getMaster(self):
         """Returns master"""
         #optional attribute, return empty string if not set
+        from ComClusterRepository import ComoonicsClusterRepository
         return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_master, "")
     
     def getSlave(self):
         """Returns slave"""
         #optional attribute, return empty string if not set
+        from ComClusterRepository import ComoonicsClusterRepository
         return self.getAttribute(ComoonicsClusterRepository.attribute_netdev_slave, "")
-
-# $Log: ComClusterNodeNic.py,v $
-# Revision 1.10  2009-07-22 08:37:09  marc
-# Fedora compliant
-#
-# Revision 1.9  2009/05/27 18:31:59  marc
-# - prepared and added querymap concept
-# - reviewed and changed code to work with unittests and being more modular
-#
-# Revision 1.8  2008/08/05 13:09:31  marc
-# - fixed bugs with constants
-# - optimized imports
-# - added nonstatic attributes
-# - added helper class
-#
-# Revision 1.7  2008/07/08 07:25:31  andrea2
-# Use constants (xpathes, filenames) from __init__
-#
-# Revision 1.6  2008/06/10 10:15:42  marc
-# fixed getIP to work with dhcp and being able to resolve it
-#
-# Revision 1.5  2008/05/09 12:57:46  marc
-# - implemented BUG#218 right ip returning whenever node is configured for dhcp
-#
-# Revision 1.4  2007/09/19 06:41:47  andrea2
-# adapted source code in dependence on Python Style Guide, removed not used imports and statements
-#
-# Revision 1.3  2007/08/06 12:09:27  andrea2
-# Added more Docu, removed ClusterMetainfo
-#
-# Revision 1.1  2007/06/05 13:11:21  andrea2
-# *** empty log message ***
-##
-# Revision 0.1  2007/05/10 13:30:56  andrea
-# inital version
-#
