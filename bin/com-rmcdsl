@@ -3,9 +3,9 @@
 Deletes existing cdsl from filesystem and inventoryfile.
 Contains deleting of symbolic links and content of cdsl.
 !!ATTENTION!!
-   You can remove data with that program. Use on your own risk!
+   You can remove data with that program. Use at your own risk!
 """
-__version__ = "$Revision: 1.10 $"
+__version__ = "0.2-10"
 
 import getopt
 import sys
@@ -21,21 +21,33 @@ from comoonics.ComExceptions import ComException
 
 from comoonics.cluster import parseClusterConf, getClusterInfo, getClusterRepository
 from comoonics.cdsl import commonoptparseroptions, dirtrim, get_defaultsfiles, get_defaultsenvkey
-from comoonics.cdsl.ComCdsl import CdslDoesNotExistException
-from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+from comoonics.cdsl import CdslNotFoundException, getCdslRepository, CdslHasChildren
 
 try:
     from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
 except ImportError:
     from optparse import OptionParser
 
-class CdslNotExistsException(ComException):pass
-
 usage = "usage: %prog [options] fullpathtofile"
 parser = OptionParser(usage=usage, description=__doc__)
 parser=commonoptparseroptions(parser)
 
-parser.add_option("-s", "--symboliconly", dest="symboliconly", default=True, action="store_true", help="Only removes the symbolic links but not the data itself")
+parser.add_option("-F", "--reallyforce", dest="reallyforce", default=False, action="store_true", 
+                  help="""The normal behaviour of %prog is to restore the files to path where the origin is.
+This option will also remove the files the cdsl was representing.
+ATTENTION: Handle with extreme care. If reallyforce is used all cdsl data is wiped away never to be seem again.
+Default: %default    
+""")
+parser.add_option("-f", "--force", dest="force", default=False, action="store_true", help="Removes everything it can find. Independently from if the cdsl is existant or not.")
+parser.add_option("-S", "--resolved", dest="resolved", default=False, action="store_true", 
+                  help="""Tell """+os.path.basename(sys.argv[0])+
+                  """ not to be clever and resolve the given path but take it as it is. 
+ATTENTION: This option should not be used if you don't know what you are doing.. 
+Default: %default""")
+parser.add_option("-R", "--recursive", dest="recursive", default=False, action="store_true",
+                  help="""Also remove cdsls that are children of the current one.
+Remember: Shared cdsls will only be copied to the first nodeid cdsl directory if removed.
+""")
 
 try:
     parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
@@ -44,24 +56,40 @@ except (TypeError, NameError):
     pass
 
 ComLog.setLevel(logging.INFO)
-(options, args) = parser.parse_args()
+args=sys.argv[1:]
+options=None
+parentcdslRepository=None; cdslRepository=None
+clusterRepository=None; clusterInfo=None
+while args:
+    (options, args) = parser.parse_args(args, options)
 
+    if len(args) < 1:
+        parser.error("Failure no or more then one file is given as argument.")
 
-if len(args) != 1:
-    parser.error("Failure no or more then one file is given as argument.")
+    try:          
+        clusterRepository = getClusterRepository(clusterconf=options.clusterconf)
+        clusterInfo = getClusterInfo(clusterRepository)
 
-try:          
-    doc=parseClusterConf(options.clusterconf)
-    #create needed cluster objects
-    clusterRepository = getClusterRepository(doc.documentElement,doc)
-    clusterInfo = getClusterInfo(clusterRepository)
+        cdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
 
-    cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
-
-    cdsl = cdslRepository.getCdsl(args[0])
-    cdsl.delete(force=not options.symboliconly)
-except Exception, e:
-    print "Error: Could not remove cdsl. Command was %s " %" ".join(sys.argv)
-    print "Error: %s" %str(e)
-    ComLog.debugTraceLog()
-    sys.exit(1)
+        cdsl = cdslRepository.getCdsl(args[0], realpath=not options.resolved)
+        cdsl.delete(recursive=options.recursive, symbolic=not options.reallyforce, force=options.force)
+        del args[0]
+    except CdslNotFoundException, cnfe:
+        print >>sys.stderr, """Cdsl %s seems to be broken or does not exist. 
+        Please either validate with com-cdslinvchk or use %s with --force.""" %(args[0], sys.argv[0])
+        ComLog.debugTraceLog("comoonics.cdsl")
+        sys.exit(1)
+    except CdslHasChildren, chc:
+        print >>sys.stderr, """Error: the cdsl %s seems to have child cdsls.
+Cannot continue. You might think about specifying --recursive to this command.
+This option also deletes all children.
+Or delete the children manual (safe way).
+""" %cdsl.src
+        ComLog.debugTraceLog("comoonics.cdsl")
+        sys.exit(1)
+    except Exception, e:
+        print >>sys.stderr, "Error: Could not remove cdsl. Command was %s " %" ".join(sys.argv)
+        print >>sys.stderr, "Error: %s" %str(e)
+        ComLog.debugTraceLog("comoonics.cdsl")
+        sys.exit(2)
