@@ -126,6 +126,32 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Fri Oct 07 2011 MG <grimme( at )atix.de>, 0.1-40
+  - bin/com-rmcdsl: 
+    - reflect latest API changes 
+    - accept multiple cdsls to be deleted 
+    - added option resolved, recursive and reallyforce instead of
+      symboliconly.
+  - bin/com-mkcdslinfrastructure, bin/com-queryclusterconf: reflect latest API
+    changes
+  - bin/com-mkcdsl: 
+    - now support multiple cdsl as commandline option 
+    - added resolved option 
+    - rewrote comments/documentation
+  - bin/com-cdslinvchk: reflect latest API Changes
+  - lib/comoonics/cdsl/__init__.py,
+    lib/comoonics/cdsl/migration/MigrationTools.py: - removed cvs tags 
+    - cleaned up _ parameters 
+    - setDebug: set to logging level comoonics.cdsl.
+  - lib/comoonics/cdsl/test/baseSetup.py, lib/comoonics/cdsl/test/test_Cdsl.py,
+    lib/comoonics/cdsl/test/test_CdslRepository.py,
+    lib/comoonics/cdsl/test/test_Core.py: 
+    - refactoring: made a little more
+      flexible and reusable; 
+    - reflect latest changes.
+* Fri Sep 09 2011 MG <grimme( at )atix.de>, 0.1-39
+  - change to be able to also work without cluster.configuration and support
+    for comoonics.cluster.SimpleClusterInfo
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-38
   - added Group System Environment/Base
   - Fixed bug with com-mkcdslinventory --mountpoint with a leading / to be stripped off
@@ -257,6 +283,26 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+* Fri Oct 07 2011 MG <grimme( at )atix.de>, 0.1-37
+  - lib/comoonics/cluster/ComClusterRepository.py: 
+    - added SimpleClusterRepository 
+    - added getClusterNodeClass for all repositoryClasses
+  - lib/comoonics/cluster/ComClusterNodeNic.py: removed CVS Tags moved some imports
+  - lib/comoonics/cluster/ComClusterNode.py: 
+    - added SimpleComoonicsClusterNode
+    - RedHatClusterNode: new API rewritten
+  - lib/comoonics/cluster/ComClusterInfo.py: added SimpleClusterInfo
+  - lib/comoonics/cluster/__init__.py: - getClusterRepository - extended with 
+       SimpleComoonicsClusterRepository when no cluster.conf
+  - lib/comoonics/cluster/test/BaseClusterTestClass.py,
+    lib/comoonics/cluster/test/cluster2.conf,
+    lib/comoonics/cluster/test/test_ClusterInfo.py,
+    lib/comoonics/cluster/test/test_ClusterNode.py,
+    lib/comoonics/cluster/test/test_ClusterNodeNic.py,
+    .../cluster/test/test_ClusterRepository.py: tests that reflect latest changes
+* Fri Sep 09 2011 MG <grimme( at )atix.de>, 0.1-36
+  - change to be able to also work without cluster.configuration and support
+    for comoonics.cluster.SimpleClusterInfo
 * Mon Apr 18 2011 MG <grimme@atix.de>, 0.1-35
   - __init__.py: 
     - fixed default querymap
@@ -661,8 +707,14 @@ comoonics-imsd-py
   - renamed from comoonics-fenceacksv-py 
 
 comoonics-installation-py
+* Fri Jul 01 2011 MG <grimme@atix.de>, 0.1-4
+  - osrcluster
+    - added filesystem to each clusternode
+  - nfs
+    - first usable version to be tested
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-3
   - added Group System Environment/Extras
+  - fixed for RHEL5.6
 * Mon Mar 08 2010 MG <grimme@atix.de>, 0.1-2
   - first version for comoonics-4.6-rc1.
 * Tue May 20 2008 MG <grimme@atix.de>, 0.1-1
@@ -780,6 +832,8 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Tue Apr 19 2011 MG <grimme@atix.de>, 0.1-12
+  - lib/comoonics/tools/ComSysreport.py: - removed obsolete imports
 * Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-11
   - SystemInformation
     - better detection of distribution
