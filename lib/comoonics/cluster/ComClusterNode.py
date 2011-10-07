@@ -35,8 +35,9 @@ __version__ = "$Revision: 1.14 $"
 
 import os
 
-from ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository, ClusterObject
+from comoonics.cluster import ClusterObject, ClusterNodeNoIdFoundException
 from ComClusterNodeNic import ComoonicsClusterNodeNic
+from ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository
 
 from comoonics import ComLog
 from comoonics.XmlTools import xpathjoin
@@ -47,25 +48,6 @@ class ClusterNode(ClusterObject):
     """
     
     log = ComLog.getLogger("comoonics.cluster.ComClusterNode")
-    
-    def __new__(cls, *args, **kwds):
-        """
-        Decides by content of given element which 
-        instance of clusternode (general, redhat 
-        or comoonics) has to be created.
-        """
-        try:
-            import comoonics.XmlTools
-            comoonics.XmlTools.evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0])
-        except NameError:
-            if args[0].getAttribute("name"):
-                cls = RedHatClusterNode
-            else:
-                cls = ClusterNode
-        else:
-            cls = ComoonicsClusterNode
-            
-        return object.__new__(cls) #, *args, **kwds)
     
     def __init__(self, element, doc=None):
         super(ClusterNode, self).__init__(element, doc)
@@ -81,6 +63,26 @@ class ClusterNode(ClusterObject):
         """placeholder for isActvie method. Should return True if node is actively joined to the given cluster"""
         return True                
 
+class SimpleComoonicsClusterNode(ClusterNode):
+    """
+    Just a simple implementation of the ClusterNode abstract class.
+    This class just has a name and id for the first.
+    """
+    def __init__(self, nodeid, nodename=None, active=True):
+        super(SimpleComoonicsClusterNode, self).__init__(None)
+        self.id=nodeid
+        self.name=nodename
+        self.active=active
+        
+    def getId(self):
+        return self.id
+    
+    def getName(self):
+        return self.name
+    
+    def isActive(self):
+        return self.active        
+
 class RedHatClusterNode(ClusterNode):
     """
     Extends the generall ClusterNode class 
@@ -92,9 +94,9 @@ class RedHatClusterNode(ClusterNode):
     
     def __init__(self, element, doc=None):
         super(RedHatClusterNode, self).__init__(element, doc)
-        from helper import RedHatClusterHelper, HelperNotSupportedError
+        from helper import getClusterHelper, HelperNotSupportedError
         try:
-            self.helper=RedHatClusterHelper()
+            self.helper=getClusterHelper()
         except HelperNotSupportedError:
             self.helper=None
         self.addNonStatic("state")
@@ -124,7 +126,10 @@ class RedHatClusterNode(ClusterNode):
         @return: nodeid
         @rtype: int
         """
-        return self.getAttribute(RedHatClusterRepository.attribute_clusternode_nodeid, "")
+        try:
+            return self.getAttribute(RedHatClusterRepository.attribute_clusternode_nodeid)
+        except NameError:
+            raise ClusterNodeNoIdFoundException("Clusternode %s has no nodeid. Nodeid attribute is required.")
 
     def getVotes(self):
         """
@@ -219,10 +224,13 @@ class ComoonicsClusterNode(RedHatClusterNode):
         @return: device belonging to rootvolume
         @rtype: string
         """
-        _element=self._getRootvolumeElement()
-        if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_name):
-            return self._getRootvolumeElement().getAttribute(ComoonicsClusterRepository.attribute_rootvolume_name)
-        else:
+        try:
+            _element=self._getRootvolumeElement()
+            if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_name):
+                return self._getRootvolumeElement().getAttribute(ComoonicsClusterRepository.attribute_rootvolume_name)
+            else:
+                return ""
+        except IndexError:
             return ""
 
     def getRootFs(self):
@@ -230,10 +238,13 @@ class ComoonicsClusterNode(RedHatClusterNode):
         @return: type of root filesystem
         @rtype: string
         """
-        _element=self._getRootvolumeElement()
-        if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_fstype):
-            return _element.getAttribute(ComoonicsClusterRepository.attribute_rootvolume_fstype)
-        else:
+        try:
+            _element=self._getRootvolumeElement()
+            if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_fstype):
+                return _element.getAttribute(ComoonicsClusterRepository.attribute_rootvolume_fstype)
+            else:
+                return self.defaultRootFs
+        except IndexError:
             return self.defaultRootFs
 
     def getMountopts(self):
@@ -241,10 +252,13 @@ class ComoonicsClusterNode(RedHatClusterNode):
         @return: additional Mountoptions for root filesystem
         @rtype: string
         """
-        _element=self._getRootvolumeElement()
-        if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_mountopts):
-            return _element.getAttribute(ComoonicsClusterRepository.attribute_rootvolume_mountopts)
-        else:
+        try:
+            _element=self._getRootvolumeElement()
+            if _element and _element.hasAttribute(ComoonicsClusterRepository.attribute_rootvolume_mountopts):
+                return _element.getAttribute(ComoonicsClusterRepository.attribute_rootvolume_mountopts)
+            else:
+                return self.defaultMountopts
+        except IndexError:
             return self.defaultMountopts
         
     def getSyslog(self):
