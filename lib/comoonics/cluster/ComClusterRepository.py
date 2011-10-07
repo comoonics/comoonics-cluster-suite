@@ -34,13 +34,12 @@ inherited from L{DataObject}.
 
 
 __version__ = "$Revision: 1.19 $"
-# $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterRepository.py,v $
 
 from comoonics import ComLog
 from comoonics.DictTools import createDomFromHash
 import comoonics.XmlTools
 from comoonics.cluster import ClusterObject, ClusterIdNotFoundException, ClusterMacNotFoundException, ClusterRepositoryConverterNotFoundException
-from comoonics.cluster.ComClusterInfo import ClusterInfo, RedHatClusterInfo, ComoonicsClusterInfo
+from comoonics.cluster.ComClusterInfo import ClusterInfo, RedHatClusterInfo, ComoonicsClusterInfo, SimpleComoonicsClusterInfo
 log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
 
                 
@@ -73,6 +72,61 @@ class ClusterRepository(ClusterObject):
         @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
         """
         return ClusterInfo
+
+    def getClusterNodeClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        from comoonics.cluster.ComClusterNode import ClusterNode
+        return ClusterNode
+
+class SimpleComoonicsClusterRepository(ClusterRepository):
+    """
+    Class that implements a simple cluster repository that does not consist of any configuration file but is
+    defined from the constructor parameters.
+    """
+    def __init__(self, maxnodeidnum=1, nodeids=None, nodenames=None, clusterconf=None):
+        """
+        Constructor that creates a new cluster repository from outside information.
+        @param nodeids: an optional list of nodeids (list of numbers)
+        @type  nodeids: L{list} of L{int}
+        @param maxnodeid: if no nodeids list is given maxnodeid will implicitly create a list of ids from 1 to maxnodeid.
+        @type  maxnodeid: L{int} default is 1
+        @param nodenames: an optional list of nodenames (list of strings).
+        @type  nodenames: L{list} of L{string} which represent the list of nodenames.   
+        """
+        super(SimpleComoonicsClusterRepository, self).__init__()
+        num_nodeids=maxnodeidnum
+        if nodeids and not maxnodeidnum:
+            num_nodeids=len(nodeids)
+            
+        for index in range(num_nodeids):
+            nodeid=index
+            if nodeids:
+                nodeid=nodeids.get(index, index)
+            nodename=None
+            if nodenames:
+                nodename=nodename=nodenames.get(index, None)
+            node=self.getClusterNodeClass()(nodeid=nodeid, nodename=nodename)
+            self.nodeIdMap[nodeid]=node
+            if nodename:
+                self.nodeNameMap[nodename]=node
+    
+    def getClusterInfoClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        return SimpleComoonicsClusterInfo
+
+    def getClusterNodeClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        from comoonics.cluster.ComClusterNode import SimpleComoonicsClusterNode
+        return SimpleComoonicsClusterNode
             
 class RedHatClusterRepository(ClusterRepository):
     """
@@ -140,7 +194,6 @@ class RedHatClusterRepository(ClusterRepository):
     getDefaultClustatXPath=staticmethod(getDefaultClustatXPath)
     
     def __init__(self, element=None, doc=None, *options):
-        from comoonics.cluster.ComClusterNode import ClusterNode
         if ((element == None) and (len(options) == 0)) or ((element != None) and (len(options) != 0)):
             raise AttributeError("You have to specify element OR options to create a new element")
         elif element == None:
@@ -156,7 +209,7 @@ class RedHatClusterRepository(ClusterRepository):
         #fill dictionaries with nodename:nodeobject, nodeid:nodeobject and nodeident:nodeobject
         _nodes = comoonics.XmlTools.evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), self.getElement())
         for i in range(len(_nodes)):
-            _node = ClusterNode(_nodes[i], doc)
+            _node = self.getClusterNodeClass()(_nodes[i], doc)
             self.nodeNameMap[_node.getName()] = _node
             self.nodeIdMap[_node.getId()] = _node
     
@@ -166,6 +219,14 @@ class RedHatClusterRepository(ClusterRepository):
         @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
         """
         return RedHatClusterInfo
+
+    def getClusterNodeClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        from comoonics.cluster.ComClusterNode import RedHatClusterNode
+        return RedHatClusterNode
             
     def setClusterName(self,name):
         """
@@ -388,65 +449,12 @@ cluster:
         """
         return ComoonicsClusterInfo
 
-ClusterRepository.CONVERTERS["ocfs2"]=ComoonicsClusterRepository.createOCFS2ClusterConf
+    def getClusterNodeClass(self):
+        """
+        Returns the class for the cluster information relevant to this ClusterRepository
+        @returns L{comoonics.cluster.ComClusterInformation.ClusterInformation}
+        """
+        from comoonics.cluster.ComClusterNode import ComoonicsClusterNode
+        return ComoonicsClusterNode
 
-# $Log: ComClusterRepository.py,v $
-# Revision 1.19  2010-11-21 21:45:28  marc
-# - fixed bug 391
-#   - moved to upstream XmlTools implementation
-#
-# Revision 1.18  2009/07/22 08:37:10  marc
-# Fedora compliant
-#
-# Revision 1.17  2009/05/27 18:31:59  marc
-# - prepared and added querymap concept
-# - reviewed and changed code to work with unittests and being more modular
-#
-# Revision 1.16  2008/08/06 11:18:28  marc
-# - fixed more bugs with xpath
-#
-# Revision 1.15  2008/08/05 18:28:18  marc
-# more bugfixes
-#
-# Revision 1.14  2008/08/05 13:09:40  marc
-# - fixed bugs with constants
-# - optimized imports
-# - added nonstatic attributes
-# - added helper class
-#
-# Revision 1.13  2008/07/08 07:34:30  andrea2
-# Improved imports (no imports with *), sourced out dict-tools, sourced out validate_xml to xmltools, use constants (xpath, filenames) from __init__
-#
-# Revision 1.12  2008/06/17 16:22:55  mark
-# added support for query nodenamebyid. This is needed for passing the nodeid as boot parameter.
-#
-# Revision 1.11  2008/06/10 10:16:15  marc
-# - added ClusterConf conversion
-#
-# Revision 1.10  2008/06/04 10:28:28  marc
-# - added ocfs2config creation
-#
-# Revision 1.9  2008/05/20 11:14:39  marc
-# - Error better readable
-#
-# Revision 1.8  2008/04/07 09:45:22  andrea2
-# added searchDict, applyDefaults(apply defaultvalues to a hash), setConfigVersion, createDomFromHash, adds posibility to hand over a hash over to ClusterRepository
-#
-# Revision 1.7  2008/02/27 09:16:40  mark
-# added getClusterName support
-#
-# Revision 1.6  2007/09/19 06:42:28  andrea2
-# adapted source code in dependence on Python Style Guide, removed not used imports and statements
-#
-# Revision 1.5  2007/09/04 07:52:25  andrea2
-# Removed unused variable
-#
-# Revision 1.4  2007/08/06 12:09:27  andrea2
-# Added more Docu, removed ClusterMetainfo
-#
-# Revision 1.1  2007/06/05 13:11:21  andrea2
-# *** empty log message ***
-##
-# Revision 0.1  2007/05/02 13:30:56  andrea
-# inital version
-#
+ClusterRepository.CONVERTERS["ocfs2"]=ComoonicsClusterRepository.createOCFS2ClusterConf
