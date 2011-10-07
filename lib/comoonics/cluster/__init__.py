@@ -39,6 +39,7 @@ __version__='$Revision: 1.11 $'
 class ClusterMacNotFoundException(ComException): pass
 class ClusterInformationNotFound(ComException): pass
 class ClusterIdNotFoundException(ComException): pass
+class ClusterNodeNoIdFoundException(ComException): pass
 
 class ClusterObject(DataObject):
     non_statics=dict()
@@ -81,8 +82,12 @@ def getClusterRepository(*args, **kwds):
     """
     Factory method to autocreate a fitting cluster repository.
     The following call semantics are supported:
-    getClusterRepository(filename)
-    getClusterRepository(docelement, doc, options)
+    getClusterRepository() => SimpleComoonicsClusterRepository
+    getClusterRepository(filename) => ComoonicsClusterRepository
+    getClusterRepository(docelement, doc, options) => ComoonicsClusterRepository
+    getClusterRepository(filename=filename) => ComoonicsClusterRepository
+    getClusterRepository(clusterconf=filename) => ComoonicsClusterRepository
+    getClusterRepository(maxnodeid=maxnodeid) => SimpleClusterRepository
     Parses the given filename as configuration to the given cluster or already accept a parsed configuration. 
     Right now only xml.dom.Node representation of the cluster configuration is supported.
     @param filename:   representation of the path to the cluster configuration. If it is a xml file it will be parsed. 
@@ -99,32 +104,57 @@ def getClusterRepository(*args, **kwds):
     """
     from comoonics.XmlTools import evaluateXPath
     from comoonics.DictTools import searchDict
-    from comoonics.cluster.ComClusterRepository import ClusterRepository, ComoonicsClusterRepository, RedHatClusterRepository
-    repositoryclass=ClusterRepository
-    if len(args) >= 1 and isinstance(args[0], basestring):
-        doc=parseClusterConf(args[0])
+    import ComClusterRepository
+#    from comoonics.cluster.ComClusterRepository import SimpleComoonicsClusterRepository, ComoonicsClusterRepository, RedHatClusterRepository
+    repositoryclass=ComClusterRepository.SimpleComoonicsClusterRepository
+    
+    clusterconf=None
+    if (args and len(args) >= 1 and isinstance(args[0], basestring)) or (kwds and kwds.has_key("clusterconf")):
+        if args and len(args) >= 1 and isinstance(args[0], basestring):
+            clusterconf=args[0]
+        else:
+            clusterconf=kwds.get("clusterconf")
+    
+    if clusterconf and os.path.isfile(clusterconf):
+        doc=parseClusterConf(clusterconf)
         newargs=[doc.documentElement,doc]
         newargs.extend(args[1:])
         args=newargs
-        if len(evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(), doc.documentElement)) > 0:
-            repositoryclass = ComoonicsClusterRepository
-        elif len(evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), doc.documentElement)) > 0:
-            repositoryclass = RedHatClusterRepository
-    if len(args) >= 2:
-        if (args[0] != None):                
-            if evaluateXPath(ComoonicsClusterRepository.getDefaultComoonicsXPath(""), args[0]) or len(args[2]) == 0:
-                repositoryclass = ComoonicsClusterRepository
-            elif evaluateXPath(RedHatClusterRepository.getDefaultClusterNodeXPath(), args[0]):
-                repositoryclass = RedHatClusterRepository
+        if len(evaluateXPath(ComClusterRepository.ComoonicsClusterRepository.getDefaultComoonicsXPath(), doc.documentElement)) > 0:
+            repositoryclass = ComClusterRepository.ComoonicsClusterRepository
+        elif len(evaluateXPath(ComClusterRepository.RedHatClusterRepository.getDefaultClusterNodeXPath(), doc.documentElement)) > 0:
+            repositoryclass = ComClusterRepository.RedHatClusterRepository
+    elif len(args) >= 2 or kwds.has_key("element"):
+        if args and args[0]:
+            element=args[0]
+        else:
+            element=kwds.get("element", None)
+        if (element != None):
+            if args and len(args)>=3:
+                options=args[2]
+            else:
+                options=kwds.get("options", {})       
+            if evaluateXPath(ComClusterRepository.ComoonicsClusterRepository.getDefaultComoonicsXPath(""), element) or not options:
+                repositoryclass = ComClusterRepository.ComoonicsClusterRepository
+            elif evaluateXPath(ComClusterRepository.RedHatClusterRepository.getDefaultClusterNodeXPath(), element):
+                repositoryclass = ComClusterRepository.RedHatClusterRepository
                 
         elif type(args[2]) == dict:
             if searchDict(args[2],"osr"):
-                repositoryclass = ComoonicsClusterRepository
-            elif searchDict(args[2],RedHatClusterRepository.element_clusternode):
-                repositoryclass = RedHatClusterRepository
+                repositoryclass = ComClusterRepository.ComoonicsClusterRepository
+            elif searchDict(args[2],ComClusterRepository.RedHatClusterRepository.element_clusternode):
+                repositoryclass = ComClusterRepository.RedHatClusterRepository
             
     return repositoryclass(*args, **kwds) #, *args, **kwds)
-    
+
+def getClusterNode(clusterrepository, element, doc=None):
+    """
+    Decides by content of given element which 
+    instance of clusternode (general, redhat 
+    or comoonics) has to be created.
+    """
+    return clusterrepository.getClusterNodeClass(element, doc)
+
 # needed files
 try:
     clusterconf=os.environ["CLUSTERCONF"]
