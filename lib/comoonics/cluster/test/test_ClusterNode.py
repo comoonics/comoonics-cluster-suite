@@ -27,22 +27,16 @@ class test_ClusterNode(baseClusterTestClass):
                 self.nics.append(nic)
       
     def testGetname(self):
-        _list = self.createNodeList("name")
-        _list.reverse()
         for node in self.clusterInfo.getNodes():
-            self.assertEqual(node.getName(), _list.pop())
+            self.assertEqual(node.getName(), self.nodeValues[node.getId()]["name"])
             
     def testGetid(self):
-        _list = self.createNodeList("id")
-        _list.reverse()
         for node in self.clusterInfo.getNodes():
-            self.assertEqual(node.getId(), _list.pop())
+            self.assertEqual(node.getId(), self.nodeValues[node.getId()]["id"])
             
     def testGetvotes(self):
-        _list = self.createNodeList("votes")
-        _list.reverse()
         for node in self.clusterInfo.getNodes():
-            self.assertEqual(node.getVotes(), _list.pop())
+            self.assertEqual(node.getVotes(), self.nodeValues[node.getId()]["votes"])
                     
     """
     Methods from ComoonicsClusterNode
@@ -51,40 +45,23 @@ class test_ClusterNode(baseClusterTestClass):
         pass
     
     def testRootvolume(self):
-        self.assertRaises(IndexError, self.clusterInfo.getNodes()[0].getRootvolume)
-        self.assertEqual(self.clusterInfo.getNodes()[1].getRootvolume(), self.nodeValues[1]["rootvolume"])
+        self.assertEqual(self.clusterRepository.nodeIdMap["1"].getRootvolume(), self.nodeValues["1"]["rootvolume"])
     
     def testRootfs(self):
-        self.assertRaises(IndexError, self.clusterInfo.getNodes()[0].getRootFs)
-        i = 0
         for node in self.clusterInfo.getNodes():
-            if i>0:
-                self.assertEqual(node.getRootFs(), self.nodeValues[i]["rootfs"])
-#            else:
-#                self.assertRaises(IndexError, node.getRootFs)
-            i = i + 1
+            self.assertEqual(node.getRootFs(), self.nodeValues[node.getId()]["rootfs"])
             
     def testGetmountopts(self):
-        self.assertRaises(IndexError, self.clusterInfo.getNodes()[0].getMountopts)
-        i = 0
         for node in self.clusterInfo.getNodes():
-            if i>0:
-                self.assertEqual(node.getMountopts(), self.nodeValues[i]["mountopts"])
-#            else:
-#                self.assertRaises(IndexError, node.getMountopts())
-            i = i + 1
+            self.assertEqual(node.getMountopts(), self.nodeValues[node.getId()]["mountopts"])
     
     def testGetsyslog(self):
-        i = 0
         for node in self.clusterInfo.getNodes():
-            self.assertEqual(node.getSyslog(), self.nodeValues[i]["syslog"])
-            i = i + 1
+            self.assertEqual(node.getSyslog(), self.nodeValues[node.getId()]["syslog"])
     
     def testGetscsifailover(self):
-        i = 0
         for node in self.clusterInfo.getNodes():
-            self.assertEqual(node.getScsifailover(), self.nodeValues[i]["scsifailover"])
-            i = i + 1
+            self.assertEqual(node.getScsifailover(), self.nodeValues[node.getId()]["scsifailover"])
     
     def testGetnics(self):
         """
@@ -95,23 +72,12 @@ class test_ClusterNode(baseClusterTestClass):
         for node in self.clusterInfo.getNodes():
             _nics = node.getNics()
             
-            # prepare predefined ordered list of nicnames to compare
-            _nodenames = []
-            for i in range(len(self.nicValues)):
-                if self.nicValues[i]["nodename"] == node.getName():
-                    _nodenames.append(self.nicValues[i]["name"])         
-            
             # test if return type of tested function is list
             # test if type of list values is ComoonicsClusterNodeNic
             self.assertEqual(type(_nics), type([]))
             for nic in _nics:
                 self.assertEqual(type(nic).__name__, "ComoonicsClusterNodeNic")
-                
-            # test order of nics in list
-            i = 0
-            for nic in _nics:
-                self.assertEqual(nic.getName(), _nodenames[i])
-                i = i + 1
+                self.assertEqual(nic.getName(), self.nodeValues[node.getId()][nic.getName()]["name"])
 
     def testGetnonstatics(self):
         for node in self.clusterInfo.getNodes():

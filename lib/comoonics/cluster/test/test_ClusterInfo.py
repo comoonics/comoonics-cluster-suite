@@ -41,19 +41,23 @@ class test_ClusterInfo(baseClusterTestClass):
             self.assertEqual(str(type(node)), "<class 'comoonics.cluster.ComClusterNode.ComoonicsClusterNode'>")
             
     def testGetnodeidentifiers(self):
-        self.assertEqual(self.clusterInfo.getNodeIdentifiers('name'), self.createNodeList("name"))
-        _tmp1 = self.clusterInfo.getNodeIdentifiers('id')
-        _tmp2 = self.createNodeList("id")
+        self.assertEqual(self.clusterInfo.getNodeIdentifiers('id'), self.nodeValues.keys())
+        _tmp1 = self.clusterInfo.getNodeIdentifiers('name')
+        _tmp2 = map(lambda node: node["name"], self.nodeValues.values())
         _tmp1.sort()
         _tmp2.sort()
         self.assertEqual(_tmp1, _tmp2)
     
     # Methods from RedhatClusterinfo
     def testQueryvalue1(self):
-        self.assertEqual(self.createNodeList("name"), self.clusterInfo.queryValue("/cluster/clusternodes/clusternode/@name"))
+        list1=map(lambda node: node["name"], self.nodeValues.values())
+        list2=self.clusterInfo.queryValue("/cluster/clusternodes/clusternode/@name")
+        list1.sort()
+        list2.sort()
+        self.assertEqual(list1, list2)
         
     def testQueryvalue2(self):
-        self.assertEqual(len(self.createNodeList("name")), self.clusterInfo.queryValue("count(/cluster/clusternodes/clusternode/@name)")[0])
+        self.assertEqual(len(map(lambda node: node["name"], self.nodeValues.values())), self.clusterInfo.queryValue("count(/cluster/clusternodes/clusternode/@name)")[0])
         
     def testQueryxml(self):
         _tmp1 = "name"
@@ -69,7 +73,6 @@ class test_ClusterInfo(baseClusterTestClass):
         
     def testQueryProperties(self):
         from comoonics.ComDataObject import DataObject
-        import comoonics.XmlTools
         _tmp1 = "name"
         _tmp2 = "gfs-node1"
         _tmp3 = "name"
@@ -86,20 +89,22 @@ class test_ClusterInfo(baseClusterTestClass):
         """
         Requires proper function of method getName() 
         """
-        for nodename in self.createNodeList("name"):
-            self.assertEqual(self.clusterInfo.getNode(nodename).getName(), nodename)
+        for node in self.clusterInfo.getNodes():
+            self.assertEqual(node.getName(), self.nodeValues[node.getId()]["name"])
         
     def testGetname(self):
-        #except first nic because it does not have an mac-address
-        _tmp = self.nicValues[1:]
-        for i in range(len(_tmp)):
-            self.assertEqual(_tmp[i]["nodename"], str(self.clusterInfo.getNodeName(_tmp[i]["mac"])))
+        for node in self.clusterInfo.getNodes():
+            for nic in node.getNics():
+                if self.nodeValues[node.getId()][nic.getName()].has_key("mac") and self.nodeValues[node.getId()][nic.getName()]["mac"]!= "":
+                    self.assertEquals(self.clusterInfo.getNodeName(self.nodeValues[node.getId()][nic.getName()]["mac"]),
+                                                                node.getName())
         
     def testGetid(self):
-        #except first nic because it does not have an mac-address
-        _tmp = self.nicValues[1:]
-        for i in range(len(_tmp)):
-            self.assertEqual(_tmp[i]["nodeid"], str(self.clusterInfo.getNodeId(_tmp[i]["mac"])))
+        for node in self.clusterInfo.getNodes():
+            for nic in node.getNics():
+                if self.nodeValues[node.getId()][nic.getName()].has_key("mac") and self.nodeValues[node.getId()][nic.getName()]["mac"]!= "":
+                    self.assertEquals(self.clusterInfo.getNodeId(self.nodeValues[node.getId()][nic.getName()]["mac"]),
+                                                              node.getId())
             
     def testGetFailoverdomainnodes(self):
         for i in range(len(self.failoverdomainValues)):
@@ -112,18 +117,18 @@ class test_ClusterInfo(baseClusterTestClass):
             
     def testGetNodeids(self):
         _tmp1 = self.clusterInfo.getNodeIds()
-        _tmp2 = self.createNodeList("id")
+        _tmp2 = self.nodeValues.keys()
         _tmp1.sort()
         _tmp2.sort()
         self.assertEqual(_tmp1, _tmp2)
     
     # Methods from ComoonicsClusterinfo
     def testGetNic(self):
-        #except first nic because it does not have an mac-address
-        _tmp = self.nicValues[1:]
-        for i in range(len(_tmp)):
-            self.assertEqual(self.clusterInfo.getNic(_tmp[i]["mac"]), _tmp[i]["name"])
-
+        for node in self.clusterInfo.getNodes():
+            for nic in node.getNics():
+                if self.nodeValues[node.getId()][nic.getName()].has_key("mac") and self.nodeValues[node.getId()][nic.getName()]["mac"] != "":
+                    self.assertEquals(self.clusterInfo.getNic(self.nodeValues[node.getId()][nic.getName()]["mac"]),
+                                                              nic.getName())
 #    def testGetNicFailure(self):
 #        self.assertRaises(ClusterMacNotFoundException, self.clusterInfo.getNic,"murks")
         

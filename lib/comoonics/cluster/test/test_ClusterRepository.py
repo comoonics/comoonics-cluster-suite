@@ -1,5 +1,5 @@
 from BaseClusterTestClass import baseClusterTestClass
-from comoonics.cluster import getClusterRepository, ClusterMacNotFoundException
+import comoonics.cluster
 
 import unittest
 
@@ -11,21 +11,30 @@ class test_ClusterRepository(baseClusterTestClass):
         import os.path
         super(test_ClusterRepository, self).setUp()
         #create comclusterRepository Object
-        self.clusterRepository = getClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
+        self.clusterRepository = comoonics.cluster.getClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
 
     def testGetnodename(self):
+        # except first nic because it does not have a mac-address
+        for node in self.clusterRepository.nodeIdMap.values():
+            for nic in node.getNics():
+                if not self.nodeValues[node.getId()][nic.getName()].has_key("mac") or self.nodeValues[node.getId()][nic.getName()]["mac"] == "":
+                    self.failUnlessRaises(comoonics.cluster.ClusterMacNotFoundException, self.clusterRepository.getNodeName, self.nodeValues[node.getId()][nic.getName()]["mac"])
+                else:
+                    self.assertEqual(self.clusterRepository.getNodeName(self.nodeValues[node.getId()][nic.getName()]["mac"]), 
+                                     self.nodeValues[node.getId()]["name"])
+        self.assertRaises(comoonics.cluster.ClusterMacNotFoundException, self.clusterRepository.getNodeId,"murks")
         # except first nic because it does not have an mac-address
-        _tmp = self.nicValues[1:]
-        for i in range(len(_tmp)):
-            self.assertEqual(_tmp[i]["nodename"], str(self.clusterRepository.getNodeName(_tmp[i]["mac"])))
-        self.assertRaises(ClusterMacNotFoundException, self.clusterRepository.getNodeName,"murks")
         
     def testGetnodeid(self):
-        # except first nic because it does not have an mac-address
-        _tmp = self.nicValues[1:]
-        for i in range(len(_tmp)):
-            self.assertEqual(_tmp[i]["nodeid"], str(self.clusterRepository.getNodeId(_tmp[i]["mac"])))
-        self.assertRaises(ClusterMacNotFoundException, self.clusterRepository.getNodeId,"murks")
+        # except first nic because it does not have a mac-address
+        for node in self.clusterRepository.nodeIdMap.values():
+            for nic in node.getNics():
+                if not self.nodeValues[node.getId()][nic.getName()].has_key("mac") or self.nodeValues[node.getId()][nic.getName()]["mac"] == "":
+                    self.failUnlessRaises(comoonics.cluster.ClusterMacNotFoundException, self.clusterRepository.getNodeId, self.nodeValues[node.getId()][nic.getName()]["mac"])
+                else:
+                    self.assertEqual(self.clusterRepository.getNodeId(self.nodeValues[node.getId()][nic.getName()]["mac"]), 
+                                     self.nodeValues[node.getId()]["id"])
+        self.assertRaises(comoonics.cluster.ClusterMacNotFoundException, self.clusterRepository.getNodeId,"murks")
         
     def testStr(self):
         self.assertEquals(str(self.clusterRepository), "ComoonicsClusterRepository(nodes: 3)")
@@ -39,18 +48,18 @@ class test_ClusterRepository2(unittest.TestCase):
     Methods from RedhatClusterRepository
     """                    
     def setUp(self):
-        self.clusterRepository = getClusterRepository()
+        self.clusterRepository = comoonics.cluster.getClusterRepository(maxnodeidnum=5)
     def testCreateEmpty(self):
-        from comoonics.cluster.ComClusterRepository import ClusterRepository
+        from comoonics.cluster.ComClusterRepository import SimpleComoonicsClusterRepository
         #create comclusterRepository Object
-        self.assertTrue(isinstance(self.clusterRepository, ClusterRepository))
+        self.assertTrue(isinstance(self.clusterRepository, SimpleComoonicsClusterRepository))
         
     def testStr(self):
-        self.assertEquals(str(self.clusterRepository), "ClusterRepository(nodes: 0)")
+        self.assertEquals(str(self.clusterRepository), "SimpleComoonicsClusterRepository(nodes: 5)")
 
     def testClusterInfoClass(self):
-        from comoonics.cluster.ComClusterInfo import ClusterInfo
-        self.assertEquals(self.clusterRepository.getClusterInfoClass(), ClusterInfo)
+        from comoonics.cluster.ComClusterInfo import SimpleComoonicsClusterInfo
+        self.assertEquals(self.clusterRepository.getClusterInfoClass(), SimpleComoonicsClusterInfo)
 
 def test_main():
     try:

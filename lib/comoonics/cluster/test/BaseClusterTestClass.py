@@ -12,6 +12,16 @@ class baseClusterTestClass(unittest.TestCase):
     def __init__(self, testMethod="runTest"):
         super(baseClusterTestClass, self).__init__(testMethod)
         self.init()
+      
+    def _testNicGetName(self, name, methodname=None):
+        if not methodname:
+            methodname="get"+name.capitalize()
+        for node in self.clusterInfo.getNodes():
+            node.helper.output=self.clusterInfo.helper.output
+            for nic in node.getNics():
+                self.assertEqual(getattr(nic, methodname)(), 
+                                 self.nodeValues[node.getId()][nic.getName()][name],
+                                 "Nic attribute %s of node %s and nic %s, %s != %s" %(name, node.getId(), nic.getName(), getattr(nic, methodname)(), self.nodeValues[node.getId()][nic.getName()][name]))
     
     def init(self):
         """
@@ -46,111 +56,101 @@ class baseClusterTestClass(unittest.TestCase):
         self.failoverdomainValues[2]["name"] = "testdomain3"
         self.failoverdomainValues[2]["members"] = []
         self.failoverdomainValues[2]["prefnode"] = ""
-
-        # Perparation of nics
-        self.nicValues = []
-        
-        self.nicValues.append({})
-        self.nicValues[0]["name"] = "eth1"
-        self.nicValues[0]["nodename"] = "gfs-node1"
-        self.nicValues[0]["nodeid"] = "1"
-        self.nicValues[0]["mac"] = ""
-        self.nicValues[0]["ip"] = "dhcp"
-        self.nicValues[0]["gateway"] = ""
-        self.nicValues[0]["netmask"] = ""
-        self.nicValues[0]["master"] = ""
-        self.nicValues[0]["slave"] = ""
-        
-        self.nicValues.append({})
-        self.nicValues[1]["name"] = "eth0"
-        self.nicValues[1]["nodename"] = "gfs-node2"
-        self.nicValues[1]["nodeid"] = "2"
-        self.nicValues[1]["mac"] = "00:0C:29:3C:XX:XX"
-        self.nicValues[1]["ip"] = "10.0.0.2"
-        self.nicValues[1]["gateway"] = ""
-        self.nicValues[1]["netmask"] = "255.255.255.0"
-        self.nicValues[1]["master"] = "bond0"
-        self.nicValues[1]["slave"] = "yes"
-        
-        self.nicValues.append({})
-        self.nicValues[2]["name"] = "eth1"
-        self.nicValues[2]["nodename"] = "gfs-node2"
-        self.nicValues[2]["nodeid"] = "2"
-        self.nicValues[2]["mac"] = "00:0C:29:3C:XX:XY"
-        self.nicValues[2]["ip"] = "10.0.0.3"
-        self.nicValues[2]["gateway"] = "1.2.3.4"
-        self.nicValues[2]["netmask"] = "255.255.255.0"
-        self.nicValues[2]["master"] = ""
-        self.nicValues[2]["slave"] = ""
-        
-        self.nicValues.append({})
-        self.nicValues[3]["name"] = "bond0"
-        self.nicValues[3]["nodename"] = "gfs-node3"
-        self.nicValues[3]["nodeid"] = ""
-        self.nicValues[3]["mac"] = "00:17:A4:10:7B:7D"
-        self.nicValues[3]["ip"] = "192.168.10.22"
-        self.nicValues[3]["gateway"] = "192.168.10.1"
-        self.nicValues[3]["netmask"] = "255.255.255.0"
-        self.nicValues[3]["master"] = ""
-        self.nicValues[3]["slave"] = ""
-        
-        self.nicValues.append({})
-        self.nicValues[4]["name"] = "eth0"
-        self.nicValues[4]["nodename"] = "gfs-node3"
-        self.nicValues[4]["nodeid"] = ""
-        self.nicValues[4]["mac"] = "00:17:A4:10:7B:7E"
-        self.nicValues[4]["ip"] = ""
-        self.nicValues[4]["gateway"] = ""
-        self.nicValues[4]["netmask"] = ""
-        self.nicValues[4]["master"] = "bond0"
-        self.nicValues[4]["slave"] = "yes"
-        
-        self.nicValues.append({})
-        self.nicValues[5]["name"] = "bond0.45"
-        self.nicValues[5]["nodename"] = "gfs-node3"
-        self.nicValues[5]["nodeid"] = ""
-        self.nicValues[5]["mac"] = "00:17:A4:10:7B:7C"
-        self.nicValues[5]["ip"] = "192.168.254.233"
-        self.nicValues[5]["gateway"] = ""
-        self.nicValues[5]["netmask"] = "255.255.255.255"
-        self.nicValues[5]["master"] = ""
-        self.nicValues[5]["slave"] = ""
-        
-        # Preparation of nodes
-        self.nodeValues = []
-        
-        self.nodeValues.append({})
-        self.nodeValues[0]["name"] = "gfs-node1"
-        self.nodeValues[0]["id"] = "1"
-        self.nodeValues[0]["votes"] = "1"
-        self.nodeValues[0]["rootvolume"] = "/dev/VG_SHAREDROOT/LV_SHAREDROOT"
-        self.nodeValues[0]["rootfs"] = "gfs"
-        self.nodeValues[0]["mountopts"] = ""
-        self.nodeValues[0]["syslog"] = ""
-        self.nodeValues[0]["scsifailover"] = "driver"
-        
-        self.nodeValues.append({})
-        self.nodeValues[1]["name"] = "gfs-node2"
-        self.nodeValues[1]["id"] = "2"
-        self.nodeValues[1]["votes"] = "3"
-        self.nodeValues[1]["rootvolume"] = "/dev/VG_SHAREDROOT/LV_SHAREDROOT"
-        self.nodeValues[1]["rootfs"] = "meinfs"
-        self.nodeValues[1]["mountopts"] = "someopts"
-        self.nodeValues[1]["syslog"] = "gfs-node1"
-        self.nodeValues[1]["scsifailover"] = "gfs-node1"
-        
-        self.nodeValues.append({})
-        self.nodeValues[2]["name"] = "gfs-node3"
-        self.nodeValues[2]["id"] = ""
-        self.nodeValues[2]["votes"] = "1"
-        self.nodeValues[2]["rootvolume"] = "/dev/VG_SHAREDROOT/LV_SHAREDROOT"
-        self.nodeValues[2]["rootfs"] = "ocfs2"
-        self.nodeValues[2]["mountopts"] = "noatime"
-        self.nodeValues[2]["syslog"] = ""
-        self.nodeValues[2]["scsifailover"] = "driver"
                 
-    def createNodeList(self, key):
-        _list = []
-        for i in range(len(self.nodeValues)):
-            _list.append(self.nodeValues[i][key])
-        return _list
+        # Preparation of nodes
+        self.nodeValues = {}
+        
+        self.nodeValues["1"]={}
+        self.nodeValues["1"]["name"] = "gfs-node1"
+        self.nodeValues["1"]["id"] = "1"
+        self.nodeValues["1"]["votes"] = "1"
+        self.nodeValues["1"]["rootvolume"] = ""
+        self.nodeValues["1"]["rootfs"] = "gfs"
+        self.nodeValues["1"]["mountopts"] = ""
+        self.nodeValues["1"]["syslog"] = ""
+        self.nodeValues["1"]["scsifailover"] = "driver"
+
+        self.nodeValues["1"]["eth1"]={}
+        self.nodeValues["1"]["eth1"]["name"] = "eth1"
+        self.nodeValues["1"]["eth1"]["nodename"] = "gfs-node1"
+        self.nodeValues["1"]["eth1"]["nodeid"] = "1"
+        self.nodeValues["1"]["eth1"]["mac"] = ""
+        self.nodeValues["1"]["eth1"]["ip"] = "dhcp"
+        self.nodeValues["1"]["eth1"]["gateway"] = ""
+        self.nodeValues["1"]["eth1"]["netmask"] = ""
+        self.nodeValues["1"]["eth1"]["master"] = ""
+        self.nodeValues["1"]["eth1"]["slave"] = ""
+        
+        self.nodeValues["2"]={}
+        self.nodeValues["2"]["name"] = "gfs-node2"
+        self.nodeValues["2"]["id"] = "2"
+        self.nodeValues["2"]["votes"] = "3"
+        self.nodeValues["2"]["rootvolume"] = "/dev/VG_SHAREDROOT/LV_SHAREDROOT"
+        self.nodeValues["2"]["rootfs"] = "meinfs"
+        self.nodeValues["2"]["mountopts"] = "someopts"
+        self.nodeValues["2"]["syslog"] = "gfs-node1"
+        self.nodeValues["2"]["scsifailover"] = "gfs-node1"
+
+        self.nodeValues["2"]["eth0"]={}
+        self.nodeValues["2"]["eth0"]["name"] = "eth0"
+        self.nodeValues["2"]["eth0"]["nodename"] = "gfs-node2"
+        self.nodeValues["2"]["eth0"]["nodeid"] = "2"
+        self.nodeValues["2"]["eth0"]["mac"] = "00:0C:29:3C:XX:XX"
+        self.nodeValues["2"]["eth0"]["ip"] = "10.0.0.2"
+        self.nodeValues["2"]["eth0"]["gateway"] = ""
+        self.nodeValues["2"]["eth0"]["netmask"] = "255.255.255.0"
+        self.nodeValues["2"]["eth0"]["master"] = "bond0"
+        self.nodeValues["2"]["eth0"]["slave"] = "yes"
+        
+        self.nodeValues["2"]["eth1"]={}
+        self.nodeValues["2"]["eth1"]["name"] = "eth1"
+        self.nodeValues["2"]["eth1"]["nodename"] = "gfs-node2"
+        self.nodeValues["2"]["eth1"]["nodeid"] = "2"
+        self.nodeValues["2"]["eth1"]["mac"] = "00:0C:29:3C:XX:XY"
+        self.nodeValues["2"]["eth1"]["ip"] = "10.0.0.3"
+        self.nodeValues["2"]["eth1"]["gateway"] = "1.2.3.4"
+        self.nodeValues["2"]["eth1"]["netmask"] = "255.255.255.0"
+        self.nodeValues["2"]["eth1"]["master"] = ""
+        self.nodeValues["2"]["eth1"]["slave"] = ""
+        
+        self.nodeValues["3"]={}
+        self.nodeValues["3"]["name"] = "gfs-node3"
+        self.nodeValues["3"]["id"] = "3"
+        self.nodeValues["3"]["votes"] = "1"
+        self.nodeValues["3"]["rootvolume"] = "/dev/VG_SHAREDROOT/LV_SHAREDROOT"
+        self.nodeValues["3"]["rootfs"] = "ocfs2"
+        self.nodeValues["3"]["mountopts"] = "noatime"
+        self.nodeValues["3"]["syslog"] = ""
+        self.nodeValues["3"]["scsifailover"] = "driver"
+        self.nodeValues["3"]["bond0"]={}
+        self.nodeValues["3"]["bond0"]["name"] = "bond0"
+        self.nodeValues["3"]["bond0"]["nodename"] = "gfs-node3"
+        self.nodeValues["3"]["bond0"]["nodeid"] = ""
+        self.nodeValues["3"]["bond0"]["mac"] = "00:17:A4:10:7B:7D"
+        self.nodeValues["3"]["bond0"]["ip"] = "192.168.10.22"
+        self.nodeValues["3"]["bond0"]["gateway"] = "192.168.10.1"
+        self.nodeValues["3"]["bond0"]["netmask"] = "255.255.255.0"
+        self.nodeValues["3"]["bond0"]["master"] = ""
+        self.nodeValues["3"]["bond0"]["slave"] = ""
+        
+        self.nodeValues["3"]["eth0"]={}
+        self.nodeValues["3"]["eth0"]["name"] = "eth0"
+        self.nodeValues["3"]["eth0"]["nodename"] = "gfs-node3"
+        self.nodeValues["3"]["eth0"]["nodeid"] = "3"
+        self.nodeValues["3"]["eth0"]["mac"] = "00:17:A4:10:7B:7E"
+        self.nodeValues["3"]["eth0"]["ip"] = ""
+        self.nodeValues["3"]["eth0"]["gateway"] = ""
+        self.nodeValues["3"]["eth0"]["netmask"] = ""
+        self.nodeValues["3"]["eth0"]["master"] = "bond0"
+        self.nodeValues["3"]["eth0"]["slave"] = "yes"
+        
+        self.nodeValues["3"]["bond0.45"]={}
+        self.nodeValues["3"]["bond0.45"]["name"] = "bond0.45"
+        self.nodeValues["3"]["bond0.45"]["nodename"] = "gfs-node3"
+        self.nodeValues["3"]["bond0.45"]["nodeid"] = ""
+        self.nodeValues["3"]["bond0.45"]["mac"] = "00:17:A4:10:7B:7C"
+        self.nodeValues["3"]["bond0.45"]["ip"] = "192.168.254.233"
+        self.nodeValues["3"]["bond0.45"]["gateway"] = ""
+        self.nodeValues["3"]["bond0.45"]["netmask"] = "255.255.255.255"
+        self.nodeValues["3"]["bond0.45"]["master"] = ""
+        self.nodeValues["3"]["bond0.45"]["slave"] = ""
