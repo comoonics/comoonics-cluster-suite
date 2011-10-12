@@ -442,6 +442,9 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Wed Oct 12 2011 MG <grimme@atix.de>, 0.1-28
+    - Fixed 'Lock wait timeout exceeded; try restarting transaction' bug when 
+      multiple client run at the same time (cleanTMP will now create one table per client).
 * Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-27
   - rewrite of everything
   - added Packages module to represent collection of software packages and packages as well as detecting differences
