@@ -7,11 +7,9 @@ Methods for comparing systems and the like
 # $Id: ComSoftwareCMDB.py,v 1.18 2007/05/10 12:14:01 marc Exp $
 #
 
-import re
 from comoonics.cmdb.ComBaseDB import BaseDB
 from comoonics import ComLog
 from comoonics.db.ComDBLogger import DBLogger
-from ComSource import Source
 from Packages import Package, Packages
 
 class SoftwareCMDB(BaseDB):
@@ -33,8 +31,20 @@ class SoftwareCMDB(BaseDB):
     SELECT_FOR_DIFFS_MASTER=("sourcename", "name", "version_master", "subversion_master", "architecture_master", "version_diffs", "subversion_diffs", "architecture_diffs")
 
     DIFFS_COLNAME="diffs"
+    CREATE_TABLE="""CREATE TABLE IF NOT EXISTS %s (
+  sw_type ENUM('rpm', 'proprietary', 'deb', 'local') NOT NULL DEFAULT "rpm",
+  clustername char(50) NOT NULL,
+  channel char(50) NOT NULL,
+  channelversion char(50) NOT NULL,
+  name char(50) NOT NULL,
+  version char(50) NOT NULL,
+  subversion char(50) NOT NULL,
+  architecture char(50) NOT NULL,
+  PRIMARY KEY  (sw_type, clustername, name, version, subversion, architecture)
+) TYPE=InnoDB COMMENT='Installed Software on each cluster';
+"""
 
-    log=ComLog.getLogger("SoftwareCMDB")
+    log=ComLog.getLogger("comoonics.cmdb.SoftwareCMDB")
 
     def __init__(self, **kwds):
         """
@@ -129,10 +139,10 @@ class SoftwareCMDB(BaseDB):
         elif ret>1:
             self.dblog.log(DBLogger.DB_LOG_LEVEL, "Updated existing software package %s-%s.%s.%s (table: %s)" %(_rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], self.tablename))
 
-    def cleanTMP(self, name):
-        self._clean(name, self.tablename+"_tmp")
-    def clean(self, name):
-        self._clean(name, self.tablename)
+    def cleanTMP(self, sysname):
+        self._clean(sysname, self.getTMPTablename(sysname))
+    def clean(self, sysname):
+        self._clean(sysname, self.tablename)
     
     def _clean(self, name, tablename):
 #        query="LOCK TABLES %s; DELETE FROM %s WHERE clustername=\"%s\"; UNLOCK TABLES;" %(tablename, tablename, name)
@@ -140,25 +150,33 @@ class SoftwareCMDB(BaseDB):
         self.dblog.log(DBLogger.DB_LOG_LEVEL, "Cleaning %s for %s" %(tablename, name))
         self.db.query(query)
 
-    def updateRPMinTMP(self, _rpm, name, channelname, channelversion):
-        query="INSERT INTO %s_tmp VALUES(\"rpm\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\");" \
-                    %(self.tablename, name, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"])
+    def updateRPMinTMP(self, _rpm, sysname, channelname, channelversion):
+        tmptablename=self.getTMPTablename(sysname)
+        self.createTMP(tmptablename)
+        query="INSERT INTO %s VALUES(\"rpm\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\");" \
+                    %(tmptablename, sysname, channelname, channelversion, _rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"])
         self.db.query(query)
 
-    def deleteNotInTmp(self, name, names=""):
+    def createTMP(self, tmptablename):
+        self.db.query(self.CREATE_TABLE %(tmptablename))
+
+    def getTMPTablename(self, sysname):
+        return self.tablename+"_"+sysname
+
+    def deleteNotInTmp(self, sysname, names=""):
         _names=""
         if type(names)==list:
             for _name in names:
-                _names+=" OR software_cmdb.name=\"%s\"" %(_name)
+                _names+=" OR %s.name=\"%s\"" %(self.tablename, _name)
             if len(names)>0:
                 _names=" AND ("+_names[3:]+")"
         else:
             _names="%s" %(names)
 
-        query="""DELETE FROM software_cmdb  WHERE clustername="%s" AND
+        query="""DELETE FROM %s  WHERE clustername="%s" AND
   (name, version, subversion, architecture)
-  NOT IN (SELECT name, version, subversion, architecture FROM software_cmdb_tmp WHERE clustername="%s")
-     %s;""" %(name, name, _names)
+  NOT IN (SELECT name, version, subversion, architecture FROM %s WHERE clustername="%s")
+     %s;""" %(self.tablename, sysname, self.getTMPTablename(sysname), sysname, _names)
 
         self.log.debug("deleteNotInTmp: query: "+query)
         self.db.query(query)
