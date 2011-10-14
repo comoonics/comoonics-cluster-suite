@@ -140,6 +140,7 @@ class SoftwareCMDB(BaseDB):
             self.dblog.log(DBLogger.DB_LOG_LEVEL, "Updated existing software package %s-%s.%s.%s (table: %s)" %(_rpm["name"], _rpm["version"], _rpm["release"], _rpm["arch"], self.tablename))
 
     def cleanTMP(self, sysname):
+        self.createTMP(self.getTMPTablename(sysname))
         self._clean(sysname, self.getTMPTablename(sysname))
     def clean(self, sysname):
         self._clean(sysname, self.tablename)
