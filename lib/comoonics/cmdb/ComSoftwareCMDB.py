@@ -162,7 +162,7 @@ class SoftwareCMDB(BaseDB):
         self.db.query(self.CREATE_TABLE %(tmptablename))
 
     def getTMPTablename(self, sysname):
-        return self.tablename+"_"+sysname
+        return self.tablename+"_"+sysname.replace("-", "_")
 
     def deleteNotInTmp(self, sysname, names=""):
         _names=""
