@@ -126,6 +126,10 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Wed Oct 19 2011 MG <grimme( at )atix.de> 0.1-41
+  - bin/com-mkcdslinfrastructure: obsolete
+  - bin/com-mkcdsl: error messages go to stderr.
+  - bin/com-cdslinvadm: new command that obsoletes com-mkcdslinfrastructure.
 * Fri Oct 07 2011 MG <grimme( at )atix.de>, 0.1-40
   - bin/com-rmcdsl: 
     - reflect latest API changes 
@@ -283,6 +287,14 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
+Wed Oct 19 2011 MG <grimme( at ) atix.de, 0.1-38
+  - .../cluster/helper/RedHatClusterHelper.py: removed redefinitions
+  - lib/comoonics/cluster/__init__.py: added ClusterRepositoryNoNodesFound
+     Exception getClusterRepository: - factory method will now also accept
+     parameter filename besides clustername and removes those from keys.
+  - lib/comoonics/cluster/ComClusterInfo.py: ComoonicsClusterInfo.getNodes:
+    nodes need to be predefined.
+  - bin/com-fence-validate: initial revision
 * Fri Oct 07 2011 MG <grimme( at )atix.de>, 0.1-37
   - lib/comoonics/cluster/ComClusterRepository.py: 
     - added SimpleClusterRepository 
@@ -443,8 +455,13 @@ comoonics-cluster-tools-py:
 
 comoonics-cmdb-py:
 * Wed Oct 12 2011 MG <grimme@atix.de>, 0.1-28
-    - Fixed 'Lock wait timeout exceeded; try restarting transaction' bug when 
-      multiple client run at the same time (cleanTMP will now create one table per client).
+  - lib/comoonics/cmdb/ComSoftwareCMDB.py: createTMP: - create table as
+     prerequisite
+     bugfix in getTMPTablename where name was not valid SQL if name has "-".
+   - Fixed another bug in SoftwareCMDB.getTMPTablename to return valid SQL code as tablename
+   - Fixed bug in SoftwareCMDB.cleanTMP: createTMP table as prerequisite
+   - Fixed 'Lock wait timeout exceeded; try restarting transaction' bug when 
+     multiple client run at the same time (cleanTMP will now create one table per client).
 * Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-27
   - rewrite of everything
   - added Packages module to represent collection of software packages and packages as well as detecting differences
