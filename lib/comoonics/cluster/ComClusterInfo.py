@@ -77,6 +77,7 @@ class ClusterInfo(ClusterObject):
         """
         self.log.debug("get clusternodes from clusterrepository(active=%s)" %active)
         _nodes=list()
+        nodes=list()
         if self.clusterRepository.nodeIdMap and len(self.clusterRepository.nodeIdMap)>0:
             nodes=self.clusterRepository.nodeIdMap.values()
         elif self.clusterRepository.nodeNameMap and len(self.clusterRepository.nodeNameMap)>0:
