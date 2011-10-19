@@ -109,6 +109,7 @@ class test_CdslRepository(unittest.TestCase):
         Test without clusterinfo
         """
         self.cwd.pushd(os.path.join(repository.root, repository.getMountpoint()))
+#        setupCDSLRepository._createCDSLFiles(".")
         _dirs=results.keys()
         _dirs.sort()
         repository.buildInfrastructure(clusterinfo)
@@ -118,9 +119,9 @@ class test_CdslRepository(unittest.TestCase):
                 _cdsl=repository.getCdsl(_path)
             except CdslNotFoundException:
                 if results[_path][1] == True:
-                    _cdsl=getCdsl(_path, CDSL_HOSTDEPENDENT_TYPE, repository)
+                    _cdsl=getCdsl(_path, CDSL_HOSTDEPENDENT_TYPE, repository, clusterinfo)
                 elif results[_path][1] == False:
-                    _cdsl=getCdsl(_path, CDSL_SHARED_TYPE, repository)
+                    _cdsl=getCdsl(_path, CDSL_SHARED_TYPE, repository, clusterinfo)
             
             if _cdsl:
                 repository.commit(_cdsl)
@@ -131,14 +132,17 @@ class test_CdslRepository(unittest.TestCase):
                 self.assertTrue(_isexpanded or _shouldnotbeexpanded, "Path %s=>%s should be detected as expanded but is not %s!!!" %(_cdsl.src, _expanded, _isexpanded))
 
         repository.removeInfrastructure(clusterinfo)
+#        setupCDSLRepository._removeCDSLFiles(".")
         self.cwd.popd()
 
     def testCdsls(self):
         for i in range(len(setupCDSLRepository.cdslRepositories)):
             self._testCdsls(setupCDSLRepository.cdslRepositories[i], setupCluster.clusterInfos[i], setupCDSLRepository.results)
+        setupCDSLRepository._removeCDSLFiles(baseSetup.tmppath)
 
     def _testCdsls(self, repository, clusterinfo, results):
         self.cwd.pushd(os.path.join(repository.root, repository.getMountpoint()))
+#        setupCDSLRepository._createCDSLFiles(".")
         _dirs=results.keys()
         _dirs.sort()
         repository.buildInfrastructure(clusterinfo)
@@ -148,9 +152,9 @@ class test_CdslRepository(unittest.TestCase):
                 _cdsl=repository.getCdsl(_path)
             except CdslNotFoundException:
                 if results[_path][1] == True:
-                    _cdsl=getCdsl(_path, CDSL_HOSTDEPENDENT_TYPE, repository)
+                    _cdsl=getCdsl(_path, CDSL_HOSTDEPENDENT_TYPE, repository, clusterinfo)
                 elif results[_path][1] == False:
-                    _cdsl=getCdsl(_path, CDSL_SHARED_TYPE, repository)
+                    _cdsl=getCdsl(_path, CDSL_SHARED_TYPE, repository, clusterinfo)
             
             if _cdsl:
                 self.assert_(repository.commit(_cdsl))
@@ -160,6 +164,8 @@ class test_CdslRepository(unittest.TestCase):
         for cdsl in repository.getCdsls():
             self.assert_(repository.delete(cdsl))
         repository.removeInfrastructure(clusterinfo)       
+#        setupCDSLRepository._removeCDSLFiles(".")
+        self.cwd.popd()
         
     def testBuildInfrastructures(self):
         for i in range(len(setupCDSLRepository.cdslRepositories)):

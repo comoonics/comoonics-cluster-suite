@@ -84,6 +84,27 @@ class SetupBase(object):
 #                      "hd/sd/hd/sd/ne": ("hd/sd/.cdsl.hd/sd/ne", None),
                      }
 
+    def _createCDSLFiles(self, _tmppath):
+        from comoonics.cdsl import cmpbysubdirs
+        _cdsls=self.results.keys()
+        _cdsls.sort(cmpbysubdirs)
+        for _cdsl in _cdsls:
+            if _cdsl.endswith("d") and not os.path.exists(os.path.join(_tmppath, _cdsl)):
+                os.makedirs(os.path.join(_tmppath, _cdsl))
+            elif not os.path.exists(os.path.join(_tmppath, _cdsl)):
+                open(os.path.join(_tmppath, _cdsl), "w+")
+
+    def _removeCDSLFiles(self, _tmppath):
+        from comoonics.cdsl import cmpbysubdirs
+        _cdsls=self.results.keys()
+        _cdsls.sort(cmpbysubdirs)
+        _cdsls.reverse()
+        for _cdsl in _cdsls:
+            if _cdsl.endswith("d") and os.path.exists(os.path.join(_tmppath, _cdsl)):
+                os.rmdir(os.path.join(_tmppath, _cdsl))
+            elif os.path.exists(os.path.join(_tmppath, _cdsl)):
+                os.remove(os.path.join(_tmppath, _cdsl))
+
 class SetupCDSLRepository(SetupBase):
     def __init__(self):
         super(SetupCDSLRepository, self).__init__()
@@ -189,16 +210,6 @@ class SetupCDSLs(SetupBase):
             if _cdsl:
                 self.repository.commit(_cdsl)
     
-    def _createCDSLFiles(self, _tmppath):
-        from comoonics.cdsl import cmpbysubdirs
-        _cdsls=self.results.keys()
-        _cdsls.sort(cmpbysubdirs)
-        for _cdsl in _cdsls:
-            if _cdsl.endswith("d") and not os.path.exists(os.path.join(_tmppath, _cdsl)):
-                os.makedirs(os.path.join(_tmppath, _cdsl))
-            elif not os.path.exists(os.path.join(_tmppath, _cdsl)):
-                open(os.path.join(_tmppath, _cdsl), "w+")
-
     def setupCDSLInfrastructure(self, path, cdslRepository, clusterinfo):
         from comoonics.ComPath import Path
         self.repository.buildInfrastructure(clusterinfo)
