@@ -182,7 +182,7 @@ except (TypeError, NameError):
     pass
 
 ComLog.setLevel(logging.INFO)
-logger=ComLog.getLogger("com-queryclusterconf")
+logger=ComLog.getLogger("comoonics.cluster.com-queryclusterconf")
 (options, values) = parser.parse_args()
 
 if len(values)<=0 and not options.queriesfile:
