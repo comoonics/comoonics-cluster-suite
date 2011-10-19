@@ -40,6 +40,7 @@ class ClusterMacNotFoundException(ComException): pass
 class ClusterInformationNotFound(ComException): pass
 class ClusterIdNotFoundException(ComException): pass
 class ClusterNodeNoIdFoundException(ComException): pass
+class ClusterRepositoryNoNodesFound(ComException): pass
 
 class ClusterObject(DataObject):
     non_statics=dict()
@@ -109,11 +110,15 @@ def getClusterRepository(*args, **kwds):
     repositoryclass=ComClusterRepository.SimpleComoonicsClusterRepository
     
     clusterconf=None
-    if (args and len(args) >= 1 and isinstance(args[0], basestring)) or (kwds and kwds.has_key("clusterconf")):
+    if (args and len(args) >= 1 and isinstance(args[0], basestring)) or (kwds and (kwds.has_key("clusterconf") or kwds.has_key("filename"))):
         if args and len(args) >= 1 and isinstance(args[0], basestring):
             clusterconf=args[0]
-        else:
+        elif kwds.has_key("clusterconf"):
             clusterconf=kwds.get("clusterconf")
+            del kwds["clusterconf"]
+        elif kwds.has_key("filename"):
+            clusterconf=kwds.get("filename")
+            del kwds["filename"]
     
     if clusterconf and os.path.isfile(clusterconf):
         doc=parseClusterConf(clusterconf)
