@@ -38,7 +38,7 @@ from comoonics.ComDataObject import DataObject
 from comoonics import ComSystem
 from comoonics.ComPath import Path
 
-from comoonics.cdsl import stripleadingsep, getCdsl, dirtrim, CdslNotFoundException, CdslVersionException
+from comoonics.cdsl import stripleadingsep, getCdsl, dirtrim, CdslNotFoundException, CdslVersionException, CdslNodeidsRequired
 
 import os.path
 
@@ -181,24 +181,25 @@ class CdslRepository(DataObject):
         """
         return self.resource
     
-    def walkCdsls(self, clusterinfo=None, cdsls=None, onerror=None):
+    def walkCdsls(self, clusterinfo=None, cdsls=None, onerror=None, repository=None):
         """
         Only walks through the repository cdsl by cdsl as generator to be used by for
         """
+        if not repository:
+            repository=self
         if not cdsls or len(cdsls)==0:
-            for cdsl in self.getCdsls():
+            for cdsl in repository.cdsls:
                 yield cdsl
         else:
             for cdsl in cdsls:
                 try:
-                    yield self.getCdsl(cdsl)
+                    yield repository.getCdsl(cdsl)
                 except CdslNotFoundException, e:
                     self.log.debug("walkCdsls: Skipping %s because it does not exists." %cdsl)
                     if onerror:
-                        yield onerror(self, e.value, clusterinfo)
+                        yield onerror(repository, e.value, clusterinfo)
                     else:
                         raise
-                     
 
     def delete(self,cdsl):
         """
@@ -357,7 +358,6 @@ class ComoonicsCdslRepository(CdslRepository):
         self.dtd=None
         self.resourcehandle=None
         self.resourcehandlelock=0
-        self.nodeids=list()
         if not keys:
             raise TypeError("comoonics.cdsl.ComCdslRepository.ComoonicsCDSLRepository can only be instanciated with keywords not otherwise.")
         self.root = keys.get("root", "/")
@@ -544,7 +544,6 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
                 else:
                     nodes.append(child.getAttribute(self.noderef_ref_attribute))
             child=child.nextSibling
-        self._updateNodeIds(nodes)
         return nodes
 
     def _readRepositoriesElement(self, element, ignoreerrors=False):
@@ -559,12 +558,6 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
                 self.repositories[path]=ComoonicsCdslRepository(resource=resource, mountpoint=path, root=os.path.join(self.root, self.getMountpoint()))
                 
             child = child.nextSibling
-
-    def _updateNodeIds(self, nodeids):
-        for nodeid in nodeids:
-            if not nodeid in self.nodeids:
-                self.nodeids.append(nodeid)
-        self.nodeids.sort()
 
     def stripsrc(self, _src, join=True, realpath=True):
         """
@@ -757,18 +750,27 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             path.popd()
         raise CdslNotFoundException(src,repository)
         
-            
-    def commit(self,cdsl):
-        """
-        Adds or modifies cdsl entry in inventoryfile (depending on existing entry with the same src attribute like the given cdsl)
-        @param cdsl: cdsl to commit
-        @type cdsl: L{ComoonicsCdsl}
-        """
-        #Open and lock XML-file and return DOM
-        path=Path()
-        path.pushd(self.workingdir)
-        self.refresh(False)
-        self.lockresourceRW()
+    def walkCdsls(self, clusterinfo=None, cdsls=None, onerror=None, repository=None, recursive=False):
+        if not repository:
+            repository=self
+        if not cdsls or len(cdsls)==0:
+            for cdsl in repository.cdsls.values():
+                yield cdsl
+        else:
+            for cdsl in cdsls:
+                try:
+                    yield repository.getCdsl(cdsl)
+                except CdslNotFoundException, e:
+                    self.log.debug("walkCdsls: Skipping %s because it does not exists." %cdsl)
+                    if onerror:
+                        yield onerror(repository, e.value, clusterinfo)
+                    else:
+                        raise
+        if recursive:
+            for repository in repository.repositories:
+                self.walkCdsls(clusterinfo, cdsls, onerror, repository)
+                    
+    def _commit(self, cdsl):
         if self.exists(cdsl):
             log.debug("cdsl exists")
             log.debug("removing cdsl %s.." % cdsl.src)
@@ -787,8 +789,19 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         
         #modify cdsls of cdslRepository instance
         self.cdsls[cdsl.src] = cdsl
-        self._updateNodeIds(cdsl.getNodenames())
-        
+        return cdsl
+    
+    def commit(self,cdsl):
+        """
+        Adds or modifies cdsl entry in inventoryfile (depending on existing entry with the same src attribute like the given cdsl)
+        @param cdsl: cdsl to commit
+        @type cdsl: L{ComoonicsCdsl}
+        """
+        path=Path()
+        path.pushd(self.workingdir)
+        self.refresh(False)
+        self.lockresourceRW()
+        cdsl=self._commit(cdsl)
         self.writeresource()
         self.unlockresource()
         path.popd()
@@ -854,9 +867,8 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         @param recursive:  If true also build dependent repos. (Default: True)
         @type  recursive:  L{Boolean} 
         """
-        nodes=self._getNodes(clusterinfo)
-        if not nodes or len(nodes) == 0:
-            raise TypeError("Either specify a clusterinfo or maxnodeidnums need to be set in order to determine the nodeids required to build the cdsl infrastructure.")
+#        if not nodes or len(nodes) == 0:
+#            raise TypeError("Either specify a clusterinfo or maxnodeidnums need to be set in order to determine the nodeids required to build the cdsl infrastructure.")
         
         path=Path()
         path.pushd(self.workingdir)
@@ -865,6 +877,29 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             self.writeresource()
             self.unlockresource()
             
+        # Create the shared directory
+        if not os.path.exists(self.getSharedTreepath()):
+            log.debug("Creating shareddir " + self.getSharedTreepath())
+            ComSystem.execMethod(os.makedirs, self.getSharedTreepath())
+        
+        # Create directories root_variable/relpath_variable if not already existing
+        if not os.path.exists(self.getLinkPath()):
+            log.debug("Creating link directory " + self.getLinkPath())
+            ComSystem.execMethod(os.makedirs,self.getLinkPath())
+        
+        self.updateInfrastructure(clusterinfo=clusterinfo)
+        
+        if recursive:
+            for repository in self.getRepositories().values():
+                repository.buildInfrastructure(clusterinfo, recursive)
+        path.popd()
+
+    def updateInfrastructure(self, clusterinfo=None, nodes=None):
+        if not nodes:
+            nodes=self._getNodes(clusterinfo)
+        
+        path=Path()
+        path.pushd(self.workingdir)
         cdslDefaultdir = os.path.join(self.getTreePath(),self.getDefaultDir())
         if not os.path.exists(cdslDefaultdir):
             log.debug("Creating default_dir " + cdslDefaultdir)
@@ -876,21 +911,10 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
             nodepath=os.path.join(self.getTreePath(),str(node))
             if not os.path.exists(nodepath):
                 log.debug("Creating hostdirectory " + nodepath +"..")
-                ComSystem.execMethod(os.makedirs,nodepath)
-        
-        # Create the shared directory
-        if not os.path.exists(self.getSharedTreepath()):
-            log.debug("Creating shareddir " + self.getSharedTreepath())
-            ComSystem.execMethod(os.makedirs, self.getSharedTreepath())
-        
-        # Create directories root_variable/relpath_variable if not already existing
-        if not os.path.exists(self.getLinkPath()):
-            log.debug("Creating link directory " + self.getLinkPath())
-            ComSystem.execMethod(os.makedirs,self.getLinkPath())
-        
-        if recursive:
-            for repository in self.getRepositories().values():
-                repository.buildInfrastructure(clusterinfo, recursive)
+                ComSystem.execLocalOutput("cp -a %s %s" %(cdslDefaultdir, nodepath), True)
+                for cdsl in self.cdsls.values():
+                    cdsl.nodes.append(node)
+                #ComSystem.execMethod(os.makedirs,nodepath)
         path.popd()
 
     def removeInfrastructure(self,clusterinfo=None, recursive=True, force=False, withcdsls=True):
@@ -1008,7 +1032,6 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         """ 
 
         from comoonics.cdsl import strippath, guessType
-        from comoonics.cdsl.ComCdsl import Cdsl
 
         # let's get the cdsl
         if isinstance(cdsl, basestring):
@@ -1165,91 +1188,88 @@ For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdi
         """
         return self.getAttribute(self.cdsls_version_attribute, "")
     
-    def addNode(self,node,addtotree=True, recursive=True):
+    def addNode(self,node, recursive=True):
         """
         Adds node to all defined cdsls in inventoryfile (does not consider directories of cdsl in filesystem) 
         @param node: ID of node which should be added to cdsls, needed type of ID (nodeID, name or prefix & ID) 
         depends on values of used inventoryfile
         @type node: String
-        @param addtotree: If true, add new node to filesystem, uses copy of default-directory for cdsl-directorys. (Default: True)
-        @type addtotree: Boolean
         @param recursive: Will also change the child repositories.
         @type  recursive: L{Boolean}
         """
         #prepare filesystem for new node
-        if addtotree == True:
-            root = self.root
-            mountpoint = dirtrim(self.getMountpoint())
-            cdsltree = dirtrim(self.getTreePath())
+        wpath=Path()
+        wpath.pushd(self.workingdir)
+        cdslDefaultdir = os.path.join(self.getTreePath(), self.getDefaultDir())
+        nodedir = os.path.join(self.getTreePath(), node)
+        if not os.path.exists(cdslDefaultdir):
+            raise IOError(2, "Required default directory " + cdslDefaultdir + " does not exist")
         
-            _rootMountpoint = os.path.normpath(os.path.join(root,mountpoint))
-            if not os.path.exists(_rootMountpoint):
-                raise IOError(2, "Mount point " + _rootMountpoint + " does not exist.")
+        #create needed directories if they are not existing
+        if os.path.exists(nodedir):
+            wpath.popd()
+            raise IOError(2, "Node destination directory %s already exists." %nodedir)
             
-            cdslDefaultdir = os.path.join(_rootMountpoint, cdsltree, self.getDefaultDir())
-            nodedir = os.path.join(_rootMountpoint, cdsltree, node)
-            if not os.path.exists(cdslDefaultdir):
-                raise IOError(2, "Required default directory " + cdslDefaultdir + " does not exist")
-            
-            #create needed directories if they are not existing
-            if not os.path.exists(os.path.dirname(nodedir)):
-                ComSystem.execMethod(os.makedirs,os.path.dirname(nodedir))
-                
-            if os.path.exists(nodedir):
-                raise IOError(2, "Node destination directory %s already exists." %nodedir)
-            #copy content of defaultnode-directory to newnode-directory
-            ComSystem.execLocalStatusOutput("cp -a " + cdslDefaultdir + " " + nodedir)
+        #copy content of defaultnode-directory to newnode-directory
+        ComSystem.execLocalStatusOutput("cp -a " + cdslDefaultdir + " " + nodedir)
         
         #Open and lock XML-file and return DOM
-        self.lockresourceRW()
-        self.refresh()
         if recursive:
             for repository in self.getRepositories():
-                repository.addNode(node, addtotree, recursive)
+                repository.addNode(node, recursive)
         
-        #find noderef and remove element
-        #_nodes = xpath.Evaluate("/cdsls/cdsl/nodes[noderef/@ref != '%s']" %(node),doc)
+        self.lockresourceRW()
+        self.refresh()
         for cdsl in self.cdsls.values():
             cdsl.addNode(node)
+            self._commit(cdsl)
         
         self.writeresource()
         self.unlockresource()
+        wpath.popd()
     
-    def removeNode(self,node,removefromtree=True, recursive=True):
+    def removeNode(self,node, recursive=True, force=False, backupdir="/tmp"):
         """
         Remove node to all defined cdsls in inventoryfile (does not consider directories of cdsl in filesystem)
         @param node: ID of node which should be added to cdsls, needed type of ID (nodeID, name or prefix & ID) 
         depends on values of used inventoryfile
         @type node: string
-        @param removefromtree: If true, remove node from filesystem. (Default: True)
+        @param force: Removes all files never to be seen again. Default: false
         @type removefromtree: Boolean
         @param recursive: Will also change the child repositories.
         @type  recursive: L{Boolean}
         """
-        import shutil
         #Open and lock XML-file and return DOM
+        wpath=Path()
+        wpath.pushd(self.workingdir)
+            
+        nodedir = os.path.join(self.getTreePath(), node)
+            
+        if not force and not os.path.exists(backupdir):
+            wpath.popd()
+            raise IOError(2, "Backup destination directory %s does not exist or is not writeable." %backupdir)
+        if not os.path.exists(nodedir):
+            wpath.popd()
+            raise IOError(2, "Node destination directory %s does not exist." %nodedir)
+
+        if recursive:
+            for repository in self.getRepositories():
+                repository.removeNode(node, recursive, force, backupdir)
+        
+        #copy content of defaultnode-directory to newnode-directory
+        if not force:
+            ComSystem.execLocalOutput("cp -a %s %s" %(nodedir, backupdir), True)
+        ComSystem.execLocalOutput("rm -rf %s" %nodedir, True)
         self.lockresourceRW()
         self.refresh()
         
         for cdsl in self.cdsls.values():
             cdsl.removeNode(node)
+            self._commit(cdsl)
             
         self.writeresource()
         self.unlockresource()
-        if removefromtree == True:
-            root = self.root
-            mountpoint = dirtrim(self.getMountpoint())
-            cdsltree = dirtrim(self.getTreePath())
-            _rootMountpoint = os.path.normpath(os.path.join(root, mountpoint))
-            if not os.path.exists(_rootMountpoint):
-                raise IOError(2, "Mount point " + _rootMountpoint + " does not exist.")
-            
-            nodedir = os.path.join(_rootMountpoint, cdsltree, node)
-                
-            if not os.path.exists(nodedir):
-                raise IOError(2, "Node destination directory %s does not  exists." %nodedir)
-            #copy content of defaultnode-directory to newnode-directory
-            ComSystem.execMethod(shutil.rmtree, nodedir)
+        wpath.popd()
         
     def update(self,src,clusterInfo,onlyvalidate=True):
         """
