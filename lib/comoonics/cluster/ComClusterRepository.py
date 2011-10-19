@@ -38,7 +38,8 @@ __version__ = "$Revision: 1.19 $"
 from comoonics import ComLog
 from comoonics.DictTools import createDomFromHash
 import comoonics.XmlTools
-from comoonics.cluster import ClusterObject, ClusterIdNotFoundException, ClusterMacNotFoundException, ClusterRepositoryConverterNotFoundException
+from comoonics.cluster import ClusterObject, ClusterIdNotFoundException, ClusterMacNotFoundException
+from comoonics.cluster import ClusterRepositoryConverterNotFoundException, ClusterRepositoryNoNodesFound
 from comoonics.cluster.ComClusterInfo import ClusterInfo, RedHatClusterInfo, ComoonicsClusterInfo, SimpleComoonicsClusterInfo
 log = ComLog.getLogger("comoonics.cdsl.ComClusterRepository")
 
@@ -100,7 +101,9 @@ class SimpleComoonicsClusterRepository(ClusterRepository):
         num_nodeids=maxnodeidnum
         if nodeids and not maxnodeidnum:
             num_nodeids=len(nodeids)
-            
+        
+#        if num_nodeids == 0:
+#            raise ClusterRepositoryNoNodesFound("Could not find nodes in repository. No nodes are specified.")
         for index in range(num_nodeids):
             nodeid=index
             if nodeids:
