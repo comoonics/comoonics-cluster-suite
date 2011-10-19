@@ -34,8 +34,8 @@ import time
 from comoonics import ComSystem
 from comoonics import ComLog
 from comoonics.ComDataObject import DataObject
-from comoonics.cdsl import dirtrim, getCdsl, CdslUnsupportedTypeException, CdslFileHandlingException, CdslPrefixWithoutNodeidsException
-from comoonics.cdsl import CdslDoesNotExistException, CdslAlreadyExists, CdslOfSameType, CdslHasChildren 
+from comoonics.cdsl import dirtrim, getCdsl, CdslUnsupportedTypeException, CdslPrefixWithoutNodeidsException
+from comoonics.cdsl import CdslDoesNotExistException, CdslAlreadyExists, CdslOfSameType, CdslHasChildren , CdslNodeidsRequired
 from comoonics.cdsl import CDSL_HOSTDEPENDENT_TYPE, CDSL_SHARED_TYPE, CDSL_UNKNOWN_TYPE
 
 class Cdsl(DataObject):
@@ -77,7 +77,7 @@ class Cdsl(DataObject):
             self.timestamp = time.time()
         
         #get nodes from clusterinfo if nodelist is not setgiven
-        if (nodes == None) and (clusterinfo != None):
+        if (nodes == None or len(nodes)==0) and clusterinfo != None:
             self.node_prefix = cdslRepository.getNodePrefix()
             self.use_nodeids = cdslRepository.getUseNodeids()
             self.maxnodeidnum = cdslRepository.getMaxnodeidnum()
@@ -108,6 +108,10 @@ class Cdsl(DataObject):
         else:
             raise TypeError("Cdsl constructor called with wrong parameters. Propably no cdslrepository given.")
         
+        if not self.nodes or len(self.nodes) == 0:
+            raise CdslNodeidsRequired("""No node identities specified for this cdsl %s. 
+At least on node identity is specified. Either specify a default with with the maxnodeidnum option or add nodes at will.""" %self.src)
+        
         #create DOM-Element
         doc = cdslRepository.getDocument()
         topelement=None
@@ -128,13 +132,9 @@ class Cdsl(DataObject):
             topelement.appendChild(nodes)
         
             for node in self.nodes:
-                node1=doc.createElement("noderef")
-                #If nodeids without prefix are used, use prefix id_ to get a valid xml-file
-#            _isDigit=re.match('^[0-9]*$',str(node))
-#            if _isDigit != None:
-#                node = "id_" + str(node)
-                node1.setAttribute("ref",str(node))
+                node1=self._createNoderefElement(node, document=doc)
                 nodes.appendChild(node1)
+
         
         #self.XmlElement = doc
         #element = xpath.Evaluate('/cdsl', self.XmlElement)[0]
@@ -147,7 +147,13 @@ class Cdsl(DataObject):
             raise CdslOfSameType("Cannot create the cdsl %s of the same type then the already existing cdsl %s." %(self.src, self.parent.src))
 
     def __str__(self):
-        return self.src
+        return self.toString(detailed=False)
+    
+    def toString(self, detailed=False):
+        if not detailed:
+            return self.src
+        else:
+            return "%s: Nodeids: %s, timestamp: %s" %(self.src, self.nodes, self.timestamp)
     def __eq__(self, othercdsl):
         """
         Two cdsls are equal if their sources they refer to are equal and their repository is equal
@@ -199,6 +205,9 @@ class Cdsl(DataObject):
         from comoonics.cdsl import ltrimDir, isHostdependentPath, isSharedPath
         _path=Path()
         _path.pushd(self.getBasePath())
+        if not os.path.exists(self.src):
+            return False
+
         _exists=False
         _cdslpath=self.getCDSLPath()
         _cdsllinkpath=self.getCDSLLinkPath()
@@ -350,6 +359,13 @@ class Cdsl(DataObject):
         @rtype: ComoonicsCdsl
         """
         return None
+                
+    def _createNoderefElement(self, node, document=None):
+        if not document:
+            document=self.getDocument()
+        node1=document.createElement("noderef")
+        node1.setAttribute("ref",str(node))
+        return node1
 
 class ComoonicsCdsl(Cdsl):
     """
@@ -395,6 +411,7 @@ class ComoonicsCdsl(Cdsl):
         self._stripped=False
 
         self.logger = ComLog.getLogger("comoonics.cdsl.ComCdsl.ComoonicsCdsl")
+        
         if stripsource and not self._stripped:
             src=cdslRepository.stripsrc(src, realpath=realpath)
             cdslRepository=cdslRepository.getRepositoryForCdsl(src)
@@ -522,31 +539,6 @@ class ComoonicsCdsl(Cdsl):
         else:
             return _path.count(os.sep)+1
         
-    def _createEmptyFile(self,path,force=False):
-        """
-        Method to create an empty file at a given path.
-        Overwrites Existing file or directory if force is set
-        @param path: Path of file to create
-        @type path: string
-        @param force: Set if path should be overwritten if already existing
-        @type force: Boolean
-        """
-        self.logger.debug("Creating " + path)
-        try:
-            if not os.path.exists(os.path.dirname(path)):
-                os.makedirs(os.path.dirname(path))
-            if force == True and os.path.exists(path):
-                self.logger.debug("rm -rf " + path)
-                shutil.rmtree(path)
-            #if source does not exist, use a blank dummyfile instead
-            if not os.path.isdir(path):
-                _tmpFile = file(path,"w")
-                _tmpFile.write("")
-                _tmpFile.flush()
-                _tmpFile.close()
-        except:
-            raise CdslFileHandlingException("Cannot create blank file " + path)
-        
     def _removePath(self,path,onerror=None):
         """
         Removes given path or paths.
@@ -604,6 +596,9 @@ class ComoonicsCdsl(Cdsl):
 
         _path=Path()
         _path.pushd(self.getBasePath())
+        if not os.path.exists(self.src):
+            raise CdslDoesNotExistException("File %s for cdsl does not exist (cwd: %s). Cannot create." %(self.src, self.getBasePath()))
+        self.cdslRepository.updateInfrastructure(nodes=self.getNodenames())
                 
 #        _expanded=self.cdslRepository.expandCdsl(self)
 #        parent=self.getParent()
@@ -860,3 +855,56 @@ class ComoonicsCdsl(Cdsl):
             if self.src != cdsl.src and cdsl.getParent() == self.getParent() :
                 _tmpcdsls.append(cdsl)
         return _tmpcdsls
+
+    def addNode(self, node):
+        """
+        Adds a new node (identification) to the nodes that go with this cdsl.
+        @param node: the node identification
+        @type node: L{String}
+        @return: Nothing
+        @raise CdslNodeIDInUse: if the specified node is already associated with the cdsl
+        """
+        from comoonics.cdsl import CdslNodeIDInUse
+        if node in self.nodes:
+            raise CdslNodeIDInUse("CDSL Node ID %s is already in use for this cdsl cannot add this node." %node)
+        
+        self.nodes.append(node)
+        self.nodes.sort()
+        self.nodesWithDefaultdir=list(self.nodes)
+        self.nodesWithDefaultdir.append(self.default_dir)
+        self._updateNodesElement()
+
+    def removeNode(self, node):
+        """
+        Removes an existing node (identification) from the nodes that go with this cdsl.
+        @param node: the node identification
+        @type node: L{String}
+        @return: Nothing
+        """
+        if not node in self.nodes:
+            return
+        
+        self.nodes.remove(node)
+        self.nodes.sort()
+        self.nodesWithDefaultdir=list(self.nodes)
+        self.nodesWithDefaultdir.append(self.default_dir)
+        self._updateNodesElement()
+        
+    def _updateNodesElement(self, nodes=None):
+        """
+        Update the nodes element with the current nodes list or parameter.
+        """
+        if not nodes:
+            nodes=self.nodes
+            
+        nodeselement=self.getElement().getElementsByTagName("nodes")[0]
+        nodestmp=list(nodes)
+        for noderef in nodeselement.getElementsByTagName("noderef"):
+            ref=noderef.getAttribute("ref")
+            ref=ref.replace("id_", "", 1)
+            if not ref in nodestmp:
+                nodeselement.removeChild(noderef)
+            else:
+                nodestmp.remove(ref)
+        for node in nodestmp:
+            nodeselement.appendChild(self._createNoderefElement(node))
