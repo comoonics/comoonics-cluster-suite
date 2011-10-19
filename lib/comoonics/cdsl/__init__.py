@@ -6,8 +6,6 @@ Provides modules to manage cdsls on filesystem and in inventoryfile. Offers
 functionality to create, manipulate and check cdsls on filesystem/in inventoryfile. 
 Discovers needed cdsl type by looking after type of used cluster configuration.
 """
-
-# @(#)$File$
 #
 # Copyright (c) 2001 ATIX GmbH, 2007 ATIX AG.
 # Einsteinstrasse 10, 85716 Unterschleissheim, Germany
@@ -290,7 +288,7 @@ def dirtrim(_dir):
 def setDebug(option, opt, value, parser):
     from comoonics import ComLog
     import logging
-    ComLog.setLevel(logging.DEBUG)
+    ComLog.setLevel(logging.DEBUG, "comoonics.cdsl")
 #    ComLog.getLogger().propagate=1
     
 def setQuiet(option, opt, value, parser):
@@ -324,7 +322,7 @@ def commonoptparseroptions(parser):
 def get_defaultsfiles():
     import os.path
     default_dir = "/etc/comoonics"
-    home_dir = os.path.join(os.environ['HOME'], ".comoonics")
+    home_dir = os.path.join(os.environ.get('HOME', ''), ".comoonics")
     globalcfgdefault_file= os.path.join(default_dir, "cdsl.cfg") 
     localcfgdefault_file= os.path.join(home_dir, "cdsl.cfg")
     return globalcfgdefault_file, localcfgdefault_file
@@ -332,38 +330,97 @@ def get_defaultsfiles():
 def get_defaultsenvkey():
     return "COMOONICS_CDSL_CFG" 
 
-#################
-# $Log: __init__.py,v $
-# Revision 1.12  2010-06-17 08:23:37  marc
-# strippath: extended with _fullpath flag
-#
-# Revision 1.11  2010/05/27 08:29:58  marc
-# - guessType: simplified
-# - commonoptparseroptions: added default to inventoryfile
-#
-# Revision 1.10  2010/03/08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.9  2010/02/15 12:54:06  marc
-# - fixed bugs with nested cdsls not being working
-#
-# Revision 1.8  2010/02/07 20:01:26  marc
-# First candidate for new version.
-#
-# Revision 1.7  2009/07/22 08:37:09  marc
-# Fedora compliant
-#
-# Revision 1.6  2009/06/10 14:53:06  marc
-# - first stable version
-# - fixed many bugs
-# - rewrote nearly everything
-# - extensive tests
-#
-# Revision 1.5  2009/06/05 11:57:10  marc
-# - first version with binaries
-# - regression tests passed.
-#
-# Revision 1.4  2009/06/04 13:49:49  marc
-# code review and rewrite.
-# added unittests.
-#
+from comoonics.ComExceptions import ComException
+
+class CdslInitException(ComException):pass
+class CdslUnsupportedTypeException(ComException):pass
+class CdslPrefixWithoutNodeidsException(ComException):pass
+class CdslDoesNotExistException(ComException):pass
+class CdslSourcePathIsAlreadyCdsl(ComException): pass
+class CdslAlreadyExists(ComException): pass
+class CdslIsNoCdsl(ComException): pass
+class CdslOfSameType(ComException): pass
+class CdslHasChildren(ComException): pass
+class CdslNodeidsRequired(ComException): pass
+class CdslNodeIDInUse(ComException): pass
+
+def getCdsl(src, type, cdslrepository, clusterinfo=None, nodes=None, timestamp=None, ignoreerrors=False, realpath=True, stripsource=True):
+    """
+    Constructs a new cdsl-xml-object from given L{CdslRepository} and nodes. The constructor 
+    gets the needed nodes either from list (nodes) or from a given L{ClusterInfo} but never 
+    from both! You can optional assign the creation timestamp manually.
+    @param src: source of cdsl to create
+    @type src: string
+    @param type: type of cdsl to create, could be hostdependent or shared
+    @type type: string
+    @param cdslRepository: cdslRepository to use
+    @type cdslRepository: L{CdslRepository}
+    @param clusterinfo: clusterinfo with information about used nodes (Default: None)
+    @type clusterinfo: L{ClusterInfo}
+    @param nodes: Array of nodes to use for cdsl (Default: None)
+    @type nodes: Array of strings
+    @param timestamp: Timestamp to set to cdsl (Default: None), if not set create timestamp from systemtime
+    @type timestamp: string
+    @param realpath: Should this src path be resolved to its realpath. Default: True.
+    @type  realpath: L{Boolean}
+    @param stripsource: Should this src path be stripped and checked or taken as is. 
+                        This can be switched of if read from repo (speed up). Default: True.
+    @type  stripsource: L{Boolean}
+    """
+    from comoonics.cdsl.ComCdsl import ComoonicsCdsl
+    return ComoonicsCdsl(src, type, cdslrepository, clusterinfo=clusterinfo, nodes=nodes, timestamp=timestamp, ignoreerrors=ignoreerrors, realpath=realpath, stripsource=stripsource)
+
+class CdslNotFoundException(ComException):
+    def __init__(self, src, repository=None):
+        ComException.__init__(self, src)
+        self.repository=repository
+    def __str__(self):
+        return "Could not find Cdsl \"%s\" in repository %s" %(self.value, self.repository)
+class CdslRepositoryNotConfigfileException(ComException):pass
+class CdslVersionException(ComException): pass
+    
+def getCdslRepository(**keys):
+    """
+    Constructs a new comoonicsCdslRepository from given resource. Creates 
+    a list of cdsls from resource to provide an easy access to them.
+    @param resource: path to resource, should be created if it does not already exist
+    @type  resource: L{string}
+    @param dtd: path to dtd used with resource (Default: None)
+    @type  dtd: L{string}
+    @param validate: set to false to skip validation of resource (Default: True)
+    @type  validate: L{Boolean}
+    @param path|mountpoint: the path or mountpoint this repository belongs to
+    @type  path|mountpoint: L{String}
+    @param root: the root|chroot this repository is relative to
+    @type  root: L{String}
+    @param parent: the parent repository if any
+    @type  parent: L{comoonics.cdsl.ComCdslRepository.CdslRepository}
+    @param cdsltree: the cdsltree where hostdependent files should be stored. Default: .cluster/cdsl
+    @type  cdsltree: L{String}
+    @param cdsltreeshared: the cdsltree where reshared files should be stored. Default: .cluster/shared
+    @type  cdsltreeshared: L{String}
+    @param cdsllink: Where should the link to the hostdependent path be related to. Default .cdsl.local
+    @type  cdsllink: L{String}
+    @param maxnodeidnum: You might want to overwrite the the max nodeids. Default is to query the underlying cluster.
+    @type  maxnodeidnum: L{Integer}
+    @param usenodeids: Flag that either uses nodenames or nodeids. Default: True which means use nodeids
+    @type  usenodeids: L{Boolean} 
+    @param defaultdir: Directory where the default path should be stored. Default: default
+    @type  defaultdir: L{String}
+    @param nodeprefix: Should there be a string prefixed to every node directory? Default: ""
+    @type  nodeprefix: L{String}
+    @param expandstring: How should reshared or rehostdeps be suffixed. Default: ".cdsl"
+    @type  expandstring: L{String}
+    @param nocreate: Not create a repository if it does not exist but fail with an exception.
+    @type  nocreate: L{Boolean}
+    
+    """
+    return getCdslRepositoryClass()(**keys)
+
+def getCdslRepositoryClass():
+    from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
+    return ComoonicsCdslRepository
+
+CDSL_HOSTDEPENDENT_TYPE="hostdependent"
+CDSL_SHARED_TYPE="shared"
+CDSL_UNKNOWN_TYPE="unknown"

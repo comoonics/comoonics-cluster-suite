@@ -38,7 +38,7 @@ $0 channeldistribution destdir [channelclass=${CHANNELCLASS}] [arch=${ARCH}] [fi
 EOF
 }
 
-if [ $# -le 2 ] || [ $(echo "$1" | tr A-Z a-z) = "-h" ] || [ $(echo "$1" | tr A-Z a-z) = "--help" ]; then
+if [ $# -lt 2 ] || [ $(echo "$1" | tr A-Z a-z) = "-h" ] || [ $(echo "$1" | tr A-Z a-z) = "--help" ]; then
 	usage
 	exit 1
 fi

@@ -1198,57 +1198,71 @@ def doc2man(packagename, manpath, outmanpages):
     os.chdir(olddir)
 
 # class bdist_rpm
-setup_cfg={ "comoonics-assistant-py": {
-      "name":"comoonics-assistant-py",
+setup_cfg={ "comoonics-analysis-py": {
+      "name":"comoonics-analysis-py",
       "version":"0.1",
-      "description":"Comoonics assistant library written in Python",
+      "description":"com.oonics analysis library written in Python",
       "long_description":""" 
-Comoonics assistant library written in Python
+com.oonics analysis library written in Python
 """,
 #      "author":"ATIX AG - Mark Hlawatschek",
 #      "author_email":"hlawatschek@atix.de",
-      "url":"http://www.open-sharedroot.org/development/comoonics-assistant-py",
+      "url":"http://www.comoonics.org/development/comoonics-analysis-py",
+      "package_dir" :  { "comoonics.assistant": "lib/comoonics/analysis"},
+      "packages": [ "comoonics.analysis" ],
+      "scripts":       [ "bin/strace_analyser" ],
+    },
+    "comoonics-assistant-py": {
+      "name":"comoonics-assistant-py",
+      "version":"0.1",
+      "description":"com.oonics assistant library written in Python",
+      "long_description":""" 
+com.oonics assistant library written in Python
+""",
+#      "author":"ATIX AG - Mark Hlawatschek",
+#      "author_email":"hlawatschek@atix.de",
+      "url":"http://www.comoonics.org/development/comoonics-assistant-py",
       "package_dir" :  { "comoonics.assistant": "lib/comoonics/assistant"},
       "packages": [ "comoonics.assistant" ],
     },
     "comoonics-backup-legato-py": {
       "name":"comoonics-backup-legato-py",
       "version":"0.1",
-      "description":"Comoonics Legato Backup utilities and libraries written in Python",
+      "description":"com.oonics Legato Backup utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Legato Backup utilities and libraries written in Python
+com.oonics Legato Backup utilities and libraries written in Python
 """,
 #      "author":"ATIX AG - Mark Hlawatschek",
 #      "author_email":"hlawatschek@atix.de",
-      "url":"http://www.open-sharedroot.org/development/comoonics-backup-legato-py",
+      "url":"http://www.comoonics.org/development/comoonics-backup-legato-py",
       "package_dir" :  { "comoonics.backup.EMCLegato": "lib/comoonics/backup/EMCLegato"},
       "packages": [ "comoonics.backup.EMCLegato" ],
     },    
     "comoonics-backup-py": {
       "name":"comoonics-backup-py",
       "version":"0.1",
-      "description":"Comoonics Backup utilities and libraries written in Python",
+      "description":"com.oonics Backup utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Backup utilities and libraries written in Python
+com.oonics Backup utilities and libraries written in Python
 """,
 #      "author":"ATIX AG - Mark Hlawatschek",
 #      "author_email":"hlawatschek@atix.de",
-      "url":"http://www.open-sharedroot.org/development/comoonics-backup-py",
+      "url":"http://www.comoonics.org/development/comoonics-backup-py",
       "package_dir" :  { "comoonics.backup": "lib/comoonics/backup"},
       "packages": [ "comoonics.backup" ],
     },    
     "comoonics-base-py": {
       "name":"comoonics-base-py",
       "version":"0.1",
-      "description":"Comoonics minimum baselibraries",
+      "description":"com.oonics minimum baselibraries",
       "long_description":""" 
-Comoonics minimum baselibraries written in Python
+com.oonics minimum baselibraries written in Python
 
 Those are classes used by more other packages.
 """,
 #      "author":"ATIX AG - Mark Hlawatschek",
 #      "author_email":"hlawatschek@atix.de",
-      "url":"http://www.open-sharedroot.org/development/comoonics-base-py",
+      "url":"http://www.comoonics.org/development/comoonics-base-py",
       "package_dir" :  { "": "lib/"},
       "packages": [ "comoonics" ],
 #      "py_modules" :   [ "comoonics.ComDataObject", 
@@ -1263,11 +1277,11 @@ Those are classes used by more other packages.
     "comoonics-cdsl-py": { 
       "name": "comoonics-cdsl-py",
       "version": "0.2",
-      "description": "Comoonics cdsl utilities and library written in Python",
-      "long_description": """ Comoonics cdsl utilities and library written in Python """,
+      "description": "com.oonics cdsl utilities and library written in Python",
+      "long_description": """ com.oonics cdsl utilities and library written in Python """,
 #      author="ATIX AG - Marc Grimme",
 #      author_email="grimme@atix.de",
-      "url": "http://www.open-sharedroot.org/development/comoonics-cdsl-py",
+      "url": "http://www.comoonics.org/development/comoonics-cdsl-py",
       "package_dir": { "comoonics.cdsl" : "lib/comoonics/cdsl", "comoonics.cdsl.migration": "lib/comoonics/cdsl/migration" },
       "packages":      [ "comoonics.cdsl", "comoonics.cdsl.migration" ],
       "scripts":       [ "bin/com-mkcdsl", "bin/com-mkcdslinfrastructure", "bin/com-cdslinvchk", "bin/com-rmcdsl" ],
@@ -1276,15 +1290,15 @@ Those are classes used by more other packages.
     "comoonics-cluster-tools-py": {
       "name":"comoonics-cluster-tools-py",
       "version":"0.1",
-      "description":"Comoonics cluster tools",
+      "description":"com.oonics cluster tools",
       "long_description":""" 
-Comoonics cluster tools written in Python
+com.oonics cluster tools written in Python
 
 Those are tools to help using OSR clusters.
 """,
 #      "author":"ATIX AG - Mark Hlawatschek",
 #      "author_email":"hlawatschek@atix.de",
-      "url":"http://www.open-sharedroot.org/development/comoonics-cluster-tools-py",
+      "url":"http://www.comoonics.org/development/comoonics-cluster-tools-py",
       "package_dir" :  { "": "lib/"},
       "packages":      [ "comoonics.cluster.tools" ],
       "scripts":       [ "bin/com-dsh", "bin/cl_checknodes" ],
@@ -1292,11 +1306,11 @@ Those are tools to help using OSR clusters.
     "comoonics-cluster-py": {
       "name": "comoonics-cluster-py",
       "version": "0.1",
-      "description":"Comoonics cluster configuration utilities written in Python",
-      "long_description": """ Comoonics cluster configuration utilities written in Python """,
+      "description":"com.oonics cluster configuration utilities written in Python",
+      "long_description": """ com.oonics cluster configuration utilities written in Python """,
 #      author="ATIX AG - Marc Grimme",
 #      author_email="grimme@atix.de",
-      "url": "http://www.open-sharedroot.org/development/comoonics-cluster-py",
+      "url": "http://www.comoonics.org/development/comoonics-cluster-py",
       "package_dir":  { "comoonics.cluster" : "lib/comoonics/cluster", "comoonics.cluster.helper": "lib/comoonics/cluster/helper"},
       "packages":     [ "comoonics.cluster", "comoonics.cluster.helper" ],
       "scripts":      [ "bin/com-queryclusterconf" ],
@@ -1305,11 +1319,11 @@ Those are tools to help using OSR clusters.
     "comoonics-cmdb-py": {
       "name":"comoonics-cmdb-py",
       "version":"0.1",
-      "description":"Comoonics Softwaremanagement CMDB utilities and libraries written in Python",
+      "description":"com.oonics Softwaremanagement CMDB utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Softwaremanagement CMDB utilities and libraries written in Python
+com.oonics Softwaremanagement CMDB utilities and libraries written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-cmdb-py",
+      "url":"http://www.comoonics.org/development/comoonics-cmdb-py",
       "package_dir" :  { "comoonics.cmdb": "lib/comoonics/cmdb"},
       "packages": [ "comoonics.cmdb" ],
       "scripts":       [ "bin/com-channel2db", "bin/com-rpm2db", "bin/com-rpmdiffs", "bin/com-sysinfo" ],
@@ -1317,24 +1331,24 @@ Comoonics Softwaremanagement CMDB utilities and libraries written in Python
     "comoonics-db-py": {
       "name":"comoonics-db-py",
       "version":"0.1",
-      "description":"Comoonics Softwaremanagement Database utilities and libraries written in Python",
+      "description":"com.oonics Softwaremanagement Database utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Softwaremanagement Database utilities and libraries written in Python
+com.oonics Softwaremanagement Database utilities and libraries written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-db-py",
+      "url":"http://www.comoonics.org/development/comoonics-db-py",
       "package_dir" :  { "comoonics.db": "lib/comoonics/db"},
       "packages": [ "comoonics.db" ],
     },    
     "comoonics-dr-py": {
       "name":"comoonics-dr-py",
       "version":"0.1",
-      "description":"Comoonics desaster recovery assistant written in Python",
+      "description":"com.oonics desaster recovery assistant written in Python",
       "long_description":""" 
-Comoonics desaster recovery assistant written in Python
+com.oonics desaster recovery assistant written in Python
 """,
 #      "author":"ATIX AG - Mark Hlawatschek",
 #      "author_email":"hlawatschek@atix.de",
-      "url":"http://www.open-sharedroot.org/development/comoonics-dr-py",
+      "url":"http://www.comoonics.org/development/comoonics-dr-py",
       "package_dir" :  { "": "lib/"},
       "scripts":       [ "bin/comoonics-create-restoreimage", "bin/comoonics-restore-system" ],
       "data_files":    [ ("/etc/comoonics/enterprisecopy/xml-dr",[
@@ -1349,11 +1363,11 @@ Comoonics desaster recovery assistant written in Python
     "comoonics-ec-admin-py": {
       "name":"comoonics-ec-admin-py",
       "version":"0.1",
-      "description":"Comoonics enterprise copy administrator written in Python",
+      "description":"com.oonics enterprise copy administrator written in Python",
       "long_description":""" 
-Comoonics enterprise copy administrator written in Python
+com.oonics enterprise copy administrator written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-ec-admin-py",
+      "url":"http://www.comoonics.org/development/comoonics-ec-admin-py",
       "data_files":    [ ("/etc/comoonics/enterprisecopy/xml-ec-admin",[
             "xml/xml-ec-admin/localclone.disk2disk.infodef.xml",
             "xml/xml-ec-admin/localclone.disk2disk.template.xml",
@@ -1366,13 +1380,13 @@ Comoonics enterprise copy administrator written in Python
     "comoonics-ec-base-py": {
       "name":"comoonics-ec-base-py",
       "version":"0.1",
-      "description":"Comoonics Enterprise Copy base libraries",
+      "description":"com.oonics Enterprise Copy base libraries",
       "long_description":""" 
-Comoonics Enterprise Copy base libraries
+com.oonics Enterprise Copy base libraries
 
 Base libraries used for comoonics enterprise copy.
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-ec-base-py",
+      "url":"http://www.comoonics.org/development/comoonics-ec-base-py",
       "package_dir" :  { "": "lib/"},
       "packages": [ "comoonics.ecbase" ],
 #      "py_modules" :   [ "comoonics.ecbase.ComJournaled", 
@@ -1382,56 +1396,56 @@ Base libraries used for comoonics enterprise copy.
     "comoonics-ec-py": {
       "name":"comoonics-ec-py",
       "version":"0.1",
-      "description":"Comoonics Enterprisecopy utilities and libraries written in Python",
+      "description":"com.oonics Enterprisecopy utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Enterprisecopy utilities and libraries written in Python
+com.oonics Enterprisecopy utilities and libraries written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-ec-py",
+      "url":"http://www.comoonics.org/development/comoonics-ec-py",
       "package_dir" :  { "comoonics.enterprisecopy": "lib/comoonics/enterprisecopy"},
       "packages": [ "comoonics.enterprisecopy" ],
       "scripts": [ "bin/com-ec" ]
     },    
-    "comoonics-fenceacksv-plugins-py": {
-      "name":"comoonics-fenceacksv-plugins-py",
+    "comoonics-imsd-plugins-py": {
+      "name":"comoonics-imsd-plugins-py",
       "version":"0.1",
-      "description":"Comoonics Fenceacksv plugins written in Python",
+      "description":"com.oonics imsd plugins written in Python",
       "long_description":""" 
-Comoonics Fenceacksv plugins written in Python
+com.oonics imsd plugins written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-fenceacksv-plugins-py",
-      "package_dir" :  { "comoonics.fenceacksv.plugins": "lib/comoonics/fenceacksv/plugins"},
-      "packages": [ "comoonics.fenceacksv.plugins" ],
+      "url":"http://www.comoonics.org/development/comoonics-imsd-plugins-py",
+      "package_dir" :  { "comoonics.imsd.plugins": "lib/comoonics/imsd/plugins"},
+      "packages": [ "comoonics.imsd.plugins" ],
     },    
-    "comoonics-fenceacksv-py": {
-      "name":"comoonics-fenceacksv-py",
+    "comoonics-imsd-py": {
+      "name":"comoonics-imsd-py",
       "version":"0.1",
-      "description":"Comoonics Fenceacksv utilities and libraries written in Python",
+      "description":"com.oonics imsd utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Fenceacksv utilities and libraries written in Python
+com.oonics imsd utilities and libraries written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-fenceacksv-py",
-      "package_dir" :  { "comoonics.fenceacksv": "lib/comoonics/fenceacksv"},
-      "packages": [ "comoonics.fenceacksv" ],
+      "url":"http://www.comoonics.org/development/comoonics-imsd-py",
+      "package_dir" :  { "comoonics.imsd": "lib/comoonics/imsd"},
+      "packages": [ "comoonics.imsd" ],
     },    
     "comoonics-installation-py": {
       "name":"comoonics-installation-py",
       "version":"0.1",
-      "description":"Comoonics installation library written in Python",
+      "description":"com.oonics installation library written in Python",
       "long_description":""" 
-Comoonics installation library written in Python
+com.oonics installation library written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-installation-py",
+      "url":"http://www.comoonics.org/development/comoonics-installation-py",
       "package_dir" :  { "comoonics.installation": "lib/comoonics/installation"},
       "packages": [ "comoonics.installation" ],
     },    
     "comoonics-scsi-py": {
       "name":"comoonics-scsi-py",
       "version":"0.1",
-      "description":"Comoonics SCSI utilities and libraries written in Python",
+      "description":"com.oonics SCSI utilities and libraries written in Python",
       "long_description":""" 
-Comoonics SCSI utilities and libraries written in Python
+com.oonics SCSI utilities and libraries written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-scsi-py",
+      "url":"http://www.comoonics.org/development/comoonics-scsi-py",
       "package_dir" :  { "comoonics.scsi": "lib/comoonics/scsi"},
       "packages": [ "comoonics.scsi" ],
       "scripts": [ "bin/com-rescanscsi" ]
@@ -1443,7 +1457,7 @@ Comoonics SCSI utilities and libraries written in Python
       "long_description":""" 
 Searchlibraries used by mgrep
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-search-py",
+      "url":"http://www.comoonics.org/development/comoonics-search-py",
       "package_dir" :  { "comoonics.search": "lib/comoonics/search",
                          "comoonics.search.datetime": "lib/comoonics/search/datetime" },
       "packages": [ "comoonics.search", "comoonics.search.datetime" ],
@@ -1451,35 +1465,35 @@ Searchlibraries used by mgrep
     "comoonics-storage-hp-py": {
       "name":"comoonics-storage-hp-py",
       "version":"0.1",
-      "description":"Comoonics Enterprisecopy HP Storage utilities and libraries written in Python",
+      "description":"com.oonics Enterprisecopy HP Storage utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Enterprisecopy HP Storage utilities and libraries written in Python
+com.oonics Enterprisecopy HP Storage utilities and libraries written in Python
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-storage-hp-py",
+      "url":"http://www.comoonics.org/development/comoonics-storage-hp-py",
       "package_dir" :  { "comoonics.storage.hp": "lib/comoonics/storage/hp"},
       "packages": [ "comoonics.storage.hp" ],
     },    
     "comoonics-storage-py": {
       "name":"comoonics-storage-py",
       "version":"0.1",
-      "description":"Comoonics Enterprisecopy Storage utilities and libraries written in Python",
+      "description":"com.oonics Enterprisecopy Storage utilities and libraries written in Python",
       "long_description":""" 
-Comoonics Enterprisecopy Storage utilities and libraries written in Python
+com.oonics Enterprisecopy Storage utilities and libraries written in Python
 """,
-      "url": "http://www.open-sharedroot.org/development/comoonics-storage-py",
+      "url": "http://www.comoonics.org/development/comoonics-storage-py",
       "package_dir" :  { "comoonics.storage": "lib/comoonics/storage"},
       "packages": [ "comoonics.storage" ],
     },    
     "comoonics-tools-py": {
       "name":"comoonics-tools-py",
       "version":"0.1",
-      "description":"Comoonics base tools",
+      "description":"com.oonics base tools",
       "long_description":""" 
-Comoonics basic tools written in Python
+com.oonics basic tools written in Python
 
 Those are classes used by more other packages.
 """,
-      "url":"http://www.open-sharedroot.org/development/comoonics-tools-py",
+      "url":"http://www.comoonics.org/development/comoonics-tools-py",
       "package_dir" :  { "": "lib/"},
       "packages": [ "comoonics.tools" ],
 #      "py_modules" :   [ "comoonics.AutoDelegator", 
@@ -1493,13 +1507,13 @@ Those are classes used by more other packages.
     "mgrep": {
       "name":"mgrep",
       "version":"0.1",
-      "description":"Comoonics base tools",
+      "description":"com.oonics base tools",
       "long_description":""" 
-Comoonics basic tools written in Python
+com.oonics basic tools written in Python
 
 Those are classes used by more other packages.
 """,
-      "url":"http://www.open-sharedroot.org/development/mgrep",
+      "url":"http://www.comoonics.org/development/mgrep",
       "scripts":       [ "bin/mgrep" ],
       "data_files":    [ ("share/man/man1",[ "man/mgrep.1.gz" ]) ],
     },

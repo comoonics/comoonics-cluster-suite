@@ -34,14 +34,9 @@ __version__ = "$Revision: 1.16 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/cluster/ComClusterInfo.py,v $
 
 
-from comoonics.XmlTools import xpathjoin, xpathsplit, XPATH_SEP, evaluateXPath
-
-from comoonics.ComExceptions import ComException
-
 from comoonics import ComLog
-from comoonics.cluster.ComClusterRepository import RedHatClusterRepository, ComoonicsClusterRepository, ClusterObject
-
-class ClusterMacNotFoundException(ComException): pass
+from comoonics.XmlTools import xpathjoin, xpathsplit, evaluateXPath
+from comoonics.cluster import ClusterObject, ClusterMacNotFoundException
 
 class ClusterInfo(ClusterObject):
     """
@@ -50,17 +45,6 @@ class ClusterInfo(ClusterObject):
     """
     
     log = ComLog.getLogger("comoonics.cluster.ComClusterInfo")
-    
-    def __new__(cls, *args, **kwds):
-        """
-        Decides by type of given clusterrepository which instance of 
-        clusterinfo (general, redhat or comoonics) has to be created.
-        """
-        if isinstance(args[0], ComoonicsClusterRepository):
-            cls = ComoonicsClusterInfo
-        elif isinstance(args[0], RedHatClusterRepository):
-            cls = RedHatClusterInfo
-        return object.__new__(cls) #, *args, **kwds)
     
     def __init__(self, clusterRepository):
         """
@@ -71,6 +55,9 @@ class ClusterInfo(ClusterObject):
         #Clusterrepository holds list of nodes and items like node_prefix etc.
         super(ClusterInfo, self).__init__(clusterRepository.getElement())
         self.clusterRepository = clusterRepository
+        
+    def __str__(self):
+        return "%s(%s)" %(self.__class__.__name__, self.clusterRepository)
         
     def getClusterName(self):
         """
@@ -90,7 +77,12 @@ class ClusterInfo(ClusterObject):
         """
         self.log.debug("get clusternodes from clusterrepository(active=%s)" %active)
         _nodes=list()
-        for _node in self.clusterRepository.nodeNameMap.values():
+        nodes=list()
+        if self.clusterRepository.nodeIdMap and len(self.clusterRepository.nodeIdMap)>0:
+            nodes=self.clusterRepository.nodeIdMap.values()
+        elif self.clusterRepository.nodeNameMap and len(self.clusterRepository.nodeNameMap)>0:
+            nodes=self.clusterRepository.nodeNameMap.values()
+        for _node in nodes:
             if not active or _node.isActive():
                 _nodes.append(_node)
         return _nodes
@@ -115,6 +107,20 @@ class ClusterInfo(ClusterObject):
             for _node in _nodes:
                 _ids.append(_node.getName())
         return _ids
+
+class SimpleComoonicsClusterInfo(ClusterInfo):
+    """
+    Simple L{ClusterInfo} implementation that does not use any special configuration file (/etc/cluster/cluster.conf) or the like. 
+    But only the the parameters got from the information class L{comoonics.cluster.ComClusterRepository.SimpleComoonicsClusterRepository}.
+    """
+    def __init__(self, clusterRepository):
+        """
+        __init__(clusterRepository)
+        Standard constructor
+        @param clusterRepository: the parent cluster repository
+        @type  clusterRepository: L{comoonics.cluster.ComClusterRepository.SimpleComoonicsClusterRepository}  
+        """
+        super(SimpleComoonicsClusterInfo, self).__init__(clusterRepository)
     
 class RedHatClusterInfo(ClusterInfo):
     """
@@ -129,10 +135,11 @@ class RedHatClusterInfo(ClusterInfo):
         @param clusterRepository: clusterRepository to use
         @type clusterRepository: L{RedhatClusterRepository}
         """
+        from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
+        from helper import getClusterHelper, HelperNotSupportedError
         super(RedHatClusterInfo, self).__init__(clusterRepository)
-        from helper import RedHatClusterHelper, HelperNotSupportedError
         try:
-            self.helper=RedHatClusterHelper()
+            self.helper=getClusterHelper()
         except HelperNotSupportedError:
             self.helper=None
         self.addNonStatic("name", xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_clustat_cluster, "@"+RedHatClusterRepository.attribute_clustat_cluster_name))
@@ -142,6 +149,7 @@ class RedHatClusterInfo(ClusterInfo):
         self.addNonStatic("quorum_groupmember", xpathjoin(RedHatClusterRepository.getDefaultClustatXPath(), RedHatClusterRepository.element_quorum, "@"+RedHatClusterRepository.attribute_quorum_groupmember))
 
     def query(self, param, *params, **keys):
+        from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
         if keys and keys.has_key("pathroot"):
             _pathroot=keys["pathroot"]
         elif params and len(params)>=1:
@@ -257,6 +265,7 @@ class RedHatClusterInfo(ClusterInfo):
         @rtype: string
         """
         #no defaultvalue specified because every dailoverdomain needs to have one or more failoverdomainnodes
+        from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
         _xpath=xpathjoin(RedHatClusterRepository.getDefaultClusterFailoverDomain(failoverdomain), RedHatClusterRepository.element_failoverdomainnode, "@"+RedHatClusterRepository.attribute_failoverdomainnode_name)
         self.log.debug("get failoverdomainnodes from failoverdomain %s: %s" %(failoverdomain,_xpath))
         _tmp1 = self.queryValue(_xpath)
@@ -269,6 +278,7 @@ class RedHatClusterInfo(ClusterInfo):
         @return: Name of node which is prefered in failovercase of given failoverdomain
         @rtype: string
         """
+        from comoonics.cluster.ComClusterRepository import RedHatClusterRepository
         #no defaultvalue specified because every dailoverdomain needs to have one or more failoverdomainnodes and priority is a needed attribute
         _tmp1 = self.getFailoverdomainNodes(failoverdomain)
         

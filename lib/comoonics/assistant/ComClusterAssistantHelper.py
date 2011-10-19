@@ -23,21 +23,14 @@ class ClusterAssistantHelper(AssistantHelper):
 
 class RedHatClusterAssistantHelper(ClusterAssistantHelper):
     def __init__(self, query):
-        from xml.dom.ext.reader import Sax2
-        from comoonics.cluster.ComClusterRepository import ClusterRepository
-        from comoonics.cluster.ComClusterInfo import ClusterInfo
+        from comoonics.cluster import getClusterRepository, getClusterInfo, clusterconf
         ClusterAssistantHelper.__init__(self, query)
         self.error=False
         # create Reader object
         try:
-            reader = Sax2.Reader()
-            _file = open("/etc/cluster/cluster.conf", "r")
-            reader = Sax2.Reader()
-            doc = reader.fromStream(_file)
-            #create comclusterRepository Object
-            clusterRepository = ClusterRepository(doc.documentElement, doc)
+            clusterRepository = getClusterRepository(clusterconf)
             #create comclusterinfo object
-            self.clusterInfo = ClusterInfo(clusterRepository)
+            self.clusterInfo = getClusterInfo(clusterRepository)
         except Exception, e:
             ComLog.getLogger(__logStrLevel__).error("Error parsing cluster.conf %s" %e)
             ComLog.errorTraceLog()       

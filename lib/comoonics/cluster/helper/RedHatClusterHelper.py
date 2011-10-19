@@ -39,8 +39,9 @@ import comoonics.XmlTools
 import warnings
 import os.path
 from HelperNotSupported import HelperNotSupportedError
+from comoonics.cluster.helper import ClusterHelper
 
-class RedHatClusterHelper(object):
+class RedHatClusterHelper(ClusterHelper):
     defaultclusterstatus_cmd= "/usr/sbin/clustat"
     defaultclusterstatus_opts=["-x", "-f"]
 
@@ -69,7 +70,6 @@ class RedHatClusterHelper(object):
         return cmd
 
     def setSimOutput(self):
-        import os.path
         import StringIO
         import inspect
         path=os.path.dirname(inspect.getfile(self.__class__))
@@ -88,7 +88,6 @@ class RedHatClusterHelper(object):
         query=self.__getfromkwds("query", kwds, None)
         __output=self.__getfromkwds("output", kwds, None)
         self.log.debug("queryStatusElement: query=%s" %query)
-        from comoonics import ComSystem
         try:
             # create Reader object
             _dom=comoonics.XmlTools.parseXMLString(ComSystem.execLocalOutput(self.getClusterStatusCmd(True, delimitor), True, __output))

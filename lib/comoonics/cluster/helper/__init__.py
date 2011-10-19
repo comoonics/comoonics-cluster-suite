@@ -24,8 +24,30 @@ Those should never be used outside the comoonics.cluster package.
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from RedHatClusterHelper import RedHatClusterHelper
 from HelperNotSupported import HelperNotSupportedError
+
+def getClusterHelper(clusterinfo=None):
+    """
+    Returns a new instance of a cluster helper class that suits the given Base class:
+       ComoonicsClusterInfo, RedHatClusterInfo => RedHetClusterHelper
+       * => HelperNotSupportedError
+    @return: Instance of the cluster helper class.
+    @rtype: L{comoonics.cluster.helper.ClusterHelper}
+    """
+    from RedHatClusterHelper import RedHatClusterHelper
+    from comoonics.cluster.ComClusterInfo import RedHatClusterInfo
+    cls=RedHatClusterHelper
+    if clusterinfo and not isinstance(clusterinfo, RedHatClusterInfo):
+        raise HelperNotSupportedError("Clusterinformation %s does not support the cluster helper concept." %(clusterinfo))
+    return cls()
+        
+    
+class ClusterHelper(object):
+    """
+    The base cluster helper class.
+    No implementation content yet. But all cluster helper classes have to be derived from here.
+    """
+    pass
 
 ##########
 # $Log: __init__.py,v $

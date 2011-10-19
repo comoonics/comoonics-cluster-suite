@@ -1,0 +1,20 @@
+9351       0.000000 execve("/data/cms/imperia/cgi-bin/site_mydesk.pl", ["/data/cms/imperia/cgi-bin/site_m"], [/* 27 vars */]) = 0 <0.000170>
+9351       0.000272 brk(0)              = 0x1afed000 <0.000004>
+9351       0.000036 mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x2b6272e65000 <0.000006>
+9351       0.000061 mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x2b6272e66000 <0.000006>
+9351       0.000035 access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory) <0.000013>
+9351       0.000065 open("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/tls/x86_64/libperl.so", O_RDONLY) = -1 ENOENT (No such file or directory) <0.000035>
+9351       0.000082 stat("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/tls/x86_64", 0x7fff7e473e90) = -1 ENOENT (No such file or directory) <0.000018>
+9351       0.000047 open("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/tls/libperl.so", O_RDONLY) = -1 ENOENT (No such file or directory) <0.000017>
+9351       0.000043 stat("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/tls", 0x7fff7e473e90) = -1 ENOENT (No such file or directory) <0.000017>
+9351       0.000042 open("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/x86_64/libperl.so", O_RDONLY) = -1 ENOENT (No such file or directory) <0.000017>
+9351       0.000042 stat("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/x86_64", 0x7fff7e473e90) = -1 ENOENT (No such file or directory) <0.000017>
+9351       0.000042 open("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/libperl.so", O_RDONLY) = 3 <0.000020>
+9351       0.000044 read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340\34\3A7\0\0\0"..., 832) = 832 <0.000016>
+9351       0.000045 fstat(3, {st_mode=S_IFREG|0755, st_size=1262384, ...}) = 0 <0.000006>
+9351       0.000041 mmap(0x3741000000, 3363648, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x3741000000 <0.000008>
+9351       0.000027 mprotect(0x374112c000, 2093056, PROT_NONE) = 0 <0.000007>
+9351       0.000025 mmap(0x374132b000, 36864, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x12b000) = 0x374132b000 <0.000011>
+9351       0.000037 mmap(0x3741334000, 4928, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x3741334000 <0.000007>
+9351       0.000029 close(3)            = 0 <0.000004>
+9351       0.000027 open("/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/CORE/libresolv.so.2", O_RDONLY) = -1 ENOENT (No such file or directory) <0.000021>

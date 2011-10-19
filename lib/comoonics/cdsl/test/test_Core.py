@@ -2,7 +2,7 @@ import unittest
 import baseSetup as setup
 
 setupCluster=setup.SetupCluster()        
-setupCDSLRepository=setup.SetupCDSLRepository(setupCluster.clusterinfo)  
+setupCDSLRepository=setup.SetupCDSLRepository()  
 
 class test_0CoreFunctions(unittest.TestCase):
     def testsubpathsto(self):
@@ -38,7 +38,7 @@ class test_0CoreFunctions(unittest.TestCase):
                        [ ".cluster/cdsl/1/hostdependent/shared", False ],
                        [ ".cdsl.local/hostdependent/shared", False ] ]
         for _tmp in _resultpairs:
-            _result=isSharedPath(_tmp[0], setupCDSLRepository.cdslRepository1, False)
+            _result=isSharedPath(_tmp[0], setupCDSLRepository.cdslRepositories[0], False)
             self.assertEquals(_result, _tmp[1], "%s isSharedPath != %s." %(_tmp[0], _tmp[1]))
 
     def testisHostdependentPath(self):
@@ -48,15 +48,15 @@ class test_0CoreFunctions(unittest.TestCase):
                        [ ".cluster/cdsl/1/hostdependent/shared", True ],
                        [ ".cdsl.local/hostdependent/shared", True ] ]
         for _tmp in _resultpairs:
-            _result=isHostdependentPath(_tmp[0], setupCDSLRepository.cdslRepository1, False)
+            _result=isHostdependentPath(_tmp[0], setupCDSLRepository.cdslRepositories[0], False)
             self.assertEquals(_result, _tmp[1], "%s isHostdependentPath != %s." %(_tmp[0], _tmp[1]))
 
     def testgetNodeFromPath(self):
         from comoonics.cdsl import getNodeFromPath
-        self.assertEquals(getNodeFromPath(".cluster/cdsl/1/hostdependent/shared", setupCDSLRepository.cdslRepository1, False), "1")
-        self.assertEquals(getNodeFromPath(".cluster/cdsl/nodename/hostdependent/shared", setupCDSLRepository.cdslRepository1, False), "nodename")
-        self.assertEquals(getNodeFromPath(".cluster/cdsl/default/hostdependent/shared", setupCDSLRepository.cdslRepository1, False), "default")
-        self.assertRaises(ValueError, getNodeFromPath, "/cdsl/default/hostdependent/shared", setupCDSLRepository.cdslRepository1, False)
+        self.assertEquals(getNodeFromPath(".cluster/cdsl/1/hostdependent/shared", setupCDSLRepository.cdslRepositories[0], False), "1")
+        self.assertEquals(getNodeFromPath(".cluster/cdsl/nodename/hostdependent/shared", setupCDSLRepository.cdslRepositories[0], False), "nodename")
+        self.assertEquals(getNodeFromPath(".cluster/cdsl/default/hostdependent/shared", setupCDSLRepository.cdslRepositories[0], False), "default")
+        self.assertRaises(ValueError, getNodeFromPath, "/cdsl/default/hostdependent/shared", setupCDSLRepository.cdslRepositories[0], False)
 
     def test0Ltimdir(self):
         from comoonics.cdsl import ltrimDir

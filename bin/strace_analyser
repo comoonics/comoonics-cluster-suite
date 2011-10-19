@@ -1,0 +1,87 @@
+#!/usr/bin/python
+
+"""
+This program helps analyse the output of an strace run from a specific program.
+If the given stracefile is empty it will read from stdin.
+"""
+
+__version__ = "0.1"
+
+import sys
+import itertools
+import logging
+logging.basicConfig()
+from comoonics.analysis import get_defaultsfiles, get_defaultsenvkey
+from comoonics.analysis.StraceAnalyser import StraceAnalyser, formatResults
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+except ImportError:
+    from optparse import OptionParser, OptionGroup
+
+parser = OptionParser(description=__doc__, usage="usage: %prog [options] [stracefile]")
+parser.add_option("-v", "--verbose", action="store_true", default=False, dest="verbose", help="Be more verbose")
+
+filteroptions=OptionGroup(parser, "Filter options")
+filteroptions.add_option("-c", "--call", dest="calls", action="append", type="string", default=list(), 
+                         help="Only include the given calls to be analysed. Default is to take all calls into account.")
+filteroptions.add_option("-r", "--from", dest="fromentry", type="int", default=None,
+                         help="Go from entry..")
+filteroptions.add_option("-t", "--to", dest="toentry", type="int", default=None,
+                         help="Go to entry..")
+
+validfeatures=["max", "min", "avg", "min_hotspots", "max_hotspots", "calls", "avg_call"]
+validtimevalues=["timebetween", "timespend"]
+reportoptions=OptionGroup(parser, "Report options")
+reportoptions.add_option("-F", "--without-feature", dest="notfeatures", action="append", type="choice", 
+                         choices=validfeatures, default=list(),
+                         help="Which kind of features should not be applied to the report. Default is no feature will be excluded. Available features: %s." %validfeatures)
+reportoptions.add_option("-f", "--with-feature", dest="features", action="append", type="choice", 
+                         choices=validfeatures, default=None,
+                         help="Which kind of features should be applied to the report. Default is all features. Available features: %s." %validfeatures)
+reportoptions.add_option("-T", "--without-time", dest="nottimes", action="append", type="choice",
+                         choices=validtimevalues, default=list(),
+                         help="Which kind of timevalues should not be taken into account. Default is all timevalues. Available values are %s" %validtimevalues)
+reportoptions.add_option("-H", "--hotspots", dest="hotspots", type="int", default=5,
+                         help="How many hotspots should be displayed. Default: %default.")
+
+parser.add_option_group(filteroptions)
+parser.add_option_group(reportoptions)
+
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
+
+options, args=parser.parse_args()
+if options.verbose:
+    logging.getLogger().setLevel(logging.DEBUG)
+if not options.features:
+    options.features=validfeatures
+stracefiles=[sys.stdin]
+if args:
+    stracefiles=args
+    
+allresults=dict()
+for stracefile in stracefiles:
+    results=dict()
+    analyser=StraceAnalyser(stracefile)
+    for feature in filter(lambda feature: feature not in options.notfeatures, options.features):
+        results[feature]=dict()
+        for timevalue in filter(lambda timevalue: timevalue not in options.nottimes, validtimevalues):
+            results[feature][timevalue]=getattr(analyser, feature)(attrname=timevalue, 
+                                                                   hotspots=options.hotspots,
+                                                                   iter=itertools.islice(itertools.ifilter(lambda entry: len(options.calls)==0 or entry.call in options.calls, analyser.iter()), options.fromentry, options.toentry))
+    allresults[stracefile]=results
+
+formatResults(allresults, {"max": {"timebetween": "max(time between): %(timebetween)1.7f", 
+                                   "timespend": "max(time spend): %(timespend)1.7f"}, 
+                           "min": {"timebetween": "min(time between): %(timebetween)1.7f",
+                                   "timespend": "min(time spend): %(timespend)1.7f"},
+                           "min_hotspots": {"timebetween": ("min time between hotspots:", "\t%s", ",\n"),
+                                            "timespend": ("min time spend hotspots:", "\t%s", ",\n")},
+                           "max_hotspots": {"timebetween": ("max time between hotspots:", "\t%s", ",\n"),
+                                            "timespend": ("max time spend hotspots:", "\t%s", ",\n")},
+                           "avg_call": {"timebetween": ("avg(time between) for call:", "\t%s: %1.7f", ",\n"),
+                                        "timespend": ("avg(time spend) for call:", "\t%s: %1.7f", ",\n")}
+                           })

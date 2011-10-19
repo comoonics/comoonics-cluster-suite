@@ -1,6 +1,8 @@
 from BaseClusterTestClass import baseClusterTestClass
 
 import unittest
+from comoonics.cluster import getClusterRepository, getClusterInfo
+from comoonics import ComSystem
 
 class test_ClusterNodeNic(baseClusterTestClass):
     """
@@ -8,67 +10,37 @@ class test_ClusterNodeNic(baseClusterTestClass):
     """
     def init(self):
         import os.path
-        from comoonics.cluster.ComClusterRepository import ClusterRepository
-        from comoonics.cluster.ComClusterInfo import ClusterInfo
-        from comoonics import ComSystem
         ComSystem.setExecMode(ComSystem.SIMULATE)
         super(test_ClusterNodeNic, self).init()
         #create comclusterRepository Object
-        self.clusterRepository = ClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
+        self.clusterRepository = getClusterRepository(os.path.join(self._testpath, "cluster2.conf"))
 
         #create comclusterinfo object
-        self.clusterInfo = ClusterInfo(self.clusterRepository)  
+        self.clusterInfo = getClusterInfo(self.clusterRepository)  
 
         # setup the cashes for clustat for redhat cluster
-        import logging
         self.clusterInfo.helper.setSimOutput()
-        self.nics=list()
-        for node in self.clusterInfo.getNodes():
-            node.helper.output=self.clusterInfo.helper.output
-            for nic in node.getNics():
-                self.nics.append(nic)
-      
+    
     def testGetname(self):
-        i = 0
-        for nic in self.nics:
-            self.assertEqual(nic.getName(), self.nicValues[i]["name"])
-            i = i + 1
+        self._testNicGetName("name")
             
     def testGetmac(self):
-        i = 0
-        for nic in self.nics:
-            self.assertEqual(nic.getMac(), self.nicValues[i]["mac"])
-            i = i + 1
+        self._testNicGetName("mac")
             
     def testGetip(self):
-        i = 0
-        for nic in self.nics:
-            self.assertEqual(nic.getIP(), self.nicValues[i]["ip"])
-            i = i + 1
+        self._testNicGetName("ip", "getIP")
             
     def testGetgateway(self):
-        i = 0
-        for nic in self.nics:
-            self.assertEqual(nic.getGateway(), self.nicValues[i]["gateway"])
-            i = i + 1
+        self._testNicGetName("gateway")
             
     def testGetnetmask(self):
-        i = 0
-        for nic in self.nics:
-            self.assertEqual(nic.getNetmask(), self.nicValues[i]["netmask"])
-            i = i + 1
+        self._testNicGetName("netmask")
             
     def testGetmaster(self):
-        i = 0
-        for nic in self.nics:
-            self.assertEqual(nic.getMaster(), self.nicValues[i]["master"])
-            i = i + 1
-            
+        self._testNicGetName("master")
+                    
     def testGetslave(self):
-        i = 0
-        for nic in self.nics:
-            self.assertEqual(nic.getSlave(), self.nicValues[i]["slave"])
-            i = i + 1
+        self._testNicGetName("slave")
 
 def test_main():
     try:

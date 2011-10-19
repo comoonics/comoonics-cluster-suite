@@ -1,11 +1,12 @@
 #!/usr/bin/python
 """
 Creates context dependant symbolic links (cdsl). 
-The process includes creating and copying of files and directories and building symbolic links. 
-Needs a working cdsl-infrastructure and a matching inventoryfile. 
-Could create hostdependent and shared cdsls.
+The process includes creating and copying of the relevant files and directories 
+and building symbolic links. 
+Needs a working cdsl infrastructure and a matching inventoryfile (Use com-mkcdsladm --list to validate). 
+Can create hostdependent and shared cdsls.
 """
-__version__ = "$revision$"
+__version__ = "0.2-10"
 __description__="""
 Binary to manage cdsls
 """
@@ -23,12 +24,9 @@ from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 #from comoonics import GetOpts
 
-from comoonics.cluster import parseClusterConf
-from comoonics.cluster.ComClusterInfo import ClusterInfo
-from comoonics.cluster.ComClusterRepository import ClusterRepository, RedHatClusterRepository
-from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
-from comoonics.cdsl.ComCdsl import ComoonicsCdsl
+from comoonics.cluster import getClusterInfo, getClusterRepository
 from comoonics.cdsl import dirtrim, commonoptparseroptions, get_defaultsfiles, get_defaultsenvkey
+from comoonics.cdsl import getCdslRepository, getCdsl, CDSL_HOSTDEPENDENT_TYPE, CDSL_SHARED_TYPE
 try:
     from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
 except ImportError:
@@ -37,15 +35,21 @@ except ImportError:
 usage = "usage: %prog [options] fullpathtofile"
 parser = OptionParser(usage=usage, description=__doc__)
 parser=commonoptparseroptions(parser)
+parser.add_option("-a", "--hostdependent", dest="hostdependent", default=None, 
+                  action="store_true", help="Creates hostdependent cdsl and copy src to all nodes")
+parser.add_option("-s", "--shared", dest="hostdependent", default=None, 
+                  action="store_false", help="Creates shared cdsl and copy src to shared tree")
 
-parser.add_option("-a", "--hostdependent", dest="hostdependent", default=False, action="store_true", help="Creates hostdependent cdsl and copy src to all nodes")
-parser.add_option("-s", "--shared", dest="shared", default=False, action="store_true", help="Creates shared cdsl and copy src to shared tree")
-
-parser.add_option("-f", "--force", dest="force", default=False, action="store_true", help="forces overwriting of existing links, files and directories, skip backup")
+parser.add_option("-b", "--backup", dest="backup", default=False, action="store_true", help="Switch on of keeping a backup of the original file as <filename>.orig.")
 parser.add_option("-u", "--updateinventory", dest="updateinventory", default=False, action="store_true", help="""updates inventoryfile:
    if cdsl with given target does not exist in inventoryfile, add entry
    if it does not exist on filesystem but in inventoryfile, delete entry
    if it exists in inventoryfile but verifies from filesystem, update entry""")
+parser.add_option("-S", "--resolved", dest="resolved", default=False, action="store_true", 
+                  help="""Tell """+os.path.basename(sys.argv[0])+
+                  """not to be clever and resolve the given path but take it as it is. 
+ATTENTION: This option should not be used if you don't know what you are doing.. 
+Default: %default""")
 
 try:
     parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
@@ -54,44 +58,67 @@ except (TypeError, NameError):
     pass
 
 ComLog.setLevel(logging.INFO)
-(options, args) = parser.parse_args()
+parser.disable_interspersed_args()
 
-if len(args) != 1:
-    parser.error("Failure no ore more then one arguments given.")
-elif not options.shared and not options.hostdependent:
-    parser.error("You must specify the type of the cdsl to be created. Means either hostdendent (-a|--hostdependent) or shared (-s|--shared).")
-else:
-    src=args[0]
+#create cdsl objects
+args=sys.argv[1:]
+options=None
+parentcdslRepository=None; cdslRepository=None
+clusterRepository=None; clusterInfo=None
+while args:
+    (options, args) = parser.parse_args(args=args, values=options)
+    if not parentcdslRepository:
+        parentcdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, nocreate=True)
+    if not cdslRepository:
+        if options.mountpoint != "" or options.mountpoint != "/":
+            cdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, 
+                                               mountpoint=options.mountpoint, nocreate=True)
+        else:
+            cdslRepository=parentcdslRepository
 
-try:
-    doc=parseClusterConf(options.clusterconf)
-          
-    #create needed cluster objects
-    clusterRepository = ClusterRepository(doc.documentElement,doc)
-    clusterInfo = ClusterInfo(clusterRepository)
-    
-    #create cdsl objects
-    parentcdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, nocreate=True)
-    if options.mountpoint != "" or options.mountpoint != "/":
-        cdslRepository = ComoonicsCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint, nocreate=True)
-    else:
-        cdslRepository=parentcdslRepository
+    if not clusterRepository:
+        clusterRepository = getClusterRepository(clusterconf=options.clusterconf, 
+                                                 maxnodeidnum=int(parentcdslRepository.getMaxnodeidnum()))
+    if not clusterInfo:
+        clusterInfo = getClusterInfo(clusterRepository)
 
-    if options.hostdependent:
-        #Creates a hostdependent cdsl and copies content to all nodes defined 
-        #in clusterrepository or specified by maxnodeidnum in cdslrepository
-        obj = ComoonicsCdsl(src, ComoonicsCdsl.HOSTDEPENDENT_TYPE, cdslRepository, clusterInfo, None)
-    elif options.shared:
-        #Creates a shared cdsl and copies content to sharedtree defined 
-        #in clusterrepository
-        obj = ComoonicsCdsl(src, ComoonicsCdsl.SHARED_TYPE, cdslRepository, clusterInfo, None)
-
-    obj.commit(force=options.force)
+    if len(args) < 1:
+        parser.error("Failure no ore more then one arguments given.")
+    elif options.hostdependent == None:
+        parser.error("You must specify the type of the cdsl to be created. Means either hostdendent (-a|--hostdependent) or shared (-s|--shared).")
         
-    if options.updateinventory:
-        cdslRepository.update(src,clusterInfo, chroot=options.root)
-except Exception, e:
-    print "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
-    print "Error: %s" %str(e)
-    ComLog.debugTraceLog()
-    sys.exit(1) 
+    src=args[0]
+    del args[0]
+    nodes=[]
+    if args[1:]:
+        for arg in args:
+            if os.path.exists(arg) or arg.startswith("-"):
+                break
+            nodes.append(arg)
+        args=args[len(nodes):]
+            
+    if options.hostdependent:
+        cdsltype=CDSL_HOSTDEPENDENT_TYPE
+    else:
+        cdsltype=CDSL_SHARED_TYPE
+    
+    try:
+        obj = getCdsl(src=src, type=cdsltype, 
+                      cdslrepository=cdslRepository, clusterinfo=clusterInfo, nodes=nodes,
+                      realpath=not options.resolved)
+
+        obj.commit(force=not options.backup)
+        
+        if options.updateinventory:
+            cdslRepository.update(src, clusterInfo, chroot=options.root)
+    except SystemExit, se:
+        if se.code!=0:
+            print >>sys.stderr, "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
+            print >>sys.stderr, "Error: %s" %str(e)
+            ComLog.debugTraceLog("comoonics.cdsl")
+            sys.exit(se.code)         
+    except Exception, e:
+        print >>sys.stderr, "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
+        print >>sys.stderr, "Error: %s" %str(e)
+        ComLog.debugTraceLog("comoonics.cdsl")
+        sys.exit(1) 

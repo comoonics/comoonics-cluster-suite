@@ -1,0 +1,105 @@
+#!/usr/bin/python
+
+"""
+Validates the fencing configuration of the current cluster.
+"""
+import sys
+import os.path
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+    from comoonics.cluster import get_defaultsfiles, get_defaultsenvkey
+except ImportError:
+    from optparse import OptionParser
+from optparse import OptionGroup
+from comoonics.cluster import getClusterInfo, getClusterRepository, QueryMap, parseClusterConf
+from comoonics.cluster import clusterconf, commonoptparseroptions, querymapfile, get_defaultsfiles, get_defaultsenvkey
+from comoonics import ComLog, ComSystem
+import logging
+logging.basicConfig()
+
+def execFencecmd(cmdstr, parameters):
+    import subprocess
+    import StringIO
+    try:
+        cmd=subprocess.Popen(cmdstr, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    except OSError, oe:
+        raise ComSystem.ExecLocalException(cmdstr, 1, "", oe)
+    for parameter in parameters:
+        print >>cmd.stdin, parameter+'='+parameters[parameter]
+    cmd.stdin.close()
+    returncode=cmd.wait()
+    if returncode != 0:
+        raise ComSystem.ExecLocalException(cmdstr, returncode, "", "".join(cmd.stdout.readlines()))    
+
+parser = OptionParser(description=__doc__, usage="%s [baseoptions] [parameter=value]*" %os.path.basename(sys.argv[0]))
+
+fenceoptiong=OptionGroup(parser, "Fencing options")
+fenceoptiong.add_option("-n", "--name", default=None, dest="name", help="Specifies the fenceagent name.")
+fenceoptiong.add_option("-N", "--node", default=list(), dest="nodes", action="append", help="Overwrite clusternodes with this given node[s].")
+parser=commonoptparseroptions(parser)
+parser.add_option_group(fenceoptiong)
+
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError, AttributeError):
+    pass
+
+logger=ComLog.getLogger("comoonics.cluster.fence-validate")
+
+(options, args) = parser.parse_args()
+
+fencedeviceglobalparams=dict()
+if not args:
+    fencedeviceglobalparams["action"]="status"
+else:
+    for arg in args:
+        fencedeviceglobalparams[arg.split("=")[0]]=arg.split("=")[1]
+
+if not options.name:
+    parser.error("You have to specify the name of a valid fenceagent.")
+    sys.exit(1)
+
+doc=parseClusterConf(options.clusterconf)
+
+#create needed cluster objects
+clusterRepository = getClusterRepository(doc.documentElement,doc)
+clusterInfo = getClusterInfo(clusterRepository)
+
+fencedevicexpath='/cluster/fencedevices/fencedevice[@name="'+options.name+'"]'
+fencecnodesxpath='/cluster/clusternodes/clusternode[@name="%s"]/fence/method/device[@name="'+options.name+'"]'
+
+fencedeviceelement=clusterInfo.queryXml(fencedevicexpath)[0]
+for index in range(fencedeviceelement.attributes.length):
+    attr=fencedeviceelement.attributes.item(index)
+    fencedeviceglobalparams[attr.name]=attr.value
+
+if not options.nodes:
+    options.nodes=clusterInfo.getNodeIdentifiers(active=True)
+    
+for node in options.nodes:
+    sys.stdout.write(node)
+    fencecnode=clusterInfo.queryXml(fencecnodesxpath %node)
+    if fencecnode and len(fencecnode)==1:
+        fencecnode=fencecnode[0]
+        fencecmdparameters=dict(fencedeviceglobalparams)
+        for index in range(fencecnode.attributes.length):
+            attr=fencecnode.attributes.item(index)
+            fencecmdparameters[attr.name]=attr.value
+        cmd=fencecmdparameters["agent"]
+        del fencecmdparameters["agent"]
+        del fencecmdparameters["name"]
+    
+        logger.debug("parameters: %s" %fencecmdparameters)
+        logger.debug("cmd: %s" %cmd)
+    
+        try:
+            execFencecmd(cmd, fencecmdparameters)
+            print" OK"
+        except ComSystem.ExecLocalException, ele:
+            print >>sys.stderr, "Could not execute fencecmd %s with parameters %s." %(cmd, fencecmdparameters)
+            print >>sys.stderr, "Error: %s" %ele
+            ComLog.debugTraceLog("comoonics.cdsl.fence-validate")
+            print" FAILED"
+    else:
+        print " SKIPPED(fenceagent: %s not found)" %options.name

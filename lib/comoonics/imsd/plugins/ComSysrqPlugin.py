@@ -77,43 +77,6 @@ processes.
     def doPost(self, _name, *params, **kwds):
         self._sysrq.restoreTrigger()
 
-def _test():
-    _validcommands=[
-        "locks",
-        "help",
-        "memory",
-        "regs",
-        "timers",
-        "sync",
-        "tasks",
-        "voyager",
-        "blocked",
-        "xmon",
-        "log0",
-        "log1",
-        "log2",
-        "log3",
-        "log4",
-        "log5",
-        "log6",
-        "log7",
-        "log8",
-        "log9",
-                    ]
-    _plugin=SysrqPlugin()
-    print "Help of plugin %s: " %_plugin.getName()
-    print _plugin.help()
-    for _command in _plugin.getCommands():
-        print "Help of command %s:" %_command
-        print _plugin.help(_command)
-    for _command in _validcommands:
-        print "doCommand %s:" %_command
-        _plugin.doCommand(_command)
-        _plugin.doCommand(_command)
-
-if __name__=="__main__":
-    _test()
-
 ########################
 # $Log: ComSysrqPlugin.py,v $
 # Revision 1.1  2007-09-07 14:42:28  marc

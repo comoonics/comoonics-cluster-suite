@@ -14,24 +14,175 @@
 
 import os
 import kudzu
-from comoonics import ComLog
+from comoonics import ComLog, ComSystem
 log=ComLog.getLogger("comoonics:installation:nfs")
 try:
     from fsset import FileSystemType
+    import flags
+    import iutil
+    import commands
+    import logging
+    anacondalog = logging.getLogger("anaconda")
     class nfsFileSystem(FileSystemType):
         def __init__(self):
+            from flags import flags
             FileSystemType.__init__(self)
             self.partedFileSystemType=None
-            self.formattable=0
+            self.formattable=1
             self.checked=1
             self.linuxnativefs=1
-            self.supported=-1
+            if flags.cmdline.has_key("nfs") or flags.debug:
+                self.supported = -1
+            else:
+                self.supported = 0
             self.name="nfs"
             self.packages=None
             self.maxSizeMB=16*1024*1024
-        
+            self.packages=[ "portmap" ]
+                
         def formatDevice(self, entry, progress, chroot="/"):
-            log.debug("nfsFileSystem: skipping nfs format")
+            self.mount(entry.device.getDevice(), entry.mountpoint, instroot=chroot)
+            log.debug("nfsFileSystem: Erasing all content on %s, %s/%s..." %(entry.device.getDevice(), chroot, entry.mountpoint))
+            commands.getstatusoutput("rm -rf %s/%s/*" %(chroot, entry.mountpoint))
+            self.umount(entry.device, "%s/%s" %(chroot, entry.mountpoint))
+
+        def mount(self, device, mountpoint, readOnly=0, bindMount=0, instroot=""):
+            if not self.isMountable():
+                return
+            iutil.mkdirChain("%s/%s" %(instroot, mountpoint))
+#            if flags.selinux:
+#                log.info("Could not mount nfs filesystem with selinux context enabled.")
+#                return
+            anacondalog.debug("nfsFileSystem: Mounting nfs %s => %s" %(device, "%s/%s" %(instroot, mountpoint)))
+            ComSystem.execLocalOutput("mount -t nfs -o nolock %s %s/%s" %(device, instroot, mountpoint))
+
+        def umount(self, device, path):
+            log.debug("Umounting nfs filesystem from %s" %path)
+            ComSystem.execLocalOutput("umount %s" %path)
+        
+        def badblocksDevice(self, entry, windowCreator, chroot='/'):
+            return
+        
+    from partRequests import PartitionSpec, RequestSpec
+    from constants import REQUEST_PREEXIST
+    import fsset
+    class nfsPartitionSpec(PartitionSpec):
+        """ Object to define a pseudo-requests nfs partition.."""
+        def __init__(self, fstype, size = None, mountpoint = None,
+                     preexist = 1, migrate = None, grow = 0, maxSizeMB = None,
+                     start = None, end = None, drive = None, primary = None,
+                     format = None, multidrive = None, bytesPerInode = 4096,
+                     fslabel = None):
+            """Create a new PartitionSpec object.
+
+            fstype is the fsset filesystem type (should always be nfs).
+            size is the requested size (in megabytes).
+            mountpoint is the mountpoint.
+            grow is whether or not the partition is growable (always 0).
+            maxSizeMB is the maximum size of the partition in megabytes (always None).
+            start is the starting cylinder/sector (new/preexist) (always None).
+            end is the ending cylinder/sector (new/preexist) (always None).
+            drive is the drive the partition goes on (default None should be a pseudo NFSDisk).
+            primary is whether or not the partition should be forced as primary (always None).
+            format is whether or not the partition should be formatted (always No).
+            preexist is whether this partition is preexisting (always Yes).
+            migrate is whether or not the partition should be migrated (always No).
+            multidrive specifies if this is a request that should be replicated
+            across _all_ of the drives in drive (always No)
+            bytesPerInode is the size of the inodes on the filesystem (ignored).
+            fslabel is the label to give to the filesystem (ignored).
+            """
+
+            # if it's preexisting, the original fstype should be set
+            if preexist == 1:
+                origfs = fstype
+            else:
+                origfs = None
+            RequestSpec.__init__(self, fstype = fstype, size = size,
+                                 mountpoint = mountpoint, format = None,
+                                 preexist = 1, migrate = None,
+                                 origfstype = origfs, bytesPerInode = bytesPerInode,
+                                 fslabel = fslabel)
+            self.type = REQUEST_PREEXIST
+
+            self.grow = 0
+            self.maxSizeMB = maxSizeMB
+            self.requestSize = size
+            self.start = start
+            self.end = end
+
+            self.drive = drive
+            self.primary = None
+            self.multidrive = None
+
+            # should be able to map this from the device =\
+            self.currentDrive = None
+            """Drive that this request will currently end up on."""        
+
+        def getDevice(self, partitions):
+            """Return a device to solidify."""
+            self.dev = fsset.PartitionDevice(self.device,
+                                             encryption=self.encryption)
+            return self.dev
+
+        def getActualSize(self, partitions, diskset):
+            """Return the actual size allocated for the request in megabytes."""
+            # FIXME: Not yet implemented will return 10000
+            return 10000
+
+        def doSizeSanityCheck(self):
+            """Sanity check that the size of the partition is sane."""
+            if not self.fstype:
+                return None
+            if not self.format:
+                return None
+            ret = RequestSpec.doSizeSanityCheck(self)
+            if ret is not None:
+                return ret
+
+            if (self.size and self.maxSizeMB
+                and (self.size > self.maxSizeMB)):
+                return (_("The size of the requested partition (size = %s MB) "
+                          "exceeds the maximum size of %s MB.")
+                        % (self.size, self.maxSizeMB))
+
+            if self.size and self.size < 0:
+                return _("The size of the requested partition is "
+                         "negative! (size = %s MB)") % (self.size)
+            return None
+ 
+    from fsset import Device
+    import re
+    class NFSDevice(Device):
+        def __init__(self , device = "none", encryption=None):
+            Device.__init__(self, device, encryption)
+            # FIXME: Quickhack for size of 6GB should be made more generic later
+            self.model="NFSExport"
+            self.deviceOptions=",nolock,_netdev"
+            self.crypto = None
+    
+        def check(self, chroot="/mnt/sysimage"):
+            """
+            Will automatically check if the nfs export is availble or not and also update internal values.
+            """
+            filesystem=fsset.fileSystemTypeGet("nfs")
+            filesystem.mount(self.device, chroot)
+            dfoutput=ComSystem.execLocalOutput("df %s" %chroot )
+            spaces=re.match(self.getExport()+"\W+\s(?P<all>\d+)\s+(?P<used>\d+)\s+(?P<available>\d+)\s", "\n".join(dfoutput[1:]))
+            if spaces:
+                self.size=int(spaces.group("all"))
+                self.used=int(spaces.group("used"))
+                self.available=int(spaces.group("available"))
+            filesystem.umount(self.device, chroot)
+        
+        def getDeviceOptions(self):
+            return self.deviceOptions
+    
+        def getExport(self):
+            return self.getDevice()
+        def getLabel(self):
+            return ""
+       
 except:
     pass
 
@@ -41,31 +192,23 @@ class NFSType(object):
     def check_feature(self, feature):
         return False
 
-class NFSDevice(object):
-    def __init__(self, _disk):
-        # FIXME: Quickhack for size of 6GB should be made more generic later
-        self.heads=1024
-        self.cylinders=1024
-        self.sectors=6000
-        self.sector_size=1
-        self.model="NFSExport"
-
-
-class PseudoDisk(object):
+class PsudoDisk(object):
     pass
-class NFSDisk(PseudoDisk):
+class NFSDisk(PsudoDisk):
     def __init__(self, _export):
         self.export=_export
         self.dev=NFSDevice(self)
         self.type=NFSType()
+        self.extended_partition=None
+        self.max_primary_partition_count=0
     def next_partition(self):
         return []
 
 from partedUtils import DiskSet
-class PseudoDiskSet(DiskSet):
+class PsudoDiskSet(DiskSet):
     pseudoDisks=list()
     def _removeDisk(self, drive, addSkip=True):
-        if not isinstance(drive, PseudoDisk):
+        if not isinstance(drive, PsudoDisk) and not (self.disks.has_key(drive) and isinstance(self.disks[drive], PsudoDisk)):
             DiskSet._removeDisk(self, drive, addSkip)
         
 class NFSExport(object):
@@ -92,9 +235,8 @@ class nfs(object):
         pass
     def startup(self):
         pass
-    def addNFSExport(self, nfsserver, export="/"):
+    def addNFSExport(self, nfsserver, export):
         self.nfsexports.append(NFSExport(nfsserver, export))
-        
     def writeKS(self, _file):
         pass
     def write(self, installPath):

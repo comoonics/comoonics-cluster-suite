@@ -15,67 +15,71 @@ __version__ = "$Revision: 1.5 $"
 # $Source: /atix/ATIX/CVSROOT/nashead2004/management/comoonics-clustersuite/python/lib/comoonics/storage/ComDevice.py,v $
 
 import os
-import re
-import sys
 
-from comoonics.ComExceptions import ComException
 from ComDisk import HostDisk
 
 class Device(HostDisk):
     TAGNAME="device"
-    def __init__(self, element, doc):
+    def __init__(self, element, doc, mountsfile="/proc/mounts"):
         HostDisk.__init__(self,element, doc)
+        self.mountsfile=mountsfile
 
     def isMounted(self, mountpoint=None):
-        __lines = self.getMountList()
-        __exp = "^" + self.getDevicePath() + " "
-        if mountpoint:
-            __exp+=mountpoint.getAttribute("name")
-        self.getLog().debug("is mounted: " + __exp)
-        for __line in __lines:
-            if re.search(__exp, __line):
+        """
+        returns True if this device is already mounted.
+        If mountpoint is also given, the mountpoint will be taken into account
+        otherwise the devicename
+        @param mountpoint: the mountpoint as DataObject
+        @return: True or False. True if device is already mounted otherwise False
+        """
+        for line in self.getMountList():
+            lineattrs=line.split(" ")
+            # split the device if mountpoint is not set and give over to matchDevice 
+            if mountpoint and self.isMyMountpoint(lineattrs[1], mountpoint.getAttribute("name"), lineattrs[0]):
+                return True
+            elif not mountpoint and self.isMyDevice(lineattrs[0]):
                 return True
         return False
 
+    def isMyDevice(self, devicepath):
+        """
+        Returns True if the underlying device is the same device as the given one. For this os.path.samefile will be used.
+        @param L{String}devicepath: The path to the device as string.
+        @return: True or False. True if the given devicename is the same device as the underlying one.
+        """
+        if os.path.exists(self.getDevicePath()):
+            return os.path.exists(devicepath) and os.path.samefile(devicepath, self.getDevicePath())
+        else:
+            return devicepath==self.getDevicePath()
+
+    def isMyMountpoint(self, mountpoint1, mountpoint2, devicepath):
+        """
+        Returns true if the devicepath is the same as the underlying device and if the given mountpoint is the same file as the other one given
+        and if both mountpoints exist physically.
+        @param mountpoint1: string path to the first mountpoint
+        @param mountpoint2: string path to the second mountpoint
+        @param devicepath: the devicepath to be compared with the underlying one. 
+        @return: True or False. True if either the devicepath exists or the mountpoints are of the same file. 
+        """
+        return self.isMyDevice(devicepath) and os.path.exists(mountpoint1) and os.path.exists(mountpoint2) and os.path.samefile(mountpoint1, mountpoint2)
 
     def scanMountPoint(self):
         """ returns first mountpoint of device and fstype if mounted
         returns None if not mounted
         """
-        from comoonics.ecbase import ComUtils
-        lines=self.getMountList()
-        exp="^" + self.getDevicePath() + " (/.*?) .*"
-        self.getLog().debug(exp)
-        mp=ComUtils.grepInLines(lines, exp)
-        if len(mp) == 0:
-            return [None, None]
-        exp="^" + self.getDevicePath() + " " + mp[0] + " (.*?) .*"
-        fs=ComUtils.grepInLines(lines, exp)
-        if len(fs) == 0:
-            return [None, None]
-        self.getLog().debug("mountpoint %s filesystem %s", mp[0], fs[0])
-        return [mp[0], fs[0]]
+        for line in self.getMountList():
+            lineattrs=line.split(" ")
+            if self.isMyDevice(lineattrs[0]):
+                if lineattrs[1] and lineattrs[2]:
+                    return [lineattrs[1], lineattrs[2]]
+        return [None, None]
 
     """
     private methods
     """
 
     def getMountList(self):
-        if not os.path.isfile("/proc/mounts"):
-            raise ComException("/proc/mounts not found.")
-
-        if sys.version[:3] < "2.5":
-            [ i, o ]=os.popen2("cat /proc/mounts")
-        else:
-            import subprocess
-            p = subprocess.Popen(["cat /proc/mounts"], shell=True, 
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                             close_fds=True)
-            p.wait()
-            i=p.returncode
-            o=p.stdout
-            
-        return o.readlines()
+        return file(self.mountsfile)
 
 # $Log: ComDevice.py,v $
 # Revision 1.5  2011-02-15 14:54:52  marc

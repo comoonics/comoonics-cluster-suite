@@ -1,0 +1,208 @@
+#!/usr/bin/python
+"""
+Administrates cdsl infrastructures.
+
+Creating of cdsl infrastructure (--create):
+%{progname}s builds the infrastructure to create cdsls, this includes 
+creating directories and symbolic links. 
+Also an inventoryfile that defaults %{inventoryfile} is created. 
+It will further on hold all cdsl metadata. 
+The resulting infrastructure needs to be linked together
+with the link command.
+
+Links together node identification and cdsl directory structure (--link):
+This command links together the given node identfication and the directory structure. 
+This is normally done by the bind mount command an requires root rights.
+
+Lists and returns global parameters set in the repository file (--get/--list).
+
+Lists and returns all or single cdsls from the given repository (--getcdsl/--listcdsls). 
+"""
+
+__version__ = "$revision$"
+
+import getopt
+import sys
+import logging
+import xml
+logging.basicConfig()
+
+import os.path
+sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
+
+from comoonics import ComLog, XmlTools
+import comoonics.cluster
+from comoonics.cluster import getClusterInfo, getClusterRepository, ClusterRepositoryNoNodesFound
+from comoonics.cdsl import commonoptparseroptions, dirtrim, get_defaultsfiles, get_defaultsenvkey
+from comoonics.cdsl import getCdslRepository, getCdslRepositoryClass, CdslVersionException
+try:
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+except ImportError:
+    from optparse import OptionParser
+from optparse import OptionGroup
+
+commands=["create", "delete", "get", "list", "set", "migrate", "getcdsl", "listcdsls", "addnode", "deletenode" ]
+
+parser = OptionParser(description=__doc__, usage="%s [baseoptions] command [options]" %os.path.basename(sys.argv[0]))
+parser=commonoptparseroptions(parser)
+
+createoptions=OptionGroup(parser, "Create Options", "Options that influence the behavior of cdls repository creation.")
+createoptions.add_option("-t", "--cdsltree", default=getCdslRepositoryClass().cdsltree_default, dest="cdsltree", help="path for hostdependent cdsls")
+createoptions.add_option("-s", "--cdsltreeshared", default=getCdslRepositoryClass().cdslsharedtree_default, dest="cdsltreeshared", help="path for the reshared cdsls")
+createoptions.add_option("-L", "--cdsllink", default=getCdslRepositoryClass().cdsllink_default, dest="cdsllink", help="path for the cdsl link.")
+createoptions.add_option("-M", "--maxnodeidnum", default=getCdslRepositoryClass().maxnodeidnum_default, dest="maxnodeidnum", type="int", help="Up to this nodeid node dirs are created")
+createoptions.add_option("-N", "--usenodenames", default=not getCdslRepositoryClass().usenodeids_default, dest="usenodenames", action="store_true", help="Use nodenames instead of nodeids.")
+createoptions.add_option("-D", "--defaultdir", default=getCdslRepositoryClass().defaultdir_default, dest="defaultdir", help="set the default node directory.")
+createoptions.add_option("-S", "--sourceinventory", default=None, dest="sourceinventory", help="Source inventory file. Only for migration")
+#createoptions.add_option("-n", "--node", default=list(), dest="nodes", action="append", help="Manual specify the node identifier. Multiples allowed.")
+
+#parser.add_option("-p", "--nodeprefix", default=None, dest="nodeprefix", help="set the nodeprefix if needed")
+parser.add_option_group(createoptions)
+
+listgetoptions=OptionGroup(parser, "listcdsls/getcdsl Options", "Options for list and get cdsls.")
+listgetoptions.add_option("-X", "--xml", default=False, dest="xml", action="store_true", help="Output in XML.")
+listgetoptions.add_option("-E", "--detailed", default=False, dest="detailed", action="store_true", help="Output in cdsl in detailed format.")
+parser.add_option_group(listgetoptions)
+
+commonoptions=OptionGroup(parser, "Common Options", "Options that are valid for all commands")
+commonoptions.add_option("-C", "--onlyinventory", default=False, dest="onlyinventory", action="store_true", help="Only create the inventory file but don't create the filesystem structure.")
+commonoptions.add_option("-R", "--recursive", default=True, dest="recursive", action="store_true", help="Toggle if what to be done will be done recursive. Means also for subrepositories. Default: True")
+commonoptions.add_option("-f", "--force", default=False, dest="force", action="store_true", help="Toggle if what to be done will be forced if necessary. Default is: False.")
+parser.add_option_group(commonoptions)
+
+commandoptions=OptionGroup(parser, "Command Options", "One of these option is required to tell what you are going to do.")
+commandoptions.add_option("-g", "--migrate",   default=None, dest="command", type="choice", choices=commands, help="Migrates the current cdsl inventory to latest version")
+commandoptions.add_option("-x", "--delete" ,   default=None, dest="command", type="choice", choices=commands, help="Deletes the cdsl infrastructure with all cdsls. Handle with extreme care!!")
+commandoptions.add_option("-e", "--create" ,   default=None, dest="command", type="choice", choices=commands, help="Creates the cdsl infrastructure. Default is to create. So you don't need to specify it.")
+commandoptions.add_option("-p", "--get"    ,   default=None, dest="command", type="choice", choices=commands, help="Get a specified parameter from the cdsl infrastructure.")
+commandoptions.add_option("-T", "--set"    ,   default=None, dest="command", type="choice", choices=commands, help="Set a specified parameter from the cdsl infrastructure with the given value.")
+commandoptions.add_option("-l", "--list"   ,   default=None, dest="command", type="choice", choices=commands, help="List all parameters from the cdsl infrastructure.")
+commandoptions.add_option("-I", "--listcdsls", default=None, dest="command", type="choice", choices=commands, help="List all cdsls in this repository (--recursive leads to all other repos too).")
+commandoptions.add_option("-G", "--getcdsl",   default=None, dest="command", type="choice", choices=commands, help="Get a specific cdsl from this repository (--recursive leads to all other repos too).")
+commandoptions.add_option("-o", "--addnode",   default=None, dest="command", type="choice", choices=commands, help="Adds a new node to the cdsl repository and updates all cdsls accordingly.")
+commandoptions.add_option("-O", "--deletenode",default=None, dest="command", type="choice", choices=commands, help="Deletes an existing node from the cdsl repository and updates all cdsls accordingly. You'll end up with a directory called like the nodeid in the current working directory.")
+parser.add_option_group(commandoptions)
+
+try:
+    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+    pass
+
+ComLog.setLevel(logging.INFO)
+(options, args) = parser.parse_args()
+
+if len(args) != 0 and options.command:
+    parser.error("You specified a command as argument and as option. Please specify one or the other.")
+    sys.exit(1)
+elif not args and not options.command:
+    parser.error("No command specified. Please specify the command from %s" %commands)
+    sys.exit(1)
+else:
+    options.command=args[0]
+    args=args[1:]
+
+if options.command not in commands:
+    parser.error("Wrong command specified. You might choose from the following commands %s." %commands)
+    sys.exit(1)
+
+if not options.usenodenames:
+    _useNodeids = "True"
+else:
+    _useNodeids = "False"
+
+try:
+    parentcdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, 
+                                             cdsltree=options.cdsltree, cdsltreeshared=options.cdsltreeshared, 
+                                             cdsllink=options.cdsllink, maxnodeidnum=str(options.maxnodeidnum), 
+                                             usenodeids=str(not options.usenodenames), defaultdir=options.defaultdir, 
+                                             nocreate=not options.command=="create")
+    if options.mountpoint != "" and options.mountpoint != "/":
+        childcdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, 
+                                                mountpoint=options.mountpoint, cdsltree=options.cdsltree, 
+                                                cdsltreeshared=options.cdsltreeshared, cdsllink=options.cdsllink, 
+                                                maxnodeidnum=str(options.maxnodeidnum), 
+                                                usenodeids=str(not options.usenodenames), 
+                                                defaultdir=options.defaultdir, nocreate=not options.command == "create")
+    else:
+        childcdslRepository=parentcdslRepository
+
+    # see comoonics.cluster.getClusterRepository for explanation
+    clusterRepository = getClusterRepository(clusterconf=options.clusterconf, maxnodeidnum=int(parentcdslRepository.getMaxnodeidnum()))
+    clusterInfo = getClusterInfo(clusterRepository)
+
+    if options.command == "create" and not options.onlyinventory:
+        try:
+            childcdslRepository.buildInfrastructure(clusterInfo)
+            if parentcdslRepository.root == childcdslRepository.root and parentcdslRepository.getMountpoint() != childcdslRepository.getMountpoint():
+                parentcdslRepository.addRepository(childcdslRepository, options.mountpoint)
+        except Exception, err:
+            print >>sys.stderr, "Could not create cdsl infrastructure for repository %s." %childcdslRepository
+            print >>sys.stderr, "Error %s" %err
+            ComLog.debugTraceLog("comoonics.cdsl")
+    elif options.command == "delete":
+        if not options.onlyinventory:
+            childcdslRepository.removeInfrastructure(clusterInfo, options.recursive, options.force, True)
+#        if parentcdslRepository != childcdslRepository:
+#            parentcdslRepository.removeRepository(childcdslRepository)
+    elif options.command == "get":
+        print childcdslRepository.getAttribute(args[0])
+    elif options.command == "set":
+        print childcdslRepository.setAttribute(args[0], args[1])
+        childcdslRepository.writeresource(nolock=False)
+    elif options.command == "list":
+        attributes=childcdslRepository.getElement().attributes
+        for i in range(attributes.length):
+            print "%s: %s" %(attributes.item(i).name, attributes.item(i).value)
+    elif options.command == "listcdsls":
+        print "root: "+childcdslRepository.root
+        if not options.xml:
+            if childcdslRepository.getMountpoint()!= "":
+                print childcdslRepository.getMountpoint()+":"
+            else:
+                print "/:"
+        if options.recursive:
+            for repository in childcdslRepository.getRepositories():
+                print "\t"+repository.getMountpoint()+":"
+                for cdsl in childcdslRepository.walkCdsls(clusterinfo=clusterInfo):
+                    if options.xml:
+                        print XmlTools.toPrettyXml(cdsl.getElement())
+                    else:
+                        print "\t\t"+cdsl.toString(detailed=options.detailed)
+        for cdsl in childcdslRepository.walkCdsls(clusterinfo=clusterInfo):
+            if options.xml:
+                print "\t"+XmlTools.toPrettyXml(cdsl.getElement())
+            else:
+                print "\t"+cdsl.toString(detailed=options.detailed)
+    elif options.command == "getcdsl":
+        cdsl=childcdslRepository.getCdsl(args[0])
+        if options.xml:
+            print XmlTools.toPrettyXml(cdsl.getElement())
+        else:
+            print cdsl.toString(detailed=options.detailed)
+    elif options.command == "addnode":
+        childcdslRepository.addNode(args[0], options.recursive)
+    elif options.command == "deletenode":
+        childcdslRepository.removeNode(args[0], recursive=options.recursive, force=options.force, backupdir=os.path.curdir)
+    elif options.command == "migrate":
+        print "Seems you are using the latest version of the cdsl inventory. I will not try to migrate anything."
+        sys.exit(0)
+    else:
+        parser.error("Wrong option or no option given. Please either specify create, list, get or delete as action.")
+        sys.exit(1)
+except CdslVersionException:
+    if options.command == "migrate":
+        import comoonics.cdsl.migration
+        cwd=os.getcwd()
+        os.chdir(os.path.join(options.root, options.mountpoint))
+        if not options.sourceinventory:
+            options.sourceinventory=getCdslRepositoryClass().guessresource()
+        repository=comoonics.cdsl.migration.migrate(None, getCdslRepositoryClass().version, fromresource=options.sourceinventory, toresource=options.inventoryfile, root=options.root, mountpoint=options.mountpoint)
+        os.chdir(cwd)
+        print("If no errors occured you can now savely remove the old cdsl inventory found in %s/%s\n" %(os.path.join(options.root, options.mountpoint), getCdslRepositoryClass().default_resources[1]))
+    else:
+        raise
+except ClusterRepositoryNoNodesFound:
+    print >>sys.stderr, "Could not create cluster repository. Either no cluster configuration available or no maxnodeidnum parameter specified."
+    ComLog.debugTraceLog("comoonics.cdsl")
+    sys.exit(4)

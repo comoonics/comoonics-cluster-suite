@@ -58,16 +58,20 @@ import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
 from comoonics.cluster.tools import pexpect, get_defaultsfiles, get_defaultsenvkey
+from comoonics.cluster import clusterconf 
 import fileinput, fcntl, getpass, os, re
 import socket, struct, sys, termios, threading, time
 try:
     from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup, make_option
 except:
     from optparse import OptionParser, OptionGroup, make_option
-
 #                                                                            }}}
 # ------------------------------------------------------------------------------
 # Configuration                                                              {{{
+# Default host list for the -a option.
+defaultgroup_dir=os.path.join(get_defaultsfiles()[2], "groups")
+allgroup_file = os.path.join(defaultgroup_dir, "all")
+homegroup_dir = os.path.join(get_defaultsfiles()[3], "groups")
 
 # Default shell protocol to use RSH, SSH or Telnet.
 proto = "SSH"
@@ -94,7 +98,7 @@ ssh_hostkey = "ask"
 
 # Config Directory for SSH files.
 # Default $HOME/.ssh
-SSH_CONFIG_DIR = os.environ['HOME'] + '/.ssh/'
+SSH_CONFIG_DIR = os.environ.get('HOME', '') + '/.ssh/'
 
 # Location of users SSH known hosts file.
 # Default $HOME/.ssh/known_hosts
@@ -187,12 +191,22 @@ def command_options (appname, usage):
                             "hostnames, or ip addresses (individually" + \
                             " or as a range i.e. node01-10 or " + \
                             "192.168.0.1-254).")
+    host_options.add_option("-R", "--norange", action="store_true",
+                            dest="norange",
+                            help="Disable interpreting ranges in hostnames " + \
+                            "such as node01-10 or 192.168.0.1-254).")
+    host_options.add_option("", "--windowrows", action="store", type="int",
+                            dest="windowrows", metavar="<ROWS>", default=24,
+                            help="Set the number of rows the terminal should fall back if the tty does not allow to query those settings. Default: %default")
+    host_options.add_option("", "--windowcolumns", action="store", type="int",
+                            dest="windowcolumns", metavar="<COLS>", default=80,
+                            help="Set the number of columns the terminal should fall back if the tty does not allow to query those settings. Default: %default")
     cmd_parser.add_option_group(host_options)
     cluster_options = OptionGroup(cmd_parser, "Cluster Options")
     cluster_options.add_option("-N", "--nocluster", action="store_true",
                             dest="nocluster", default=False, 
                             help="Disables automatic cluster detection.")
-    cluster_options.add_option("-c", "--clusterconf", type="string", default=cluster_conf,
+    cluster_options.add_option("-c", "--clusterconf", type="string", default=clusterconf,
                                dest="clusterconf", help="Overwrites the default clusterconf file")
     cluster_options.add_option("-L", "--nolocalhost", action="store_true", default=False,
                                dest="localhost", help="Use nodename instead of localhost for localnode.")
@@ -245,7 +259,7 @@ def command_options (appname, usage):
 
         cmd_parser.add_option_group(ssh_options)
         
-        user_options.add_option("-s", "--sudo", action="store_true", dest="sudo", default=True,
+        user_options.add_option("-s", "--sudo", action="store_true", dest="sudo", default=False,
                                 help="After logging in, switch to root user.")
 
     # SCP Options
@@ -612,7 +626,7 @@ def host_loop (command, options, hostlist, password, pass_root, win_width):
         thread.join()
     return output_list, error_list
 
-def process_hostlist (all, default_group, hostfile_list, groupfile, nodes, verbose):
+def process_hostlist (all, default_group, hostfile_list, groupfile, nodes, verbose, norange):
     """
     Function Process Hostlist
 
@@ -623,7 +637,7 @@ def process_hostlist (all, default_group, hostfile_list, groupfile, nodes, verbo
       hostfile_list = []
     remove_nodes  = []
 
-    # print "process_hostlist (%s, %s, %s, %s, %s)" %(all, default_group, hostfile_list, nodes, verbose)
+    # print "process_hostlist (%s, %s, %s, %s, %s %s)" %(all, default_group, hostfile_list, nodes, verbose, norange)
 
     if groupfile:
         if os.path.exists("%s/%s" %(homegroup_dir, groupfile[0])):
@@ -668,13 +682,16 @@ def process_hostlist (all, default_group, hostfile_list, groupfile, nodes, verbo
             index = []
             pad_depth = 0
             custom_port = None
-            index     = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)(:\d+)', node)
-            if index == None:
-                index = re.search(r'(\b\D+)(\d+)-(\d+)(:\d+)', node)
-            if index == None:
-                index = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)', node)
-            if index == None:
-                index = re.search(r'(\b\D+)(\d+)-(\d+)', node)
+            if norange:
+               index = None
+            else:
+                index     = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)(:\d+)', node)
+                if index == None:
+                    index = re.search(r'(\b\D+)(\d+)-(\d+)(:\d+)', node)
+                if index == None:
+                    index = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)', node)
+                if index == None:
+                    index = re.search(r'(\b\D+)(\d+)-(\d+)', node)
             if index == None:
                 continue
             else:
@@ -1145,7 +1162,7 @@ def sess_su (session, host, pass_root, timeout, verbose):
     """
 
     sulogin = session.sendline ('/bin/su -')
-    sulogin_pl = session.compile_pattern_list([timeout, pexpect.EOF,
+    sulogin_pl = session.compile_pattern_list([pexpect.TIMEOUT, pexpect.EOF,
                  PASSWORD_PROMPT, SU_LOGINFAIL, SU_DEB_LOGINFAIL, CMD_PRMPT])
     sulogin_fail = 0
     sulogin_retry = 0
@@ -1200,7 +1217,7 @@ def sess_suexit (session):
     Exit SU session.
     """
     session.sendline ('exit')
-    session. expect (CMD_PRMPT, timeout=self.timeout)
+    session.expect (CMD_PRMPT, timeout=session.timeout)
 
 def test_connectivity (hlist, options):
     """
@@ -1328,12 +1345,11 @@ def getHostsFromCluster(clusterconf, verbose, uselocalhost=True, localhost="loca
     """
     if verbose >= 2:
         print "  Adding hosts to hostlist.."
-    from comoonics.cluster.ComClusterRepository import ClusterRepository
-    from comoonics.cluster.ComClusterInfo import ClusterInfo
+    from comoonics.cluster import getClusterRepository, getClusterInfo
     from comoonics import ComSystem
     
-    repo=ClusterRepository(clusterconf)
-    info=ClusterInfo(repo)
+    repo=getClusterRepository(clusterconf)
+    info=getClusterInfo(repo)
     if ComSystem.isSimulate():
         info.helper.setSimOutput()
         for node in info.getNodes():
@@ -1426,7 +1442,8 @@ def main (argv):
             print "Process host list"
         if not hostlist:
             hostlist=process_hostlist(options.allgroup, allgroup_file,
-                                      options.hostfiles, options.group, options.nodes, options.verbose)
+                                      options.hostfiles, options.group, options.nodes, options.verbose,
+                                      options.norange)
         if options.verbose >= 2:
             print '  Hostlist:  %s' % (hostlist)
         # Max host length
@@ -1437,8 +1454,13 @@ def main (argv):
             print '  Max Host Length:  %s' % (max_host_len)
         # Window width
         if not options.dryrun:
-            window = fcntl.ioctl(0, termios.TIOCGWINSZ, "\000"*8)
-            row, column = struct.unpack('hhhh', window)[0:2]
+            # if the ioctl could not be executed because of a missing tty we default to a size.
+            try:
+                window = fcntl.ioctl(0, termios.TIOCGWINSZ, "\000"*8)
+                row, column = struct.unpack('hhhh', window)[0:2]
+            except IOError:
+                row=options.windowrows
+                column=options.windowcolumns
             win_width = column - (max_host_len + 3)
         # Test hosts for connectivity
         if options.verbose >= 1:

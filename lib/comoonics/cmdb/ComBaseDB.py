@@ -124,7 +124,6 @@ class BaseDB(DBConnection):
         _return=0
         rs=self.selectQuery(selectquery)
         count=rs.num_rows()
-        log_array=list()
 
         if count == 0:
             #self.log.debug("insert %s" % insertquery)

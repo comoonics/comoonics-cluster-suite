@@ -175,6 +175,7 @@ try:
            n_doc.freeDoc()
            res.freeDoc()
            doc=reader.fromString(str_buff)
+           libxslt.cleanup()
         except ImportError, ie:
             warnings.warn("""Could not import xslt functionality for this plattform (libxslt, libxml2 for python).
 Either find a package that provides this libraries or
@@ -184,7 +185,6 @@ don't use xslt translations.""")
             line("Could not apply stylesheet to document. Quitting. Error: %s" %e)
             ComLog.debugTraceLog()
             raise e
-        libxslt.cleanup()
     else:
 	doc = reader.fromString(_buf.getvalue())
 	#if values:

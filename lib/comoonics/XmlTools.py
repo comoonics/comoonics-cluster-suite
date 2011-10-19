@@ -54,6 +54,14 @@ class ElementFilter(object):
         else:
             return ElementFilter.FILTER_REJECT
 
+def documentNodeFromNode(node):
+    if node.nodeType==Node.DOCUMENT_NODE:
+        return node
+    elif node.parentNode:
+        return documentNodeFromNode(node.parentNode)
+    else:
+        return None 
+
 def evaluateXPath(path, element):
     try:
         import xml.dom
@@ -97,10 +105,9 @@ def overwrite_attributes_with_xpaths(_element, xpaths):
     for xpath in xpaths.keys():
         try:
             logger.debug("overwrite_attributes_with_xpaths xpath %s=>%s, rootnode: %s, type(element): %s, class(element): %s" %(xpath, xpaths[xpath], _element, type(_element), _element.__class__))
-            if isinstance(_element, Node):
+            if isinstance(element, Node):
                 try:
                     from xml.xpath import Evaluate
-                    element=clone_node(element)
                     sets=Evaluate(xpath, element)
                     for _set in sets:
                         _set.nodeValue=xpaths[xpath]
@@ -328,10 +335,18 @@ def clone_node(node, doc=None):
     """
     clones the given node by creating a new one
     """
-    import xml.dom
+    if hasattr(node, "cloneNode"):
+        return node.cloneNode(deep=1)
     if not doc:
-        _impl=getDOMImplementation()
-        doc=_impl.createDocument(None, node.tagName, None)
+        doc=documentNodeFromNode(node)
+        if not doc:
+            _impl=getDOMImplementation()
+            if node.nodeType==Node.DOCUMENT_NODE:
+                doc=_impl.createDocument(None, node.documentElement.tagName, None)
+            elif node.nodeType==Node.ELEMENT_NODE:
+                doc=_impl.createDocument(None, node.tagName, None)
+            else:
+                doc=_impl.createDocument(None, node.nodeValue, None)
     if node.nodeType==Node.ELEMENT_NODE:
         newnode=doc.createElement(node.tagName)
         for _i in range(node.attributes.length):

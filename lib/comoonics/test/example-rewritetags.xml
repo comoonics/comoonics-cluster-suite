@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE enterprisecopy SYSTEM "/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy name="mkinitrd">
+	<modificationset type="filesystem">
+   		<device name="/dev/sda1">
+	      	<filesystem type="ext3" exlock="/var/sharelock/bootfs.lock"/>
+      		<mountpoint name="/boot"/>
+   			<modification type="copy">
+   				<file name="initrd_sr-%{kernelversion:$(uname -r)}.img.failsafe" sourcefile="initrd_sr-%{kernelversion:$(uname -r)}.img"/>
+   			</modification>
+			<modification type="exec"
+				command="/opt/atix/comoonics-bootimage/mkinitrd -f initrd_sr-%{kernelversion:$(uname -r)}.img %{kernelversion:$(uname -r)}"/>
+		</device>
+	</modificationset>
+</enterprisecopy>
