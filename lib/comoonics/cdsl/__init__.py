@@ -334,7 +334,6 @@ from comoonics.ComExceptions import ComException
 
 class CdslInitException(ComException):pass
 class CdslUnsupportedTypeException(ComException):pass
-class CdslFileHandlingException(ComException):pass
 class CdslPrefixWithoutNodeidsException(ComException):pass
 class CdslDoesNotExistException(ComException):pass
 class CdslSourcePathIsAlreadyCdsl(ComException): pass
@@ -342,6 +341,8 @@ class CdslAlreadyExists(ComException): pass
 class CdslIsNoCdsl(ComException): pass
 class CdslOfSameType(ComException): pass
 class CdslHasChildren(ComException): pass
+class CdslNodeidsRequired(ComException): pass
+class CdslNodeIDInUse(ComException): pass
 
 def getCdsl(src, type, cdslrepository, clusterinfo=None, nodes=None, timestamp=None, ignoreerrors=False, realpath=True, stripsource=True):
     """
@@ -414,8 +415,11 @@ def getCdslRepository(**keys):
     @type  nocreate: L{Boolean}
     
     """
+    return getCdslRepositoryClass()(**keys)
+
+def getCdslRepositoryClass():
     from comoonics.cdsl.ComCdslRepository import ComoonicsCdslRepository
-    return ComoonicsCdslRepository(**keys)
+    return ComoonicsCdslRepository
 
 CDSL_HOSTDEPENDENT_TYPE="hostdependent"
 CDSL_SHARED_TYPE="shared"
