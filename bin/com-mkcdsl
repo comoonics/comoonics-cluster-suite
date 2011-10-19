@@ -113,12 +113,12 @@ while args:
             cdslRepository.update(src, clusterInfo, chroot=options.root)
     except SystemExit, se:
         if se.code!=0:
-            print "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
-            print "Error: %s" %str(e)
+            print >>sys.stderr, "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
+            print >>sys.stderr, "Error: %s" %str(e)
             ComLog.debugTraceLog("comoonics.cdsl")
             sys.exit(se.code)         
     except Exception, e:
-        print "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
-        print "Error: %s" %str(e)
+        print >>sys.stderr, "Error: Could not create cdsl with command %s" %" ".join(sys.argv)
+        print >>sys.stderr, "Error: %s" %str(e)
         ComLog.debugTraceLog("comoonics.cdsl")
         sys.exit(1) 
