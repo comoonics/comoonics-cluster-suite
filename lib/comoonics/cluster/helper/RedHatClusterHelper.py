@@ -70,7 +70,6 @@ class RedHatClusterHelper(ClusterHelper):
         return cmd
 
     def setSimOutput(self):
-        import os.path
         import StringIO
         import inspect
         path=os.path.dirname(inspect.getfile(self.__class__))
@@ -89,7 +88,6 @@ class RedHatClusterHelper(ClusterHelper):
         query=self.__getfromkwds("query", kwds, None)
         __output=self.__getfromkwds("output", kwds, None)
         self.log.debug("queryStatusElement: query=%s" %query)
-        from comoonics import ComSystem
         try:
             # create Reader object
             _dom=comoonics.XmlTools.parseXMLString(ComSystem.execLocalOutput(self.getClusterStatusCmd(True, delimitor), True, __output))
