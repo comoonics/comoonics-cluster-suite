@@ -70,7 +70,7 @@ while args:
     if not parentcdslRepository:
         parentcdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, nocreate=True)
     if not cdslRepository:
-        if options.mountpoint != "" or options.mountpoint != "/":
+        if options.mountpoint != "" and options.mountpoint != "/":
             cdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, 
                                                mountpoint=options.mountpoint, nocreate=True)
         else:
@@ -90,7 +90,7 @@ while args:
     src=args[0]
     del args[0]
     nodes=[]
-    if args[1:]:
+    if args:
         for arg in args:
             if os.path.exists(arg) or arg.startswith("-"):
                 break
