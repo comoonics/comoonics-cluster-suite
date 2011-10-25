@@ -1,7 +1,20 @@
 """ Comoonics filecopy copyset module
 
-
-here should be some more information about the module, that finds its way inot the onlinedoc
+The ComFilesystemCopyset presents a way to copy one filesystem/path to one another. It is represented by an XML configuration of the following
+format:
+    <copyset type="filesystem" name="save-tmp">
+        <properties>
+           <!-- properties are optional and will be added as commandline attributes to the copy command -->
+           <property name="..">..</property>
+           ..
+        <properties>
+        <source type="path">
+            <path name="%s"/>
+        </source>
+        <destination type="path">
+            <path name="%s"/>
+        </destination>
+    </copyset>
 
 """
 
