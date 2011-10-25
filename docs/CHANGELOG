@@ -126,9 +126,10 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
-* Wed Oct 19 2011 MG <grimme( at )atix.de> 0.1-41
+* Wed Oct 25 2011 MG <grimme( at )atix.de> 0.1-41
   - bin/com-mkcdslinfrastructure: obsolete
   - bin/com-mkcdsl: error messages go to stderr.
+    fixed bug with args handling where first node id if given was skipped.
   - bin/com-cdslinvadm: new command that obsoletes com-mkcdslinfrastructure.
 * Fri Oct 07 2011 MG <grimme( at )atix.de>, 0.1-40
   - bin/com-rmcdsl: 
