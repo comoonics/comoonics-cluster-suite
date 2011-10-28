@@ -105,9 +105,34 @@ class PathCopyObject(CopyObjectJournaled):
 
     def updateMetaData(self, element):
         ''' updates meta data information '''
-        pass
+        # get filesystem element
+        try:
+            __spath=element
+        except Exception:
+            raise ComException("path for metadata not defined")
+
+        # save dest attributes
+        __attr = self.getPath().getElement().attributes
+        # copy all source fs info to dest
+        self.setPathElement(__spath)
+        # restore saved attibutes from dest
+        self.getPath().setAttributes(__attr)
     def getPath(self):
         return self.path
+    def setPath(self, filesystem):
+        self.setPathElement(filesystem.getElement())
+
+    def setPathElement(self, element):
+        __parent=self.path.getElement().parentNode
+        __newnode=element.cloneNode(True)
+        __oldnode=self.path.getElement()
+        self.path.setElement(__newnode)
+        # only replace attributes
+        try:
+            __parent.replaceChild(__newnode, __oldnode)
+        except Exception, e:
+            ComLog.getLogger(PathCopyObject.__logStrLevel__).warning(e)
+
 
     def getMountpoint(self):
         return self.getPath().getElement()
