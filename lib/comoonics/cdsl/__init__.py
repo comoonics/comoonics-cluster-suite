@@ -306,10 +306,11 @@ def commonoptparseroptions(parser):
     """
     import logging
     from ComCdslRepository import ComoonicsCdslRepository
+    from optparse import SUPPRESS_HELP
     
     logging.basicConfig()
     
-    parser.add_option("-n", "--noexecute", action="callback", callback=setNoExecute, help="display what would be done, but not really change filesystem")
+    parser.add_option("-n", "--noexecute", action="callback", callback=setNoExecute, help=SUPPRESS_HELP)
     parser.add_option("-q", "--quiet", action="callback", callback=setQuiet, help="Quiet, does not show any output")
     parser.add_option("-d", "--verbose", action="callback", callback=setDebug, help="Quiet, does not show any output")
 
