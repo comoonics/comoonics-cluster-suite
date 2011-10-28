@@ -221,26 +221,3 @@ def get_defaultsenvkey():
     return "COMOONICS_CLUSTER_CFG" 
 
 from comoonics.cluster.ComQueryMap import QueryMap
-
-###############
-# $Log: __init__.py,v $
-# Revision 1.11  2010-11-21 21:45:28  marc
-# - fixed bug 391
-#   - moved to upstream XmlTools implementation
-#
-# Revision 1.10  2010/02/05 12:13:08  marc
-# - take default clusterconf if none given
-#
-# Revision 1.9  2009/07/22 13:01:58  marc
-# ported to getopts
-#
-# Revision 1.8  2009/07/22 08:37:09  marc
-# Fedora compliant
-#
-# Revision 1.7  2009/05/27 18:31:59  marc
-# - prepared and added querymap concept
-# - reviewed and changed code to work with unittests and being more modular
-#
-# Revision 1.6  2009/02/24 10:16:01  marc
-# added helper method to parse clusterconfiguration
-#
