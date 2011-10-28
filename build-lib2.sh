@@ -1,8 +1,9 @@
 INSTALLDIR=install
 build_rpms() {
-	NAME=$1
+    RPMBUILDDIR=${RPMBUILDDIR:-$(rpmbuild --showrc | grep ": _topdir" | awk '{print $3}')}
+		NAME=$1
 	shift
-    DISTRIBUTION_NAME=$2
+    DISTRIBUTION_NAME=$1
     shift
 	CHANGELOG=$(awk '
 BEGIN { changelogfound=0; }
@@ -41,4 +42,5 @@ BEGIN { changelogfound=0; }
   		rm -f $(basename $file)
 	done
 	rpm -ivh dist/${NAME}*.src.rpm
+	cp dist/${NAME}*.src.rpm ${RPMBUILDDIR}/SRPMS/
 }

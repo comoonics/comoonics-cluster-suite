@@ -47,6 +47,7 @@ $(DISTDIR)/comoonics-cdsl-py-$(VERSION).tar.gz: lib/comoonics/cdsl/ComCdsl.py \
 		lib/comoonics/cdsl/__init__.py \
 		lib/comoonics/cdsl/ComCdslValidate.py \
 		bin/com-mkcdsl bin/com-cdslinvadm bin/com-cdslinvchk bin/com-rmcdsl
+	@make -C man comoonics-cdsl-py
 	./build_rpm-cdsl.sh "$(COMOONICS_DISTRIBUTION)"
 
 # comoonics-cluster-py
@@ -55,6 +56,7 @@ $(DISTDIR)/comoonics-cluster-py-$(VERSION).tar.gz: lib/comoonics/cluster/ComClus
 				lib/comoonics/cluster/ComQueryMap.py \
 				lib/comoonics/cluster/ComClusterRepository.py \
 				bin/com-queryclusterconf
+	@make -C man comoonics-cluster-py
 	./build_rpm-cluster.sh "$(COMOONICS_DISTRIBUTION)"
 
 # comoonics-cluster-tools-py
@@ -210,25 +212,6 @@ $(DISTDIR)/comoonics-tools-py-$(VERSION).tar.gz: lib/comoonics/tools/poptparse.p
 		lib/comoonics/tools/XMLConfigParser.py \
 		bin/stabilized
 	./build_rpm-tools.sh "$(COMOONICS_DISTRIBUTION)"
-
-.PHONY: all
-all: $(PACKAGES)
-
-.PHONY: test
-test: 
-	@if [ -z "$(NOTESTS)" ]; then \
-		make -C lib test; \
-	else \
-		echo "Skipping tests."; \
-	fi
-
-.PHONY: bin
-bin: test $(PACKAGES)
-	PYTHONPATH=$(PYTHONPATH) NOTEST=1 ./build_all-specs.sh $(PACKAGES)	
-
-.PHONY: man
-man:
-	@make -C man man
 	
 .PHONY: comoonics-analysis-py
 comoonics-analysis-py: $(DISTDIR)/comoonics-analysis-py-$(VERSION).tar.gz
@@ -247,11 +230,9 @@ comoonics-base-py: $(DISTDIR)/comoonics-base-py-$(VERSION).tar.gz
 	
 .PHONY: comoonics-cdsl-py
 comoonics-cdsl-py: $(DISTDIR)/comoonics-cdsl-py-$(VERSION).tar.gz
-	@make -C man $@
 	
 .PHONY: comoonics-cluster-py
 comoonics-cluster-py: $(DISTDIR)/comoonics-cluster-py-$(VERSION).tar.gz
-	@make -C man $@
 	
 .PHONY: comoonics-cluster-tools-py
 comoonics-cluster-tools-py: $(DISTDIR)/comoonics-cluster-tools-py-$(VERSION).tar.gz
@@ -298,9 +279,62 @@ comoonics-storage-py: $(DISTDIR)/comoonics-storage-py-$(VERSION).tar.gz
 .PHONY: comoonics-tools-py
 comoonics-tools-py: $(DISTDIR)/comoonics-tools-py-$(VERSION).tar.gz
 
+.PHONY: all
+all: $(PACKAGES)
+
+.PHONY: test
+test: 
+	@if [ -z "$(NOTESTS)" ]; then \
+		make -C lib test; \
+	else \
+		echo "Skipping tests."; \
+	fi
+
+.PHONY: bin
+bin: test $(PACKAGES)
+	PYTHONPATH=$(PYTHONPATH) NOTEST=1 ./build_all-specs.sh $(PACKAGES)	
+
+.PHONY: man
+man:
+	@make -C man man
+
 .PHONY: clean
 clean:
 	@make -C man clean
 	for package in $(PACKAGES); do \
 		rm -f $(DISTDIR)/$$package*; \
+		rm -f $(RPM_PACKAGE_BIN_DIR)/$$package*; \
+		rm -f $(RPM_PACKAGE_SRC_DIR)/$$package*; \
 	done
+	
+.PHONY:rpmsign
+rpmsign:
+	@echo "Signing packages"
+	rpm --resign $(RPM_PACKAGE_BIN_DIR)/$(PACKAGE_NAME)-*.rpm $(RPM_PACKAGE_SRC_DIR)/$(PACKAGE_NAME)-*.src.rpm
+
+.PHONY: channelcopy-rhel6
+channelcopy-rhel6:
+	@make DISTRIBUTION=rhel6 channelcopy
+
+.PHONY: channelcopy
+channelcopy: 
+	# Create an array of all CHANNELDIRS distros (second dir in path) and one without numbers at the end ready to be feeded in find
+	for channel in $(CHANNELNAMES); do \
+	    channelname=`echo $$channel | cut -f1 -d:`; \
+	    channelalias=`echo $$channel | cut -f2 -d:`; \
+       for architecture in $(ARCHITECTURES); do \
+	      echo -n "Copying rpms to channel $(CHANNELDIR)/$$channelname/$(DISTRIBUTION)/$$architecture.."; \
+	      ./install/copy_rpms.sh "$(DISTRIBUTION)" $(CHANNELDIR)/$$channelname $$channelalias $$architecture "$(PACKAGE_NAME)"; \
+	      echo "(DONE)"; \
+	   done; \
+	done;
+	
+.PHONY: channelbuild
+channelbuild:
+	@echo "Rebuilding channels.."
+	@for channel in $(CHANNELNAMES); do \
+        channelname=`echo $$channel | cut -f1 -d:`; \
+	    for distribution in $(DISTROS); do \
+              $(CHANNELBASEDIR)/updaterepositories -s -r $(PRODUCTNAME)/$(PRODUCTVERSION)/$$channelname/$$distribution; \
+	    done; \
+	 done 
