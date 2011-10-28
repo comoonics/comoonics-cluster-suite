@@ -43,6 +43,10 @@ from optparse import OptionGroup
 
 commands=["create", "delete", "get", "list", "set", "migrate", "getcdsl", "listcdsls", "addnode", "deletenode" ]
 
+def store_command(option, opt, value, parser):
+    if option._long_opts[0][2:] in commands:
+        parser.values.command=option._long_opts[0][2:]
+
 parser = OptionParser(description=__doc__, usage="%s [baseoptions] command [options]" %os.path.basename(sys.argv[0]))
 parser=commonoptparseroptions(parser)
 
@@ -71,16 +75,16 @@ commonoptions.add_option("-f", "--force", default=False, dest="force", action="s
 parser.add_option_group(commonoptions)
 
 commandoptions=OptionGroup(parser, "Command Options", "One of these option is required to tell what you are going to do.")
-commandoptions.add_option("-g", "--migrate",   default=None, dest="command", type="choice", choices=commands, help="Migrates the current cdsl inventory to latest version")
-commandoptions.add_option("-x", "--delete" ,   default=None, dest="command", type="choice", choices=commands, help="Deletes the cdsl infrastructure with all cdsls. Handle with extreme care!!")
-commandoptions.add_option("-e", "--create" ,   default=None, dest="command", type="choice", choices=commands, help="Creates the cdsl infrastructure. Default is to create. So you don't need to specify it.")
-commandoptions.add_option("-p", "--get"    ,   default=None, dest="command", type="choice", choices=commands, help="Get a specified parameter from the cdsl infrastructure.")
-commandoptions.add_option("-T", "--set"    ,   default=None, dest="command", type="choice", choices=commands, help="Set a specified parameter from the cdsl infrastructure with the given value.")
-commandoptions.add_option("-l", "--list"   ,   default=None, dest="command", type="choice", choices=commands, help="List all parameters from the cdsl infrastructure.")
-commandoptions.add_option("-I", "--listcdsls", default=None, dest="command", type="choice", choices=commands, help="List all cdsls in this repository (--recursive leads to all other repos too).")
-commandoptions.add_option("-G", "--getcdsl",   default=None, dest="command", type="choice", choices=commands, help="Get a specific cdsl from this repository (--recursive leads to all other repos too).")
-commandoptions.add_option("-o", "--addnode",   default=None, dest="command", type="choice", choices=commands, help="Adds a new node to the cdsl repository and updates all cdsls accordingly.")
-commandoptions.add_option("-O", "--deletenode",default=None, dest="command", type="choice", choices=commands, help="Deletes an existing node from the cdsl repository and updates all cdsls accordingly. You'll end up with a directory called like the nodeid in the current working directory.")
+commandoptions.add_option("-g", "--migrate",   action="callback", callback=store_command, help="Migrates the current cdsl inventory to latest version")
+commandoptions.add_option("-x", "--delete" ,   action="callback", callback=store_command, help="Deletes the cdsl infrastructure with all cdsls. Handle with extreme care!!")
+commandoptions.add_option("-e", "--create" ,   action="callback", callback=store_command, help="Creates the cdsl infrastructure. Default is to create. So you don't need to specify it.")
+commandoptions.add_option("-p", "--get"    ,   action="callback", callback=store_command, help="Get a specified parameter from the cdsl infrastructure.")
+commandoptions.add_option("-T", "--set"    ,   action="callback", callback=store_command, help="Set a specified parameter from the cdsl infrastructure with the given value.")
+commandoptions.add_option("-l", "--list"   ,   action="callback", callback=store_command, help="List all parameters from the cdsl infrastructure.")
+commandoptions.add_option("-I", "--listcdsls", action="callback", callback=store_command, help="List all cdsls in this repository (--recursive leads to all other repos too).")
+commandoptions.add_option("-G", "--getcdsl",   action="callback", callback=store_command, help="Get a specific cdsl from this repository (--recursive leads to all other repos too).")
+commandoptions.add_option("-o", "--addnode",   action="callback", callback=store_command, help="Adds a new node to the cdsl repository and updates all cdsls accordingly.")
+commandoptions.add_option("-O", "--deletenode",action="callback", callback=store_command, help="Deletes an existing node from the cdsl repository and updates all cdsls accordingly. You'll end up with a directory called like the nodeid in the current working directory.")
 parser.add_option_group(commandoptions)
 
 try:
@@ -92,13 +96,13 @@ except (TypeError, NameError):
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()
 
-if len(args) != 0 and options.command:
+if len(args) > 0 and args[0] in commands and hasattr(options, "command"):
     parser.error("You specified a command as argument and as option. Please specify one or the other.")
     sys.exit(1)
-elif not args and not options.command:
+elif not args and not hasattr(options, "command"):
     parser.error("No command specified. Please specify the command from %s" %commands)
     sys.exit(1)
-else:
+elif not hasattr(options, "command"):
     options.command=args[0]
     args=args[1:]
 
