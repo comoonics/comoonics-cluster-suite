@@ -25,10 +25,11 @@ from comoonics.tools.ComSystemInformation import SystemInformation
 from comoonics import ComLog, ComSystem
 from comoonics.ComPath import Path
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
     from comoonics.tools import get_defaultsenvkey, get_defaultsfiles
 except ImportError:
-    from optparse import OptionParser, OptionGroup
+    from optparse import OptionParser
+from optparse import OptionGroup
 
 import tempfile
 import logging

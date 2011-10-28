@@ -21,10 +21,11 @@ from comoonics.cmdb.ComSource import Source
 from comoonics.cmdb.Reports import getReport, getReportkeys
 from comoonics.cmdb.Packages import Package
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
     from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
 except ImportError:
-    from optparse import OptionParser, OptionGroup
+    from optparse import OptionParser
+from optparse import OptionGroup
 
 import logging
 import logging.handlers

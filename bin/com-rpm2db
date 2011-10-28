@@ -27,10 +27,11 @@ from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
 from comoonics.cmdb.ComDSL import DSL
 from comoonics.cmdb.ComSource import Source
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup, make_option
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
     from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
 except ImportError:
-    from optparse import OptionParser, OptionGroup, make_option
+    from optparse import OptionParser
+from optparse import OptionGroup, make_option
 
 import logging
 logging.basicConfig()

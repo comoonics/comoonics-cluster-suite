@@ -23,10 +23,11 @@ except ImportError:
 import logging
 from datetime import timedelta
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup, make_option
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
     from comoonics.tools import get_defaultsenvkey, get_defaultsfiles
 except ImportError:
-    from optparse import OptionParser, OptionGroup, make_option
+    from optparse import OptionParser
+from optparse import OptionGroup, make_option
 logging.basicConfig()
 
 version="0.1"
