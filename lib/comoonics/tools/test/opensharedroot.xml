@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE enterprisecopy SYSTEM "/opt/atix/comoonics-cs/xml/comoonics-enterprise-copy.dtd">
+<enterprisecopy name="sysreport-osr">
+    <modificationset type="path" name="sysreport-head">
+        <path name="/tmp/sysreport-osr" id="basepath">
+            <modification type="message">
+                <text>
+
+                    This utility will go through and collect some detailed information
+                    about the hardware and setup of your $release_name system.
+                    This information will be used to diagnose problems with your system
+                    and will be considered confidential information.  Red Hat will use
+                    this information for diagnostic purposes ONLY.
+
+                    Please wait while we collect information about your system.
+
+                    This process may take a while to complete....
+                    No changes will be made to your system during this process.
+
+                    NOTE: You can safely ignore a failed message. This only means a file
+                    we were checking for did not exist.
+
+                    If your system hangs while gathering rpm information, please abort
+                    the script with CTRL-C and run it again after adding -norpm to the
+                    sysreport command line
+                </text>
+            </modification>
+        </path>
+    </modificationset>
+</enterprisecopy>
