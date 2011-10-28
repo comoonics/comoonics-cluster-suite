@@ -308,9 +308,10 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
         super(RedhatClusterSystemInformation, self).__init__(*args, **kwds)
         self.features.append("redhatcluster")
         if not kwds and not args:
-            self.cluster_conf=XmlTools.parseXMLFile(self.REDHAT_CLUSTER_CONF)
-            self.type=SystemTypes.CLUSTER
-            self.name=self.getClusterName()
+            if os.path.exists(self.REDHAT_CLUSTER_CONF):
+                self.cluster_conf=XmlTools.parseXMLFile(self.REDHAT_CLUSTER_CONF)
+                self.type=SystemTypes.CLUSTER
+                self.name=self.getClusterName()
         else:
             self.__dict__.update(dict(kwds))
             self.type=SystemTypes.CLUSTER
@@ -323,7 +324,10 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
               -> RedhatCluster->getClusterName()
         """
         from comoonics import XmlTools
-        return XmlTools.evaluateXPath(self.XPATH_CLUSTERNAME, self.cluster_conf)[0]
+        if self.type==SystemTypes.CLUSTER:
+            return XmlTools.evaluateXPath(self.XPATH_CLUSTERNAME, self.cluster_conf)[0]
+        else:
+            return "unknown"
 
     check=staticmethod(check)
 
