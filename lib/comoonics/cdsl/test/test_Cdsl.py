@@ -148,4 +148,5 @@ if __name__ == "__main__":
         setupCdsls.cleanUpInfrastructure(setup.tmppath, repository, setupCluster.clusterInfos[0])
         setup.cleanup()
     os.chdir(olddir)
-    sys.exit(module.result.wasSuccessful())    
+    if not module.result.wasSuccessful():
+        sys.exit(1)

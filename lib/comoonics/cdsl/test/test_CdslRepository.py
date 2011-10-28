@@ -237,4 +237,5 @@ if __name__ == "__main__":
     module=baseSetup.MyTestProgram(module=test_CdslRepository(methodName='run'))
     setupCDSLRepository.cleanUpInfrastructure(baseSetup.tmppath)
     baseSetup.cleanup()
-    sys.exit(module.result.wasSuccessful())
+    if not module.result.wasSuccessful():
+        sys.exit(1)
