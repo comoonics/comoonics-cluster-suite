@@ -62,9 +62,11 @@ from comoonics.cluster import clusterconf
 import fileinput, fcntl, getpass, os, re
 import socket, struct, sys, termios, threading, time
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup, make_option
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
 except:
-    from optparse import OptionParser, OptionGroup, make_option
+    from optparse import OptionParser
+    
+from optparse import OptionGroup, make_option
 #                                                                            }}}
 # ------------------------------------------------------------------------------
 # Configuration                                                              {{{
@@ -290,7 +292,7 @@ def command_options (appname, usage):
     try:
         cmd_parser.setGlobalDefaultsFilename(getdefaultsfiles[0])
         cmd_parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
-    except (TypeError, NameError):
+    except (AttributeError, TypeError, NameError):
         pass
     cmd_parser.disable_interspersed_args()
     return cmd_parser
