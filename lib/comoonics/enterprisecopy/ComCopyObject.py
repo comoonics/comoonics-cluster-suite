@@ -47,39 +47,35 @@ def registerCopyObject(_type, _class):
 
 def getCopyObject(element, doc):
     """ Factory function to create Copyset Objects"""
-    return CopyObject(element, doc)
+    if isinstance(element, Node):
+        __type=element.getAttribute("type")
+        #print "getCopyObject(%s)" %(element.tagName)
+        if __type == "disk":
+            from ComPartitionCopyObject import PartitionCopyObject
+            cls=PartitionCopyObject
+        elif __type == "filesystem":
+            from ComFilesystemCopyObject import FilesystemCopyObject
+            cls=FilesystemCopyObject
+        elif __type == "lvm":
+            from ComLVMCopyObject import LVMCopyObject
+            cls=LVMCopyObject
+        elif __type == "backup":
+            from ComArchiveCopyObject import ArchiveCopyObject
+            cls=ArchiveCopyObject
+        elif _copyobject_registry.has_key(__type):
+            cls=_copyobject_registry[__type]
+            #from ComPathCopyObject import PathCopyObject
+            #cls=PathCopyObject
+        else:
+            raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, element.tagName))
+        ComLog.getLogger(CopyObject.__logStrLevel__).debug("Returning new object %s" %(cls))
+        return cls(element, doc)
+    else:
+        raise UnsupportedCopyObjectException("Wrong parameters passed to factory method getCopyObject. Expected element, doc.")
 
 class CopyObject(DataObject, Requirements):
     """ Base Class for all source and destination objects"""
     __logStrLevel__ = "comoonics.enterprisecopy.ComCopyObject.CopyObject"
-
-    def __new__(cls, *args, **kwds):
-        if len (args) > 0 and isinstance(args[0], Node):
-            __type=args[0].getAttribute("type")
-            #print "getCopyObject(%s)" %(element.tagName)
-            if __type == "disk":
-                from ComPartitionCopyObject import PartitionCopyObject
-                cls=PartitionCopyObject
-            elif __type == "filesystem":
-                from ComFilesystemCopyObject import FilesystemCopyObject
-                cls=FilesystemCopyObject
-            elif __type == "lvm":
-                from ComLVMCopyObject import LVMCopyObject
-                cls=LVMCopyObject
-            elif __type == "backup":
-                from ComArchiveCopyObject import ArchiveCopyObject
-                cls=ArchiveCopyObject
-            elif _copyobject_registry.has_key(__type):
-                cls=_copyobject_registry[__type]
-                #from ComPathCopyObject import PathCopyObject
-                #cls=PathCopyObject
-            else:
-                raise UnsupportedCopyObjectException("Unsupported CopyObject type %s in element %s" % (__type, args[0].tagName))
-            ComLog.getLogger(CopyObject.__logStrLevel__).debug("Returning new object %s" %(cls))
-            return object.__new__(cls, args, kwds)
-        else:
-            return object.__new__(cls, args, kwds)
-
 
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)

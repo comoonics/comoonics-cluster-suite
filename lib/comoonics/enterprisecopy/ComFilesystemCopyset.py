@@ -30,7 +30,7 @@ __version__ = "$Revision: 1.19 $"
 import xml.dom
 import warnings
 
-from ComCopyObject import CopyObject
+from ComCopyObject import getCopyObject, CopyObject
 from ComCopyset import Copyset
 from comoonics import ComSystem
 from comoonics import ComLog
@@ -127,14 +127,14 @@ class FilesystemCopyset(Copyset):
             Copyset.__init__(self, element, doc)
             try:
                 __source=element.getElementsByTagName('source')[0]
-                self.source=CopyObject(__source, doc)
+                self.source=getCopyObject(__source, doc)
             except Exception, e:
                 ComLog.getLogger(__logStrLevel__).warning(e)
                 ComLog.debugTraceLog(ComLog.getLogger(__logStrLevel__))
                 raise ComException("Source for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
             try:
                 __dest=element.getElementsByTagName('destination')[0]
-                self.dest=CopyObject(__dest, doc)
+                self.dest=getCopyObject(__dest, doc)
             except Exception, e:
                 ComLog.getLogger(__logStrLevel__).warning(e)
                 raise ComException("Destination for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))

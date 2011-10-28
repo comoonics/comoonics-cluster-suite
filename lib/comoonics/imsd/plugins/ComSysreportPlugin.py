@@ -5,7 +5,7 @@
 import time
 from ComPlugin import Plugin
 from comoonics.tools.ComSysreport import Sysreport
-from comoonics.tools.ComSystemInformation import SystemInformation
+from comoonics.tools.ComSystemInformation import getSystemInformation
 
 # here is some internal information
 # $Id: ComSysreportPlugin.py,v 1.1 2007-09-07 14:42:28 marc Exp $
@@ -40,7 +40,7 @@ sysreport or just execute differents part of the sysreport.
     def setupSysreport(self, shell=None):
         if not shell:
             print >>self.stdout,  "Setting up systeminformation"
-            _sysinfo=SystemInformation()
+            _sysinfo=getSystemInformation()
             print >>self.stdout,  "OK"
         else:
             _sysinfo=shell.sysinfo

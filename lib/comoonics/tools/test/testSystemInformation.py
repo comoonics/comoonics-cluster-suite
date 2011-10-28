@@ -4,13 +4,13 @@ Created on 24.03.2011
 @author: marc
 '''
 import unittest
-from comoonics.tools.ComSystemInformation import SystemInformation
+from comoonics.tools.ComSystemInformation import getSystemInformation
 
 class Test(unittest.TestCase):
 
 
     def setUp(self):
-        self.systeminformation=SystemInformation()
+        self.systeminformation=getSystemInformation()
 
 
     def tearDown(self):

@@ -11,11 +11,11 @@ class Test(unittest.TestCase):
     def setUp(self):
         import tempfile
         import os
-        from comoonics.tools.ComSystemInformation import SystemInformation
+        from comoonics.tools.ComSystemInformation import getSystemInformation
         from comoonics.tools.ComSysreport import Sysreport
         self.tmpdir=tempfile.mkdtemp()
         print("tmpdir: %s" %self.tmpdir)
-        self.systeminformation=SystemInformation()
+        self.systeminformation=getSystemInformation()
         self.sysreportdir=os.path.dirname(os.path.realpath(__file__))
         print "sysreportdir: %s, cwd: %s" %(self.sysreportdir, os.path.realpath(os.path.curdir))
         self.sysreport=Sysreport(self.systeminformation, self.tmpdir, None, self.sysreportdir)
