@@ -33,9 +33,11 @@ class Device(HostDisk):
         @return: True or False. True if device is already mounted otherwise False
         """
         for line in self.getMountList():
+            if not line or line == "":
+                continue
             lineattrs=line.split(" ")
             # split the device if mountpoint is not set and give over to matchDevice 
-            if mountpoint and self.isMyMountpoint(lineattrs[1], mountpoint.getAttribute("name"), lineattrs[0]):
+            if lineattrs and len(lineattrs) > 1 and mountpoint and self.isMyMountpoint(lineattrs[1], mountpoint.getAttribute("name"), lineattrs[0]):
                 return True
             elif not mountpoint and self.isMyDevice(lineattrs[0]):
                 return True
@@ -68,8 +70,10 @@ class Device(HostDisk):
         returns None if not mounted
         """
         for line in self.getMountList():
+            if not line or line == "":
+                continue
             lineattrs=line.split(" ")
-            if self.isMyDevice(lineattrs[0]):
+            if lineattrs and self.isMyDevice(lineattrs[0]):
                 if lineattrs[1] and lineattrs[2]:
                     return [lineattrs[1], lineattrs[2]]
         return [None, None]
