@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 try:
-    from comoonics.tools.ComSystemInformation import SystemInformation
+    from comoonics.tools.ComSystemInformation import getSystemInformation as SystemInformation
 except ImportError:
     from comoonics.ComSystemInformation import SystemInformation
 import logging
@@ -76,7 +76,6 @@ if options.querydatabase:
     for systemname in args:
         sysinfos=source.getSourcesAsSysteminformations(systemname)
 else:
-    from comoonics.tools.ComSystemInformation import SystemInformation
     sysinfos=[SystemInformation()]
 
 for sysinfo in sysinfos:

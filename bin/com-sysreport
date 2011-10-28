@@ -21,7 +21,7 @@ import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
 from comoonics.tools.ComSysreport import Sysreport, SYSREPORT_TEMPLATEBASE
-from comoonics.tools.ComSystemInformation import SystemInformation
+from comoonics.tools.ComSystemInformation import getSystemInformation
 from comoonics import ComLog, ComSystem
 from comoonics.ComPath import Path
 try:
@@ -70,7 +70,7 @@ if options.verbose:
 if options.ask:
     ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
 
-systeminformation=SystemInformation()
+systeminformation=getSystemInformation()
 sysreport=Sysreport(systeminformation, tmpdir.getPath(), options.tarfile, options.templatebase)
 sysreport.destination=options.tmpdir
 if options.validparts:
