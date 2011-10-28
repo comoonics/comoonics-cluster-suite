@@ -216,11 +216,15 @@ all: $(PACKAGES)
 
 .PHONY: test
 test: 
-	@[ -z "$(NOTEST)"] && make -C lib test
+	@if [ -z "$(NOTESTS)" ]; then \
+		make -C lib test; \
+	else \
+		echo "Skipping tests."; \
+	fi
 
 .PHONY: bin
 bin: test $(PACKAGES)
-	PYTHONPATH=$(PYTHONPATH) NOTEST=1 ./build_all-specs.sh $?	
+	PYTHONPATH=$(PYTHONPATH) NOTEST=1 ./build_all-specs.sh $(PACKAGES)	
 
 .PHONY: man
 man:

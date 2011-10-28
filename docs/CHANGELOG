@@ -129,6 +129,9 @@ comoonics-cdsl-py:
 * Wed Oct 26 2011 MG <grimme( at )atix.de> 0.1-42
   - bin/com-cdslinvchk: bugfix
   - man/*: rewrite all manpages.
+  - bin/com-cdslinvadm: fixed bug when certain calls would cause errors
+    although they should not.
+  - lib/comoonics/cdsl/__init__.py: excluded noexecute option from seen ones.
 * Tue Oct 25 2011 MG <grimme( at )atix.de> 0.1-41
   - bin/com-mkcdslinfrastructure: obsolete
   - bin/com-mkcdsl: error messages go to stderr.
@@ -593,6 +596,11 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-62
+  - lib/comoonics/enterprisecopy/ComPathCopyObject.py: fixed bug in metadata
+  handling. Would fail if used in combination with ArchiveCopyObjects.
+  - .../enterprisecopy/ComFilesystemCopyset.py: fixed bug where
+  FileSystemCopyObject would fail when PathCopyObject is used.
 * Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-61
   - Implemented PersistentOptionParser for all commands.
   - CatifModification
@@ -803,6 +811,12 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-21
+  - lib/comoonics/storage/ComDevice.py: isMounted, scanMountpoint: make the
+  semantics more robust on different possible inputs.
+  - lib/comoonics/storage/ComArchive.py: removed obsolete imports addFile:
+  react on ReadError Exception that is yielded instead of IOError on more
+  recent python versions.
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-20
   - added Group System Environment/Base
 * Sun Feb 19 2011 MG <grimme@atix.de>, 0.1-19
@@ -863,6 +877,10 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-13
+  - lib/comoonics/tools/ComSystemInformation.py: fixed bugs when
+  SystemInformation would yield Exceptions when OSR is detected bug
+  RedHatCluster not available.
 * Tue Apr 19 2011 MG <grimme@atix.de>, 0.1-12
   - lib/comoonics/tools/ComSysreport.py: - removed obsolete imports
 * Wed Apr 06 2011 MG <grimme@atix.de>, 0.1-11
