@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding='utf-8'?>
+<!DOCTYPE article
+  PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+  
+<article id="cdsl-manpages" lang="en">
+    
+    <refentry id="com-rmcdsl">
+        <indexterm><primary>Delete cdsl</primary></indexterm>
+        <indexterm><primary>com-rmcdsl</primary></indexterm>
+        
+        <refmeta>
+            <refentrytitle>com-rmcdsl</refentrytitle>
+            <manvolnum>1</manvolnum>
+        </refmeta>
+        
+        <refnamediv>
+            <refname>com-rmcdsl</refname>
+            <refpurpose>Delete cdsl</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+            <cmdsynopsis>
+                <command>com-rmcdsl</command>
+                <arg>-l|--inventoryfile <replaceable>filename</replaceable></arg>
+                <arg>-q|--quiet</arg>
+                <arg>-c|--clusterconf <replaceable>filename</replaceable></arg>
+                <arg>-v|--version</arg>
+                <arg>-d|--verbose</arg>
+                <arg>-r|--root <replaceable>value</replaceable></arg>
+                <arg>-F|--reallyforce</arg>
+                <arg>-f|--force</arg>
+                <arg>-S|--resolved</arg>
+                <arg>-R|--recursive</arg>
+                <arg>-h|--help</arg>
+            </cmdsynopsis>
+        </refsynopsisdiv>
+        
+        <refsect1>
+            <title>Description</title>
+            <para>
+                Deletes existing cdsl from filesystem and inventoryfile. Contains deleting of symbolic links and content of cdsl. 
+                The hostdependent parts of removed cdsl will be backuped in the parent directory with <quote>.nodeid</quote> as extension.
+            </para>
+        </refsect1>
+        
+        <refsect1>
+            <title>Options</title>
+            <variablelist>
+                <varlistentry>
+                    <term><option>-l|--inventoryfile <replaceable>filename</replaceable></option></term>
+                    <listitem>
+                        <para>
+                            Specify the path of used inventoryfile (default: /var/lib/cdsl/cdsl_inventory.xml)
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-q|--quiet</option></term>
+                    <listitem>
+                        <para>
+                            Minimizes output to critical messages
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-c|--clusterconf <replaceable>filename</replaceable></option></term>
+                    <listitem>
+                        <para>
+                            Specify the path of used clusterconfiguration (default: /etc/cluster/cluster.conf)
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-v|--version</option></term>
+                    <listitem>
+                        <para>
+                            Outputs version
+                        </para>
+                    </listitem>
+                </varlistentry>			
+                <varlistentry>
+                    <term><option>-d|--verbose</option></term>
+                    <listitem>
+                        <para>
+                            Extends output by adding debugging messages
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-r|--root</option></term>
+                    <listitem>
+                        <para>
+                            Set root if you work in an environment where chroot is planed but not already performed. Set path to the value you plan to use for your chroot-environment.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-f|--force</option></term>
+                    <listitem>
+                        <para>Removes everything it can find. Independently from if the cdsl is consistent or not.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-F|--reallyforce</option></term>
+                    <listitem>
+                        <para>The normal behaviour of <quote>com-rmcdsl</quote> is to restore the files
+                            to path where the origin is. This option will also
+                            remove the files the cdsl was representing.
+                            Handle with extreme care. If reallyforce is used all
+                            cdsl data is wiped away never to be seem again.
+                        </para>
+                        <note><title>ATTENTION</title>
+                            <para>Handle with extreme care. If reallyforce is used all
+                                cdsl data is wiped away never to be seem again.</para></note>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-S, --resolved</option></term>
+                    <listitem>
+                        <para>Tell <quote>com-rmcdsl</quote> not to be clever and resolve the given
+                            path but take it as it is.
+                        </para>
+                        <note><title>ATTENTION:</title>
+                            <para>This option
+                                should not be used if you don't know what you are
+                                doing.</para></note>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-h|--help</option></term>
+                    <listitem>
+                        <para>
+                            Shows a short help
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-R|--recursive</option></term>
+                    <listitem>
+                        <para>Also remove cdsls that are children of the current
+                            one. Remember: Shared cdsls will only be copied to the
+                            current's nodeid cdsl directory if removed.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect1>
+        
+        <refsect1>
+            <title>Examples</title>
+            <indexterm><primary>example usage</primary></indexterm>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-rmcdsl /hostdependent_dir/shared_file</userinput></screen>
+                <para>If only the path to the cdsl to delete is specified, delete symbolic links and content.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-rmcdsl --reallyforce /hostdependent_dir/shared_file</userinput></screen>
+                <para>Same as above, but delete only symbolic links. Helpfull if you want to delete a cdsl but need its content afterwards.</para>
+            </informalexample>
+        </refsect1>
+        
+        
+        <refsect1 role='author'>
+            <title>Author</title>
+            <para>This manual page was written by Marc Grimme <email>grimme( at )atix.de</email>. 
+                Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, 
+                Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts 
+                and no Back-Cover Texts.</para>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>Files</title>
+            <simplelist type="vert">
+                <member><filename><?install-datadir?>bin/com-rmcdsl</filename></member>
+                <member><filename><?install-datadir?>lib/comoonics/cdsl/*</filename></member>
+            </simplelist>
+            <para>
+                The above files are distributed and installed by the com-cdsl-py package.
+            </para>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>See Also</title>		
+            <simplelist type="inline">
+                <member>com-cdsladm</member>
+                <member>com-mkcdsl</member>
+                <member>com-cdslinvchk</member>
+            </simplelist>
+        </refsect1>
+    </refentry>
+</article>    

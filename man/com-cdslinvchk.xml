@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding='utf-8'?>
+<!DOCTYPE article
+  PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+  
+<article id="cdsl-manpages" lang="en">
+    
+    <refentry id="com-cdslinvchk">
+        <indexterm><primary>check inventoryfile</primary></indexterm>
+        <indexterm><primary>com-cdslinvchk</primary></indexterm>
+        
+        <refmeta>
+            <refentrytitle>com-cdslinvchk</refentrytitle>
+            <manvolnum>1</manvolnum>
+        </refmeta>
+        
+        <refnamediv>
+            <refname>com-cdslinvchk</refname>
+            <refpurpose>Check inventoryfile</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+            <cmdsynopsis>
+                <command>com-cdslinvchk</command>
+                <arg>-d|--verbose</arg>
+                <arg>-v|--version</arg>
+                <arg>-i|--inventoryfile <replaceable>filename</replaceable></arg>
+                <arg>-r|--root <replaceable>value</replaceable></arg>
+                <arg>-u|--update</arg>
+                <arg>-f|--filesystem</arg>
+                <arg>-h|--help</arg>
+            </cmdsynopsis>
+        </refsynopsisdiv>
+        
+        <refsect1>
+            <title>Description</title>
+            <para>
+                Binary to check if cdsls that are defined in the inventoryfile really exists on filesystem. 
+                Outputs a message if check was succesfull or not. 
+                In case of failure the tool documents which of the tested cdsls have failed in the logfile.
+                Those can be applied with the <quote>--update</quote> option.
+            </para>
+        </refsect1>
+        
+        <refsect1>
+            <title>Options</title>
+            <variablelist>
+                <varlistentry>
+                    <term><option>-d|--verbose</option></term>
+                    <listitem>
+                        <para>
+                            Extends output by adding debugging messages
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-v|--version</option></term>
+                    <listitem>
+                        <para>
+                            Outputs version
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-i|--inventoryfile <replaceable>filename</replaceable></option></term>
+                    <listitem>
+                        <para>
+                            Specify the path of inventoryfile to create/use (default: /var/lib/cdsl/cdsl_inventory.xml)
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-r|--root <replaceable>value</replaceable></option></term>
+                    <listitem>
+                        <para>
+                            Sets chroot to check cdsls which where created for a chroot-Environment
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-h|--help</option></term>
+                    <listitem>
+                        <para>
+                            Shows a short help
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>-u|--update</term>
+                    <listitem><para>
+                        Don't only information about inconstencies but also update the repository.
+                    </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>-f|--filesystem</term>
+                    <listitem><para>
+                        Also recursivly walk throught the CDSL part of the filesystem and validate the CDSL for consitence. 
+                    </para></listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect1>
+        
+        <refsect1>
+            <title>Examples</title>
+            <indexterm><primary>example usage</primary></indexterm>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-cdslinvchk</userinput>
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lib/dbus.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/local.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate etc/blkid.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/log.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate etc/sysconfig/network.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/spool.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/run.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:- var/run
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lock.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:- var/lock
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/cache.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/account.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lib/dhclient.
+Removed cdsl var/run type hostdependent
+Removed cdsl var/lock type hostdependent
+			</screen>
+                <para>Uses default values for inventory- and logfile and check cdsl defined in inventoryfile. Outputs what would be done but does nothing.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-cdslinvchk --update</userinput>
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lib/dbus.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/local.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate etc/blkid.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/log.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate etc/sysconfig/network.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/spool.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/run.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:- var/run
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lock.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:- var/lock
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/cache.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/account.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lib/dhclient.
+Removed cdsl var/run type hostdependent
+Removed cdsl var/lock type hostdependent
+			</screen>
+                <para>Dose the same as in the above example but also fixes the problems.</para>
+            </informalexample>
+            <indexterm><primary>example usage</primary></indexterm>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-cdslinvchk</userinput>
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lib/dbus.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/local.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate etc/blkid.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/log.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate etc/sysconfig/network.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/spool.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/cache.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/account.
+INFO:comoonics.cdsl.ComCdslValidate.CdslValidate:validate var/lib/dhclient.
+			</screen>
+                <para>Uses default values for inventory- and logfile and check cdsl defined in inventoryfile. Outputs what would be done but does nothing.</para>
+            </informalexample>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>Files</title>
+            <simplelist type="vert">
+                <member><filename><?install-datadir?>bin/com-cdslinvchk</filename></member>
+                <member><filename><?install-datadir?>lib/comoonics/cdsl/*</filename></member>
+            </simplelist>
+            <para>
+                The above files are distributed and installed by the com-cdsl-py package.
+            </para>
+        </refsect1>
+        
+        <refsect1 role='author'>
+            <title>Author</title>
+            <para>This manual page was written by Marc Grimme <email>grimme( at )atix.de</email>. 
+                Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, 
+                Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts 
+                and no Back-Cover Texts.</para>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>See Also</title>		
+            <simplelist type="inline">
+                <member>com-cdslinvadm</member>
+                <member>com-mkcdsl</member>
+                <member>com-rmcdsl</member>
+            </simplelist>
+        </refsect1>
+    </refentry>
+</article>    

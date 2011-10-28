@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding='utf-8'?>
+<!DOCTYPE article
+  PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+  
+<article id="cdsl-manpages" lang="en">
+    
+    <refentry id="com-cdslinvadm">
+        <indexterm><primary>Administration tool to manage the required inventory for cdsls</primary></indexterm>
+        <indexterm><primary>com-cdslinvadm</primary></indexterm>
+        
+        <refmeta>
+            <refentrytitle>com-cdslinvadm</refentrytitle>
+            <manvolnum>1</manvolnum>
+        </refmeta>
+        
+        <refnamediv>
+            <refname>com-cdslinvadm</refname>
+            <refpurpose>Administration tool to manage the required inventory for cdsls</refpurpose>
+        </refnamediv>
+        <refsynopsisdiv>
+            <cmdsynopsis>
+                <command>com-cdslinvadm</command>
+                <group>
+                    <arg>-h|--help</arg>
+                    <arg>-d|--verbose</arg>
+                    <arg>-q|--quiet</arg>
+                </group>
+                <group>
+                    <arg>-C|--onlyinventory</arg>
+                    <arg>-R|--recursive</arg>
+                    <arg>-f|--force</arg>
+                </group>
+                <group>
+                    <arg>-i|--inventoryfile= <replaceable>INVENTORYFILE</replaceable></arg>
+                    <arg>-c|--clusterconf= <replaceable>CLUSTERCONFIGURATION</replaceable></arg>
+                    <arg>-r|--root= <replaceable>ROOT</replaceable></arg>
+                    <arg>-m|--mountpoint= <replaceable>MOUNTPOINT</replaceable></arg>
+                </group>
+                <arg>-e|--create|create 
+                    <arg>-t|--cdsltree= <replaceable>CDSLTREE</replaceable></arg>
+                    <arg>-s|--cdsltreeshared= <replaceable>CDSLTREESHARED</replaceable></arg>
+                    <arg>-L|--cdsllink= <replaceable>CDSLLINK</replaceable></arg>
+                    <arg>-M|--maxnodeidnum= <replaceable>MAXNODEIDNUM</replaceable></arg>
+                    <arg>-D|--defaultdir= <replaceable>DEFAULTDIR</replaceable></arg>
+                </arg>
+                <arg>-I|--listcdsls|listcdsls|-p|--getcdsl|getcdsl= <replaceable>cdslpath</replaceable>
+                    <arg>-X|--xml</arg>
+                    <arg>-E|--detailed</arg>
+                </arg>
+                <arg></arg>
+            </cmdsynopsis>
+        </refsynopsisdiv>
+        
+        <refsect1>
+            <title>Note</title>
+            <para>The command com-cdslinvadm replaces the obsolete command com-mkcdslinventory.</para>
+        </refsect1>
+        <refsect1>
+            <title>Description</title>
+            <para>The com-cdslinvadm command provides all needs to administrate cdsl inventories. The different use cases are switch with the 
+                <abbrev>command</abbrev> option.
+                The following commands are allowed.
+            </para>
+            <refsect2>
+                <title>Create cdsl inventories</title>
+                <para>The <quote>create</quote> command instructs <quote>com-cslinvadm</quote> to create a new cdsl inventory. 
+                    This includes creating directories and symbolic links. 
+                    Also an inventoryfile that defaults to /.cdsl_inventory (relative to the root and mountpoint) is created. 
+                    It will further on hold all cdsl metadata. 
+                    The resulting cdsl inventory needs to be linked together (mount --bind /.cluster/cdsl/<quote>nodeid</quote> /.cdsl.local).
+                </para>
+                <para>The follwing settings migth be overwritten. Please change those only if you know what you are doing.</para>
+                <variablelist>
+                    <varlistentry>
+                        <term>CDSLTREE</term>
+                        <listitem>
+                            <para>
+                                The <quote>CDSLTREE</quote> specifies the directory relevant to <quote>MOUNTPOINT</quote> and 
+                                <quote>ROOT</quote> that will further on hold all cdsls. There you will find one directory for each nodeid and one
+                                for the default. The <quote>CDSLTREE</quote> will be automatically created by this command.
+                                Under the nodeid directories all cdsl files and directory can be found with there full path.
+                            </para>
+                            <para>The default is <quote>.cluster/cdsl</quote>.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>CDSLTREESHARED</term>
+                        <listitem>
+                            <para>
+                                The <quote>CDSLTREESHARED</quote> specifies the directory where shared CDSLs are being stored. Shared CDSLs are
+                                children of hostdependent CDSLs that should be shared among all nodes. 
+                                The <quote>CDSLTREESHARED</quote> will be automatically created by this command.
+                            </para>
+                            <para>
+                                The default is <quote>.cluster/shared</quote>.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>CDSLLINK</term>
+                        <listitem>
+                            <para>The <quote>CDSLLINK</quote> specifies the directory where each node will find its individual files and directories
+                                (the CDSLs themself). This directory will be automatically be mapped to their <quote>CDSLTREE</quote> counterpart
+                                <quote>CDSLTREE/NODEID</quote>. 
+                                The <quote>CDSLLINK</quote> will be automatically created by this command.</para>
+                            <para>The default is <quote>.cdsl.local</quote>.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>MAXNODEIDNUM</term>
+                        <listitem>
+                            <para>The <quote>MAXNODEIDNUM</quote> specifies the amount of nodes that should be created 
+                                (relative to <quote>CDSLTREE</quote>). If this setting is not specified the node directories will be created at
+                                CDSL creation time or read from the cluster configuration (found at <quote>/etc/cluster/cluster.conf</quote>).
+                                If no cluster configuration is setup it is recommendet to specify this option.
+                            </para>
+                            <para>The default is <quote>0</quote>.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect2>
+            <refsect2>
+                <title>List/Get/Set CDSL inventory properties</title>
+                <para>Lists or gets and returns global parameters set in the repository file (<quote>--get/--list/--set</quote>).</para>
+                <para>This is mainly used for other scripts or programs requiring informations that can be queried from the cdsl inventory.</para>
+                <para>The commands might be used for informational purposes.</para>
+            </refsect2>
+            <refsect2>
+                <title>List or get CDSLs from inventory</title>
+                <para>
+                    Lists and returns all or single cdsls from the given repository (--getcdsl/--listcdsls). 
+                </para>
+            </refsect2>
+            <refsect2>
+                <title>Add or remove nodes from CDSL inventory</title>
+                <para>The commands <quote>add-</quote> or <quote>removenode</quote> are used to remove or add nodeids from or to the CDSL inventory.</para>
+                <para>The command then copies or removes the nodeids directory within <quote>CDSLTREE</quote> and removes or adds the node to the 
+                    CDSL inventory.</para>
+                <para>If a node is added the <quote>DEFAULT</quote> directory will be use as template for the new node directory.</para>
+                <para>If the node is to be removed the node's directory will be moved to the current working directory with the node id as it's name.
+                    This behaviour can be overwritten with the option <quote>--force</quote>. This will physically remove the node's directory.</para>
+            </refsect2>
+        </refsect1>
+        
+        <refsect1>
+            <title>Examples</title>
+            <indexterm><primary>example usage</primary></indexterm>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-cdslinvadm create --maxnodeidnum=5</userinput></screen>
+                <para>Creates a new inventory and builds the infrastructure needed for creating cdsls. There will be <quote>5</quote> from <quote>0 to 5</quote> directories be found
+                    under <quote>/.cluster/cdsl</quote>.
+                    Writes all settings to the inventory file at <emphasis>/.cdsl_inventory.xml</emphasis>.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-cdslinvadm create</userinput></screen>
+                <para>Creates a new inventory and builds the infrastructure needed for creating cdsls. 
+                    Requires <emphasis>/etc/cluster/cluster.conf</emphasis> to read the node ids from. 
+                    Writes all settings to the inventory file at <emphasis>/.cdsl_inventory.xml</emphasis>.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-cdslinvadm list</userinput>
+config_version: 2.0
+default_dir: default
+maxnodeidnum: 3
+tree: .cluster/cdsl
+link: .cdsl.local
+node_prefix: 
+expandstring: .cdsl
+mountpoint: 
+use_nodeids: True
+sharedtree: .cluster/shared
+			</screen>
+                <para>Lists all parameters persistently set in the CDSL inventory file.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-cdslinvadm listcdsls</userinput>
+root: /
+/:
+	var/lib/dbus
+	var/tmp
+	etc/blkid
+	var/log
+	etc/sysconfig/network
+	var/spool
+	var/local
+	var/run
+	var/lock
+	var/cache
+	var/account
+	var/lib/dhclient
+			</screen>
+                <para>Shows all CDSLs found in the current filesystem.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$</prompt><userinput>com-cdslinvadm listcdsls --detail</userinput>
+root: /
+/:
+	var/lib/dbus: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619626.07
+	var/tmp: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619466.63
+	etc/blkid: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619646.74
+	var/log: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619549.2
+	etc/sysconfig/network: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619648.8
+	var/spool: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619590.66
+	var/local: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619542.14
+	var/run: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619630.6
+	var/lock: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619542.76
+	var/cache: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619475.42
+	var/account: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619474.45
+	var/lib/dhclient: Nodeids: [u'1', u'2', u'3'], timestamp: 1319619627.6
+			</screen>
+                <para>Lists all CDSLs found in the current filesystem with detailed information.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$</prompt><userinput>com-cdslinvadm addnode 4</userinput>
+			</screen>
+                <para>Adds a new node with nodeid 4 to the current CDSL inventory.</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$</prompt><userinput>com-cdslinvadm delnode 4</userinput>
+			</screen>
+                <para>Removes the existant node with nodeid 4 from the current CDSL inventory.</para>
+            </informalexample>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>Files</title>
+            <simplelist type="vert">
+                <member><filename><?install-datadir?>bin/com-cdslinvadm</filename></member>
+                <member><filename><?install-datadir?>lib/comoonics/cdsl/*</filename></member>
+            </simplelist>
+            <para>
+                The above files are distributed and installed by the com-cdsl-py package.
+            </para>
+        </refsect1>
+        
+        <refsect1 role='author'>
+            <title>Author</title>
+            <para>This manual page was written by Marc Grimme <email>grimme( at )atix.de</email>. 
+                Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, 
+                Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts and no 
+                Back-Cover Texts.</para>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>See Also</title>		
+            <simplelist type="inline">
+                <member>com-mkcdsl</member>
+                <member>com-rmcdsl</member>
+                <member>com-cdslinvchk</member>
+            </simplelist>
+        </refsect1>
+    </refentry>
+</article>    

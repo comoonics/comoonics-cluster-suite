@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding='utf-8'?>
+<!DOCTYPE article
+  PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+  
+<article id="cdsl-manpages" lang="en">
+    
+    <refentry id="com-mkcdsl">
+        <indexterm><primary>Create a new CDSL</primary></indexterm>
+        <indexterm><primary>com-mkcdsl</primary></indexterm>
+        
+        <refmeta>
+            <refentrytitle>com-mkcdsl</refentrytitle>
+            <manvolnum>1</manvolnum>
+        </refmeta>
+        
+        <refnamediv>
+            <refname>com-mkcdsl</refname>
+            <refpurpose>Create a new CDSL</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+            <cmdsynopsis>
+                <command>com-mkcdsl</command>
+                <group>
+                    <arg>-h|--help</arg>
+                    <arg>-d|--verbose</arg>
+                    <arg>-q|--quiet</arg>
+                </group>
+                <group>
+                    <arg>-C|--onlyinventory</arg>
+                    <arg>-R|--recursive</arg>
+                    <arg>-f|--force</arg>
+                </group>
+                <group>
+                    <arg>-i|--inventoryfile= <replaceable>INVENTORYFILE</replaceable></arg>
+                    <arg>-c|--clusterconf= <replaceable>CLUSTERCONFIGURATION</replaceable></arg>
+                    <arg>-r|--root= <replaceable>ROOT</replaceable></arg>
+                    <arg>-m|--mountpoint= <replaceable>MOUNTPOINT</replaceable></arg>
+                </group>
+                <arg rep="repeat">-a|--hostdependent</arg>
+                <arg rep="repeat">-s|--shared</arg>
+                <arg choice="plain" rep="repeat"><replaceable>sourcename</replaceable></arg>
+            </cmdsynopsis>
+        </refsynopsisdiv>
+        
+        <refsect1>
+            <title>Description</title>
+            <para>
+                Creates context dependant symbolic links (cdsl). The process includes creating and copying of files and directories and building 
+                symbolic links. 
+                Needs a working CDSL inventory and a matching inventoryfile. Can create hostdependent and shared cdsls.
+            </para>
+        </refsect1>
+        
+        <refsect1>
+            <title>Options</title>
+            <variablelist>
+                <varlistentry>
+                    <term><option>-q|--quiet</option></term>
+                    <listitem>
+                        <para>
+                            Reduces output to critical messages (supress debug and info messages)
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-l|--inventoryfile <replaceable>filename</replaceable></option></term>
+                    <listitem>
+                        <para>
+                            Specify the path of inventoryfile to create/use (default: /var/lib/cdsl/cdsl_inventory.xml)
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-b|--backup</option></term>
+                    <listitem>
+                        <para>
+                            Keeps a backup of the original source as <quote>source.orig</quote>.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-a|--hostdependent</option></term>
+                    <listitem>
+                        <para>
+                            Create a hostdependent cdsl. Multiple options are possible. In this case they should be followed by the source.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-s|--shared</option></term>
+                    <listitem>
+                        <para>
+                            Create a shared cdsl.Multiple options are possible. In this case they should be followed by the source.
+                            A shared CDSL can only be created if it exists in a hostdependent one.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-c|--clusterconf <replaceable>filename</replaceable></option></term>
+                    <listitem>
+                        <para>
+                            Specify the path of clusterconfiguration (default: /etc/cluster/cluster.conf)
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-v|--version</option></term>
+                    <listitem>
+                        <para>
+                            Outputs version
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-i|--inventory</option></term>
+                    <listitem>
+                        <para>
+                            updates inventoryfile: Add entry if cdsl with given target does not exist in inventoryfile but on filesystem, delete entry if cdsl does not exist on filesystem but in inventoryfile, update entry
+                            if it exists in inventoryfile but verifies from filesystem
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-d|--verbose</option></term>
+                    <listitem>
+                        <para>
+                            Extends output by adding debugging messages
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-r|--root <replaceable>value</replaceable></option></term>
+                    <listitem>
+                        <para>
+                            Sets chroot to create a Cdsl which should be used in a chroot-Environment
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-h|--help</option></term>
+                    <listitem>
+                        <para>
+                            Shows a short help
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect1>
+        
+        <refsect1>
+            <title>Examples</title>
+            <indexterm><primary>example usage</primary></indexterm>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-mkcdsl --help</userinput></screen>
+                <para>Shows help</para>
+            </informalexample>
+            <informalexample>
+                <screen><prompt>$ </prompt><userinput>com-mkcdsl --hostdependent /dir_foo --shared /dir_foo/file_bar</userinput></screen>
+                <para>First creates a new hostdependent CDSL in <quote>/dir_foo</quote> and then a shared one in <quote>/dir_foo/file_bar</quote>. </para>
+            </informalexample>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>Files</title>
+            <simplelist type="vert">
+                <member><filename><?install-datadir?>bin/com-mkcdsl</filename></member>
+                <member><filename><?install-datadir?>lib/comoonics/cdsl/*</filename></member>
+            </simplelist>
+            <para>
+                The above files are distributed and installed by the com-cdsl-py package.
+            </para>
+        </refsect1>
+        
+        <refsect1 role='author'>
+            <title>Author</title>
+            <para>This manual page was written by Marc Grimme <email>grimme( at )atix.de</email>. 
+                Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, 
+                Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts 
+                and no Back-Cover Texts.</para>
+        </refsect1>
+        
+        <refsect1 role="man-page">
+            <title>See Also</title>		
+            <simplelist type="inline">
+                <member>com-cdslinvadm</member>
+                <member>com-rmcdsl</member>
+                <member>com-cdslinvchk</member>
+            </simplelist>
+        </refsect1>
+    </refentry>
+</article>    
