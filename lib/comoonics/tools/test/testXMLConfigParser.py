@@ -15,7 +15,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         import inspect
         import os.path
-        self.filename=os.path.join(os.path.dirname(inspect.getfile(self.__class__)), "loggingconfig.xml")
+        self.filename=os.path.join(os.path.dirname(__file__), "loggingconfig.xml")
         self.cp=ConfigParser()
         self.cp.read(self.filename)
         self.loggers=["atix", "atix.atix1", "atix.atix2"]
@@ -32,7 +32,7 @@ class Test(unittest.TestCase):
         for section in (ConfigParser.LOGGERS_TAGNAME, ConfigParser.HANDLERS_TAGNAME, ConfigParser.FORMATTERS_TAGNAME):
             _keys=self.cp.get(section, "keys")
             expectedkeys=expectedsections[section]
-            self.assertEquals(_keys,expectedkeys, "Keys and expected keys for section %s are different %s!= %s" %(section, _keys, expectedkeys))
+            self.assertEquals(",".split(_keys), ",".split(expectedkeys), "Keys and expected keys for section %s are different %s!= %s" %(section, _keys, expectedkeys))
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
