@@ -1502,7 +1502,7 @@ Those are classes used by more other packages.
 #                       "comoonics.stabilized",
 #                       "comoonics.XMLConfigParser",
 #                       "comoonics.ComSystemInformation" ],
-      "scripts":       [ "bin/stabilized" ],
+      "scripts":       [ "bin/stabilized", "bin/com-sysreport", "bin/com-sysinfo" ],
     },
     "mgrep": {
       "name":"mgrep",

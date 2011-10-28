@@ -468,6 +468,10 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Fri Oct 28 2011 MG <grimme@atix.de>, 0.1-29
+  - lib/comoonics/cmdb/ComSource.py: new SystemInformation factory method will
+  be used.
+  - bin/com-channel2db, bin/com-rpm2db, bin/com-rpmdiffs: fixed optparse bug.
 * Wed Oct 12 2011 MG <grimme@atix.de>, 0.1-28
   - lib/comoonics/cmdb/ComSoftwareCMDB.py: createTMP: - create table as
      prerequisite
@@ -580,6 +584,12 @@ comoonics-ec-admin-py:
   - initial revision
 
 comoonics-ec-base-py:
+* Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-8 
+  - lib/comoonics/ecbase/ComMetadataSerializer.py,
+  lib/comoonics/ecbase/test/testUtils.py: new ComSystemInformation
+  factory method (getSystemInformation) will be used.
+  - bin/com-sysinfo, bin/com-sysreport: - fixed bugs with optparse - moved to
+  new factory api
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-7
   - added Group System Environment/Base
 * Tue Feb 15 2011 MG <grimme@atix.de>, 0.1-6
@@ -597,6 +607,14 @@ comoonics-ec-base-py:
 
 comoonics-ec-py:
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-62
+  - .../enterprisecopy/ComArchiveCopyObject.py,
+  lib/comoonics/enterprisecopy/ComCopyObject.py,
+  lib/comoonics/enterprisecopy/ComCopyset.py,
+  .../enterprisecopy/ComFilesystemCopyset.py,
+  lib/comoonics/enterprisecopy/ComLVMCopyset.py,
+  .../enterprisecopy/ComPartitionCopyset.py: new ComSystemInformation
+  factory method (getSystemInformation) will be used.
+  - bin/com-ec: fixed optparse bug.
   - lib/comoonics/enterprisecopy/ComPathCopyObject.py: fixed bug in metadata
   handling. Would fail if used in combination with ArchiveCopyObjects.
   - .../enterprisecopy/ComFilesystemCopyset.py: fixed bug where
@@ -736,6 +754,9 @@ comoonics-ec-py:
   changed that modset and copysets can be mixed not for copysets then modsets.
 
 comoonics-imsd-plugins-py
+* Fri Oct 28 2011 MG <grimme( at )atix.de, 0.1-3:
+  - lib/comoonics/imsd/plugins/ComSysreportPlugin.py: new ComSystemInformation
+  factory method (getSystemInformation) will be used.
 * Mon Apr 18 2011 MG <grimme@atix.de>, 0.1-2
   - fixed bug with ComSysreportPlugin for wrong path for sysreport templates.
 * Tue Apr 07 2011 MG <grimme@atix.de>, 0.1-1
@@ -878,6 +899,11 @@ comoonics-storage-py
 
 comoonics-tools-py
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-13
+  - lib/comoonics/tools/ComSystemInformation.py,
+  lib/comoonics/tools/test/testSysreport.py,
+  lib/comoonics/tools/test/testSystemInformation.py: new ComSystemInformation
+  factory method (getSystemInformation) will be used.
+  - bin/com-sysinfo, bin/com-sysreport: fixed optparse bug.
   - lib/comoonics/tools/ComSystemInformation.py: fixed bugs when
   SystemInformation would yield Exceptions when OSR is detected bug
   RedHatCluster not available.
