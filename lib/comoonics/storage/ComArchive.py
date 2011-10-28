@@ -16,7 +16,6 @@ __version__ = "$Revision: 1.5 $"
 import os
 import shutil
 import tempfile
-import xml.dom
 from xml.dom import Node
 
 import tarfile
@@ -27,11 +26,8 @@ from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
-from exceptions import ImportError
 
 __all__ = ["Archive", "ArchiveHandlerFactory", "ArchiveHandler"]
-
-class NotImplementedError(ComException): pass
 
 class ArchiveException(ComException):pass
 
@@ -297,7 +293,9 @@ class TarArchiveHandler(ArchiveHandler):
             tarf=tarfile.open(self.tarfile, "a:"+self.compressionmode)
         except IOError:
             tarf=tarfile.open(self.tarfile, "w:"+self.compressionmode)
-        tarf.add(os.path.normpath(name), arcname, recursive)
+        except tarfile.ReadError:
+            tarf=tarfile.open(self.tarfile, "w:"+self.compressionmode)
+        tarf.add(os.path.normpath(name), os.path.normpath(arcname), recursive)
         tarf.close()
 
 
