@@ -7,8 +7,4 @@ source ./build-lib2.sh
 
 NAME=comoonics-ec-py
 
-build_rpms $NAME $*
-
-##############
-# $Log:$
-#
+build_rpms $NAME "$@"

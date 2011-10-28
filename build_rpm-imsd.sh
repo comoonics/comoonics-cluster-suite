@@ -6,5 +6,5 @@ source ./build-lib2.sh
 
 NAME=comoonics-imsd-py
 
-build_rpms $NAME $*
+build_rpms $NAME "$@"
 

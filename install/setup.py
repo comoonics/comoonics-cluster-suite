@@ -1284,8 +1284,8 @@ Those are classes used by more other packages.
       "url": "http://www.comoonics.org/development/comoonics-cdsl-py",
       "package_dir": { "comoonics.cdsl" : "lib/comoonics/cdsl", "comoonics.cdsl.migration": "lib/comoonics/cdsl/migration" },
       "packages":      [ "comoonics.cdsl", "comoonics.cdsl.migration" ],
-      "scripts":       [ "bin/com-mkcdsl", "bin/com-mkcdslinfrastructure", "bin/com-cdslinvchk", "bin/com-rmcdsl" ],
-      "data_files":    [ ("share/man/man1",[ "man/com-mkcdslinfrastructure.1.gz", "man/com-mkcdsl.1.gz", "man/com-cdslinvchk.1.gz", "man/com-rmcdsl.1.gz" ]) ],
+      "scripts":       [ "bin/com-mkcdsl", "bin/com-cdslinvadm", "bin/com-cdslinvchk", "bin/com-rmcdsl" ],
+      "data_files":    [ ("share/man/man1",[ "man/com-cdslinvadm.1.gz", "man/com-mkcdsl.1.gz", "man/com-cdslinvchk.1.gz", "man/com-rmcdsl.1.gz" ]) ],
     },
     "comoonics-cluster-tools-py": {
       "name":"comoonics-cluster-tools-py",
@@ -1301,7 +1301,7 @@ Those are tools to help using OSR clusters.
       "url":"http://www.comoonics.org/development/comoonics-cluster-tools-py",
       "package_dir" :  { "": "lib/"},
       "packages":      [ "comoonics.cluster.tools" ],
-      "scripts":       [ "bin/com-dsh", "bin/cl_checknodes" ],
+      "scripts":       [ "bin/com-dsh", "bin/cl_checknodes", "bin/com-fence-validate" ],
     },
     "comoonics-cluster-py": {
       "name": "comoonics-cluster-py",
@@ -1527,5 +1527,5 @@ elif setup_cfg.has_key(sys.argv[0]):
     basedict=setup_cfg[sys.argv[0]]
 basedict["license"]="GPLv2+"
 basedict["cmdclass"]={"bdist_rpm": bdist_rpm_fedora, "test": test}
-buildmanpages(basedict)
+#buildmanpages(basedict)
 setup(**basedict)

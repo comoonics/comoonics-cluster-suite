@@ -126,7 +126,10 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
-* Wed Oct 25 2011 MG <grimme( at )atix.de> 0.1-41
+* Wed Oct 26 2011 MG <grimme( at )atix.de> 0.1-42
+  - bin/com-cdslinvchk: bugfix
+  - man/*: rewrite all manpages.
+* Tue Oct 25 2011 MG <grimme( at )atix.de> 0.1-41
   - bin/com-mkcdslinfrastructure: obsolete
   - bin/com-mkcdsl: error messages go to stderr.
     fixed bug with args handling where first node id if given was skipped.
@@ -288,7 +291,7 @@ comoonics-cdsl-py:
    initial revision
 
 comoonics-cluster-py:
-Wed Oct 19 2011 MG <grimme( at ) atix.de, 0.1-38
+* Wed Oct 19 2011 MG <grimme( at ) atix.de, 0.1-38
   - .../cluster/helper/RedHatClusterHelper.py: removed redefinitions
   - lib/comoonics/cluster/__init__.py: added ClusterRepositoryNoNodesFound
      Exception getClusterRepository: - factory method will now also accept
@@ -399,6 +402,13 @@ Wed Oct 19 2011 MG <grimme( at ) atix.de, 0.1-38
    initial revision
 
 comoonics-cluster-tools-py:
+* Tue Oct 25 2011 MG <grimme( at )atix.de>, 0.1-18
+  - added com-fence-validate
+  - com-dsh:
+    - The -R / --norange option will selectively switch of hostname 
+      range interpretation so that hostnames that appear to look like ranges will be accepted.
+    - It is now possible to use com-dsh within other scripting environments. 
+      The -T/-t option now supports this.
 * Wed Mar 23 2011 MG <grimme@atix.de>, 0.1-17
   - added Group System Environment/Base
   - Implemented PersistentOptionParser for all commands.
