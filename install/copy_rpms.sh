@@ -30,8 +30,8 @@ is_newer() {
 usage() {
 	cat <<EOF
 $0 channeldistribution destdir [channelclass=${CHANNELCLASS}] [arch=${ARCH}] [filenamefilter=${FILENAMEFILTER}]
-   destdir            : what destinationdirectory to copy to
    channeldistribution: what distribution: rhel4,rhel5,rhel6,sles10,sles11,fedora
+   destdir            : what destinationdirectory to copy to
    channelclass       : what kind of channel (base/extras), default: $CHANNELCLASS
    arch               : what architecture: noarch,i386,x86_64,SRPMS
    filenamefilter     : what to include: $FILENAMEFILTER
@@ -62,12 +62,10 @@ fi
    
 RPMBUILDDIR=${RPMBUILDDIR:-$(rpmbuild --showrc | grep ": _topdir" | awk '{print $3}')/${ARCH}}
 
-rpm -qp --queryformat=$QUERYFORMAT $RPMBUILDDIR/${FILENAMEFILTER}*.${arch}.rpm 2>/dev/null | while IFS=';' read filename distribution group; do
+rpm -qp --queryformat=$QUERYFORMAT $RPMBUILDDIR/${FILENAMEFILTER}*${CHANNELDISTRIBUTION}.${arch}.rpm 2>/dev/null | while IFS=';' read filename distribution group; do
   filename=${RPMBUILDDIR}/$filename
-  subgroup=$(echo "$group" | cut -f 3 -d/)
-  group=$(echo "$group" | cut -f 2 -d/)
-  echo "$group" | grep -i "${CHANNELCLASS}$" &>/dev/null
-  if [ $? -eq 0 ] && [ -e "$filename" ] && ( [ -z "$subgroup" ] || [ $(echo "$subgroup" | tr a-z A-Z) = $(echo "$CHANNELDISTRIBUTION" | tr a-z A-Z) ] ); then
+  group=$(echo "$group" | cut -f 2 -d/ | tr "[A-Z]" "[a-z]")
+  if [ -e "$filename" ] && [ "$group" = "$CHANNELCLASS" ]; then
     if is_newer $DESTDIR/$CHANNELDISTRIBUTION/$ARCH/$(basename $filename) $filename; then
       echo "$filename => $DESTDIR/$CHANNELDISTRIBUTION/$ARCH"
       cp $filename $DESTDIR/$CHANNELDISTRIBUTION/$ARCH

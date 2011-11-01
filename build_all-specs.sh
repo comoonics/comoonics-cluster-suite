@@ -18,8 +18,11 @@ else
    defines[1]='--define "withegginfo 1"'
 fi
 
+if [ -n "$SHORTDISTRO" ]; then
+    defines[2]='--define "LINUXDISTROSHORT '$SHORTDISTRO'"'
+fi
 if [ -n "$NOTEST" ]; then
-    defines[2]='--define "withtest 0"'
+    defines[3]='--define "withtest 0"'
 fi
 if [ $# -eq 0 ]; then
    files=$(ls -1 dist/*.spec)

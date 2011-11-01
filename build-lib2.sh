@@ -5,6 +5,8 @@ build_rpms() {
 	shift
     DISTRIBUTION_NAME=$1
     shift
+    SHORTDISTRO=$1
+    shift
 	CHANGELOG=$(awk '
 BEGIN { changelogfound=0; }
 /^'${NAME}'/{ changelogfound=1; next };
@@ -28,10 +30,10 @@ BEGIN { changelogfound=0; }
 	done
 	
 	if [ $# -eq 0 ]; then
-		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --spec-only --changelog="${CHANGELOG}" --distribution-name="$DISTRIBUTION_NAME"
-		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --source-only --changelog="${CHANGELOG}" --distribution-name="$DISTRIBUTION_NAME"
+	    PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --spec-only --changelog="${CHANGELOG}" --distribution-name="$DISTRIBUTION_NAME"
+	    PYTHONPATH=./ python setup.py $NAME -v bdist_rpm --source-only --changelog="${CHANGELOG}" --distribution-name="$DISTRIBUTION_NAME" --defines="LINUXDISTROSHORT=${SHORTDISTRO}"
 	else
-		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm $@ --changelog="${CHANGELOG}" --distribution-name="$distribution_name"
+		PYTHONPATH=./ python setup.py $NAME -v bdist_rpm $@ --changelog="${CHANGELOG}" --distribution-name="$distribution_name" --defines="LINUXDISTROSHORT=${SHORTDISTRO}"
 	fi
 	
 	for file in $(find $INSTALLDIR -maxdepth 1 -type f); do

@@ -434,6 +434,7 @@ class bdist_rpm_fedora (Command):
         # Allow a packager to explicitly force an architecture
         ('force-arch=', None,
          "Force an architecture onto the RPM build process"),
+        ('defines=', None, "Specify a list of defines.")
        ]
 
     boolean_options = ['keep-temp', 'use-rpm-opt-flags', 'rpm3-mode',
@@ -487,6 +488,7 @@ class bdist_rpm_fedora (Command):
         self.no_autoreq = 0
 
         self.force_arch = None
+        self.defines = None
 
     # initialize_options()
 
@@ -567,6 +569,7 @@ class bdist_rpm_fedora (Command):
         self.ensure_string_list('conflicts')
         self.ensure_string_list('build_requires')
         self.ensure_string_list('obsoletes')
+        self.ensure_string_list("defines")
 
         self.ensure_string('force_arch')
     # finalize_package_data ()
@@ -580,6 +583,7 @@ class bdist_rpm_fedora (Command):
             print "packager =", self.packager
             print "doc_files =", self.doc_files
             print "changelog =", self.changelog
+            print "defines =", self.defines
 
         # make directories
         if self.spec_only:
@@ -642,6 +646,9 @@ class bdist_rpm_fedora (Command):
         if self.rpm3_mode:
             rpm_cmd.extend(['--define',
                              '_topdir %s' % os.path.abspath(self.rpm_base)])
+        if self.defines:
+            for define in self.defines:
+                rpm_cmd.extend(['--define', define.replace("=", " ")])
         if not self.keep_temp:
             rpm_cmd.append('--clean')
         rpm_cmd.append(spec_path)
@@ -652,8 +659,11 @@ class bdist_rpm_fedora (Command):
         nvr_string = "%{name}-%{version}-%{release}"
         src_rpm = nvr_string + ".src.rpm"
         non_src_rpm = "%{arch}/" + nvr_string + ".%{arch}.rpm"
-        q_cmd = r"rpm -q --qf '%s %s\n' --specfile '%s'" % (
-            src_rpm, non_src_rpm, spec_path)
+        defines=""
+        for define in self.defines:
+            defines='--define "'+define.replace("=", " ")+'" '+defines
+        q_cmd = r"rpm %s -q --qf '%s %s\n' --specfile '%s'" % (
+            defines, src_rpm, non_src_rpm, spec_path)
 
         out = os.popen(q_cmd)
         binary_rpms = []
@@ -740,6 +750,7 @@ class bdist_rpm_fedora (Command):
             '%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}',
             '%endif',
             '%define modulename '+'comoonics',
+            '%{!?LINUXDISTROSHORT: %global LINUXDISTROSHORT rhel5}',
             withegginfo,
             withtest,
             '',
@@ -1200,7 +1211,7 @@ def doc2man(packagename, manpath, outmanpages):
 # class bdist_rpm
 setup_cfg={ "comoonics-analysis-py": {
       "name":"comoonics-analysis-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics analysis library written in Python",
       "long_description":""" 
 com.oonics analysis library written in Python
@@ -1214,7 +1225,7 @@ com.oonics analysis library written in Python
     },
     "comoonics-assistant-py": {
       "name":"comoonics-assistant-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics assistant library written in Python",
       "long_description":""" 
 com.oonics assistant library written in Python
@@ -1227,7 +1238,7 @@ com.oonics assistant library written in Python
     },
     "comoonics-backup-legato-py": {
       "name":"comoonics-backup-legato-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Legato Backup utilities and libraries written in Python",
       "long_description":""" 
 com.oonics Legato Backup utilities and libraries written in Python
@@ -1240,7 +1251,7 @@ com.oonics Legato Backup utilities and libraries written in Python
     },    
     "comoonics-backup-py": {
       "name":"comoonics-backup-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Backup utilities and libraries written in Python",
       "long_description":""" 
 com.oonics Backup utilities and libraries written in Python
@@ -1253,7 +1264,7 @@ com.oonics Backup utilities and libraries written in Python
     },    
     "comoonics-base-py": {
       "name":"comoonics-base-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics minimum baselibraries",
       "long_description":""" 
 com.oonics minimum baselibraries written in Python
@@ -1276,7 +1287,7 @@ Those are classes used by more other packages.
     },
     "comoonics-cdsl-py": { 
       "name": "comoonics-cdsl-py",
-      "version": "0.2",
+      "version": "5.0",
       "description": "com.oonics cdsl utilities and library written in Python",
       "long_description": """ com.oonics cdsl utilities and library written in Python """,
 #      author="ATIX AG - Marc Grimme",
@@ -1289,7 +1300,7 @@ Those are classes used by more other packages.
     },
     "comoonics-cluster-tools-py": {
       "name":"comoonics-cluster-tools-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics cluster tools",
       "long_description":""" 
 com.oonics cluster tools written in Python
@@ -1305,7 +1316,7 @@ Those are tools to help using OSR clusters.
     },
     "comoonics-cluster-py": {
       "name": "comoonics-cluster-py",
-      "version": "0.1",
+      "version": "5.0",
       "description":"com.oonics cluster configuration utilities written in Python",
       "long_description": """ com.oonics cluster configuration utilities written in Python """,
 #      author="ATIX AG - Marc Grimme",
@@ -1318,7 +1329,7 @@ Those are tools to help using OSR clusters.
     },
     "comoonics-cmdb-py": {
       "name":"comoonics-cmdb-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Softwaremanagement CMDB utilities and libraries written in Python",
       "long_description":""" 
 com.oonics Softwaremanagement CMDB utilities and libraries written in Python
@@ -1330,7 +1341,7 @@ com.oonics Softwaremanagement CMDB utilities and libraries written in Python
     },    
     "comoonics-db-py": {
       "name":"comoonics-db-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Softwaremanagement Database utilities and libraries written in Python",
       "long_description":""" 
 com.oonics Softwaremanagement Database utilities and libraries written in Python
@@ -1341,7 +1352,7 @@ com.oonics Softwaremanagement Database utilities and libraries written in Python
     },    
     "comoonics-dr-py": {
       "name":"comoonics-dr-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics desaster recovery assistant written in Python",
       "long_description":""" 
 com.oonics desaster recovery assistant written in Python
@@ -1362,7 +1373,7 @@ com.oonics desaster recovery assistant written in Python
     },
     "comoonics-ec-admin-py": {
       "name":"comoonics-ec-admin-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics enterprise copy administrator written in Python",
       "long_description":""" 
 com.oonics enterprise copy administrator written in Python
@@ -1379,7 +1390,7 @@ com.oonics enterprise copy administrator written in Python
     },    
     "comoonics-ec-base-py": {
       "name":"comoonics-ec-base-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Enterprise Copy base libraries",
       "long_description":""" 
 com.oonics Enterprise Copy base libraries
@@ -1395,7 +1406,7 @@ Base libraries used for comoonics enterprise copy.
     },
     "comoonics-ec-py": {
       "name":"comoonics-ec-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Enterprisecopy utilities and libraries written in Python",
       "long_description":""" 
 com.oonics Enterprisecopy utilities and libraries written in Python
@@ -1407,7 +1418,7 @@ com.oonics Enterprisecopy utilities and libraries written in Python
     },    
     "comoonics-imsd-plugins-py": {
       "name":"comoonics-imsd-plugins-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics imsd plugins written in Python",
       "long_description":""" 
 com.oonics imsd plugins written in Python
@@ -1418,7 +1429,7 @@ com.oonics imsd plugins written in Python
     },    
     "comoonics-imsd-py": {
       "name":"comoonics-imsd-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics imsd utilities and libraries written in Python",
       "long_description":""" 
 com.oonics imsd utilities and libraries written in Python
@@ -1429,7 +1440,7 @@ com.oonics imsd utilities and libraries written in Python
     },    
     "comoonics-installation-py": {
       "name":"comoonics-installation-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics installation library written in Python",
       "long_description":""" 
 com.oonics installation library written in Python
@@ -1440,7 +1451,7 @@ com.oonics installation library written in Python
     },    
     "comoonics-scsi-py": {
       "name":"comoonics-scsi-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics SCSI utilities and libraries written in Python",
       "long_description":""" 
 com.oonics SCSI utilities and libraries written in Python
@@ -1452,7 +1463,7 @@ com.oonics SCSI utilities and libraries written in Python
     },    
     "comoonics-search-py": {
       "name":"comoonics-search-py",
-      "version":"0.1",
+      "version": "5.0",
       "description": "Searchlibraries used by mgrep",
       "long_description":""" 
 Searchlibraries used by mgrep
@@ -1464,7 +1475,7 @@ Searchlibraries used by mgrep
     },    
     "comoonics-storage-hp-py": {
       "name":"comoonics-storage-hp-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Enterprisecopy HP Storage utilities and libraries written in Python",
       "long_description":""" 
 com.oonics Enterprisecopy HP Storage utilities and libraries written in Python
@@ -1475,7 +1486,7 @@ com.oonics Enterprisecopy HP Storage utilities and libraries written in Python
     },    
     "comoonics-storage-py": {
       "name":"comoonics-storage-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics Enterprisecopy Storage utilities and libraries written in Python",
       "long_description":""" 
 com.oonics Enterprisecopy Storage utilities and libraries written in Python
@@ -1486,7 +1497,7 @@ com.oonics Enterprisecopy Storage utilities and libraries written in Python
     },    
     "comoonics-tools-py": {
       "name":"comoonics-tools-py",
-      "version":"0.1",
+      "version": "5.0",
       "description":"com.oonics base tools",
       "long_description":""" 
 com.oonics basic tools written in Python
