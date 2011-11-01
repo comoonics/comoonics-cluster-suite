@@ -1,11 +1,11 @@
 #!/bin/bash
 # copies all relevant rpms to the specific channel
-RPMBUILDDIR=${RPMBUILDDIR:-$(rpmbuild --showrc | grep ": _topdir" | awk '{print $3}')}
 CHANNELDISTRIBUTION=${1}
 DESTDIR=$2
 CHANNELCLASS=${3:-extras}
-ARCH=${4:-noarch}
-FILENAMEFILTER=${5:-comoonics-*-py*}
+arch=${4:-noarch}
+FILENAMEFILTER=${5:-comoonics-bootimage*}
+RPMBUILDDIR=$6
 
 is_newer() {
 	local file1=$1
@@ -38,7 +38,7 @@ $0 channeldistribution destdir [channelclass=${CHANNELCLASS}] [arch=${ARCH}] [fi
 EOF
 }
 
-if [ $# -lt 2 ] || [ $(echo "$1" | tr A-Z a-z) = "-h" ] || [ $(echo "$1" | tr A-Z a-z) = "--help" ]; then
+if [ $# -le 2 ] || [ $(echo "$1" | tr A-Z a-z) = "-h" ] || [ $(echo "$1" | tr A-Z a-z) = "--help" ]; then
 	usage
 	exit 1
 fi
@@ -47,19 +47,25 @@ if [ ! -d "$DESTDIR" ]; then
 	usage
 	exit 2
 fi
-if [ "$ARCH" = "SRPMS" ]; then
+if [ "$arch" = "SRPMS" ]; then
   QUERYFORMAT='%{NAME}-%{VERSION}-%{RELEASE}.src.rpm;%{DISTRIBUTION};%{GROUP}\n'
 else
-  QUERYFORMAT='%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm;%{DISTRIBUTION};%{GROUP}\n'
+  QUERYFORMAT='%{NAME}-%{VERSION}-%{RELEASE}.%{arch}.rpm;%{DISTRIBUTION};%{GROUP}\n'
 fi
 
-[ "$ARCH" = "SRPMS" ] || ARCH="RPMS/$ARCH"
-rpm -qp --queryformat=$QUERYFORMAT $RPMBUILDDIR/${ARCH}/$FILENAMEFILTER 2>/dev/null | while IFS=';' read filename distribution group; do
-  filename=${RPMBUILDDIR}/${ARCH}/$filename
-  subgroup=$(echo "$group" | cut -f 2 -d/)
-  subgroup2=$(echo "$group" | cut -f 3 -d/)
-  echo "$subgroup" | grep -i "${CHANNELCLASS}" &>/dev/null
-  if [ $? -eq 0 ] && [ -e "$filename" ] && ( [ -z "$subgroup2" ] || [ $(echo "$subgroup2" | tr a-z A-Z) = $(echo "$CHANNELDISTRIBUTION" | tr a-z A-Z) ] ); then
+if [ "$arch" = "SRPMS" ]; then
+    ARCH=$arch
+    arch="src"
+else
+    ARCH="RPMS/$arch"
+fi
+   
+RPMBUILDDIR=${RPMBUILDDIR:-$(rpmbuild --showrc | grep ": _topdir" | awk '{print $3}')/${ARCH}}
+
+rpm -qp --queryformat=$QUERYFORMAT $RPMBUILDDIR/${FILENAMEFILTER}*${CHANNELDISTRIBUTION}.${arch}.rpm 2>/dev/null | while IFS=';' read filename distribution group; do
+  filename=${RPMBUILDDIR}/$filename
+  group=$(echo "$group" | cut -f 2 -d/ | tr "[A-Z]" "[a-z]")
+  if [ -e "$filename" ] && [ "$group" = "$CHANNELCLASS" ]; then
     if is_newer $DESTDIR/$CHANNELDISTRIBUTION/$ARCH/$(basename $filename) $filename; then
       echo "$filename => $DESTDIR/$CHANNELDISTRIBUTION/$ARCH"
       cp $filename $DESTDIR/$CHANNELDISTRIBUTION/$ARCH

@@ -37,9 +37,10 @@ from comoonics.storage import ComLVM
 from comoonics import ComSystem, ComLog
 from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset, get_defaultsfiles, get_defaultsenvkey
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
 except ImportError:
-    from optparse import OptionParser, OptionGroup
+    from optparse import OptionParser 
+from optparse import OptionGroup
 
 import os.path
 #define some variables

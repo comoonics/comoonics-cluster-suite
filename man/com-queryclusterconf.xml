@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding='utf-8'?>
+<!DOCTYPE article
+  PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<article id="com-cluster-py-man" lang="en">
+
+<refentry id="com-queryclusterconf">
+	<indexterm><primary>query clusterconfiguration</primary></indexterm>
+	<indexterm><primary>com-queryclusterconf</primary></indexterm>
+
+	<refmeta>
+		<refentrytitle>com-queryclusterconf</refentrytitle>
+		<manvolnum>1</manvolnum>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>com-queryclusterconf</refname>
+		<refpurpose>Queries a default or given Clusterconfiguration</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>com-queryclusterconf</command>
+		    <group>
+		        <arg>-v|--version</arg>
+		        <arg>-h|--help</arg>		        
+		        <arg>-v|--verbose</arg>
+		    </group>
+		    <group>
+		        <arg>-V|--validate</arg>
+		        <arg>-f <replaceable>CLUSTERCONF</replaceable>, --filename=<replaceable>CLUSTERCONF</replaceable> -c <replaceable>CLUSTERCONF</replaceable> --clusterconf=<replaceable>CLUSTERCONF</replaceable></arg>
+		        <arg>-Q <replaceable>QUERIESFILE</replaceable> --queriesfile=<replaceable>QUERIESFILE</replaceable></arg>
+		        <arg>-m <replaceable>MAPFILE</replaceable>, --querymapfile=<replaceable>MAPFILE</replaceable></arg>
+		    </group>
+		    <group>
+		        <arg>-q, --query</arg>
+		        <arg>-p, --properties</arg>
+		    </group>
+		    <group>
+		        <arg>-W, --nowarnings</arg>
+		        <arg>-Y, --pretty</arg>
+		        <arg>-E, --evalparams</arg>
+		        <arg>-s <replaceable>SEPERATOR</replaceable>, --seperator=<replaceable>SEPERATOR</replaceable></arg>
+		        <arg>-P <replaceable>PREFIX</replaceable>, --prefix=<replaceable>PREFIX</replaceable></arg>
+		        <arg>-S <replaceable>SUFFIX</replaceable>, --suffix=<replaceable>SUFFIX</replaceable></arg>
+		    </group>
+		    <arg choice="opt" rep="repeat">query_xml query params</arg>
+		    <arg choice="opt" rep="repeat">query=<replaceable>query_value query params</replaceable></arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsect1>
+		<title>Description</title>		
+		<para>
+			com-queryclusterconf queries a given or default clusterconfiguration. You can use the predefined queries and also query 
+			for any valid XQL-Query-String.
+			The predefined queries only work for the Red Hat Cluster configuration.
+		</para>
+	</refsect1>
+	
+	<refsect1>
+		<title>Options</title>		
+		<para>
+			The following section describes the available options.
+		</para>	
+		<variablelist>
+		    <varlistentry>
+		        <term><option>-h|--help</option></term>
+		        <listitem>
+		            <para>
+		                Shows a short help
+		            </para>
+		        </listitem>
+		    </varlistentry>
+		    <varlistentry>
+				<term><option>-f |--filename=|-c |--clusterconf=CLUSTERCONF</option></term>
+				<listitem>
+					<para>
+						Specify the path to clusterconfiguration, if not specified use /etc/cluster/cluster.conf
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-v|--verbose</option></term>
+				<listitem>
+					<para>
+						Adds debugging messages when perform a query
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-V|--validate</option></term>
+				<listitem>
+					<para>
+						Validates clusterconfiguration before performing a query. Default is no validation.
+					</para>
+				</listitem>
+			</varlistentry>
+		    <varlistentry>
+		        <term><option>-W, --nowarnings</option></term>
+		        <listitem>
+		            <para>
+		                Suppres warnings.
+		            </para>
+		        </listitem>
+		    </varlistentry>
+		    <varlistentry>
+		        <term><option>-Y, --pretty</option></term>
+		        <listitem>
+		            <para>
+		                Try to make pretty XML output.
+		            </para>
+		        </listitem>
+		    </varlistentry>
+		    <varlistentry>
+		        <term><option>-E, --evalparams</option></term>
+		        <listitem>
+		            <para>Evaluate all given parameters. Default evaluate parameters. Switches this behaviour off.</para>
+		        </listitem>
+		    </varlistentry>
+		    <varlistentry>
+		        <term><option>-s <replaceable>SEPERATOR</replaceable>, --seperator=<replaceable>SEPERATOR</replaceable></option></term>
+		        <listitem>
+		            <para>
+		                Use the given character as seperator between output values. Default is no seperator.
+		            </para>
+		        </listitem>
+		    </varlistentry>
+		    <varlistentry>
+		        <term><option>-P <replaceable>PREFIX</replaceable>, --prefix=<replaceable>PREFIX</replaceable></option></term>
+		        <listitem>
+		            <para>The query result is prefixed by this given string.
+                        Default: ""</para>
+		        </listitem>
+		    </varlistentry>
+		    <varlistentry>
+		        <term><option>-S SUFFIX, --suffix=SUFFIX</option></term>
+		        <listitem>
+		            <para>The query result is suffixed by this given string.
+                        Default: ""</para>
+		        </listitem>
+		    </varlistentry>
+		</variablelist>
+		<refsect2>
+			<title>Query parameters</title>
+			<indexterm><primary>query parameters</primary></indexterm>
+			<para>
+				This section gives an overview over the query parameters.
+			</para>
+			<variablelist>
+				<varlistentry>
+					<term><option>-Q <replaceable>QUERIESFILE</replaceable>, --queriesfile=<replaceable>QUERIESFILE</replaceable></option></term>
+					<listitem>
+						<para>
+							Specify a queryfile the queries are read from.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term></term>
+					<listitem>
+						<para>
+							Query file with given XQL, return all suitable values separated by a space. Default is read from command line.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>-m <replaceable>MAPFILE</replaceable>, --querymapfile=<replaceable>MAPFILE</replaceable></option></term>
+					<listitem>
+						<para>
+							Read valid predefined queries from specified file. Default: None.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsect2>
+    </refsect1>
+    <refsect1>
+        <title>Predefined queries to be used</title>
+        <para>This section sums up all possible predefined queries to be passed as query. If a querymap is used all queries specified in the
+        querymap can be used.</para>
+        <variablelist>
+            <varlistentry>
+                <term><option>query_xml <replaceable>query</replaceable> <replaceable>param*</replaceable></option></term>
+                <listitem>
+                    <para>
+                        Directly query the given xml file with the query given and output the resulting XML.
+                        Parameters will be replaced by their correspondent counterparts in the query. 
+                        <quote>%(param0)s</quote> represents the first parameter and so forth.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>query_value <replaceable>query</replaceable> <replaceable>param*</replaceable></option></term>
+                <listitem>
+                    <para>
+                        Directly query the given xml file with the query given and output the resulting as string.
+                        Parameters will be replaced by their correspondent counterparts in the query. 
+                        <quote>%(param0)s</quote> represents the first parameter and so forth.
+                    </para>                    
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>convert <replaceable>format</replaceable></option></term>
+                <listitem>
+                    <para>Converts the current cluster configuration into another format. Right now only <quote>OCFS2</quote> is supported as 
+                    valid destination format.</para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>netdevs <replaceable>Nodeid</replaceable></option></term>
+                <listitem>
+                    <para>Outputs all specified network devices for the given Nodeid.</para>
+                </listitem>
+            </varlistentry>
+    		<varlistentry>
+				<term><option>nodename <replaceable>mac</replaceable></option></term>
+				<listitem>
+					<para>
+						Shows nodename which belongs to given mac-address
+					</para>
+				</listitem>
+			</varlistentry>
+				<varlistentry>
+					<term><option>nodeid <replaceable>mac</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows nodeid which belongs to given mac-address
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>ip <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows ip-address for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>master <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows master-device for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>slave  <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows slave-status for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>mask <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows netmask for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>gateway <replaceable>nodename</replaceable> <replaceable>dev</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows gateway for given hostname and network device name
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>hosts</option></term>
+					<listitem>
+						<para>
+							Shows the specified nodename in hosts file format.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>ifconfig <replaceable>mac</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows ifconfig parameter for mac.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>rootvolume <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows device name for the root device of given node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>rootfs <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows filesystem name for root device of given node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>mountopts <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows mount options for root device of given node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>syslog <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows syslog server of given node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>failoverdomainnodes <replaceable>failoverdomain</replaceable> <replaceable><optional>sep</optional></replaceable></option></term>
+					<listitem>
+						<para>
+							Shows all defined nodes in the given failoverdomain. Seperated by seperator.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>failoverdomainprefnode <replaceable>failoverdomain</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows preferred node defined in the given failoverdomain.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>nodeids <replaceable><optional>sep</optional></replaceable></option></term>
+					<listitem>
+						<para>
+							Shows all nodes which are definde in clusterconfiguration. Seperated by sep (default: blank)
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>scsifailover <replaceable>nodename</replaceable></option></term>
+					<listitem>
+						<para>
+							Shows scsifailovertype for the given node.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsect1>
+	
+	<refsect1>
+		<title>Examples</title>
+		<indexterm><primary>example usage</primary></indexterm>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-queryclusterconf netdevs gfs-node1 -</userinput></screen>
+			<para>Shows network device names for node <quote>gfs-node1</quote>. Uses blank to separate entries.</para>
+		</informalexample>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-queryclusterconf hosts</userinput></screen>
+			<para>Shows the hosts in hosts file type (e.g. 192.168.1.1 gfs-node1). Uses a new line for every host.</para>
+		</informalexample>
+		<informalexample>
+			<screen><prompt>$ </prompt><userinput>com-queryclusterconf -f /my_conf.xml query_value /cluster/clusternodes/clusternode/@name</userinput></screen>
+			<para>Shows name of nodes which are defined in clusterconfiguration at /my_conf.xml. Items are seperated by a blank.</para>
+		</informalexample>
+	</refsect1>
+	
+	<refsect1 role="man-page">
+		<title>Files</title>
+		<simplelist type="vert">
+			<member><filename><?install-datadir?>bin/com-queryclusterconf</filename></member>
+			<member><filename><?install-datadir?>lib/comoonics/cluster/*</filename></member>
+		</simplelist>
+		<para>
+			The above files are distributed and installed by the com-cluster-py package.
+		</para>
+	</refsect1>
+    
+    <refsect1 role='author'>
+        <title>Author</title>
+        <para>This manual page was written by Marc Grimme <email>grimme( at )atix.de</email>. 
+            Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, 
+            Version 1.1 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts 
+            and no Back-Cover Texts.</para>
+    </refsect1>
+    
+</refentry>
+
+</article>

@@ -14,9 +14,10 @@ logging.basicConfig()
 from comoonics.analysis import get_defaultsfiles, get_defaultsenvkey
 from comoonics.analysis.StraceAnalyser import StraceAnalyser, formatResults
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
 except ImportError:
-    from optparse import OptionParser, OptionGroup
+    from optparse import OptionParser
+from optparse import OptionGroup
 
 parser = OptionParser(description=__doc__, usage="usage: %prog [options] [stracefile]")
 parser.add_option("-v", "--verbose", action="store_true", default=False, dest="verbose", help="Be more verbose")

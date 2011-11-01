@@ -20,10 +20,11 @@ sys.path.append("/home/marc/atix/comoonics-clustersuite/python/lib")
 from comoonics import ComLog
 from comoonics import ComSystem, ComLog, ComExceptions
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
     from comoonics.cmdb import get_defaultsenvkey, get_defaultsfiles
 except ImportError:
-    from optparse import OptionParser, OptionGroup
+    from optparse import OptionParser
+from optparse import OptionGroup
     
 from comoonics.cmdb.ComDSL import DSL
 from comoonics.cmdb.ComDSLStages import DSLStages

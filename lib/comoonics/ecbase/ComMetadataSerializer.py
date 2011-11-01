@@ -28,23 +28,22 @@ from xml.dom import Node
 
 class UnsupportedMetadataException(ComException): pass
 
+def getMetadataSerializer(element, doc):
+    if isinstance(element, Node):
+        archives=element.getElementsByTagName("archive")
+        if len(archives) > 0:
+            ComLog.getLogger(MetadataSerializer.__logStrLevel__).debug("Returning new object ArchiveMetadataSerializer")
+            return ArchiveMetadataSerializer(element, doc)
+        else:
+            raise UnsupportedMetadataException("Unsupported Metadata type in element " % (element.tagName))
+    else:
+        raise UnsupportedMetadataException("Unsupported Metadata type because no domelement given (%s)" %(element))
+
 class MetadataSerializer(DataObject):
     """ The Metadata baseclass """
     __logStrLevel__="MetadataSerializer"
     log=ComLog.getLogger(__logStrLevel__)
     TAG_NAME="metadata"
-
-    def __new__(cls, *args, **kwds):
-        if len (args) > 0 and isinstance(args[0], Node):
-            archives=args[0].getElementsByTagName("archive")
-            if len(archives) > 0:
-                cls=ArchiveMetadataSerializer
-                ComLog.getLogger(MetadataSerializer.__logStrLevel__).debug("Returning new object %s" %(cls))
-                return object.__new__(cls, *args, **kwds)
-            else:
-                raise UnsupportedMetadataException("Unsupported Metadata type in element " % (args[0].tagName))
-        else:
-            raise UnsupportedMetadataException("Unsupported Metadata type because no domelement given (%u)" %(len(args)))
 
     def __init__(self, element, doc=None):
         DataObject.__init__(self, element, doc)

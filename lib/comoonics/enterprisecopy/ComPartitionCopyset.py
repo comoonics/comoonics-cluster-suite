@@ -45,7 +45,7 @@ import os
 import re
 
 from ComCopyset import CopysetJournaled
-from ComCopyObject import CopyObject
+from ComCopyObject import getCopyObject
 from comoonics.ComExceptions import *
 from comoonics import ComSystem, ComLog
 
@@ -55,14 +55,14 @@ class PartitionCopyset(CopysetJournaled):
         CopysetJournaled.__init__(self, element, doc)
         try:
             __source=element.getElementsByTagName('source')[0]
-            self.source=CopyObject(__source, doc)
+            self.source=getCopyObject(__source, doc)
         #except Exception, e:
         except Exception, e:
             ComLog.getLogger(__logStrLevel__).warning(e)
             raise ComException("source for copyset not defined")
         try:
             __dest=element.getElementsByTagName('destination')[0]
-            self.dest=CopyObject(__dest, doc)
+            self.dest=getCopyObject(__dest, doc)
         except Exception, e:
         #except None:
             print ("EXCEPTION: %s\n" %e)
@@ -125,36 +125,3 @@ class PartitionCopyset(CopysetJournaled):
             return False
         else:
             return True
-
-
-# $Log: ComPartitionCopyset.py,v $
-# Revision 1.6  2010-03-08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.5  2007/10/15 09:11:47  mark
-# Fixed BZ#42. Added source and dest cleanup
-#
-# Revision 1.4  2007/02/27 15:54:41  mark
-# changed Disk to HostDisk
-#
-# Revision 1.3  2006/12/08 09:42:53  mark
-# added support for generic CopyObject Framework
-#
-# Revision 1.2  2006/07/20 10:25:10  mark
-# added check for update
-#
-# Revision 1.1  2006/07/19 14:29:15  marc
-# removed the filehierarchie
-#
-# Revision 1.4  2006/07/05 12:30:02  mark
-# added --force to partition copy
-#
-# Revision 1.3  2006/07/03 14:32:38  mark
-# added undo
-#
-# Revision 1.2  2006/07/03 09:28:17  mark
-# added support for empty partition tables
-#
-# Revision 1.1  2006/06/28 17:25:16  mark
-# initial checkin (stable)
-#

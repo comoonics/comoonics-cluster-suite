@@ -1,7 +1,20 @@
 """ Comoonics filecopy copyset module
 
-
-here should be some more information about the module, that finds its way inot the onlinedoc
+The ComFilesystemCopyset presents a way to copy one filesystem/path to one another. It is represented by an XML configuration of the following
+format:
+    <copyset type="filesystem" name="save-tmp">
+        <properties>
+           <!-- properties are optional and will be added as commandline attributes to the copy command -->
+           <property name="..">..</property>
+           ..
+        <properties>
+        <source type="path">
+            <path name="%s"/>
+        </source>
+        <destination type="path">
+            <path name="%s"/>
+        </destination>
+    </copyset>
 
 """
 
@@ -17,7 +30,7 @@ __version__ = "$Revision: 1.19 $"
 import xml.dom
 import warnings
 
-from ComCopyObject import CopyObject
+from ComCopyObject import getCopyObject, CopyObject
 from ComCopyset import Copyset
 from comoonics import ComSystem
 from comoonics import ComLog
@@ -114,14 +127,14 @@ class FilesystemCopyset(Copyset):
             Copyset.__init__(self, element, doc)
             try:
                 __source=element.getElementsByTagName('source')[0]
-                self.source=CopyObject(__source, doc)
+                self.source=getCopyObject(__source, doc)
             except Exception, e:
                 ComLog.getLogger(__logStrLevel__).warning(e)
                 ComLog.debugTraceLog(ComLog.getLogger(__logStrLevel__))
                 raise ComException("Source for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
             try:
                 __dest=element.getElementsByTagName('destination')[0]
-                self.dest=CopyObject(__dest, doc)
+                self.dest=getCopyObject(__dest, doc)
             except Exception, e:
                 ComLog.getLogger(__logStrLevel__).warning(e)
                 raise ComException("Destination for filesystem copyset with name \"%s\" is not defined" %(self.getAttribute("name", "unknown")))
@@ -254,7 +267,7 @@ class FilesystemCopyset(Copyset):
         # 3. copy archive to fs
         elif isinstance(self.source, ArchiveCopyObject):
             if isinstance(self.dest, FilesystemCopyObject) or isinstance(self.dest, PathCopyObject):
-                if not self.dest.filesystem.copyable:
+                if isinstance(self.dest, FilesystemCopyObject) and not self.dest.filesystem.copyable:
                     return True
 #                try:
                 archive=self.source.getDataArchive()

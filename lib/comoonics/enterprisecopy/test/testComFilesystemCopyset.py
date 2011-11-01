@@ -59,14 +59,16 @@ class Test(unittest.TestCase):
         self.__testCopyset(_xml)
         tar=tarfile.open(self.temparchivesource[1])
         tarok=True
+        tarfiles=list()
         for tarinfo in tar:
-            if tarinfo.name == "./":
+            tarfiles.append(tarinfo.name)
+            if tarinfo.name == "./" or tarinfo.name == ".":
                 continue
             elif os.path.basename(tarinfo.name) in self.files:
                 continue
             else:
                 tarok=False
-        self.failIfEqual(tarok , False, "Tarfile %s does not consist of files %s." %(self.temparchivesource[1], self.files))
+        self.failIfEqual(tarok , False, "Tarfile %s does not consist of files %s but %s." %(self.temparchivesource[1], self.files, tarfiles))
         tar.close()
 
         tar=tarfile.open(self.temparchivemetadata[1])

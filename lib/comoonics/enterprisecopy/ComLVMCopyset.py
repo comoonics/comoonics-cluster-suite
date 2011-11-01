@@ -29,7 +29,7 @@ from exceptions import IndexError
 from comoonics import ComLog
 from comoonics.storage.ComLVM import VolumeGroup, LinuxVolumeManager, LogicalVolume, PhysicalVolume
 
-from ComCopyObject import CopyObject
+from ComCopyObject import getCopyObject
 from ComCopyset import CopysetJournaled
 from ComLVMCopyObject import LVMCopyObject
 
@@ -77,14 +77,14 @@ class LVMCopyset(CopysetJournaled):
         except IndexError, ie:
             raise IndexError("Destination for lvm copyset %s not defined: %s" % (self.getAttribute("name", "unknown"), ie))
         # Factory constructs the right copyobject
-        self.source=CopyObject(__source, doc)
-        self.addToUndoMap(VolumeGroup.__name__, "create", "remove")
-        self.addToUndoMap(VolumeGroup.__name__, "activate", "deactivate")
-        self.addToUndoMap(PhysicalVolume.__name__,"create", "remove")
-        self.addToUndoMap(LogicalVolume.__name__,"create", "remove")
+        self.source=getCopyObject(__source, doc)
+        self.addToUndoMap(VolumeGroup.__class__.__name__, "create", "remove")
+        self.addToUndoMap(VolumeGroup.__class__.__name__, "activate", "deactivate")
+        self.addToUndoMap(PhysicalVolume.__class__.__name__,"create", "remove")
+        self.addToUndoMap(LogicalVolume.__class__.__name__,"create", "remove")
 
         # Factory constructs the right copyobject
-        self.dest=CopyObject(__dest, doc)
+        self.dest=getCopyObject(__dest, doc)
         # only copy the lvs from source if dest has no lvs
 #        if (len(self.dest.getVolumeGroup().getLogicalVolumes()) == 0):
 #            LVMCopyset.updateFromElement(self.dest, self.source)

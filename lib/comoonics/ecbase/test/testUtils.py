@@ -4,7 +4,7 @@ Created on 15.02.2011
 @author: marc
 '''
 import unittest
-from comoonics.ecbase.ComUtils import *
+from comoonics.ecbase.ComUtils import grepInLines, isInt
 
 class Test(unittest.TestCase):
 

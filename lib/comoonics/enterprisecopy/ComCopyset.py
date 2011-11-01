@@ -26,38 +26,35 @@ def registerCopyset(_type, _class):
 
 def getCopyset(element, doc):
     """ Factory function to create Copyset Objects"""
+    if isinstance(element, Node):
+        __type=element.getAttribute("type")
+        if not __type:
+            raise AttributeError("Attribute @type is not defined in element %s." %element.getAttribute("name"))
+        if __type == "partition":
+            from ComPartitionCopyset import PartitionCopyset
+            cls=PartitionCopyset
+        elif __type == "lvm":
+            from ComLVMCopyset import LVMCopyset
+            cls=LVMCopyset
+        elif __type == "filesystem":
+            from ComFilesystemCopyset import FilesystemCopyset
+            cls=FilesystemCopyset
+        elif __type == "bootloader":
+            from ComBootloaderCopyset import BootloaderCopyset
+            cls=BootloaderCopyset
+        elif __type=="storage":
+            from comoonics.enterprisecopy.ComStorageCopyset import StorageCopyset
+            cls=StorageCopyset
+        elif _copyset_registry.has_key(__type):
+            cls=_copyset_registry[__type]
+        else:
+            raise NotImplementedError("Copyset class of type %s is not yet implemented and cannot be instantiated." %(__type))
+        return cls(element, doc)
     return Copyset(element, doc)
 
 class Copyset(DataObject, Requirements):
     __logStrLevel__ = "comoonics.enterprisecopy.ComCopyset.Copyset"
     TAGNAME = "copyset"
-    def __new__(cls, *args, **kwds):
-        if isinstance(args[0], Node):
-            element=args[0]
-            __type=element.getAttribute("type")
-            if not __type:
-                raise AttributeError("Attribute @type is not defined in element %s." %element.getAttribute("name"))
-            if __type == "partition":
-                from ComPartitionCopyset import PartitionCopyset
-                cls=PartitionCopyset
-            elif __type == "lvm":
-                from ComLVMCopyset import LVMCopyset
-                cls=LVMCopyset
-            elif __type == "filesystem":
-                from ComFilesystemCopyset import FilesystemCopyset
-                cls=FilesystemCopyset
-            elif __type == "bootloader":
-                from ComBootloaderCopyset import BootloaderCopyset
-                cls=BootloaderCopyset
-            elif __type=="storage":
-                from comoonics.enterprisecopy.ComStorageCopyset import StorageCopyset
-                cls=StorageCopyset
-            elif _copyset_registry.has_key(__type):
-                cls=_copyset_registry[__type]
-            else:
-                raise NotImplementedError("Copyset class of type %s is not yet implemented and cannot be instantiated." %(__type))
-        return object.__new__(cls, args, kwds)
-
     def __init__(self, element, doc):
         DataObject.__init__(self, element, doc)
         Requirements.__init__(self, element, doc)

@@ -37,6 +37,19 @@ class SystemTypes(object):
     CLUSTER=SystemType(1)
     UNKNOWN=SystemType(2)
 
+def getSystemInformation(*args, **kwds):
+    if RHOpensharedrootSystemInformation.check(*args, **kwds):
+        return RHOpensharedrootSystemInformation(*args, **kwds)
+    elif RedhatClusterSystemInformation.check(*args, **kwds):
+        return RedhatClusterSystemInformation(*args, **kwds)
+    elif RedhatSystemInformation.check(*args, **kwds):
+        return RedhatSystemInformation(*args, **kwds)
+    elif RPMLinuxSystemInformation.check(*args, **kwds):
+        return RPMLinuxSystemInformation(*args, **kwds)
+    elif LinuxSystemInformation.check(*args, **kwds):
+        return LinuxSystemInformation(*args, **kwds)
+    raise SystemInformationNotFound("Could not find system information for this system")
+
 class SystemInformation(object):
     log=ComLog.getLogger("SystemInformation")
     """
@@ -51,15 +64,6 @@ class SystemInformation(object):
         return False
     check=staticmethod(check)
 
-    def __new__(cls, *args, **kwds):
-        """
-        The factory calling the apropriate constructor
-        """
-#        SystemInformation.log.debug("SystemInformation.__new__(args: %s, kwds: %s)" %(args, kwds))
-        if LinuxSystemInformation.check(*args, **kwds):
-            return LinuxSystemInformation.__new__(LinuxSystemInformation, *args, **kwds)
-        raise SystemInformationNotFound("Could not find system information for this system")
-
     def __init__(self, *args, **kwds):
         """
         The constructor instantiating an object of class SystemInformation
@@ -69,7 +73,7 @@ class SystemInformation(object):
         self.kernelversion="unknown"
         self.name="unknown"
         self.type=SystemTypes.UNKNOWN
-        self.uptime="unknown"
+        self.uptime=0
         self.installedsoftware=list()
         self.features=list()
 
@@ -177,15 +181,6 @@ class LinuxSystemInformation(SystemInformation):
             return ret
     check=staticmethod(check)
 
-    def __new__(cls, *args, **kwds):
-        """
-        The factory calling the apropriate constructor
-        """
-        if RPMLinuxSystemInformation.check(*args, **kwds):
-            return RPMLinuxSystemInformation.__new__(RPMLinuxSystemInformation, *args, **kwds)
-        else:
-            return object.__new__(LinuxSystemInformation, *args, **kwds)
-
     def __init__(self, *args, **kwds):
         super(LinuxSystemInformation, self).__init__(*args, **kwds)
         self.features.append("linux")
@@ -217,15 +212,6 @@ class RPMLinuxSystemInformation(LinuxSystemInformation):
         finally:
             return ret
     check=staticmethod(check)
-
-    def __new__(cls, *args, **kwds):
-        """
-        The factory calling the apropriate constructor
-        """
-        if RedhatSystemInformation.check(*args, **kwds):
-            return RedhatSystemInformation.__new__(RedhatSystemInformation, *args, **kwds)
-        else:
-            return object.__new__(RPMLinuxSystemInformation, *args, **kwds)
 
     def __init__(self, *args, **kwds):
         super(RPMLinuxSystemInformation, self).__init__(*args, **kwds)
@@ -260,14 +246,6 @@ class RedhatSystemInformation(RPMLinuxSystemInformation):
             return ret
     check=staticmethod(check)
 
-    def __new__(cls, *args, **kwds):
-        if RedhatClusterSystemInformation.check(*args, **kwds):
-            return RedhatClusterSystemInformation.__new__(RedhatClusterSystemInformation, *args, **kwds)
-        elif RHOpensharedrootSystemInformation.check(*args, **kwds):
-            return RHOpensharedrootSystemInformation.__new__(RHOpensharedrootSystemInformation, *args, **kwds)
-        else:
-            return object.__new__(RedhatSystemInformation, *args, **kwds)
-
     def __init__(self, *args, **kwds):
         super(RedhatSystemInformation, self).__init__(*args, **kwds)
         self.features.append("redhat")
@@ -298,19 +276,15 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
                     ret=True
         finally:
             return ret
-    def __new__(cls, *args, **kwds):
-        if RHOpensharedrootSystemInformation.check(*args, **kwds):
-            return RHOpensharedrootSystemInformation.__new__(RHOpensharedrootSystemInformation, *args, **kwds)
-        else:
-            return object.__new__(RedhatClusterSystemInformation, *args, **kwds)
     def __init__(self, *args, **kwds):
         from comoonics import XmlTools
         super(RedhatClusterSystemInformation, self).__init__(*args, **kwds)
         self.features.append("redhatcluster")
         if not kwds and not args:
-            self.cluster_conf=XmlTools.parseXMLFile(self.REDHAT_CLUSTER_CONF)
-            self.type=SystemTypes.CLUSTER
-            self.name=self.getClusterName()
+            if os.path.exists(self.REDHAT_CLUSTER_CONF):
+                self.cluster_conf=XmlTools.parseXMLFile(self.REDHAT_CLUSTER_CONF)
+                self.type=SystemTypes.CLUSTER
+                self.name=self.getClusterName()
         else:
             self.__dict__.update(dict(kwds))
             self.type=SystemTypes.CLUSTER
@@ -323,7 +297,10 @@ class RedhatClusterSystemInformation(RedhatSystemInformation):
               -> RedhatCluster->getClusterName()
         """
         from comoonics import XmlTools
-        return XmlTools.evaluateXPath(self.XPATH_CLUSTERNAME, self.cluster_conf)[0]
+        if self.type==SystemTypes.CLUSTER:
+            return XmlTools.evaluateXPath(self.XPATH_CLUSTERNAME, self.cluster_conf)[0]
+        else:
+            return "unknown"
 
     check=staticmethod(check)
 
@@ -346,8 +323,7 @@ class RHOpensharedrootSystemInformation(RedhatClusterSystemInformation):
                     ret=True
         finally:
             return ret
-    def __new__(cls, *args, **kwds):
-        return object.__new__(RHOpensharedrootSystemInformation, *args, **kwds)
+
     def __init__(self, *args, **kwds):
         super(RHOpensharedrootSystemInformation, self).__init__(*args, **kwds)
         self.features.append("opensharedroot")
@@ -358,35 +334,3 @@ class RHOpensharedrootSystemInformation(RedhatClusterSystemInformation):
             self.type=SystemTypes.CLUSTER
 
     check=staticmethod(check)
-
-# $Log: ComSystemInformation.py,v $
-# Revision 1.1  2011-02-15 14:58:21  marc
-# initial revision
-#
-# Revision 1.8  2011/01/12 09:59:17  marc
-# - fixed bug with old XML usage
-#
-# Revision 1.7  2007/09/07 14:47:42  marc
-# -added report method for sysreport
-# - added features
-#
-# Revision 1.6  2007/04/11 11:49:13  marc
-# Hilti RPM Control
-# - moved the updateSoftware to right place
-#
-# Revision 1.5  2007/04/02 11:22:52  marc
-# For Hilti RPM Control:
-# - made name setable
-#
-# Revision 1.4  2007/03/26 08:37:31  marc
-# - changed getInstalledSoftware and updateInstalledSoftware to work with only selected software and all (default)
-#
-# Revision 1.3  2007/03/06 07:05:20  marc
-# would not find linux in redhat rhel4 with match. Changed to search.
-#
-# Revision 1.2  2007/03/05 16:10:56  marc
-# first rpm version
-#
-# Revision 1.1  2007/02/23 12:42:59  marc
-# initial revision
-#

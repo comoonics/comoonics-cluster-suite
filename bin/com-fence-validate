@@ -85,7 +85,8 @@ for node in options.nodes:
         fencecmdparameters=dict(fencedeviceglobalparams)
         for index in range(fencecnode.attributes.length):
             attr=fencecnode.attributes.item(index)
-            fencecmdparameters[attr.name]=attr.value
+            if not fencecmdparameters.has_key(attr.name):
+                fencecmdparameters[attr.name]=attr.value
         cmd=fencecmdparameters["agent"]
         del fencecmdparameters["agent"]
         del fencecmdparameters["name"]

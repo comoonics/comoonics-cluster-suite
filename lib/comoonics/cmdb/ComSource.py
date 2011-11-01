@@ -10,7 +10,7 @@ Methods for filling and getting informations for sources for CMDB
 from comoonics.cmdb.ComBaseDB import BaseDB
 from comoonics import ComLog
 try:
-    from comoonics.tools.ComSystemInformation import SystemInformation
+    from comoonics.tools.ComSystemInformation import getSystemInformation as SystemInformation
 except ImportError:
     from comoonics.ComSystemInformation import SystemInformation
 from comoonics.db.ComDBLogger import DBLogger

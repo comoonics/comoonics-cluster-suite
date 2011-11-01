@@ -22,9 +22,10 @@ from comoonics.ComExceptions import ComException
 from comoonics.cluster import getClusterInfo, getClusterRepository, QueryMap, parseClusterConf
 from comoonics.cluster import clusterconf, commonoptparseroptions, querymapfile, get_defaultsfiles, get_defaultsenvkey
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser, OptionGroup
+    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
 except ImportError:
-    from optparse import OptionParser, OptionGroup
+    from optparse import OptionParser
+from optparse import OptionGroup
 
 def printResult(result, options, params, paramsparsestring="\%\([a-zA-Z0-9_]+\)", outbuf=None):
     from comoonics.ComDataObject import DataObject
@@ -178,7 +179,7 @@ parser.add_option_group(outputopts)
 try:
     parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
     parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
-except (TypeError, NameError):
+except (AttributeError, TypeError, NameError):
     pass
 
 ComLog.setLevel(logging.INFO)
