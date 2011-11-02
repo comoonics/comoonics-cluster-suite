@@ -87,7 +87,7 @@ class SimpleComoonicsClusterRepository(ClusterRepository):
     Class that implements a simple cluster repository that does not consist of any configuration file but is
     defined from the constructor parameters.
     """
-    def __init__(self, maxnodeidnum=1, nodeids=None, nodenames=None, clusterconf=None):
+    def __init__(self, maxnodeidnum=0, nodeids=None, nodenames=None, clusterconf=None):
         """
         Constructor that creates a new cluster repository from outside information.
         @param nodeids: an optional list of nodeids (list of numbers)
