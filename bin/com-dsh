@@ -290,7 +290,7 @@ def command_options (appname, usage):
 
     cmd_parser.add_option_group(user_options)
     try:
-        cmd_parser.setGlobalDefaultsFilename(getdefaultsfiles[0])
+        cmd_parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
         cmd_parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
     except (AttributeError, TypeError, NameError):
         pass
