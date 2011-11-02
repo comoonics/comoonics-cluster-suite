@@ -1350,7 +1350,7 @@ def getHostsFromCluster(clusterconf, verbose, uselocalhost=True, localhost="loca
     from comoonics.cluster import getClusterRepository, getClusterInfo
     from comoonics import ComSystem
     
-    repo=getClusterRepository(clusterconf)
+    repo=getClusterRepository(filename=clusterconf)
     info=getClusterInfo(repo)
     if ComSystem.isSimulate():
         info.helper.setSimOutput()
@@ -1359,7 +1359,7 @@ def getHostsFromCluster(clusterconf, verbose, uselocalhost=True, localhost="loca
         
     names=list()
     for node in info.getNodes(True):
-        if node.local=="1" and uselocalhost:
+        if hasattr(node, "local") and node.local=="1" and uselocalhost:
             names.append(localhost)
         else:
             names.append(node.getName())
@@ -1429,6 +1429,10 @@ def main (argv):
         hostlist=getHostsFromCluster(options.clusterconf, options.verbose, options.localhost)
         if options.verbose > 4:
             print "Found nodes: %s" %(hostlist)
+        if not hostlist and len(hostlist)==0 and os.path.exists(allgroup_file):
+            if options.verbose > 2:
+                print "Did not found valid clusternodes but found file %s. So falling back to this file." %allgroup_file
+            options.allgroup=True
 
     # Force single thread at high verbosity
     if options.verbose >= 4:
@@ -1442,7 +1446,7 @@ def main (argv):
         # Process host list
         if options.verbose >= 1:
             print "Process host list"
-        if not hostlist:
+        if not hostlist or len(hostlist)==0:
             hostlist=process_hostlist(options.allgroup, allgroup_file,
                                       options.hostfiles, options.group, options.nodes, options.verbose,
                                       options.norange)
