@@ -61,7 +61,10 @@ class ClusterNode(ClusterObject):
         pass
     def isActive(self):
         """placeholder for isActvie method. Should return True if node is actively joined to the given cluster"""
-        return True                
+        return True     
+    
+    def __str__(self):
+        return "%s(%u): %s" %(self.getName(), self.getId(), self.isActive())           
 
 class SimpleComoonicsClusterNode(ClusterNode):
     """
