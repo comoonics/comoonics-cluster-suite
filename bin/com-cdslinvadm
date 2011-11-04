@@ -170,18 +170,18 @@ try:
                 print "\t"+repository.getMountpoint()+":"
                 for cdsl in childcdslRepository.walkCdsls(clusterinfo=clusterInfo):
                     if options.xml:
-                        print XmlTools.toPrettyXml(cdsl.getElement())
+                        print XmlTools.toPrettyXML(cdsl.getElement())
                     else:
                         print "\t\t"+cdsl.toString(detailed=options.detailed)
         for cdsl in childcdslRepository.walkCdsls(clusterinfo=clusterInfo):
             if options.xml:
-                print "\t"+XmlTools.toPrettyXml(cdsl.getElement())
+                print "\t"+XmlTools.toPrettyXML(cdsl.getElement())
             else:
                 print "\t"+cdsl.toString(detailed=options.detailed)
     elif options.command == "getcdsl":
         cdsl=childcdslRepository.getCdsl(args[0])
         if options.xml:
-            print XmlTools.toPrettyXml(cdsl.getElement())
+            print XmlTools.toPrettyXML(cdsl.getElement())
         else:
             print cdsl.toString(detailed=options.detailed)
     elif options.command == "addnode":

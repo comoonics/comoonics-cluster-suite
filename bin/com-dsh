@@ -290,7 +290,7 @@ def command_options (appname, usage):
 
     cmd_parser.add_option_group(user_options)
     try:
-        cmd_parser.setGlobalDefaultsFilename(getdefaultsfiles[0])
+        cmd_parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
         cmd_parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
     except (AttributeError, TypeError, NameError):
         pass
@@ -684,52 +684,56 @@ def process_hostlist (all, default_group, hostfile_list, groupfile, nodes, verbo
             index = []
             pad_depth = 0
             custom_port = None
-            if norange:
-               index = None
-            else:
-                index     = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)(:\d+)', node)
+            try:
+                if norange:
+                    index = None
+                else:
+                    index     = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)(:\d+)', node)
+                    if index == None:
+                        index = re.search(r'(\b\D+)(\d+)-(\d+)(:\d+)', node)
+                    if index == None:
+                        index = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)', node)
+                    if index == None:
+                        index = re.search(r'(\b\D+)(\d+)-(\d+)', node)
                 if index == None:
-                    index = re.search(r'(\b\D+)(\d+)-(\d+)(:\d+)', node)
-                if index == None:
-                    index = re.search(r'(\b\d+\.\d+\.\d+\.)(\d+)-(\d+)', node)
-                if index == None:
-                    index = re.search(r'(\b\D+)(\d+)-(\d+)', node)
-            if index == None:
-                continue
-            else:
-                if verbose >= 2:
-                    print "  Found multihost specification, expanding %s" % (
-                          node)
-                remove_nodes.append(node)
-                basename    = index.group(1)
-                count_start = index.group(2)
-                count_end   = int(index.group(3))
-                pad_number  = re.search(r'(\b0+)(\d+)', str(count_start))
-                if pad_number != None:
-                    pad_depth = len(pad_number.group(1)) + 1
-                if index.group(4) != None:
-                    custom_port = index.group(4)
-                count_start = int(count_start)
-                if verbose >= 3:
-                    print "    Basename:        %s" % (basename)
-                    print "    Count Start:     %s" % (count_start)
-                    print "    Count End:       %s" % (count_end)
-                    if pad_depth > 0:
-                        print "    Pad Depth:       %s" % (pad_depth)
-                    if custom_port != None:
-                        print "    Custom Port:     %s" % (custom_port)
-                if count_start >= count_end:
-                    print >> sys.stderr, "ERROR :: Node range is zero " + \
-                                        "or negative."
-                    sys.exit(1)
-                for count in range(count_start, count_end + 1):
-                    if custom_port != None:
-                        new_node = "%s%s%s" % (basename, str(count).zfill(pad_depth),
-                                               custom_port)
-                    else:
-                        new_node = "%s%s" % (basename, count.zfill(pad_depth))
-                    if new_node not in nodes :
-                        nodes.append(new_node)
+                    continue
+                else:
+                    if verbose >= 2:
+                        print "  Found multihost specification, expanding %s" % (node)
+                    remove_nodes.append(node)
+                    basename    = index.group(1)
+                    count_start = index.group(2)
+                    count_end   = int(index.group(3))
+                    pad_number  = re.search(r'(\b0+)(\d+)', str(count_start))
+                    if pad_number != None:
+                        pad_depth = len(pad_number.group(1)) + 1
+                    if index.group(4) != None:
+                        custom_port = index.group(4)
+                    count_start = int(count_start)
+                    if verbose >= 3:
+                        print "    Basename:        %s" % (basename)
+                        print "    Count Start:     %s" % (count_start)
+                        print "    Count End:       %s" % (count_end)
+                        if pad_depth > 0:
+                            print "    Pad Depth:       %s" % (pad_depth)
+                        if custom_port != None:
+                            print "    Custom Port:     %s" % (custom_port)
+                    if count_start >= count_end:
+                        print >> sys.stderr, "ERROR :: Node range is zero " + \
+                                            "or negative."
+                        sys.exit(1)
+                    for count in range(count_start, count_end + 1):
+                        if custom_port != None:
+                            new_node = "%s%s%s" % (basename, str(count).zfill(pad_depth),
+                                                   custom_port)
+                        else:
+                            new_node = "%s%s" % (basename, count.zfill(pad_depth))
+                        if new_node not in nodes :
+                            nodes.append(new_node)
+            except IndexError:
+                if verbose > 3:
+                    print "Seems to be a hostname but no range name. Falling back."
+                remove_nodes.remove(node)
     else:
         print "ERROR    ::    Empty nodes list."
         sys.exit(1)
@@ -1350,7 +1354,7 @@ def getHostsFromCluster(clusterconf, verbose, uselocalhost=True, localhost="loca
     from comoonics.cluster import getClusterRepository, getClusterInfo
     from comoonics import ComSystem
     
-    repo=getClusterRepository(clusterconf)
+    repo=getClusterRepository(filename=clusterconf)
     info=getClusterInfo(repo)
     if ComSystem.isSimulate():
         info.helper.setSimOutput()
@@ -1359,7 +1363,7 @@ def getHostsFromCluster(clusterconf, verbose, uselocalhost=True, localhost="loca
         
     names=list()
     for node in info.getNodes(True):
-        if node.local=="1" and uselocalhost:
+        if hasattr(node, "local") and node.local=="1" and uselocalhost:
             names.append(localhost)
         else:
             names.append(node.getName())
@@ -1429,6 +1433,10 @@ def main (argv):
         hostlist=getHostsFromCluster(options.clusterconf, options.verbose, options.localhost)
         if options.verbose > 4:
             print "Found nodes: %s" %(hostlist)
+        if not hostlist and len(hostlist)==0 and os.path.exists(allgroup_file):
+            if options.verbose > 2:
+                print "Did not found valid clusternodes but found file %s. So falling back to this file." %allgroup_file
+            options.allgroup=True
 
     # Force single thread at high verbosity
     if options.verbose >= 4:
@@ -1442,7 +1450,7 @@ def main (argv):
         # Process host list
         if options.verbose >= 1:
             print "Process host list"
-        if not hostlist:
+        if not hostlist or len(hostlist)==0:
             hostlist=process_hostlist(options.allgroup, allgroup_file,
                                       options.hostfiles, options.group, options.nodes, options.verbose,
                                       options.norange)

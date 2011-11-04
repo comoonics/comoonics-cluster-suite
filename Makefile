@@ -342,15 +342,15 @@ rpmsign:
 
 .PHONY: channel-rhel5
 channel-rhel5:
-	@make SHORTDISTRO=rhel5  channelbuild channelcopy
+	@make SHORTDISTRO=rhel5 channelcopy channelbuild
 
 .PHONY: channel-rhel6
 channel-rhel6:
-	@make SHORTDISTRO=rhel6  channelbuild channelcopy
+	@make SHORTDISTRO=rhel6 channelcopy channelbuild
 
 .PHONY: channel-sles11
 channel-sles11:
-	@make SHORTDISTRO=sles11 channelbuild channelcopy
+	@make SHORTDISTRO=sles11 channelcopy channelbuild
 
 .PHONY: channelcopy
 channelcopy: 
