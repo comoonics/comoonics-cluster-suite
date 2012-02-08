@@ -392,7 +392,7 @@ class ComoonicsCdslRepository(CdslRepository):
 Wrong version of cdsl repository %s. 
 Version must be %s but is %s. 
 Please first migrate to appropriate version.
-For this use com-mkcdslinfrastructure --migrate""" %(os.path.join(self.workingdir, self.resource), self.version, self.getVersion()))
+For this use com-cdslinvadm --migrate""" %(os.path.join(self.workingdir, self.resource), self.version, self.getVersion()))
         self.setMountpoint(stripleadingsep(keys.get("mountpoint", "")))
         self.writeresource(False)
 
