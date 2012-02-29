@@ -134,6 +134,8 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-3
+  - Implemented com-cdslinvadm getcdsl --recursive (BZ#463)
 * Fri Nov 04 2011 MG <grimme( at )atix.de>, 5.0-2
   - Fixed bug that no XML would be written out if queried for.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
@@ -421,6 +423,9 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Wed Feb 29 2012 MG <grimme( at )atix,de>, 5.0-3
+  - fixed bug in cl_checknodes that would not detect two node cluster with qdisk.
+  - fixed bug in com-fence-validate where options would not be detected as expected.
 * Wed Nov 01 2011 MG <grimme( at )atix.de>, 5.0-2
   - fixed bug in com-dsh with handling of defaultfiles
   - implemented fallback scenario to all groupfile if no clusternodes are to be found
@@ -638,6 +643,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Fri Dec 09 2011 MG <grimme( at )atix.de>, 5.0-2
+  - Implemented excludes feature so that multiple excludes can be specified by a "," delimited property.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-62
@@ -878,6 +885,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-2
+  - Added support for GFS2 as filesystem (ComFileSystem/gfs2FileSystem)
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-21
@@ -946,6 +955,8 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-2
+  - Fixed ComSystemInformation.RHOpensharedrootSystemInformation as cluster type.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-13
