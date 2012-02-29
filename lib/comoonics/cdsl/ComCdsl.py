@@ -151,9 +151,12 @@ At least on node identity is specified. Either specify a default with with the m
     
     def toString(self, detailed=False):
         if not detailed:
-            return self.src
+            if self.hasAttribute("child"):
+                return "%s %s" %(self.getAttribute("child"), self.src)
+            else:
+                return self.src
         else:
-            return "%s: Nodeids: %s, timestamp: %s" %(self.src, self.nodes, self.timestamp)
+            return "%s: CDSLSource: %s, Nodeids: %s, timestamp: %s" %(self.getAttribute("child", self.src), self.src, self.nodes, self.timestamp)
     def __eq__(self, othercdsl):
         """
         Two cdsls are equal if their sources they refer to are equal and their repository is equal
@@ -429,9 +432,6 @@ class ComoonicsCdsl(Cdsl):
         self.cdsltree_shared = dirtrim(cdslRepository.getSharedTreepath())    
         self.default_dir = dirtrim(cdslRepository.getDefaultDir())
         self.cdsl_link = dirtrim(cdslRepository.getLinkPath())
-
-    def __str__(self):
-        return self.src
 
     def isStripped(self):
         """
