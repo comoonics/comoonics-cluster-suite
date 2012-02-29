@@ -327,10 +327,10 @@ class RHOpensharedrootSystemInformation(RedhatClusterSystemInformation):
     def __init__(self, *args, **kwds):
         super(RHOpensharedrootSystemInformation, self).__init__(*args, **kwds)
         self.features.append("opensharedroot")
+        self.type=SystemTypes.CLUSTER
         if not kwds and not args:
             pass
         else:
             self.__dict__.update(dict(kwds))
-            self.type=SystemTypes.CLUSTER
 
     check=staticmethod(check)
