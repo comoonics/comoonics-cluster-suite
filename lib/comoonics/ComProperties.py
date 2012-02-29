@@ -24,10 +24,8 @@ __version__= "$Revision $"
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
 from comoonics.ComDataObject import DataObject
 import ComLog
-from exceptions import KeyError
 from xml.dom import Node
 
 class Property(DataObject):
