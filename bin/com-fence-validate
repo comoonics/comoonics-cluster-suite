@@ -50,11 +50,7 @@ logger=ComLog.getLogger("comoonics.cluster.fence-validate")
 (options, args) = parser.parse_args()
 
 fencedeviceglobalparams=dict()
-if not args:
-    fencedeviceglobalparams["action"]="status"
-else:
-    for arg in args:
-        fencedeviceglobalparams[arg.split("=")[0]]=arg.split("=")[1]
+fencedeviceglobalparams["action"]="status"
 
 if not options.name:
     parser.error("You have to specify the name of a valid fenceagent.")
@@ -74,8 +70,11 @@ for index in range(fencedeviceelement.attributes.length):
     attr=fencedeviceelement.attributes.item(index)
     fencedeviceglobalparams[attr.name]=attr.value
 
+for arg in args:
+    fencedeviceglobalparams[arg.split("=")[0]]=arg.split("=")[1]
+
 if not options.nodes:
-    options.nodes=clusterInfo.getNodeIdentifiers(active=True)
+    options.nodes=clusterInfo.getNodeIdentifiers(active=False)
     
 for node in options.nodes:
     sys.stdout.write(node)
