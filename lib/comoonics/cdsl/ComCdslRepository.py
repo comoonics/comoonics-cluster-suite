@@ -716,17 +716,20 @@ For this use com-cdslinvadm --migrate""" %(os.path.join(self.workingdir, self.re
                 return self.getRepository(mountpoint).getRepositoryForCdsl(src)
         return self
 
-    def getCdsl(self,src, repository=None, realpath=True, stripsource=True):
+    def getCdsl(self,src, repository=None, realpath=True, stripsource=True, recursive=False):
         """
         Uses given source to return matching cdsl
         @param src: Path of searched cdsl
         @type src: string
         @param realpath: Should this src path be resolved to its realpath. Default: True.
         @type  realpath: L{Boolean}
+        @param recursive: Walk down the given cdsl part for part and return the next nearest cdsl
         @return: cdsl-object belonging to given path
         @rtype: L{ComoonicsCdsl}
         @raise CdslRepositoryNotFound: if the cdsl could not be found in the repository 
         """
+        if (not src or src=="") and recursive:
+            raise CdslNotFoundException(src,repository)
         if repository and repository.cdsls.has_key(src):
             return repository.cdsls[src]
         if self.cdsls.has_key(src):
@@ -748,6 +751,13 @@ For this use com-cdslinvadm --migrate""" %(os.path.join(self.workingdir, self.re
                     path.popd()
                     return cdsl
             path.popd()
+            try:
+                if recursive:
+                    cdsl=self.getCdsl(os.path.dirname(src), repository=repository, realpath=realpath, stripsource=stripsource, recursive=recursive)
+                    cdsl.setAttribute("child", src)
+                    return cdsl 
+            except CdslNotFoundException:
+                pass
         raise CdslNotFoundException(src,repository)
         
     def walkCdsls(self, clusterinfo=None, cdsls=None, onerror=None, repository=None, recursive=False):
