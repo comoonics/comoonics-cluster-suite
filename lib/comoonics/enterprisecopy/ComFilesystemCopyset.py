@@ -96,6 +96,7 @@ erroroutput: %s""" %(_type, "RSyncError", self._errorcode, self.getErrorMessage(
 __logStrLevel__ = "comoonics.enterprisecopy.ComFilesystemCopyset.FilesystemCopyset"
 class FilesystemCopyset(Copyset):
     DEFAULT_OPTIONS=["--archive", "--update", "--one-file-system", "--delete"]
+    EXCLUDES_DELIMITOR=","
     def __init__(self, *params, **kwds):
         """
         Valid constructors are
@@ -188,7 +189,7 @@ class FilesystemCopyset(Copyset):
     def prepareDest(self):
         # do things like mkfs, mount
         self.dest.prepareAsDest()
-        if isinstance(self.source, FilesystemCopyObject) and self.source.filesystem.getLabel(self.source.device) != "" and self.dest.filesystem.getLabel(self.dest.device) == "":
+        if isinstance(self.source, FilesystemCopyObject) and self.source.filesystem.getLabel(self.source.device) != "" and isinstance(self.dest, FilesystemCopyObject) and self.dest.filesystem.getLabel(self.dest.device) == "":
             self.dest.filesystem.labelDevice(self.dest.device, self.source.filesystem.getLabel(self.source.device))
 
 #    def copyFsAttributes(self):
@@ -206,22 +207,26 @@ class FilesystemCopyset(Copyset):
         """
         Returns the options for the sync command and also the supported options. Xattrs, selinux, acls
         """
-        _opts=FilesystemCopyset.DEFAULT_OPTIONS
+        import re
+        opts=FilesystemCopyset.DEFAULT_OPTIONS
 
         if self.getProperties():
-            for _property in self.getProperties().keys():
-                _value=self.getProperties()[_property].getValue()
-                if _value=="":
-                    if len(_property)==1:
-                        _opts.append("-%s" %_property)
+            for property in self.getProperties().keys():
+                value=self.getProperties()[property].getValue().strip()
+                if not value:
+                    if len(property)==1:
+                        opts.append("-%s" %property)
                     else:
-                        _opts.append("--%s" %_property)
+                        opts.append("--%s" %property)
                 else:
-                    if len(_property)==1:
-                        _opts.append("-%s %s" %(_property, _value))
+                    values=re.split("\s*%s\s*" %self.EXCLUDES_DELIMITOR, value)
+                    if len(property)==1:
+                        format='-%s %s'
                     else:
-                        _opts.append("--%s %s" %(_property, _value))
-        return _opts
+                        format='--%s=%s'
+                    for value in values:
+                        opts.append(format %(property, value))
+        return opts
 
     def _getFSCopyCommand(self):
         __cmd=CMD_RSYNC
