@@ -29,6 +29,9 @@ CMD_MKFS="mkfs"
 CMD_GFS_MKFS="gfs_mkfs"
 CMD_GFS_TOOL="gfs_tool"
 CMD_GFS_FSCK="gfs_fsck"
+CMD_GFS2_MKFS="mkfs.gfs2"
+CMD_GFS2_TOOL="gfs2_tool"
+CMD_GFS2_FSCK="fsck.gfs2"
 CMD_MOUNT="mount"
 CMD_UMOUNT="umount"
 CMD_E2LABEL="e2label"
@@ -439,6 +442,16 @@ class gfsFileSystem(FileSystem):
             __journals=ComUtils.grepInLines(__ret, "  Journals = ([0-9]+)")[0]
             log.debug("scan Options Journals: " +__journals)
             self.setAttribute("journals", __journals)
+
+class gfs2FileSystem(gfsFileSystem):
+    """
+    Implementation for GFS2 file system (based on gfs)
+    """
+    def __init__(self, element, doc):
+        gfsFileSystem.__init__(self, element, doc)
+        self.name="gfs2"
+        self.setMkfsCmd(CMD_GFS2_MKFS + " -O ")
+        self.setFsckCmd(CMD_GFS2_FSCK + " -y")
 
 class nfsFileSystem(FileSystem):
     """ Implementation for NFS Filesystems """

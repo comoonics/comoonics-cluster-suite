@@ -98,7 +98,6 @@ Expected commands are:
 
 class TestGfsFileSystem(BaseTestFileSystem):
     def __init__(self, method="runTest"):
-        import re
         self.xml="""
   <device id="sourcerootfs" name="/dev/vg_vmware_cluster_sr/lv_sharedroot">
     <filesystem type="gfs" journals="5" lockproto="lock_nolock" clustername="cluster1" locktable="locktable1" bsize="1024"/>
@@ -113,6 +112,29 @@ class TestGfsFileSystem(BaseTestFileSystem):
                          "umount /",
                          "gfs_mkfs -O  -j 5 -p lock_nolock -t cluster1:locktable1 -b 1024 /dev/vg_vmware_cluster_sr/lv_sharedroot", 
                          "gfs_fsck -y /dev/vg_vmware_cluster_sr/lv_sharedroot",
+                         ]
+        self.name="gfs"
+        BaseTestFileSystem.__init__(self, method)
+        
+    def testGetLabel(self):
+        pass
+
+class TestGfs2FileSystem(BaseTestFileSystem):
+    def __init__(self, method="runTest"):
+        self.xml="""
+  <device id="sourcerootfs" name="/dev/vg_vmware_cluster_sr/lv_sharedroot">
+    <filesystem type="gfs2" journals="5" lockproto="lock_nolock" clustername="cluster1" locktable="locktable1" bsize="1024"/>
+    <mountpoint name="/">
+      <option value="lock_nolock" name="lockproto"/>
+      <option value="hdfhgg" name="locktable"/>
+    </mountpoint>
+  </device>
+"""
+        self.simmethods=["mount -t gfs2 -o lockproto=lock_nolock,locktable=hdfhgg /dev/vg_vmware_cluster_sr/lv_sharedroot /", 
+                         "umount /dev/vg_vmware_cluster_sr/lv_sharedroot", 
+                         "umount /",
+                         "mkfs.gfs2 -O  -j 5 -p lock_nolock -t cluster1:locktable1 -b 1024 /dev/vg_vmware_cluster_sr/lv_sharedroot", 
+                         "fsck.gfs2 -y /dev/vg_vmware_cluster_sr/lv_sharedroot",
                          ]
         self.name="gfs"
         BaseTestFileSystem.__init__(self, method)
