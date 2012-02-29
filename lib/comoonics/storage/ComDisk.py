@@ -30,6 +30,7 @@ CMD_SFDISK = "/sbin/sfdisk"
 CMD_DD="/bin/dd"
 CMD_DMSETUP = "/sbin/dmsetup"
 CMD_KPARTX = "/sbin/kpartx"
+OPTS_KPARTX = "-p p"
 
 class Disk(DataObject):
     def __init__(self, element, doc=None):
@@ -274,11 +275,11 @@ class HostDisk(Disk):
         self.log.debug("ComHostDisk: checking for multipath devices")
         if self.isDMMultipath():
             self.log.debug("Device %s is a dm_multipath device, adding partitions" %self.getDeviceName())
-            __cmd=CMD_KPARTX + " -d " + self.getDeviceName()
+            __cmd=CMD_KPARTX + " " + OPTS_KPARTX +" -d " + self.getDeviceName()
             try:
                 __ret = ComSystem.execLocalOutput(__cmd, True, "")
                 self.log.debug(__ret)
-                __cmd=CMD_KPARTX + " -a " + self.getDeviceName()
+                __cmd=CMD_KPARTX + " " + OPTS_KPARTX + " -a " + self.getDeviceName()
                 __ret = ComSystem.execLocalOutput(__cmd, True, "")
                 self.log.debug(__ret)
                 #FIXME: crappy fix to give os some time to create devicefiles.
