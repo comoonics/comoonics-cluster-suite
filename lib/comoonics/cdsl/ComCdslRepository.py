@@ -753,7 +753,7 @@ For this use com-cdslinvadm --migrate""" %(os.path.join(self.workingdir, self.re
             path.popd()
             try:
                 if recursive:
-                    cdsl=self.getCdsl(os.path.dirname(src), repository=repository, realpath=realpath, stripsource=stripsource, recursive=recursive)
+                    cdsl=self.getCdsl(os.path.dirname(src), repository=repository, realpath=realpath, stripsource=False, recursive=recursive)
                     cdsl.setAttribute("child", src)
                     return cdsl 
             except CdslNotFoundException:
