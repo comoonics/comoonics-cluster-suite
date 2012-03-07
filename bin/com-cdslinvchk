@@ -67,11 +67,12 @@ try:
         logger.error(error)
         ComLog.debugTraceLog(logger)
         if not options.update:
-            logger.warn("Error during setup of cdsl repository %s. You might consider fixing with update enabled (com-cdsllinvchk --update)." %options.inventoryfile)
+            logger.warn("Error during setup of cdsl repository %s. You might consider fixing with update enabled (com-cdslinvchk --update)." %options.inventoryfile)
             raise
         else:
             logger.warn("Reconstructing repository..")
-
+            cdslRepository = getCdslRepository(resource=options.inventoryfile,root=options.root, mountpoint=options.mountpoint)
+            
     clusterRepository = getClusterRepository(clusterconf=options.clusterconf, maxnodeidnum=int(cdslRepository.getMaxnodeidnum()))
     clusterInfo = getClusterInfo(clusterRepository)
     validator=CdslValidate(cdslRepository, clusterInfo, root=options.root, mountpoint=options.mountpoint, resource=options.inventoryfile, cdsltree=options.cdsltree, cdsltreeshared=options.cdsltreeshared, cdsllink=options.cdsllink, maxnodeidnum=str(options.maxnodeidnum), usenodeids=str(not options.usenodenames), defaultdir=options.defaultdir)
