@@ -129,14 +129,11 @@ def __simret(**kwds):
     out=kwds.get("output", SKIPPED)
     if out == None:
         out=SKIPPED
-    errormsg=kwds.get("error", "")
-    if errormsg==None:
-        errormsg=""
-
-    if kwds.get("tostderr", False) != False:
+    errormsg=kwds.get("error", None)
+    if errormsg and kwds.get("tostderr", False) != False:
         sys.stderr.write("%s" %errormsg)
         siminfo["stderr"]=errormsg
-    if kwds.get("tostdout", False) != False:
+    if out and kwds.get("tostdout", False) != False:
         sys.stderr.write(out)
         siminfo["stdout"]=out
 
@@ -157,32 +154,36 @@ def __simret(**kwds):
             raise ExecLocalException(cmd, returncode, out, errormsg)
     elif kwds.get("tostdout", False) != False:
         return returncode
-    else:
+    elif errormsg == None:
         return [returncode, out]
+    else:
+        return [returncode, out, errormsg]
 
-def execLocalStatusOutput(__cmd, __output=None, __rc=0):
+def execLocalStatusOutput(cmd, output=None, rc=0):
     """ 
     exec %__cmd and return output and status (rc, out).
     @param __cmd the command to be executed
     @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
     global __EXEC_REALLY_DO
-    log.debug(__cmd)
-    if not __output:
-        __output=""
+    log.debug(cmd)
+    if not output:
+        output=""
     if __EXEC_REALLY_DO == ASK:
-        __ans=raw_input(__cmd+" (y*,n,c)")
-        if __ans == "c":
+        ans=raw_input(cmd+" (y*,n,c)")
+        if ans == "c":
             __EXEC_REALLY_DO=CONTINUE
-        if __ans == "y" or __ans == "" or __ans == "c":
-            return commands.getstatusoutput(__cmd)
-        return (0,SKIPPED)
+        if ans == "y" or ans == "" or ans == "c":
+            (rc, ret)=commands.getstatusoutput(cmd)
+        (rc, ret)=(0,SKIPPED)
     elif isSimulate():
-        return (__rc, __output)
-    return commands.getstatusoutput(__cmd)
+        ret=output
+    else:
+        (rc, ret)=commands.getstatusoutput(cmd)
+    return (rc, unicode(ret, "utf-8"))
 
 
-def execLocalOutput(__cmd, asstr=False, __output=None):
+def execLocalOutput(cmd, asstr=False, output=None):
     """ 
     executes the given command and returns stdout output. If status is not 0 an ExecLocalExeception is thrown
     and errorcode, cmd, stdout and stderr are in that exception
@@ -190,7 +191,7 @@ def execLocalOutput(__cmd, asstr=False, __output=None):
     @type asstr boolean
     @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
-    (rc, out, err)=execLocalGetResult(__cmd, True, __output)
+    (rc, out, err)=execLocalGetResult(cmd, True, output)
     if asstr:
         if type(out) == list:
             out="".join(out)
@@ -201,69 +202,71 @@ def execLocalOutput(__cmd, asstr=False, __output=None):
     if rc==0:
         return out
     else:
-        raise ExecLocalException(__cmd, rc, out, err)
+        raise ExecLocalException(cmd, rc, out, err)
 
-def execLocalGetResult(__cmd, err=False, __output=None, __err=None):
+def execLocalGetResult(cmd, err=False, output=None, errmsg=None):
     """ 
-    exec %__cmd and returns an array ouf output lines either (rc, out, err) or (rc, out) dependent on if err or not.
-    @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
+    exec cmd and returns an array ouf output lines either (rc, out, err) or (rc, out) dependent on if err or not.
+    @param output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
     global __EXEC_REALLY_DO
-    log.debug(__cmd)
+    log.debug(cmd)
     if __EXEC_REALLY_DO == ASK:
-        __ans=raw_input(__cmd+" (y*,n,c)")
-        if __ans == "c":
+        ans=raw_input(cmd+" (y*,n,c)")
+        if ans == "c":
             __EXEC_REALLY_DO=CONTINUE
-        if __ans == "n":
+        if ans == "n":
             if err:
                 return [0, SKIPPED, ""]
             else:
                 return [0, SKIPPED]
     elif isSimulate():
-        if not __err:
-            __err=err
-        return __simret(command=__cmd, output=__output, error=__err, tostderr=False, tostdout=False, asstring=False)
+        if not err:
+            err=errmsg
+        if err==True and errmsg==None:
+            errmsg=""
+        return __simret(command=cmd, output=output, error=errmsg, tostderr=False, tostdout=False, asstring=False)
     if sys.version[:3] < "2.4":
         import popen2
-        child=popen2.Popen3(__cmd, err)
-        __rc=child.wait()
-        __rv=child.fromchild.readlines()
+        child=popen2.Popen3(cmd, err)
+        rc=child.wait()
+        rv=map(lambda line: unicode(line, "utf-8"), child.fromchild.readlines())
         if err:
-            __err=child.childerr.readlines()
-            return [__rc, __rv, __err]
-        return [__rc, __rv]
+            errmsg=map(lambda line: unicode(line, "utf-8"), child.childerr.readlines())
+            return [rc, rv, errmsg]
+        return [rc, rv]
     else:
         import subprocess
-        p = subprocess.Popen([__cmd], shell=True, 
+        p = subprocess.Popen([cmd], shell=True, 
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                              close_fds=True)
         p.wait()
-        __rc=p.returncode
-        __rv=p.stdout.readlines()
+        rc=p.returncode
+        rv=map(lambda line: unicode(line, "utf-8"), p.stdout.readlines())
         if err:
-            __err=p.stderr.readlines()
-            return [__rc, __rv, __err]
-        return [__rc, __rv]
+            errmsg=map(lambda line: unicode(line, "utf-8"), p.stderr.readlines())
+            return [rc, rv, errmsg]
+        return [rc, rv]
 
-def execLocal(__cmd, __output=None, __error=None):
+def execLocal(cmd, output=None, error=None):
     """ 
     exec %cmd and return status output goes to sys.stdout, sys.stderr
-    @param __output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
-    @param __error overwrite the output for this command so that it will be executed. Will only work in Simulated environment
+    @param output overwrite the output for this command so that it will be executed. Will only work in Simulated environment
+    @param error overwrite the output for this command so that it will be executed. Will only work in Simulated environment
     """
     global __EXEC_REALLY_DO
-    log.debug(__cmd)
+    log.debug(cmd)
     if __EXEC_REALLY_DO == ASK:
-        __ans=raw_input(__cmd+" (y*,n,c)")
-        if __ans == "y" or __ans=="":
-            return os.system(__cmd)
-        elif __ans == "c":
+        ans=raw_input(cmd+" (y*,n,c)")
+        if ans == "y" or ans=="":
+            return os.system(cmd)
+        elif ans == "c":
             __EXEC_REALLY_DO=CONTINUE
         return 0
     elif isSimulate():
-        return __simret(command=__cmd, output=__output, asstring=False, tostdout=True, tostderr=True, error=__error)
+        return __simret(command=cmd, output=output, asstring=False, tostdout=True, tostderr=True, error=error)
     else:
-        return os.system(__cmd)
+        return os.system(cmd)
 
 def execMethod(cmd, *params):
     """
@@ -290,92 +293,3 @@ def execMethod(cmd, *params):
         return __simret(command="%s(%s)" %(cmd.__name__, ", ".join(_tmpList)), output="%s(%s)" %(cmd.__name__, ", ".join(_tmpList)), asstring=True, tostdout=True, tostderr=True, returncode=True)
     else:
         return cmd(*params)
-
-# $Log: ComSystem.py,v $
-# Revision 1.23  2010-11-21 21:48:19  marc
-# - fixed bug 391
-#   - moved to upstream XmlTools implementation
-#
-# Revision 1.22  2010/04/23 11:03:26  marc
-# just reorganized some code
-#
-# Revision 1.21  2010/04/13 13:28:06  marc
-# - bugfixes in simulation code
-#
-# Revision 1.20  2010/03/29 14:14:15  marc
-# - added feature that simcommands will be stored in a list
-#
-# Revision 1.19  2009/07/22 08:37:40  marc
-# fedora compliant
-#
-# Revision 1.18  2008/08/05 13:06:35  marc
-# - added simulated output for simulated commands
-#
-# Revision 1.17  2008/08/04 09:17:35  marc
-# - added better simulation so that you can give any method an output to be returned if simulation is on
-#
-# Revision 1.16  2008/03/12 09:34:42  marc
-# fixed bug in execLocalOutput where when SIMULATION-Mode this function would raise an exception where it should not.
-#
-# Revision 1.15  2008/02/27 10:42:54  marc
-# - added isSimulate() to return TRUE when simulation mode is on
-#
-# Revision 1.14  2007/09/18 09:23:00  marc
-# changed default auf exec_really_do to unset. If not cronjobs and all automatically called jobs will fail.
-#
-# Revision 1.13  2007/09/07 14:46:10  marc
-# - introduced set/getExecMode
-# - execLocalOutput can return string
-#
-# Revision 1.12  2007/08/02 08:27:04  andrea2
-# Added execMethod()
-#
-# Revision 1.11  2007/05/10 08:00:35  marc
-# - better docu
-#
-# Revision 1.10  2007/03/26 08:36:10  marc
-# - added askExecModeCmd
-# - cosmetic issues and better readability
-#
-# Revision 1.9  2007/03/09 09:39:47  marc
-# bugfix with err=False
-#
-# Revision 1.8  2007/03/09 09:27:58  marc
-# added simulate and testing
-#
-# Revision 1.7  2007/02/23 12:42:43  marc
-# added execLocalOutput
-#
-# Revision 1.6  2006/11/23 14:19:34  marc
-# added continue and default y
-#
-# Revision 1.5  2006/10/19 10:05:14  marc
-# bugfix
-#
-# Revision 1.4  2006/08/28 15:58:27  marc
-# new comments
-#
-# Revision 1.3  2006/08/02 12:28:26  marc
-# minor change
-#
-# Revision 1.2  2006/07/21 15:00:44  mark
-# minor bug fixes
-#
-# Revision 1.1  2006/07/19 14:29:15  marc
-# removed the filehierarchie
-#
-# Revision 1.5  2006/06/28 17:24:00  mark
-# bug fixes
-#
-# Revision 1.4  2006/06/27 11:47:07  mark
-# added stderr to execLocalGetResult
-#
-# Revision 1.3  2006/06/26 16:55:29  mark
-# added execLocalGetResult
-#
-# Revision 1.2  2006/06/23 11:55:14  mark
-# moved Log to bottom
-#
-# Revision 1.1  2006/06/23 07:56:24  mark
-# initial checkin (stable)
-#
