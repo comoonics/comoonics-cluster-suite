@@ -62,6 +62,9 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-2
+  - Fixed bug #449 in ComSystem not being able to handle non ascii encoded output.
+  - Fixed bug in simulator mode.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Mon Apr 18 2011 MG <grimme@atix.de>, 0.1-23
@@ -134,8 +137,9 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
-* Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-3
+* Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-3
   - Implemented com-cdslinvadm getcdsl --recursive (BZ#463)
+  - fixed typo in com-cdslinvadm
 * Fri Nov 04 2011 MG <grimme( at )atix.de>, 5.0-2
   - Fixed bug that no XML would be written out if queried for.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
@@ -495,6 +499,9 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-2
+- ComSoftwareCMDB.py: systemnames with "." in the names would not yield valid SQL code.
+      They are now quoted (Thanks to Kurt.Keller( at )hilti.com).
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme@atix.de>, 0.1-29
