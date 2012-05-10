@@ -305,7 +305,7 @@ test:
 
 .PHONY: binpackages
 binpackages:
-	PYTHONPATH=$(PYTHONPATH) NOTEST=1 SHORTDISTRO=$(SHORTDISTRO) ./build_all-specs.sh $(PACKAGES)	
+	PYTHONPATH=$(PYTHONPATH) NOTEST=1 SHORTDISTRO=$(SHORTDISTRO) bash ./build_all-specs.sh $(PACKAGES)	
 
 .PHONY: bin
 bin: test binpackages rpmsign
