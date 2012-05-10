@@ -1,5 +1,5 @@
 COMOONICS_DISTRIBUTION=comoonics Enterprise IT Platform Release 5.0pre (Gumpn)
-VERSION=0.1
+VERSION=5.0
 DISTDIR=dist
 
 PACKAGE_NAME=comoonics-*-py
