@@ -365,7 +365,7 @@ channelcopy:
 	    channelalias=`echo $$channel | cut -f2 -d:`; \
        for architecture in $(ARCHITECTURES); do \
 	      echo -n "Copying rpms to channel $(CHANNELDIR)/$$channelname/$(SHORTDISTRO)/$$architecture.."; \
-	      ./install/copy_rpms.sh "$(SHORTDISTRO)" $(CHANNELDIR)/$$channelname $$channelalias $$architecture "$(PACKAGE_NAME)"; \
+	      bash ./install/copy_rpms.sh "$(SHORTDISTRO)" $(CHANNELDIR)/$$channelname $$channelalias $$architecture "$(PACKAGE_NAME)"; \
 	      echo "(DONE)"; \
 	   done; \
 	done;
@@ -375,5 +375,5 @@ channelbuild:
 	@echo "Rebuilding channels.."
 	@for channel in $(CHANNELNAMES); do \
         channelname=`echo $$channel | cut -f1 -d:`; \
-        $(CHANNELBASEDIR)/updaterepositories -s -r $(PRODUCTNAME)/$(PRODUCTVERSION)/$$channelname/$(SHORTDISTRO); \
+        bash $(CHANNELBASEDIR)/updaterepositories -s -r $(PRODUCTNAME)/$(PRODUCTVERSION)/$$channelname/$(SHORTDISTRO); \
 	 done 
