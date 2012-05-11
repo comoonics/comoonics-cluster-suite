@@ -340,6 +340,11 @@ rpmsign:
 	@echo "Signing packages"
 	$(RPM_SIGN_COMMAND) $(RPM_PACKAGE_BIN_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO)*.rpm $(RPM_PACKAGE_SRC_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO).src.rpm
 
+.PHONY:rpmchecksig
+rpmchecksig:
+	@echo "Checking signature of the packages"
+	$(RPM_CHECKSIG_COMMAND) $(RPM_PACKAGE_BIN_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO)*.rpm $(RPM_PACKAGE_SRC_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO).src.rpm
+
 .PHONY: channel-rhel5
 channel-rhel5:
 	@make SHORTDISTRO=rhel5 channelcopy channelbuild

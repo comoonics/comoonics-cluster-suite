@@ -26,3 +26,4 @@ PACKAGES=comoonics-assistant-py comoonics-backup-legato-py comoonics-backup-py c
 	comoonics-imsd-plugins-py comoonics-imsd-py comoonics-installation-py comoonics-storage-hp-py comoonics-storage-py comoonics-tools-py
 
 RPM_SIGN_COMMAND=rpm --addsign
+RPM_CHECKSIG_COMMAND=rpm --checksig
