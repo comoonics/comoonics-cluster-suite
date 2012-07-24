@@ -151,7 +151,7 @@ def overwrite_attributes_with_xpaths(_element, xpaths):
     return element
 
 def merge_trees_with_pk(source, dest, doc, pk="name", filter=None, onlyone=False, takesource=False):
-    """ add all element children from element source to
+    """ add all element children from element source to dest
     if they are not already there.
     doc is the destination DOMDocument
     pk is used as primary key.
