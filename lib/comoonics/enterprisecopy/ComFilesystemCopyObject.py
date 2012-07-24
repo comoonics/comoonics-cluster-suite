@@ -136,85 +136,16 @@ class FilesystemCopyObject(CopyObjectJournaled):
 
 
     def updateMetaData(self, element):
-        ''' updates meta data information '''
         """ copy all Attributes from source to dest that are not defined
         in dest
         """
-        # get filesystem element
-        try:
-            __sfilesystem=element.getElementsByTagName("filesystem")[0]
-        except Exception:
-            raise ComException("filesystem for metadata not defined")
-
-        # save dest attributes
-        __attr = self.getFileSystem().getElement().attributes
-        # copy all source fs info to dest
-        self.setFileSystemElement(__sfilesystem)
-        # restore saved attibutes from dest
-        self.getFileSystem().setAttributes(__attr)
-
-# $Log: ComFilesystemCopyObject.py,v $
-# Revision 1.14  2011-02-21 16:23:53  marc
-# - implemented functionality that a filesystem would be queried if it allows copying or not (e.g. swap does not)
-#
-# Revision 1.13  2011/02/17 13:13:49  marc
-# added support for labeled filesystems
-#
-# Revision 1.12  2010/09/21 14:17:44  marc
-# Trace exception with debug mode
-#
-# Revision 1.11  2010/03/08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.10  2010/02/09 21:48:24  mark
-# added .storage path in includes
-#
-# Revision 1.9  2007/10/16 15:26:24  marc
-# - fixed BUG 27, break or warn when rsync error
-#
-# Revision 1.8  2007/09/13 09:35:55  marc
-# - fixed Bug BZ#110
-#   skipmount was wrongly checked
-#
-# Revision 1.7  2007/09/04 20:42:59  marc
-# Fixed one part of BZ#101
-#
-# Revision 1.6.2.1  2007/09/04 20:41:19  marc
-# Fixed one part of BZ#101
-#
-# Revision 1.6  2007/04/23 22:05:55  marc
-# added fsck
-#
-# Revision 1.5  2007/04/04 12:51:30  marc
-# MMG Backup Legato Integration:
-# - moved prepareAsDest and added resolving
-#
-# Revision 1.4  2007/03/26 07:56:34  marc
-# - added more logging
-# - added support for resolveDeviceName (see ComDisk and ComDevice)
-# - added support for activating a not activated LVM volume group
-#
-# Revision 1.3  2006/12/08 09:39:28  mark
-# added support for generic CopyObject Framework (Archiv)
-#
-# Revision 1.2  2006/10/19 10:02:05  marc
-# added skipmount
-#
-# Revision 1.1  2006/07/19 14:29:15  marc
-# removed the filehierarchie
-#
-# Revision 1.5  2006/07/06 15:09:10  mark
-# Device.isMounted(mountpoint)
-#
-# Revision 1.4  2006/07/06 11:53:11  mark
-# added journal support
-#
-# Revision 1.3  2006/07/03 14:30:06  mark
-# added undo
-#
-# Revision 1.2  2006/06/30 08:03:17  mark
-# added ComMountPoint include
-#
-# Revision 1.1  2006/06/29 07:24:02  mark
-# initial checkin
-#
+        from comoonics import XmlTools
+        sfilesystems=element.getElementsByTagName(ComFileSystem.FileSystem.TAGNAME)
+        if sfilesystems and len(sfilesystems)==1:
+            dfilesystem=self.getFileSystem().getElement()
+            for attribute in sfilesystems[0].attributes:
+                if not dfilesystem.hasAttribute(attribute.name):
+                    dfilesystem.setAttribute(attribute.name, attribute.value)
+        smountpoint=element.getElementsByTagName(MountPoint.TAGNAME)
+        if smountpoint and len(smountpoint)==1:
+            XmlTools.merge_trees_with_pk(smountpoint[0], self.getMountpoint().getElement(), self.getDocument())
