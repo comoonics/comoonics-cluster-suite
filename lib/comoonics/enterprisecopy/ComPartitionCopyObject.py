@@ -62,6 +62,18 @@ class PartitionCopyObject(CopyObjectJournaled):
         else:
             self.journal(self.disk, "noPartitionTable")
 
+        # if disk already contians LVM configuration remove it
+        from comoonics.storage.ComLVM import PhysicalVolume, LinuxVolumeManager
+        try:
+            pv=PhysicalVolume(self.disk.getAttribute("name"), self.getDocument())
+            pv.init_from_disk()
+        except LinuxVolumeManager.LVMException:
+            self.log.debug("Could not find LVM physical volume on device %s. OK." %self.disk.getAttribute("name"))
+        for lv in LinuxVolumeManager.lvlist(pv.parentvg):
+            lv.remove()
+        pv.parentvg.remove()
+        pv.remove()
+
         self.disk.createPartitions()
         self.disk.restore()
 
