@@ -67,12 +67,12 @@ class PartitionCopyObject(CopyObjectJournaled):
         try:
             pv=PhysicalVolume(self.disk.getAttribute("name"), self.getDocument())
             pv.init_from_disk()
-        except LinuxVolumeManager.LVMException:
+            for lv in LinuxVolumeManager.lvlist(pv.parentvg):
+                lv.remove()
+            pv.parentvg.remove()
+            pv.remove()
+        except LinuxVolumeManager.LVMCommandException:
             self.log.debug("Could not find LVM physical volume on device %s. OK." %self.disk.getAttribute("name"))
-        for lv in LinuxVolumeManager.lvlist(pv.parentvg):
-            lv.remove()
-        pv.parentvg.remove()
-        pv.remove()
 
         self.disk.createPartitions()
         self.disk.restore()
