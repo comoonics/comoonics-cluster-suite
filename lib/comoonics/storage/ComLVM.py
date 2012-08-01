@@ -472,7 +472,7 @@ class LogicalVolume(LinuxVolumeManager):
             raise LinuxVolumeManager.LVMNotExistsException(self.__class__.__name__+"("+str(self.getAttribute("name"))+")")
         if not newsize:
             newsize="+"+self.parentvg.getAttribute("free")
-        LinuxVolumeManager.lvm('lvresize', '-L %sM', '%s/%s' % (newsize, str(self.parentvg.getAttribute("name")), str(self.getAttribute("name"))))
+        LinuxVolumeManager.lvm('lvresize', '-L %sM %s/%s' % (newsize, str(self.parentvg.getAttribute("name")), str(self.getAttribute("name"))))
         self.init_from_disk()
 
 class PhysicalVolume(LinuxVolumeManager):
@@ -481,7 +481,7 @@ class PhysicalVolume(LinuxVolumeManager):
     '''
 
     TAGNAME="physicalvolume"
-    parentvg=""
+    parentvg=None
 
     def __init__(self, *params):
         '''
@@ -559,6 +559,9 @@ class PhysicalVolume(LinuxVolumeManager):
                 self.setAttribute("free", long(math.floor(long(free) / (1024 * 1024))))
             except:
                 continue
+            if not self.parentvg and vgname:
+                self.parentvg=VolumeGroup(vgname, self, self.getDocument())
+                self.parentvg.init_from_disk()
         if not ComSystem.isSimulate():
             self.ondisk=True
 
@@ -658,6 +661,8 @@ class VolumeGroup(LinuxVolumeManager):
             doc = doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
         elif (len(params) == 2) and not isinstance(params[1], PhysicalVolume):
             doc = params[1]
+        elif (len(params) == 3) and isinstance(params[1], PhysicalVolume):
+            doc = params[2]
         else:
             raise IndexError("Index out of range for Volume Group constructor (%u)" % len(params))
             
@@ -887,102 +892,3 @@ class VolumeGroup(LinuxVolumeManager):
         if not self.ondisk:
             raise LinuxVolumeManager.LVMNotExistsException(self.__class__.__name__+"("+str(self.getAttribute("name"))+")")
         LinuxVolumeManager.lvm('vgextend '+str(self.getAttribute("name"))+" "+newpvs)
-
-##################
-# $Log: ComLVM.py,v $
-# Revision 1.7  2010-06-09 08:16:27  marc
-# ComLVM: splitLVMPaths fixed bug with mapper devices.
-#
-# Revision 1.6  2010/04/23 10:57:51  marc
-# - rewrote lvm execution to share code and consolidated error handling
-#
-# Revision 1.5  2010/04/13 13:27:34  marc
-# - removed an error leading exception
-#
-# Revision 1.4  2010/03/08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.3  2010/02/10 12:49:07  mark
-# added .storage path in includes
-#
-# Revision 1.2  2010/02/07 20:32:42  marc
-# - new imports
-#
-# Revision 1.1  2009/09/28 15:13:36  marc
-# moved from comoonics here
-#
-# Revision 1.15  2008/06/24 20:01:20  mark
-# add support for latest lvdisplay output like in RHEL5.2
-#
-# Revision 1.14  2008/02/29 15:24:55  mark
-# fixed typo
-#
-# Revision 1.13  2008/02/28 09:29:21  mark
-# bugfixes in constructors
-#
-# Revision 1.12  2008/02/27 10:48:12  marc
-# - another bug in constructor
-#
-# Revision 1.11  2008/02/27 10:41:47  marc
-# - Fixed BZ#199 where creation of clustered volumegroups would yield problems with nodes not running the cluster
-# - Support for simulation mode
-#
-# Revision 1.10  2008/02/27 09:14:14  mark
-# enhanced support for doc=None like initialization
-#
-# Revision 1.9  2008/01/24 09:54:51  mark
-# added lvm cache check for RHEL5. Solves BZ 188
-#
-# Revision 1.8  2007/08/22 14:13:40  marc
-# Fixed Bug BZ#88 (clustered flad is created when there is none)
-#
-# Revision 1.7  2007/08/06 07:39:12  marc
-# - fixed BZ#72; also catching RunTimeExceptions when isValidLVPath.
-#
-# Revision 1.6  2007/06/19 13:10:08  marc
-# - fixed loglevel
-# - fixed minor bugs with string formating
-#
-# Revision 1.5  2007/04/04 12:49:23  marc
-# MMG Backup Legato Integration :
-# - added resolveName for resolving PVs of devices
-#
-# Revision 1.4  2007/04/02 11:48:16  marc
-# MMG Backup Legato Integration:
-# - only logging
-#
-# Revision 1.3  2007/03/26 08:33:04  marc
-# - added simple internal testing
-# - added LVM attributes
-# - changed logging
-#
-# Revision 1.2  2006/11/23 14:18:22  marc
-# added feature that lvs can be selected when cloning
-#
-# Revision 1.1  2006/07/19 14:29:15  marc
-# removed the filehierarchie
-#
-# Revision 1.8  2006/07/04 11:01:22  marc
-# changed handling errror output
-#
-# Revision 1.7  2006/07/03 16:10:20  marc
-# self on disk and checks for creating of already existings pvs, vgs and lvs
-#
-# Revision 1.6  2006/07/03 12:48:13  marc
-# added error detection
-#
-# Revision 1.5  2006/06/30 13:57:47  marc
-# changed lvcreate to take free size if size is too big
-#
-# Revision 1.4  2006/06/30 08:27:41  marc
-# removed autoactivation in create
-#
-# Revision 1.3  2006/06/29 13:47:28  marc
-# stable version
-#
-# Revision 1.2  2006/06/28 17:26:12  marc
-# first version
-#
-# Revision 1.1  2006/06/26 19:12:48  marc
-# initial revision
-#
