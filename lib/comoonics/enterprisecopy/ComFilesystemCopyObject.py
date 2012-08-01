@@ -143,7 +143,8 @@ class FilesystemCopyObject(CopyObjectJournaled):
         sfilesystems=element.getElementsByTagName(ComFileSystem.FileSystem.TAGNAME)
         if sfilesystems and len(sfilesystems)==1:
             dfilesystem=self.getFileSystem().getElement()
-            for attribute in sfilesystems[0].attributes:
+            for index in range(0, sfilesystems[0].attributes.length):
+                attribute=sfilesystems[0].attributes.item(index)
                 if not dfilesystem.hasAttribute(attribute.name):
                     dfilesystem.setAttribute(attribute.name, attribute.value)
         smountpoint=element.getElementsByTagName(MountPoint.TAGNAME)
