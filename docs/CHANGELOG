@@ -650,6 +650,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
+  - Fixed bug in ComFilesystemCopyset (updateMetadata)
 * Fri Dec 09 2011 MG <grimme( at )atix.de>, 5.0-2
   - Implemented excludes feature so that multiple excludes can be specified by a "," delimited property.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
@@ -892,6 +894,11 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
+  - First offical functional release for GFS2 (ComFileSystem/gfs2FileSystem)
+  - Redesign of use of parted (all parted deps go in ComParted). 
+  - ComParted now handles different parted versions.
+  - ComLVM fixed small bugs in PhysicalVolume. 
 * Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-2
   - Added support for GFS2 as filesystem (ComFileSystem/gfs2FileSystem)
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
