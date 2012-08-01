@@ -16,8 +16,8 @@ __version__ = "$Revision: 1.10 $"
 
 import os
 import exceptions
-import time
 import xml.dom
+import time
 
 from comoonics import ComSystem
 from comoonics.ComDataObject import DataObject
@@ -200,72 +200,27 @@ class HostDisk(Disk):
             pass
         if not self.exists():
             raise ComException("Device %s not found or no valid device!" % self.getDeviceName())
-        try:
-            self.initFromDiskParted()
-        except ImportError:
-            self.initFromDiskPartedCmd()
-            
-    def initFromDiskPartedCmd(self):
-        raise ImportError("No pyparted found. You might want to install pyparted.")       
-
-    def initFromDiskParted(self):
-        import parted
         import ComParted
 
-        phelper=ComParted.PartedHelper()
-        dev=parted.PedDevice.get(self.getDeviceName())
-        try:
-            disk=parted.PedDisk.new(dev)
-            partlist=phelper.get_primary_partitions(disk)
-            for part in partlist:
-                self.appendChild(Partition(part, self.getDocument()))
-        except parted.error:
-            HostDisk.log.debug("no partitions found")
-
+        phelper=ComParted.getInstance()
+        for partition in phelper.initFromDisk(self.getDeviceName()):
+            self.appendChild(Partition(partition, self.getDocument()))
+            
     def restore(self):
         if hasattr(self, "lvm_activated") and self.lvm_activated:
             self.lvm_vg_deactivate()
 
     def createPartitions(self):
         """ creates new partition table """
-        try:
-            self.createPartitionsParted()
-        except ImportError:
-            self.createPartitionsPartedCmd()
-
-    def createPartitionsPartedCmd(self):
-        pass
-
-    def createPartitionsParted(self):
-        import parted
-        import ComParted
         if not self.exists():
             raise ComException("Device %s not found" % self.getDeviceName())
+        import ComParted
 
-        phelper=ComParted.PartedHelper()
-        #IDEA compare the partition configurations for update
-        #1. delete all aprtitions
-        dev=parted.PedDevice.get(self.getDeviceName())
+        phelper=ComParted.getInstance()
+        phelper.createPartitions(self.getDeviceName(), self.getAllPartitions(), self.sameSize())
+        self.stabilize()
 
-        try:
-            disk=parted.PedDisk.new(dev)
-            disk.delete_all()
-        except parted.error:
-            #FIXME use generic disk types
-            disk=dev.disk_new_fresh(parted.disk_type_get("msdos"))
-
-        # create new partitions
-        for com_part in self.getAllPartitions():
-            type=com_part.getPartedType()
-            if self.sameSize():
-                size=com_part.getPartedSize(dev)
-            else:
-                size=com_part.getPartedSizeOptimum(dev)
-            flags=com_part.getPartedFlags()
-            self.log.debug("creating partition: size: %i" % size )
-            phelper.add_partition(disk, type, size, flags)
-
-        disk.commit()
+    def stabilize(self):
         self.commit()
 
         #dev.sync()
@@ -287,7 +242,6 @@ class HostDisk(Disk):
             except ComSystem.ExecLocalException, ele:
                 ComLog.debugTraceLog(self.log)
                 self.log.debug("Could not execute %s. Error %s" %(ele.cmd, ele))
-
 
     def isDMMultipath(self):
         if not os.path.exists(CMD_DMSETUP):
@@ -401,127 +355,3 @@ try:
 except ImportError:
     import warnings
     warnings.warn("Could not import SCSIWWIDResolver and FCTransportResolver. Limited functionality for HostDisks might be available.")
-
-# $Log: ComDisk.py,v $
-# Revision 1.10  2011-02-17 09:06:58  marc
-# - added samesize functionality to createPartition that would not try to guess the optimal size but take what exactly what is specified.
-# - fixed import for stabilized
-#
-# Revision 1.9  2011/02/08 13:05:02  marc
-# - removed the factory constructor for ComDisk that would automatically detect if ComStorageDisk or ComHostDisk is needed.
-#
-# Revision 1.8  2011/01/26 13:04:06  marc
-# Fixed bug that in a kvm virtualized environment the devices of repartitioned disks would not appear in time (synchronizing /proc/partitions).
-#
-# Revision 1.7  2010/06/09 08:16:51  marc
-# - exception when pyparted is not installed
-#
-# Revision 1.6  2010/04/23 10:58:37  marc
-# - rewrote execution parts to be better readable and more consistent
-#
-# Revision 1.5  2010/04/13 13:27:08  marc
-# - made to be simulated if need be
-#
-# Revision 1.4  2010/03/08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.3  2010/02/09 21:48:51  mark
-# added .storage path in includes
-#
-# Revision 1.2  2010/02/07 20:31:23  marc
-# - seperated parted functionality
-# - new imports
-#
-# Revision 1.1  2009/09/28 15:13:36  marc
-# moved from comoonics here
-#
-# Revision 1.18  2007/09/13 14:16:21  marc
-# - fixed Bug BZ#111, where partitions where not created when devicemapper in use
-#
-# Revision 1.17  2007/09/13 09:30:48  marc
-# - logging
-#
-# Revision 1.16  2007/08/23 07:58:16  marc
-#  - redirected output of dm_setup (#BZ 69) 2nd
-#
-# Revision 1.15  2007/07/31 15:16:22  marc
-# - redirected output of dm_setup (#BZ 69)
-#
-# Revision 1.14  2007/04/11 14:45:22  mark
-# added FIXME
-#
-# Revision 1.13  2007/04/04 12:48:44  marc
-# MMG Backup Legato Integration:
-# - small Bugfixed for LVM handling
-# - added constructur with just a name instead of element
-#
-# Revision 1.12  2007/04/02 11:46:45  marc
-# MMG Backup Legato Integration:
-# - Journaling for vg_activation
-#
-# Revision 1.11  2007/03/26 08:27:03  marc
-# - added more logging
-# - added DeviceNameResolving
-# - added resolvers for DeviceNameResolving
-# - added lvm awareness (will autoactivate a non activated volume group)
-#
-# Revision 1.10  2007/03/14 15:07:15  mark
-# workaround for bug bz#36
-#
-# Revision 1.9  2007/03/14 14:20:18  marc
-# bugfix for constructor
-#
-# Revision 1.8  2007/02/27 15:55:15  mark
-# added support for dm_multipath
-#
-# Revision 1.7  2007/02/12 15:43:12  marc
-# removed some cvs things.
-#
-# Revision 1.6  2007/02/09 12:28:49  marc
-# defined two implementations of disk
-# - HostDisk (for disks in servers)
-# - StorageDisks (for virtual disks on storagedevices)
-#
-# Revision 1.5  2006/12/14 09:12:53  mark
-# bug fix
-#
-# Revision 1.4  2006/12/08 09:46:16  mark
-# added full xml support.
-# included parted libraries.
-# added initFromDisk()
-# added createPartitions()
-#
-# Revision 1.3  2006/09/11 16:47:48  mark
-# modified hasPartitionTable to support gnbd devices
-#
-# Revision 1.2  2006/07/20 10:24:42  mark
-# added getPartitionTable method
-#
-# Revision 1.1  2006/07/19 14:29:15  marc
-# removed the filehierarchie
-#
-# Revision 1.8  2006/07/05 12:29:34  mark
-# added sfdisk --force option
-#
-# Revision 1.7  2006/07/03 13:02:51  mark
-# moved devicefile check in exists() methos
-#
-# Revision 1.6  2006/07/03 09:27:12  mark
-# added some methods for partition management
-# added device check in constructor
-#
-# Revision 1.5  2006/06/29 08:17:16  mark
-# added some comments
-#
-# Revision 1.4  2006/06/28 17:23:46  mark
-# modified to use DataObject
-#
-# Revision 1.3  2006/06/23 16:17:16  mark
-# removed devicefile check because there is a bug
-#
-# Revision 1.2  2006/06/23 11:58:32  mark
-# moved Log to bottom
-#
-# Revision 1.1  2006/06/23 07:56:24  mark
-# initial checkin (stable)
-#
