@@ -35,23 +35,3 @@ class MountPoint(DataObject):
             if i+1 < __attr.length:
                 __opts+=","
         return __opts
-
-# $Log: ComMountpoint.py,v $
-# Revision 1.2  2010-02-09 21:48:51  mark
-# added .storage path in includes
-#
-# Revision 1.1  2009/09/28 15:13:36  marc
-# moved from comoonics here
-#
-# Revision 1.2  2007/08/06 07:31:29  marc
-# removed Device import which is not used.
-#
-# Revision 1.1  2006/07/19 14:29:15  marc
-# removed the filehierarchie
-#
-# Revision 1.2  2006/06/30 08:05:00  mark
-# bug fixes
-#
-# Revision 1.1  2006/06/29 08:16:33  mark
-# initial checkin
-#
