@@ -18,56 +18,270 @@ __version__ = "$Revision: 1.4 $"
 
 class PartitioningError(ComException): pass
 
-
-class PartedHelper:
-    __logStrLevel__="PartedHelper"
+class AbstractPartedHelper:
+    __logStrLevel__="AbstractPartedHelper"
     log=ComLog.getLogger(__logStrLevel__)
 
-    """
-    Utility class to work with pyparted
-    """
-    
     DEVICE_DAC960=3
     DEVICE_CPQARRAY=4
     DEVICE_SX8=None    
 
     def __init__(self):
         pass
+    def isForVersion(self, version):
+        return False
+    
+class PartedHelper2(AbstractPartedHelper):
+    """PartedHelper2()
+    Utility class to work with pyparted (version >= 2)
+    """
+    __logStrLevel__="AbstractPartedHelper"
+    log=ComLog.getLogger(__logStrLevel__)
 
-    # All from anaconda partedUtils.py
+    def __init__(self):
+        import parted
+        import _ped
+        if hasattr(parted, "DiskLabelException"):
+            self.disklabelexception=parted.DiskLabelException
+        elif hasattr(_ped, "DiskLabelException"):
+            self.disklabelexception=_ped.DiskLabelException
+        else:
+            self.disklabelexception=Exception
+            
+
+    def start_sector_to_cyl(self, device, sector):
+        """Return the closest cylinder (round down) to sector on device."""
+        return device.startSectorToCylinder(sector)
+
+    def end_sector_to_cyl(self, device, sector):
+        """Return the closest cylinder (round up) to sector on device."""
+        return device.endSectorToCylinder(sector)
+
+    def start_cyl_to_sector(self, device, cyl):
+        "Return the sector corresponding to cylinder as a starting cylinder."
+        return device.startCylinderToSector(cyl)
+
+    def end_cyl_to_sector(self, device, cyl):
+        "Return the sector corresponding to cylinder as a ending cylinder."
+        return device.endCylinderToSector(cyl)
+
+    def initFromDisk(self, devicename):
+        import parted
+        partitions=list()
+        dev=parted.getDevice(devicename)
+        try:
+            dev=parted.getDevice(devicename)
+            disk=parted.Disk(dev)
+            for part in disk.getPrimaryPartitions():
+                partitions.append(part)
+        except self.disklabelexception:
+            self.log.debug("no partitions found")
+        return partitions
+
+    def createPartitions(self, devicename, partitions, samesize):
+        """
+        Create the given partitions on the device devicename.
+        @param partitions: the partitions to be created
+        @type partitions: comoonics.storage.ComPartitions.Partition 
+        """
+        import parted
+        dev=parted.getDevice(devicename)
+        try:
+            disk=parted.Disk(dev)
+            disk.deleteAllPartitions()
+        except self.disklabelexception:
+            disk=parted.freshDisk(dev, parted.disk.diskType["msdos"])
+        for part in partitions:
+            partedtype=part.getPartedType()
+            size=part.getAttribute("size")
+            flags=part.getFlags()
+            size=self.getSectorSize(size, dev)
+            partedflags=list()
+            for flag in flags:
+                partedflags.append(flag.getFlagPartedNum())
+            self.log.debug("creating partition: size: %i" % size )
+            self.add_partition(disk, partedtype, size, flags, samesize=samesize)
+
+        disk.commit()
 
     def get_flags_as_string (self, part):
-        """Retrieve a list of strings representing the flags on the partition."""
-        import parted
-        strings=[]
-        for flag in self.get_flags(part):
-            strings.append(parted.partition_flag_get_name(flag))
-        return strings
+        return part.getFlagsAsString().split(",")
 
-    def get_flags(self, part):
+    def getPartName(self, partition):
+        """ Return the partition name"""
+        return partition.name
+
+    def getPartNumber(self, partition):
+        """ Return the partition number"""
+        return partition.number
+
+    def getPartType(self, partition):
+        """ Return the partition type"""
+        return partition.type
+    
+    def getPartSize(self, partition):
+        """Return the size of partition in sectors."""
+        return partition.geometry.length
+
+    def getPartSizeMB(self, partition):
+        """Return the size of partition in megabytes."""
+        return partition.getSize("MB")
+
+    def getDeviceSizeMB(self, devname):
+        """Return the size of dev in megabytes."""
         import parted
-        flags=[]
-        if not part.is_active():
-            return flags
-        flag = parted.partition_flag_next(0)
-        while flag:
-            if part.get_flag (flag):
-                flags.append(flag)
-            flag = parted.partition_flag_next (flag)
+        return parted.getDevice(devname).getSize("MB")
+
+    def get_partition_by_name(self, disks, partname):
+        """Return the parted part object associated with partname.
+
+        Arguments:
+        disks -- Dictionary of diskname->PedDisk objects
+        partname -- Name of partition to find
+
+        Return:
+        PedPartition object with name partname.  None if no such partition.
+        """
+        for diskname in disks.keys():
+            disk = disks[diskname]
+            for part in disk.partitions:
+                if self.get_partition_name(part) == partname:
+                    return part
+        return None
+
+    def get_partition_name(self, partition):
+        """Return the device name for the PedPartition partition."""
+        if (partition.geometry.device.type == self.DEVICE_DAC960
+            or partition.geometry.device.type == self.DEVICE_CPQARRAY):
+            return "%sp%d" % (partition.geometry.device.path[5:],
+                              partition.number)
+        return "%s%d" % (partition.geometry.device.path[5:],
+                         partition.num)
+
+    def get_all_partitions(self, disk):
+        """Return a list of all PedPartition objects on disk."""
+        return disk.partitions
+
+    def get_logical_partitions(self, disk):
+        """Return a list of logical PedPartition objects on disk."""
+        return disk.getLogicalPartitions()
+
+    def get_primary_partitions(self, disk):
+        """Return a list of primary PedPartition objects on disk."""
+        return disk.getPrimaryPartitions()
+
+    def get_raid_partitions(self, disk):
+        """Return a list of RAID-type PedPartition objects on disk."""
+        return disk.getRaidPartitions()
+
+    def get_lvm_partitions(self, disk):
+        """Return a list of physical volume-type PedPartition objects on disk."""
+        return disk.getLVMPartitions()
+
+    def add_partition(self, disk, parttype, size, flags, samesize=False):
+        """Add a new partition to the device.
+            size of 0 means rest of remaining disk space
+        """
+        import parted
+        newpart = None
+        for part in disk.getFreeSpacePartitions():
+            if (part.geometry.length >= size) or samesize:
+                if size == 0:
+                    maxgeometry=parted.Geometry(device=disk.device, start=part.geometry.start,
+                                                end=part.geometry.end)
+                else:
+                    maxgeometry=parted.Geometry(device=disk.device, start=part.geometry.start,
+                                                end=part.geometry.start+size)
+                if samesize:
+                    mingeometry=parted.Geometry(device=disk.device, start=part.geometry.start,
+                                                end=part.geometry.end)
+                else:
+                    mingeometry=maxgeometry
+                constraint=parted.Constraint(device=disk.device, minGeom=mingeometry, maxGeom=maxgeometry)
+                try:
+                    newpart=parted.Partition(disk=disk, type=parttype, geometry=mingeometry)
+                    for flag in flags:
+                        newpart.setFlag(flag)
+                    disk.addPartition(newpart, constraint)
+                    break
+                except Exception, msg:
+                    raise PartitioningError, msg
+        if not newpart:
+            raise PartitioningError("Not enough free space on %s to create "
+                                    "new partition with size %u." % (disk.device.path, size))
+        return newpart
+
+    def getSectorSizeOptimum(self, size, dev):
+        sectors=self.getSectorSize(size, dev)
+        if sectors == 0: return 0
+        # now round up
+        cyls=self.end_sector_to_cyl(dev, sectors)
+        sectors=self.end_cyl_to_sector(dev, cyls)
+        return sectors
+
+    def getSectorSize(self, size, dev):
+        """ returns always size in sectors """
+        import re
+        # calculate new size
+        # FIXME Round up to next cylinder
+        # Test Megabyte e.g. size="200M"
+        if type(size)==int or type(size)==long:
+            return size
+        res=re.search("([0-9]+)M", size)
+        if res:
+            sectors=int(res.group(1)) * 1024 * 1024 / dev.sectorSize
+            self.log.debug("found size in Megabytes : %s -> %s sectors" % (res.group(1), sectors))
+            return sectors
+
+        # Test Gigabyte e.g. size="200G"
+        res=re.search("([0-9]+)G", size)
+        if res:
+            sectors = int(res.group(1)) * 1024 * 1024 * 1024 / dev.sectorSize
+            self.log.debug("found size in Gigabytes : %s -> %s sectors" %(res.group(1), sectors))
+            return sectors
+
+        # Test Percentage
+        res=re.search("([0-9]+)%", size)
+        if res:
+            sectors=int(float(float(res.group(1)) / 100 * dev.heads * dev.cylinders * dev.sectors))
+            self.log.debug("found size in %% : %s -> %s sectors" %( res.group(1), sectors))
+            return sectors
+
+        # Test REMAIN
+        res=re.search("REMAIN", size)
+        if res:
+            self.log.debug("found size in Tag :REMAIN")
+            return 0
+
+        # Test sectors
+        res=re.search("[0-9]+", size)
+        if res:
+            self.log.debug("found size in Tag :%s " % size)
+            return int(size)
+
+        raise ComException("size %s not supported" % size)
+
+    def getPartedPartitionsFlags(self, flags):
+        flagsnrs = []
+        for flag in flags:
+            flagsnrs.append(flag.getFlagPartedNum())
         return flags
+    
+    def isForVersion(self, version):
+        return version >= 2
 
-#    def get_max_logical_partitions(self, disk):
-#        import parted
-#        if not disk.type.check_feature(parted.DISK_TYPE_EXTENDED):
-#            return 0
-#        dev = disk.dev.path[5:]
-#        for key in max_logical_partition_count.keys():
-#            if dev.startswith(key):
-#                return max_logical_partition_count[key]
-#        # FIXME: if we don't know about it, should we pretend it can't have
-#        # logicals?  probably safer to just use something reasonable
-#        return 11
+class PartedHelper1(AbstractPartedHelper):
+    """PartedHelper1()
+    Utility class to work with pyparted (version <2)
+    """
+    __logStrLevel__="PartedHelper1"
+    log=ComLog.getLogger(__logStrLevel__)
 
+    def __init__(self):
+        # try to check which version is valid and fail if not needed
+        pass
+
+    # All from anaconda partedUtils.py
     def start_sector_to_cyl(self, device, sector):
         """Return the closest cylinder (round down) to sector on device."""
         return int(math.floor((float(sector)
@@ -91,13 +305,88 @@ class PartedHelper:
         "Return the sector corresponding to cylinder as a ending cylinder."
         return long(((cyl) * (device.heads * device.sectors)) - 1)
 
+    def initFromDisk(self, devicename):
+        import parted
+        partitions=list()
+        dev=parted.PedDevice.get(devicename)
+        try:
+            disk=parted.PedDisk.new(dev)
+            partlist=self.get_primary_partitions(disk)
+            for part in partlist:
+                partitions.append(part)
+        except parted.error:
+            self.log.debug("no partitions found")
+        return partitions
+
+    def createPartitions(self, devicename, partitions, samesize):
+        import parted
+        #IDEA compare the partition configurations for update
+        #1. delete all aprtitions
+
+        # old way RHEL4/5
+        dev=parted.PedDevice.get(devicename)
+        disk=parted.PedDisk.new(dev)
+        try:
+            disk.delete_all()
+        except parted.error:
+            #FIXME use generic disk types
+            disk=dev.disk_new_fresh(parted.disk_type_get("msdos"))
+
+        # create new partitions
+        for part in partitions:
+            partedtype=part.getPartedType()
+            if samesize:
+                size=self.getSectorSize(part.getAttribute("size"), dev)
+            else:
+                size=self.getSectorSizeOptimum(part.getAttribute("size"), dev)
+            flags=part.getFlags()
+            partedflags=list()
+            for flag in flags:
+                partedflags.append(flag.getFlagPartedNum())
+            self.log.debug("creating partition: size: %i" % size )
+            self.add_partition(disk, partedtype, size, partedflags)
+
+        disk.commit()
+
+    def get_flags_as_string (self, part):
+        """Retrieve a list of strings representing the flags on the partition."""
+        import parted
+        strings=[]
+        for flag in self._get_flags(part):
+            strings.append(parted.partition_flag_get_name(flag))
+        return strings
+
+    def _get_flags(self, part):
+        import parted
+        flags=[]
+        if not part.is_active():
+            return flags
+        flag = parted.partition_flag_next(0)
+        while flag:
+            if part.get_flag (flag):
+                flags.append(flag)
+            flag = parted.partition_flag_next (flag)
+        return flags
+
+    def getPartName(self, partition):
+        """ Return the partition name"""
+        return partition.name
+
+    def getPartType(self, partition):
+        """ Return the partition type"""
+        return partition.type
+
+    def getPartNumber(self, partition):
+        """ Return the partition devicename"""
+        return partition.num
+
     def getPartSize(self, partition):
         """Return the size of partition in sectors."""
         return partition.geom.length
 
     def getPartSizeMB(self, partition):
         """Return the size of partition in megabytes."""
-        return (partition.geom.length * partition.geom.dev.sector_size
+        return (self.getPartSize(partition) * partition.geom.dev.sector_size
                 / 1024.0 / 1024.0)
 
     def getDeviceSizeMB(self, dev):
@@ -140,25 +429,7 @@ class PartedHelper:
         return "%s%d" % (partition.geom.dev.path[5:],
                          partition.num)
 
-    def get_partition_file_system_type(self, part):
-        # not included because anaconda's fsset library is used.
-        pass
-
-    def set_partition_file_system_type(self, part, fstype):
-        """Set partition type of part to PedFileSystemType implied by fstype."""
-        # not included yet
-        pass
-
-    def get_partition_drive(self, partition):
-        """Return the device name for disk that PedPartition partition is on."""
-        return "%s" %(partition.geom.dev.path[5:])
-
-    def map_foreign_to_fsname(self, type):
-        """Return the partition type associated with the numeric type."""
-        # not decided yet
-        pass
-
-    def filter_partitions(self, disk, func):
+    def _filter_partitions(self, disk, func):
         rc = []
         part = disk.next_partition ()
         while part:
@@ -171,41 +442,41 @@ class PartedHelper:
     def get_all_partitions(self, disk):
         """Return a list of all PedPartition objects on disk."""
         func = lambda part: part.is_active()
-        return self.filter_partitions(disk, func)
+        return self._filter_partitions(disk, func)
 
     def get_logical_partitions(self, disk):
         """Return a list of logical PedPartition objects on disk."""
         from ComPartition import Partition
         func = lambda part: (part.is_active()
                              and part.type & Partition.PARTITION_TYPES["logical"])
-        return self.filter_partitions(disk, func)
+        return self._filter_partitions(disk, func)
 
     def get_primary_partitions(self, disk):
         """Return a list of primary PedPartition objects on disk."""
         from ComPartition import Partition
         func = lambda part: part.type == Partition.PARTITION_TYPES["primary"]
-        return self.filter_partitions(disk, func)
+        return self._filter_partitions(disk, func)
 
     def get_raid_partitions(self, disk):
         """Return a list of RAID-type PedPartition objects on disk."""
         from ComPartition import PartitionFlag
         func = lambda part: (part.is_active()
                              and part.get_flag(PartitionFlag.ALLFLAGS["raid"]) == 1)
-        return self.filter_partitions(disk, func)
+        return self._filter_partitions(disk, func)
 
     def get_lvm_partitions(self, disk):
         """Return a list of physical volume-type PedPartition objects on disk."""
         from ComPartition import PartitionFlag
         func = lambda part: (part.is_active()
                              and part.get_flag(PartitionFlag.ALLFLAGS["lvm"]) == 1)
-        return self.filter_partitions(disk, func)
+        return self._filter_partitions(disk, func)
 
     def getDefaultDiskType(self):
         """Get the default partition table type for this architecture."""
         # not included because anacondas iutil package is used
         pass
 
-    def add_partition(self, disk, type, size, flags):
+    def add_partition(self, disk, parttype, size, flags):
         """Add a new partition to the device.
             size of 0 means rest of remaining disk space
         """
@@ -216,10 +487,10 @@ class PartedHelper:
             if (part.type == Partition.PARTITION_TYPES["freespace"]
                 and part.geom.length >= size):
                 if size == 0:
-                    newp = disk.partition_new (type, None, part.geom.start,
+                    newp = disk.partition_new (parttype, None, part.geom.start,
                                            part.geom.end)
                 else:
-                    newp = disk.partition_new (type, None, part.geom.start,
+                    newp = disk.partition_new (parttype, None, part.geom.start,
                                            part.geom.start + size)
                 for flag in flags:
                     newp.set_flag(flag, 1)
@@ -236,9 +507,87 @@ class PartedHelper:
             raise PartitioningError("Not enough free space on %s to create "
                                     "new partition" % (disk.dev.path))
         return newp
+    
+    def getSectorSizeOptimum(self, size, dev):
+        sectors=self.getSectorSize(size, dev)
+        if sectors == 0: return 0
+        # now round up
+        cyls=self.end_sector_to_cyl(dev, sectors)
+        sectors=self.end_cyl_to_sector(dev, cyls)
+        return sectors
 
-###################
-# $Log: ComParted.py,v $
-# Revision 1.4  2010-03-08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
+    def getSectorSize(self, size, dev):
+        """ returns always size in sectors """
+        import re
+        # calculate new size
+        # FIXME Round up to next cylinder
+        # Test Megabyte e.g. size="200M"
+        res=re.search("([0-9]+)M", size)
+        if res:
+            sectors=int(res.group(1)) * 1024 * 1024 / dev.sector_size
+            self.log.debug("found size in Megabytes : %s -> %s sectors" % (res.group(1), sectors))
+            return sectors
+
+        # Test Gigabyte e.g. size="200G"
+        res=re.search("([0-9]+)G", size)
+        if res:
+            sectors = int(res.group(1)) * 1024 * 1024 * 1024 / dev.sector_size
+            self.log.debug("found size in Gigabytes : %s -> %s sectors" %(res.group(1), sectors))
+            return sectors
+
+        # Test Percentage
+        res=re.search("([0-9]+)%", size)
+        if res:
+            sectors=int(float(float(res.group(1)) / 100 * dev.heads * dev.cylinders * dev.sectors))
+            self.log.debug("found size in %% : %s -> %s sectors" %( res.group(1), sectors))
+            return sectors
+
+        # Test REMAIN
+        res=re.search("REMAIN", size)
+        if res:
+            self.log.debug("found size in Tag :REMAIN")
+            return 0
+
+        # Test sectors
+        res=re.search("[0-9]+", size)
+        if res:
+            self.log.debug("found size in Tag :%s " % size)
+            return int(size)
+
+        raise ComException("size %s not supported" % size)
+
+    def getPartedPartitionsFlags(self, flags):
+        flagsnrs = []
+        for flag in flags:
+            flagsnrs.append(flag.getFlagPartedNum())
+        return flags
+
+    def isForVersion(self, version):
+        return float(version) < 2
+
+partedHelpers=list()
+try:
+    partedHelpers.append(PartedHelper1())
+except:
+    pass
+try:
+    partedHelpers.append(PartedHelper2())
+except:
+    pass
+
+def getPartedVersion():
+    import parted
+    try:
+        return float(parted.version()['libparted'])
+    except SystemError:
+        from _ped import libparted_version
+        return float(libparted_version())
+    except:
+        return 1
+
+def getInstance():
+    import parted
+    
+    for helper in partedHelpers:
+        if helper.isForVersion(getPartedVersion()):
+            return helper
