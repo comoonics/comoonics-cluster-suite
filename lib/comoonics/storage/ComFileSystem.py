@@ -59,6 +59,8 @@ def getFileSystem(element, doc):
         return ext4FileSystem(element, doc)
     if __type == "gfs":
         return gfsFileSystem(element, doc)
+    if __type == "gfs2":
+        return gfs2FileSystem(element, doc)
     if __type == "ocfs2":
         return ocfs2FileSystem(element, doc)
     if __type == "nfs":
@@ -106,25 +108,27 @@ class FileSystem(DataObject):
         mountpoint: ComMountPoint.MountPoint
         """
 
-        __exclusive=self.getAttribute("exlock", "")
-        __mkdir=self.getAttributeBoolean("mkdir", True)
+        exclusive=self.getAttribute("exlock", "")
+        mkdir=self.getAttributeBoolean("mkdir", True)
 
-        __mp=mountpoint.getAttribute("name")
-        if not os.path.exists(__mp) and __mkdir:
-            log.debug("Path %s does not exists. I'll create it." % __mp)
-            ComSystem.execMethod(os.makedirs, __mp)
+        mp=mountpoint.getAttribute("name")
+        if not os.path.exists(device.getDevicePath()):
+            raise IOError("Devicepath %s does not exist." %device.getDevicePath())
+        if not os.path.exists(mp) and mkdir:
+            log.debug("Path %s does not exists. I'll create it." % mp)
+            ComSystem.execMethod(os.makedirs, mp)
 
-        if __exclusive and __exclusive != "" and os.path.exists(__exclusive):
-            raise ComException("lockfile " + __exclusive + " exists!")
+        if exclusive and exclusive != "" and os.path.exists(exclusive):
+            raise ComException("lockfile " + exclusive + " exists!")
 
-        __cmd = self.mkmountcmd(device, mountpoint)
-        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        log.debug("mount:" + __cmd + ": " + __ret)
-        if __rc != 0:
-            raise ComException(__cmd + __ret)
-        if __exclusive:
-            __fd=open(__exclusive, 'w')
-            __fd.write(device.getDevicePath() + " is mounted ")
+        cmd = self.mkmountcmd(device, mountpoint)
+        rc, ret = ComSystem.execLocalStatusOutput(cmd)
+        log.debug("mount:" + cmd + ": " + ret)
+        if rc != 0:
+            raise ComException(cmd + ret)
+        if exclusive:
+            fd=open(exclusive, 'w')
+            fd.write(device.getDevicePath() + " is mounted ")
 
     def mkmountcmd(self, device, mountpoint):
         return self.cmd_mount + " -t " + self.getAttribute("type")+ " " + mountpoint.getOptionsString() + \
@@ -272,6 +276,8 @@ class extFileSystem(FileSystem):
     def getLabelFromDevice(self, device):
         # BUG: Cannot function!!!!
         __devicePath= device.getDevicePath()
+        if not os.path.exists(__devicePath):
+            raise IOError("Devicepath %s does not exist." %__devicePath)
         __cmd = self.labelCmd + " " + __devicePath
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("getLabel: " + __cmd + ": " + __ret)
@@ -281,6 +287,8 @@ class extFileSystem(FileSystem):
 
     def formatDevice(self, device):
         __devicePath = device.getDevicePath()
+        if not os.path.exists(__devicePath):
+            raise IOError("Devicepath %s does not exist." %__devicePath)
         __cmd = self.getMkfsCmd() + " " + __devicePath
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         log.debug("formatDevice: "  + __cmd + ": " + __ret)
@@ -373,6 +381,8 @@ class gfsFileSystem(FileSystem):
 
     def formatDevice(self, device):
         __cmd = self.getMkfsCmd() + self.getOptionsString() + device.getDevicePath()
+        if not os.path.exists(device.getDevicePath()):
+            raise IOError("Devicepath %s does not exist." %device.getDevicePath())
         __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
         #self.getLog().debug("formatDevice: \n" , __cmd + __ret)
         if __rc != 0:
@@ -453,6 +463,59 @@ class gfs2FileSystem(gfsFileSystem):
         self.setMkfsCmd(CMD_GFS2_MKFS + " -O ")
         self.setFsckCmd(CMD_GFS2_FSCK + " -y")
 
+    def scanOptions(self, device, mountpoint=None):
+        """ Scans a mountded gfs2 and puts the meta information into the DOM
+        raises ComException
+        """
+
+        if mountpoint:
+            mountpoint=mountpoint.getAttribute("name")
+        else:
+            mountpoint = device.scanMountPoint()[0]
+            
+        if not mountpoint:
+            raise ComException("device " + device.getDevicePath() + " is not mounted.")
+        cmd = CMD_GFS2_TOOL + " sb " + device.getDevicePath() + " all"
+        rc, ret = ComSystem.execLocalGetResult(cmd)
+        if rc != 0:
+            raise ComException(cmd + ret)
+
+        if ret[0] == ComSystem.SKIPPED:
+            # Just to keep up working when SIMULATING
+            self.setAttribute("bsize", "4096")
+            self.setAttribute("lockproto", "lock_dlm")
+            self.setAttribute("clustername", "testcluster")
+            self.setAttribute("journals", "4")
+        else:
+            bsize=ComUtils.grepInLines(ret, "  sb_bsize = ([0-9]*)")[0]
+            log.debug("scan Options bsize: " + bsize)
+            self.setAttribute("bsize", bsize)
+
+            lockproto=ComUtils.grepInLines(ret, "  sb_lockproto = (.*)")[0]
+            log.debug("scan Options lockproto: " + lockproto)
+            self.setAttribute("lockproto", lockproto)
+
+            locktable=ComUtils.grepInLines(ret, "  sb_locktable = .*?:(.*)")
+            if len(locktable) == 1:
+                log.debug("scan Options locktable: " + locktable[0])
+                self.setAttribute("locktable", locktable[0])
+
+            clustername=ComUtils.grepInLines(ret, "  sb_locktable = (.*?):.*")
+            if len(clustername) == 1:
+                log.debug("scan Options clustername: " +clustername[0])
+                self.setAttribute("clustername", clustername[0])
+
+            # FIXME: Bug in gfs2_tool journals / does not work. Only for bindmounts on /
+            if mountpoint == "/":
+                mountpoint = device.scanMountPoint(mountpoint)[0]
+            cmd = CMD_GFS2_TOOL + " journals " + mountpoint
+            rc, ret = ComSystem.execLocalGetResult(cmd)
+            if rc != 0:
+                raise ComException(cmd + ret)
+            journals=ComUtils.grepInLines(ret, "^([0-9])+ journal\(s\) found.")[0]
+            log.debug("scan Options Journals: " +journals)
+            self.setAttribute("journals", journals)
+
 class nfsFileSystem(FileSystem):
     """ Implementation for NFS Filesystems """
     def __init__(self, element, doc):
@@ -464,73 +527,3 @@ class nfsFileSystem(FileSystem):
         self.maxSizeMB = 8 * 1024 * 1024
         #self.packages = [ "e2fsprogs" ]
         self.name="nfs"
-    
-# $Log: ComFileSystem.py,v $
-# Revision 1.9  2011-02-21 16:24:34  marc
-# - added class SwapFilesystem
-# - added general query for isCopyable
-# - made commands more flexible
-#
-# Revision 1.8  2011/02/17 13:14:26  marc
-# add support for labels.
-#
-# Revision 1.7  2011/02/15 14:54:52  marc
-# - changes for ecbase rebase to comoonics.ecbase package
-#
-# Revision 1.6  2010/11/22 10:23:09  marc
-# fixed small test bug
-#
-# Revision 1.5  2010/09/21 14:21:31  marc
-# added NFS Filesystem support
-#
-# Revision 1.4  2010/03/29 14:13:45  marc
-# - fixed bug in labelDevice
-# - first tested version for ocfs2
-#
-# Revision 1.3  2010/03/08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.2  2010/02/07 20:32:17  marc
-# - added OCFS2 Filesystem
-# - new imports
-#
-# Revision 1.1  2009/09/28 15:13:36  marc
-# moved from comoonics here
-#
-# Revision 1.6  2008/02/19 14:13:16  mark
-# add support for type=auto
-#
-# Revision 1.5  2007/04/23 22:07:42  marc
-# added fsck
-#
-# Revision 1.4  2007/03/26 08:29:17  marc
-# - fixed some never used bugs
-# - fixed bug with exclusive locking
-# - added support for skipped filesystemdetection
-# - logging
-#
-# Revision 1.3  2007/02/28 10:13:59  mark
-# added mountpoint mkdir support
-#
-# Revision 1.2  2006/07/21 15:17:19  mark
-# added support for lockex option
-#
-# Revision 1.1  2006/07/19 14:29:15  marc
-# removed the filehierarchie
-#
-# Revision 1.5  2006/07/03 10:40:24  mark
-# some bugfixes
-#
-# Revision 1.4  2006/06/29 08:23:08  mark
-# added comments
-# moved MountPoint to ComMountPoint.py
-#
-# Revision 1.3  2006/06/28 17:24:42  mark
-# bug fixes
-#
-# Revision 1.2  2006/06/27 12:10:37  mark
-# backup checkin
-#
-# Revision 1.1  2006/06/23 07:57:08  mark
-# initial checkin (unstable)
-#
