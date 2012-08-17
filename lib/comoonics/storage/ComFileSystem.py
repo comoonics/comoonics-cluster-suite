@@ -112,7 +112,7 @@ class FileSystem(DataObject):
         mkdir=self.getAttributeBoolean("mkdir", True)
 
         mp=mountpoint.getAttribute("name")
-        if not os.path.exists(device.getDevicePath()):
+        if not isinstance(self, nfsFileSystem) and not os.path.exists(device.getDevicePath()):
             raise IOError("Devicepath %s does not exist." %device.getDevicePath())
         if not os.path.exists(mp) and mkdir:
             log.debug("Path %s does not exists. I'll create it." % mp)
