@@ -201,7 +201,7 @@ class PartedHelper2(AbstractPartedHelper):
                 try:
                     newpart=parted.Partition(disk=disk, type=parttype, geometry=mingeometry)
                     for flag in flags:
-                        newpart.setFlag(flag)
+                        newpart.setFlag(flag.getFlagPartedNum())
                     disk.addPartition(newpart, constraint)
                     break
                 except Exception, msg:
