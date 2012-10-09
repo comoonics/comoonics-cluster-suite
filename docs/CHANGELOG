@@ -894,6 +894,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Tue Oct 09 2012 MG <grimme( at )atix.de>, 5.0-4
+  - ComParted.ComParted.createPartitions: fixed bug that flags would fail to synchronize.
 * Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
   - First offical functional release for GFS2 (ComFileSystem/gfs2FileSystem)
   - Redesign of use of parted (all parted deps go in ComParted). 
