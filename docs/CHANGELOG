@@ -650,6 +650,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Thu May 16 2013 MG <grimme( at )atix.de>, 5.0-4
+  - New version for comoonics-ec-py with xsltproc implementation as addition to libxslt.
 * Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
   - Fixed bug in ComFilesystemCopyset (updateMetadata)
 * Fri Dec 09 2011 MG <grimme( at )atix.de>, 5.0-2
