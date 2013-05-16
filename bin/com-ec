@@ -22,8 +22,6 @@ from exceptions import Exception
 import sys
 import os
 import xml.dom
-from xml.dom.ext import PrettyPrint
-from xml.dom.ext.reader import Sax2
 import getopt
 import logging
 import warnings
@@ -33,13 +31,14 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 
 #from comoonics import GetOpts
 
+from comoonics import XmlTools
 from comoonics.storage import ComLVM
 from comoonics import ComSystem, ComLog
 from comoonics.enterprisecopy import ComEnterpriseCopy, ComCopyset, ComModificationset, get_defaultsfiles, get_defaultsenvkey
 try:
-    from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+   from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
 except ImportError:
-    from optparse import OptionParser 
+   from optparse import OptionParser 
 from optparse import OptionGroup
 
 import os.path
@@ -61,344 +60,262 @@ logger.propagate=0
 logger.setLevel(logging.INFO)
 logger.addHandler(console)
 
-def line(str=None):
-    logger.info(str)
+def line(message=None):
+   logger.info(message)
 
 def setWarnings():
-    warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning)
-    warnings.filterwarnings(action = 'ignore', message='.*SCSIWWIDResolver.*', category=UserWarning)
+   warnings.filterwarnings(action = 'ignore', message='tempnam.*', category=RuntimeWarning)
+   warnings.filterwarnings(action = 'ignore', message='.*SCSIWWIDResolver.*', category=UserWarning)
 
 def applyValues(element, values):
-    from comoonics import XmlTools
-    return XmlTools.overwrite_attributes_with_xpaths(element, values)
+   from comoonics import XmlTools
+   return XmlTools.overwrite_attributes_with_xpaths(element, values)
+
+# So next comes the part where we are going to detect the XSLT implemenation.
+# This is still a bit "ugly" as the following code should go into classes 
+# and not be here.
+# Nevertheless this is a first shot to see how it works and if.
+def defaultXSLTImplementation(**keys):
+   import os
+   # for RHEL5 we'll use libxslt if available otherwise xsltproc as preferred
+   if os.uname[2].find("el5") > 0:
+      try:
+         import libxml2
+         import libxslt
+         return "libxslt"
+      except ImportError:
+         pass
+      try:
+         xsltproc_cmd=keys.get("xsltproc_cmd", "xsltproc")
+         ComSystem.execLocalOutput("%s --version &>/dev/null" %xsltproc_cmd, True)
+         return "xsltproc"
+      except ComSystem.ExecLocalException:
+         try:
+            import libxml2
+            import libxslt
+            return "libxslt"
+         except ImportError:
+            raise ImportError("""Cannot find a default XSLT implementation. 
+Try to specify as command line parameter (--xsltimplementation).
+Keep in mind:
+Either libxslt (for python) is installed or xsltproc (normally part of libxslt) has to be found in the path.
+Right now both seam not to be available. So please fix.""")
+
+def parseXSLT(xmlbuf, xsltfile, validate, implementation="libxslt", **keys):
+   try:
+      method=globals()["parseXSLT_%s" %implementation]
+      return method(xmlbuf, xsltfile, validate, **keys)
+   except KeyError:
+      raise KeyError("Cannot find XSLT implemenation method by name %s." %implementation)
+   
+def parseXSLT_libxslt(xmlbuf, xsltfile, validate, **keys):
+   try:
+      import libxslt
+      import libxml2
+      buf2=xmlbuf.getvalue()
+      n_doc = libxml2.parseMemory(buf2, len(buf2))
+#        if options.values:
+#            applyValues(n_doc, options.values)
+      style = libxml2.parseFile(xsltfile)
+      xslt_style = libxslt.parseStylesheetDoc(style)
+      params={}
+      res = xslt_style.applyStylesheet(n_doc, params)
+      str_buff=xslt_style.saveResultToString(res)
+      xslt_style.freeStylesheet()
+      n_doc.freeDoc()
+      res.freeDoc()
+      doc=XmlTools.parseXMLString(str_buff, validate)
+      libxslt.cleanup()
+      return doc
+   except ImportError, ie:
+      raise ImportError("""Could not import xslt functionality for this plattform (libxslt, libxml2 for python).
+Either find a package that provides this libraries or
+don't use xslt translations.""")
+   except Exception, e:
+      line("Could not apply stylesheet to document. Quitting. Error: %s" %e)
+      ComLog.debugTraceLog()
+      raise e
+
+def parseXSLT_xsltproc(xmlbuf, xsltfile, validate, **keys):
+   try:
+      import subprocess
+      xsltproc_cmd=keys.get("xsltproc_cmd", None)
+      if not xsltproc_cmd:
+         xsltproc_cmd=ComSystem.execLocalOutput("which xsltproc 2>/dev/null", True).strip()
+      ComSystem.execLocalOutput("%s --version >/dev/null" %xsltproc_cmd)
+   except ComSystem.ExecLocalException, exc:
+      raise ImportError("""Could not find or import xslt functionality for this platform (libxslt, libxml2 for python).
+Either find a package that provides this libraries or
+don't use xslt translations.""")
+   if not validate:
+      xsltproc_cmd+=" --novalid"
+   cmd="%s %s -" %(xsltproc_cmd, xsltfile)
+   p=subprocess.Popen([cmd], shell=True, 
+                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                      close_fds=True)
+   p.stdin.write(xmlbuf.getvalue())
+   p.stdin.close()
+   doc=XmlTools.parseXMLFP(p.stdout, validate)
+   p.wait()
+   if p.returncode != 0:
+      line("Could not apply stylesheet to document. Quitting. Error: %s" %p.stderr.readlines())
+      ComLog.debugTraceLog()
+      raise ComSystem.ExecLocalException(cmd, p.returncode, p.stdout.read(), "Could not apply stylesheet to document. Quitting. Error: %s" %p.stderr.readlines())
+   else:
+      return doc
 
 parser = OptionParser(description=__doc__, usage="usage: %prog [options] xmlfilename [name=value]*")
 # Flags
-parser.add_option("-v", "--verbose",      dest="debug",      default=False, action="store_true", help="toggle debugmode and be more helpful")
-parser.add_option("-a", "--ask",        dest="ask",        default=False, action="store_true", help="ask before any being command executed")
-parser.add_option("-U", "--noundo",     dest="noundo",     default=False, action="store_true", help="don't do the undoing if anything goes wrong")
+parser.add_option("-v", "--verbose",     dest="debug",     default=False, action="store_true", help="toggle debugmode and be more helpful")
+parser.add_option("-a", "--ask",      dest="ask",      default=False, action="store_true", help="ask before any being command executed")
+parser.add_option("-U", "--noundo",    dest="noundo",    default=False, action="store_true", help="don't do the undoing if anything goes wrong")
 parser.add_option("-S", "--simulate",   dest="simulate",   default=False, action="store_true", help="don't execute anything just simulate. Only valid for developer. It might not do what you expect!")
 
 # Options
 ec_options=OptionGroup(parser, "Copyset Options")
-ec_options.add_option("-c", "--copyset",         dest="copyset",         action="append", help="<name>|all: only do all or the given copy set")
+ec_options.add_option("-c", "--copyset",       dest="copyset",       action="append", help="<name>|all: only do all or the given copy set")
 ec_options.add_option("-m", "--modificationset", dest="modificationset", action="append", help="<name>|all: only do all or the given modification set")
-ec_options.add_option("-s", "--set",             dest="sets",             action="append", help="Execute the given sets. Multiple allowed")
+ec_options.add_option("-s", "--set",          dest="sets",          action="append", help="Execute the given sets. Multiple allowed")
 parser.add_option_group(ec_options)
 
 xml_options=OptionGroup(parser, "XML/XSLT Options")
-xml_options.add_option("-x", "--xslt",            dest="xslt",            help="preconvert xmlfile with given xsltfile.")
+xml_options.add_option("-x", "--xslt",         dest="xslt",         help="preconvert xmlfile with given xsltfile.")
 xml_options.add_option("-X", "--onlydisplay",dest="onlydisplay",default=False, action="store_true", help="only display the resulting dom as xml")
 xml_options.add_option("-n", "--novalidate", dest="novalidate", default=True, action="store_true", help="novalidate don't validate the xml. Handle with care!!!")
+xml_options.add_option("", "--xsltimplementation", dest="xsltimplementation", default=defaultXSLTImplementation, help="Use the following XSLT implementation (values are: libxslt, xsltproc), Default: %default")
+xml_options.add_option("", "--xsltproc-cmd", dest="xsltproc_cmd", default=None, help="Specify the path to find xsltproc if not in path. Default get from path.")
 parser.add_option_group(xml_options)
 try:
-    parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
-    parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+   parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+   parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
 except (TypeError, NameError):
-    pass
+   pass
 
 (options, args) = parser.parse_args()
 
 if options.debug:
-    ComLog.getLogger().propagate=1
-    ComLog.setLevel(logging.DEBUG)
+   ComLog.getLogger().propagate=1
+   ComLog.setLevel(logging.DEBUG)
 else:
-    ComLog.setLevel(logging.INFO)
+   ComLog.setLevel(logging.INFO)
 
 import os.path
 i=0
 if len(args):
-    values["args%u" %i]=args[i]
-    values["%u" %i]=args[i]
+   values["args%u" %i]=args[i]
+   values["%u" %i]=args[i]
 i+=1
 if len(args) > 1:
-    for arg in args[1:]:
-        if arg.find("=")>0:
-            (name, value)=arg.split("=")
-            values[name]=value
-        values["args%u" %i]=args[i]
-        values["%u" %i]=args[i]
-        i+=1
+   for arg in args[1:]:
+      if arg.find("=")>0:
+         (name, value)=arg.split("=")
+         values[name]=value
+      values["args%u" %i]=args[i]
+      values["%u" %i]=args[i]
+      i+=1
 if len(args) > 0 and os.path.isfile(args[0]):
-    filename=args[0]
+   filename=args[0]
 elif len(args) == 0:
-    logger.critical("No file given to execute.")
-    sys.exit(1)
+   logger.critical("No file given to execute.")
+   sys.exit(1)
 else:
-    logger.critical("Could not find file %s" %(args[0]))
-    sys.exit(1)
+   logger.critical("Could not find file %s" %(args[0]))
+   sys.exit(1)
 
 # filter warnings
 if not options.debug:
-    setWarnings()
-
-# create Reader object
-# FIXME: validation with xslt transformation does not work
-# BUG #33
-if options.novalidate or options.xslt:
-    reader = Sax2.Reader(validate=0)
-else:
-    reader = Sax2.Reader(validate=1)
+   setWarnings()
 
 if not filename:
-    print "No file as input given exiting."
-    parser.usage()
-    sys.exit(1)
+   print "No file as input given exiting."
+   parser.usage()
+   sys.exit(1)
 
 try:
-    file=open(filename,"r")
-    line("Parsing document %s " % filename)
-    import StringIO
-    _buf=StringIO.StringIO()
-    for _line in file:
-        try:
-            _line=_line %values
-        except KeyError:
-            pass
-        except ValueError:
-            pass
-        _buf.write(_line)
-    file.close()
-    if options.xslt:
-        try:
-           import libxslt
-           import libxml2
-           _buf2=_buf.getvalue()
-           n_doc = libxml2.parseMemory(_buf2, len(_buf2))
-#           if options.values:
-#               applyValues(n_doc, options.values)
-           style = libxml2.parseFile(options.xslt)
-           xslt_style = libxslt.parseStylesheetDoc(style)
-           params={}
-           res = xslt_style.applyStylesheet(n_doc, params)
-           str_buff=xslt_style.saveResultToString(res)
-           xslt_style.freeStylesheet()
-           n_doc.freeDoc()
-           res.freeDoc()
-           doc=reader.fromString(str_buff)
-           libxslt.cleanup()
-        except ImportError, ie:
-            warnings.warn("""Could not import xslt functionality for this plattform (libxslt, libxml2 for python).
-Either find a package that provides this libraries or
-don't use xslt translations.""")
-            raise ie
-        except Exception, e:
-            line("Could not apply stylesheet to document. Quitting. Error: %s" %e)
-            ComLog.debugTraceLog()
-            raise e
-    else:
-	doc = reader.fromString(_buf.getvalue())
-	#if values:
-		#applyValues(n_doc, values)
-    _buf.close()
+   xmlfile=open(filename,"r")
+   line("Parsing document %s " % filename)
+   import cStringIO
+   xmlbuf=cStringIO.StringIO()
+   for myline in xmlfile:
+      try:
+         myline=myline %values
+      except KeyError:
+         pass
+      except ValueError:
+         pass
+      xmlbuf.write(myline)
+   xmlfile.close()
+   if options.xslt:
+      doc=parseXSLT(xmlbuf, options.xslt, not options.novalidate, options.xsltimplementation, **options.__dict__)
+   else:
+     doc = reader.fromString(xmlbuf.getvalue())
+     buf.close()
 
-    if options.onlydisplay:
-        PrettyPrint(doc)
-        sys.exit(0)
+   if options.onlydisplay:
+      print XmlTools.toPrettyXML(doc)
+      sys.exit(0)
 
-    ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
-    logger=ComLog.getLogger(__logStrLevel__)
-    if options.ask:
-        ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
-    if options.simulate:
-        ComSystem.__EXEC_REALLY_DO=ComSystem.SIMULATE
+   ecopy=ComEnterpriseCopy.getEnterpriseCopy(doc.documentElement, doc)
+   logger=ComLog.getLogger(__logStrLevel__)
+   if options.ask:
+      ComSystem.__EXEC_REALLY_DO=ComSystem.ASK
+   if options.simulate:
+      ComSystem.__EXEC_REALLY_DO=ComSystem.SIMULATE
 except KeyboardInterrupt:
-    logger.warn("Leaving because of user signal")
-    sys.exit(1)
+   logger.warn("Leaving because of user signal")
+   sys.exit(1)
 except SystemExit, se:
-    sys.exit(se)
+   sys.exit(se)
 except Exception, e:
-    ComLog.debugTraceLog()
-    logger.error("Error occured during initialisation of enterprisecopy. Errormessage: %s." %(e))
-    sys.exit(2)
+   ComLog.debugTraceLog()
+   logger.error("Error occured during initialisation of enterprisecopy. Errormessage: %s." %(e))
+   sys.exit(2)
 
 if ecopy.hasAttribute("name"):
-    _name=ecopy.getAttribute("name")
+   name=ecopy.getAttribute("name")
 else:
-    _name=filename
+   name=filename
 
-line("Start of enterprisecopy %s" % (_name))
+line("Start of enterprisecopy %s" %(name))
 try:
-    if not options.copyset and not options.modificationset and not options.sets:
-        line("Executing all sets %u" % (len(ecopy.allsets)))
-        ecopy.doAllsets()
-    else:
-        if options.copyset:
-            line("Executing copyset %s" % (options.copyset))
-            ecopy.doCopysets(options.copyset)
+   if not options.copyset and not options.modificationset and not options.sets:
+      line("Executing all sets %u" % (len(ecopy.allsets)))
+      ecopy.doAllsets()
+   else:
+      if options.copyset:
+         line("Executing copyset %s" % (options.copyset))
+         ecopy.doCopysets(options.copyset)
 
-        if options.modificationset:
-            line("Executing modificationset %s" % (options.modificationset))
-            ecopy.doModificationsets(options.modificationset)
+      if options.modificationset:
+         line("Executing modificationset %s" % (options.modificationset))
+         ecopy.doModificationsets(options.modificationset)
 
-        if options.sets:
-            line("Executing sets %s" %(options.sets))
-            ecopy.doAllsets(options.sets)
+      if options.sets:
+         line("Executing sets %s" %(options.sets))
+         ecopy.doAllsets(options.sets)
 
-    line("Finished execution of enterprisecopy %s successfully" % (_name))
+   line("Finished execution of enterprisecopy %s successfully" % (name))
 except KeyboardInterrupt:
-    logger.warn("Leaving enterprisecopy %s because of user signal" %(_name))
-    sys.exit(1)
+   logger.warn("Leaving enterprisecopy %s because of user signal" %(name))
+   sys.exit(1)
 except Exception, e:
-    if ecopy.getCurrentSet():
-        logger.error("Error occured during execution of enterprisecopy %s in set %s. Errormessage: %s." %(_name, ecopy.getCurrentSet().getAttribute("name", "unknown"), e))
-    else:
-        logger.error("Error occured during execution of enterprisecopy %s. Errormessage: %s." %(_name, e))
-    ComLog.debugTraceLog()
-    if options.noundo:
-        line("Finished execution of enterprisecopy with errors. Skipping undo on request")
-    elif len(ecopy.donesets)>0:
-        line("Undoing %u sets" % (len(ecopy.donesets)))
-        if options.copyset:
-            ecopy.undoCopysets(options.copyset)
-        elif options.modificationset:
-            ecopy.undoModificationsets(options.modificationset)
-        elif options.sets:
-            ecopy.undo(options.sets)
-        else:
-            ecopy.undo()
+   if ecopy.getCurrentSet():
+      logger.error("Error occured during execution of enterprisecopy %s in set %s. Errormessage: %s." %(name, ecopy.getCurrentSet().getAttribute("name", "unknown"), e))
+   else:
+      logger.error("Error occured during execution of enterprisecopy %s. Errormessage: %s." %(name, e))
+   ComLog.debugTraceLog()
+   if options.noundo:
+      line("Finished execution of enterprisecopy with errors. Skipping undo on request")
+   elif len(ecopy.donesets)>0:
+      line("Undoing %u sets" % (len(ecopy.donesets)))
+      if options.copyset:
+         ecopy.undoCopysets(options.copyset)
+      elif options.modificationset:
+         ecopy.undoModificationsets(options.modificationset)
+      elif options.sets:
+         ecopy.undo(options.sets)
+      else:
+         ecopy.undo()
 
-    line("Errors during execution of enterprisecopy %s." %(_name))
-    sys.exit(2)
-
-##################
-# $Log: com-ec,v $
-# Revision 1.36  2011-02-03 14:45:04  marc
-# - remove the rpm libxslt dependency but raise an exception and warn user.
-#
-# Revision 1.35  2010/04/13 13:28:42  marc
-# - fixed bug with not working debug messages
-#
-# Revision 1.34  2010/03/29 14:14:40  marc
-# - reworked undo handling
-#
-# Revision 1.33  2010/02/16 10:29:34  marc
-# added logging.basicConfig()
-#
-# Revision 1.32  2010/02/12 10:13:38  marc
-# synchronized
-#
-# Revision 1.31  2010/02/10 13:17:51  mark
-# removed some debug messages
-#
-# Revision 1.30  2010/02/09 21:47:22  mark
-# bug fixes
-#
-# Revision 1.28  2010/02/08 19:47:14  marc
-# fixed bug with type="str" which is not available on python2.3
-#
-# Revision 1.27  2010/02/07 19:59:47  marc
-# first RC
-#
-# Revision 1.26  2009/10/08 09:34:49  marc
-# changed the libpath so that always /usr/lib/python[version:3]/site-packages is included
-#
-# Revision 1.25  2009/09/29 15:55:33  marc
-# added autopath update
-#
-# Revision 1.24  2009/09/28 15:20:00  marc
-# com-searchcdsls removed
-# typos in com-ec and com-queryclusterconf and querymapsupport
-#
-# Revision 1.23  2008/08/14 13:01:20  marc
-# - removed applyValues
-#
-# Revision 1.22  2008/08/14 12:20:09  marc
-# finally added args
-#
-# Revision 1.21  2008/08/12 09:46:45  marc
-# - added ability to overwrite xml variables with  commandline arguments
-#
-# Revision 1.20  2008/02/27 10:45:48  marc
-# - added a better comment for simulation mode
-#
-# Revision 1.19  2007/07/31 15:16:57  marc
-# - logging (#BZ 69)
-#
-# Revision 1.18  2007/07/31 10:04:05  marc
-# better error handling
-#
-# Revision 1.17  2007/06/15 19:05:16  marc
-# - better logging
-# - doAllsets with set as parameter cool stuff
-#
-# Revision 1.16  2007/06/14 07:02:43  marc
-# - new feature:
-#      - if Config.xslt - which defaults to (/opt/atix/comoonics-cs/xsl/comoonics-enterprise-copy.xsl) - exists apply xslt to the given xml.
-#      - Background: So we can do i.e. logging whichout specifying it
-#
-# Revision 1.15  2007/06/13 15:23:45  marc
-# - for -d logging.propagate=1 so that any logger will be debugging
-#
-# Revision 1.14  2007/06/13 13:22:05  marc
-# - better logging and error handling
-#
-# Revision 1.13  2007/06/13 13:07:13  marc
-# - made logging more readable
-#
-# Revision 1.12  2007/06/13 08:59:09  marc
-# - changed logging to support new ComLog Design
-#
-# Revision 1.11  2007/03/26 08:40:33  marc
-# - clean up
-# - change long option for onlyxslt to onlydisplay to also work with non xslts to see how the resetting of attributes works
-# - added functionality to overwrite attributes in xml.
-#
-# Revision 1.10  2007/02/27 15:39:35  mark
-# some bugfixes
-#
-# Revision 1.9  2007/02/22 15:25:45  marc
-# all .value in Options moved away
-#
-# Revision 1.8  2007/02/09 11:16:09  marc
-# bugfix and change way of executing. Will execute any sequence of modification and copysets even mixed.
-#
-# Revision 1.7  2006/12/15 10:10:46  marc
-# added option handling
-# and overwriting parmeters.
-#
-# Revision 1.6  2006/09/28 08:44:45  marc
-# Changed the options
-#
-# Revision 1.5  2006/08/28 15:58:36  marc
-# nop
-#
-# Revision 1.4  2006/07/26 10:06:33  marc
-# small change
-#
-# Revision 1.3  2006/07/24 15:40:33  marc
-# added the xslt functionality
-#
-# Revision 1.2  2006/07/24 10:02:31  marc
-# businesscopy=>enterprisecopy
-#
-# Revision 1.1  2006/07/19 14:31:06  marc
-# removed com-ec.py and moved to com-ec
-#
-# Revision 1.3  2006/07/18 12:12:55  marc
-# minor change.
-#
-# Revision 1.2  2006/07/11 09:24:41  marc
-# added commandswitches -m and -c
-#
-# Revision 1.1  2006/07/07 08:40:02  marc
-# initial revision business is enterprise now.
-#
-# Revision 1.6  2006/07/05 13:06:50  marc
-# support names on every tag.
-#
-# Revision 1.5  2006/07/04 11:38:21  mark
-# added support for Ctrl-C interrupt
-#
-# Revision 1.4  2006/07/04 11:16:11  mark
-# added setWarinings()
-#
-# Revision 1.3  2006/07/04 11:01:48  marc
-# be a little more verbose
-#
-# Revision 1.2  2006/07/03 16:11:10  marc
-# added commandline params
-#
-# Revision 1.1  2006/06/30 13:57:13  marc
-# initial revision
-#
+   line("Errors during execution of enterprisecopy %s." %(name))
+   sys.exit(2)
