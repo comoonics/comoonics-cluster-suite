@@ -78,24 +78,24 @@ def applyValues(element, values):
 def defaultXSLTImplementation(**keys):
    import os
    # for RHEL5 we'll use libxslt if available otherwise xsltproc as preferred
-   if os.uname[2].find("el5") > 0:
+   if os.uname()[2].find("el5") > 0:
       try:
          import libxml2
          import libxslt
          return "libxslt"
       except ImportError:
          pass
+   try:
+      xsltproc_cmd=keys.get("xsltproc_cmd", "xsltproc")
+      ComSystem.execLocalOutput("%s --version &>/dev/null" %xsltproc_cmd, True)
+      return "xsltproc"
+   except ComSystem.ExecLocalException:
       try:
-         xsltproc_cmd=keys.get("xsltproc_cmd", "xsltproc")
-         ComSystem.execLocalOutput("%s --version &>/dev/null" %xsltproc_cmd, True)
-         return "xsltproc"
-      except ComSystem.ExecLocalException:
-         try:
-            import libxml2
-            import libxslt
-            return "libxslt"
-         except ImportError:
-            raise ImportError("""Cannot find a default XSLT implementation. 
+         import libxml2
+         import libxslt
+         return "libxslt"
+      except ImportError:
+         raise ImportError("""Cannot find a default XSLT implementation. 
 Try to specify as command line parameter (--xsltimplementation).
 Keep in mind:
 Either libxslt (for python) is installed or xsltproc (normally part of libxslt) has to be found in the path.
@@ -182,7 +182,7 @@ xml_options=OptionGroup(parser, "XML/XSLT Options")
 xml_options.add_option("-x", "--xslt",         dest="xslt",         help="preconvert xmlfile with given xsltfile.")
 xml_options.add_option("-X", "--onlydisplay",dest="onlydisplay",default=False, action="store_true", help="only display the resulting dom as xml")
 xml_options.add_option("-n", "--novalidate", dest="novalidate", default=True, action="store_true", help="novalidate don't validate the xml. Handle with care!!!")
-xml_options.add_option("", "--xsltimplementation", dest="xsltimplementation", default=defaultXSLTImplementation, help="Use the following XSLT implementation (values are: libxslt, xsltproc), Default: %default")
+xml_options.add_option("", "--xsltimplementation", dest="xsltimplementation", default=defaultXSLTImplementation(), help="Use the following XSLT implementation (values are: libxslt, xsltproc), Default: %default")
 xml_options.add_option("", "--xsltproc-cmd", dest="xsltproc_cmd", default=None, help="Specify the path to find xsltproc if not in path. Default get from path.")
 parser.add_option_group(xml_options)
 try:
