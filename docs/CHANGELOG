@@ -898,7 +898,7 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
-* Tue May 21 2012 MG <grimme( at )atix.de>, 5.0-5
+* Tue May 21 2013 MG <grimme( at )atix.de>, 5.0-5
   - Fixed bugs in Filesystem, Disk, LVM, Partition to be more robust and survive more errors.
 * Tue Oct 09 2012 MG <grimme( at )atix.de>, 5.0-4
   - ComParted.ComParted.createPartitions: fixed bug that flags would fail to synchronize.
