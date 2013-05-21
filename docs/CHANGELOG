@@ -650,6 +650,8 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Tue May 21 2013 MG <grimme( at )atix.de>, 5.0-5
+  - Fixed bugs in FilesystemCopy, LVMCopy, PartitionCopy to be more robust and survive more errors.
 * Thu May 16 2013 MG <grimme( at )atix.de>, 5.0-4
   - New version for comoonics-ec-py with xsltproc implementation as addition to libxslt.
 * Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
@@ -896,6 +898,8 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Tue May 21 2012 MG <grimme( at )atix.de>, 5.0-5
+  - Fixed bugs in Filesystem, Disk, LVM, Partition to be more robust and survive more errors.
 * Tue Oct 09 2012 MG <grimme( at )atix.de>, 5.0-4
   - ComParted.ComParted.createPartitions: fixed bug that flags would fail to synchronize.
 * Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
