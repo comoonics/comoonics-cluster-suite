@@ -345,6 +345,7 @@ class LogicalVolume(LinuxVolumeManager):
       __init__(name, parent_vg, doc=None)
       '''
       name=None
+      parent_vg=None
       if len(params)==2 or (isinstance(params[0], basestring) and LogicalVolume.isValidLVPath(params[0]) and len(params)==1):
          doc = doc=xml.dom.getDOMImplementation().createDocument(None, None, None)
       elif len(params) == 3:
@@ -358,9 +359,12 @@ class LogicalVolume(LinuxVolumeManager):
       if len(params) >= 2 and isinstance(params[0], Node):
          element=params[0]
          LinuxVolumeManager.__init__(self, element, doc)
+         parent_vg=params[1]
       elif len(params) >=2 or name:
          if not name:
             name=params[0]
+         if not parent_vg and len(params)>=2:
+            parent_vg=params[1]
          LinuxVolumeManager.__init__(self, doc.createElement(LogicalVolume.TAGNAME), doc)
          self.setAttribute("name", name)
       else:
