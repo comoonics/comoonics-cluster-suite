@@ -499,6 +499,8 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Fri May 24 2013 MG <grimme( at )atix.de>, 5.0-3
+  - Fixed bug in com-rpm2db that would not detect the right system information
 * Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-2
 - ComSoftwareCMDB.py: systemnames with "." in the names would not yield valid SQL code.
       They are now quoted (Thanks to Kurt.Keller( at )hilti.com).
@@ -977,8 +979,6 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
-* Fri May 24 2013 MG <grimme( at )atix.de>, 5.0-3
-  - Fixed bug in com-rpm2db that would not detect the right system information
 * Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-2
   - Fixed ComSystemInformation.RHOpensharedrootSystemInformation as cluster type.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
