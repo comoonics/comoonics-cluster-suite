@@ -977,6 +977,8 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Fri May 24 2013 MG <grimme( at )atix.de>, 5.0-3
+  - Fixed bug in com-rpm2db that would not detect the right system information
 * Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-2
   - Fixed ComSystemInformation.RHOpensharedrootSystemInformation as cluster type.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
