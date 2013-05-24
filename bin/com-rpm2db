@@ -20,7 +20,7 @@ sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 try:
-    from comoonics.tools.ComSystemInformation import SystemInformation
+    from comoonics.tools.ComSystemInformation import getSystemInformation as SystemInformation
 except ImportError:
     from comoonics.ComSystemInformation import SystemInformation
 from comoonics.cmdb.ComSoftwareCMDB import SoftwareCMDB
