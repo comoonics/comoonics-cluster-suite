@@ -4,7 +4,6 @@ Init this package
 
 """
 
-import SepSesam
-from exceptions import ImportError
+import SepSesamBackupHandler
 from comoonics.storage.ComArchive import ArchiveHandlerFactory
-ArchiveHandlerFactory.registerArchiveHandler(EMCLegatoBackupHandler)
+ArchiveHandlerFactory.registerArchiveHandler(SepSesamBackupHandler.SepSesamBackupHandler)

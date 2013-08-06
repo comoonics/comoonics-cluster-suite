@@ -29,155 +29,148 @@ import ComLog
 from xml.dom import Node
 
 class Property(DataObject):
-    TAGNAME="property"
-    ATTRIBUTE_NAME="name"
-    ATTRIBUTE_TYPE="type"
-    ATTRIBUTE_VALUE="value"
-    __logStrLevel__ = "ComProperties"
+   TAGNAME="property"
+   ATTRIBUTE_NAME="name"
+   ATTRIBUTE_TYPE="type"
+   ATTRIBUTE_VALUE="value"
+   __logStrLevel__ = "ComProperties"
+   logger=ComLog.getLogger("ComProperty")
 
-    '''
-    static methods
-    '''
+   '''
+   static methods
+   '''
+   @staticmethod
+   def createElement():
+      import xml.dom
+      impl=xml.dom.getDOMImplementation()
+      doc=impl.createDocument(None, Property.TAGNAME, None)
+      element=doc.documentElement
+      return (element, doc)
 
-    '''
-    Public methods
-    '''
-    def __init__(self, *args):
-        if (len(args)==2 or len(args)==3) and isinstance(args[0], basestring) and not isinstance(args[1], basestring):
-            doc=args[len(args)-1]
-            element=doc.createElement(Property.TAGNAME)
-            super(Property, self).__init__(element, doc)
-            self.setAttribute(Property.ATTRIBUTE_NAME, args[0])
-            mylogger.debug("Setting value %s to True" %(args[0]))
-            self.setAttribute(Property.ATTRIBUTE_VALUE, True)
-        elif len(args)==3 and isinstance(args[0], basestring) and isinstance(args[1], basestring):
-            doc=args[2]
-            element=doc.createElement(Property.TAGNAME)
-            super(Property, self).__init__(element, doc)
-            self.setAttribute(Property.ATTRIBUTE_NAME, args[0])
-            self.setAttribute(Property.ATTRIBUTE_VALUE, args[1])
-        else:
-#            mylogger.debug("%s, %s" %(type(args[0]), type(args[1])))
-            super(Property, self).__init__(*args)
-        if self.hasAttribute(Property.ATTRIBUTE_NAME) and not self.hasAttribute(Property.ATTRIBUTE_VALUE) and len(self.getElement().childNodes)==0:
-            self.setAttribute(Property.ATTRIBUTE_VALUE, True)
+   '''
+   Public methods
+   '''
+   def __init__(self, *args, **kwds):
+      if (len(args)==2 or len(args)==3) and isinstance(args[0], basestring) and not isinstance(args[1], basestring):
+         doc=args[len(args)-1]
+         element=doc.createElement(Property.TAGNAME)
+         super(Property, self).__init__(element, doc)
+         self.setAttribute(Property.ATTRIBUTE_NAME, args[0])
+         self.logger.debug("Setting value %s to True" %(args[0]))
+         self.setAttribute(Property.ATTRIBUTE_VALUE, True)
+      elif len(args)==3 and isinstance(args[0], basestring) and isinstance(args[1], basestring):
+         doc=args[2]
+         element=doc.createElement(Property.TAGNAME)
+         super(Property, self).__init__(element, doc)
+         self.setAttribute(Property.ATTRIBUTE_NAME, args[0])
+         self.setAttribute(Property.ATTRIBUTE_VALUE, args[1])
+      elif kwds:
+         (doc, element)=Property.createElement()
+         super(Property, self).__init__(element, doc)
+         self.setAttribute(Property.ATTRIBUTE_NAME, kwds["name"])
+         self.setAttribute(Property.ATTRIBUTE_VALUE, kwds["value"])
+      else:
+#         self.logger.debug("%s, %s" %(type(args[0]), type(args[1])))
+         super(Property, self).__init__(*args)
+      if self.hasAttribute(Property.ATTRIBUTE_NAME) and not self.hasAttribute(Property.ATTRIBUTE_VALUE) and len(self.getElement().childNodes)==0:
+         self.setAttribute(Property.ATTRIBUTE_VALUE, True)
 
-    def getType(self):
-        if self.hasAttribute(Property.ATTRIBUTE_TYPE):
-            return self.getAttribute(Property.ATTRIBUTE_TYPE, None)
-        else:
-            return None
-    
-    def getValue(self):
-        if len(self.getElement().childNodes)>0:
-            buf=""
-            for _child in self.getElement().childNodes:
-                if _child.nodeType == Node.TEXT_NODE:
-                    buf+=_child.nodeValue
-        else:
-            buf=self.getAttribute(Property.ATTRIBUTE_VALUE)
-        buf=buf.strip()
-        thetype=self.getType()
-        if thetype:
-            try:
-                buf=thetype(buf)
-            except:
-                pass
-        return buf
+   def __str__(self):
+      return "comoonics.Property %s: %s" %(self.getAttribute(Property.ATTRIBUTE_NAME), self.getAttribute(Property.ATTRIBUTE_VALUE))
+   
+   def getType(self):
+      if self.hasAttribute(Property.ATTRIBUTE_TYPE):
+         return self.getAttribute(Property.ATTRIBUTE_TYPE, None)
+      else:
+         return None
+   
+   def getValue(self):
+      if len(self.getElement().childNodes)>0:
+         buf=""
+         for _child in self.getElement().childNodes:
+            if _child.nodeType == Node.TEXT_NODE:
+               buf+=_child.nodeValue
+      else:
+         buf=self.getAttribute(Property.ATTRIBUTE_VALUE)
+      buf=buf.strip()
+      thetype=self.getType()
+      if thetype:
+         try:
+            buf=thetype(buf)
+         except:
+            pass
+      return buf
 
 class Properties(DataObject):
-    TAGNAME="properties"
-    
-    __logStrLevel__ = "ComProperties"
+   TAGNAME="properties"
+   logger=ComLog.getLogger("ComProperties")
+   
+   '''
+   static methods
+   '''
+   @staticmethod
+   def createElement():
+      import xml.dom
+      impl=xml.dom.getDOMImplementation()
+      doc=impl.createDocument(None, Properties.TAGNAME, None)
+      element=doc.documentElement
+      return (element, doc)
 
-    '''
-    static methods
-    '''
+   '''
+   Public methods
+   '''
+   def __init__(self, *args, **kwds):
+      if args and len(args)==2:
+         element=args[0]
+         doc=args[1]
+         super(Properties, self).__init__(element, doc)
+         self.properties=dict()
+         for eproperty in self.getElement().getElementsByTagName(Property.TAGNAME):
+            prop=Property(eproperty, self.getDocument())
+            self.properties[prop.getAttribute(Property.ATTRIBUTE_NAME)]=prop
+      else:
+         (element, doc)=Properties.createElement()
+         super(Properties, self).__init__(element, doc)
+         self.properties=dict()
+         if kwds:
+            for name, value in kwds.items():
+               self.properties[name]=Property(name, value, self.getDocument())
 
-    '''
-    Public methods
-    '''
-    def __init__(self, element, doc=None):
-        super(Properties, self).__init__(element, doc)
-        self.properties=dict()
-        for property in self.getElement().getElementsByTagName(Property.TAGNAME):
-            property=Property(property, self.getDocument())
-            self.properties[property.getAttribute(Property.ATTRIBUTE_NAME)]=property
+   def getProperties(self):
+      return self.properties
+   def getProperty(self, name, d=None):
+      return self.getProperties().get(name, d)
+   def setProperty(self, name, value):
+      self.getProperties()[name]=Property(name, value, self.getDocument())
 
-    def getProperties(self):
-        return self.properties
-    def getProperty(self, name, d=None):
-        return self.getProperties().get(name, d)
-    def setProperty(self, name, value):
-        self.getProperties()[name]=Property(name, value, self.getDocument())
+   def __delitem__(self, name):
+      del self.getProperties()[name]
 
-    def __delitem__(self, name):
-        del self.getProperties()[name]
-
-    def __getitem__(self, name):
-        return self.getProperty(name)
-    def __setitem__(self, name, value):
-        self.setProperty(name, value)
-    def get(self, name, d=None):
-        self.getProperty(name, d)
-    def has_key(self, name):
-        return self.properties.has_key(name)
-    def iter(self):
-        for property in self.properties:
-            yield self.properties.get(property)
-    def items(self):
-        return self.properties.items()
-    def keys(self):
-        return self.properties.keys()
-    def values(self):
-        return self.properties.values()
-    def getAttribute(self, name):
-        if self.has_key(name):
-#            ComLog.getLogger("Properties").debug("name: %s, value: %s" %(name, self.getProperty(name).getAttribute("value")))
-            return self.getProperty(name).getAttribute(Property.ATTRIBUTE_VALUE)
-        else:
-            raise KeyError(name)
-    def list(self, _pairsdelim="\n", _pairdelim="=", ):
-        buf=list()
-        for _property in self.iter():
-            buf.append("%s%s%s" %(_property.getAttribute(Property.ATTRIBUTE_NAME), _pairdelim, _property.getValue()))
-        return _pairsdelim.join(buf)
-            
-mylogger=ComLog.getLogger(Properties.__logStrLevel__)
-# $Log: ComProperties.py,v $
-# Revision 1.10  2010-11-22 12:25:51  marc
-# added type attribute.
-#
-# Revision 1.9  2010/11/21 21:48:19  marc
-# - fixed bug 391
-#   - moved to upstream XmlTools implementation
-#
-# Revision 1.8  2010/02/05 12:23:30  marc
-# - added list method
-#
-# Revision 1.7  2009/07/22 08:37:40  marc
-# fedora compliant
-#
-# Revision 1.6  2008/01/25 13:04:50  marc
-# better test with flags
-#
-# Revision 1.5  2007/06/19 13:10:54  marc
-# - changed some tests
-#
-# Revision 1.4  2007/06/13 09:13:08  marc
-# - added Properties.items()
-# - added Property.getValue()
-# - better Boolean handling
-#
-# Revision 1.3  2007/03/26 08:35:13  marc
-# - better testing
-# - added keys()
-# - added del
-# - raising a KeyError as dict does if accessing nonexistend attributes
-#
-# Revision 1.2  2007/02/09 11:34:54  marc
-# bugfixes with empty params and different constructors
-#
-# Revision 1.1  2007/01/15 13:58:09  marc
-# initial revision
-#
+   def __getitem__(self, name):
+      return self.getProperty(name)
+   def __setitem__(self, name, value):
+      self.setProperty(name, value)
+   def get(self, name, d=None):
+      self.getProperty(name, d)
+   def has_key(self, name):
+      return self.properties.has_key(name)
+   def iter(self):
+      for prop in self.properties:
+         yield self.properties.get(prop)
+   def items(self):
+      return self.properties.items()
+   def keys(self):
+      return self.properties.keys()
+   def values(self):
+      return self.properties.values()
+   def getAttribute(self, name):
+      if self.has_key(name):
+#         ComLog.getLogger("Properties").debug("name: %s, value: %s" %(name, self.getProperty(name).getAttribute("value")))
+         return self.getProperty(name).getAttribute(Property.ATTRIBUTE_VALUE)
+      else:
+         raise KeyError(name)
+   def list(self, _pairsdelim="\n", _pairdelim="=", ):
+      buf=list()
+      for _property in self.iter():
+         buf.append("%s%s%s" %(_property.getAttribute(Property.ATTRIBUTE_NAME), _pairdelim, _property.getValue()))
+      return _pairsdelim.join(buf)
