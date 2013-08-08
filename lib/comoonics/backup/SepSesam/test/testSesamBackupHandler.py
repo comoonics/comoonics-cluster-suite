@@ -22,7 +22,7 @@ class Test(unittest.TestCase):
    def testSesamBackupHandler2(self):
       import comoonics.backup.SepSesam
       self.assertRaises(TypeError, 
-                        comoonics.backup.SepSesam.SepSesamBackupHandler.SepSesamBackupHandler, self.taskname)
+                        comoonics.backup.SepSesam.SepSesamBackupHandler.SepSesamBackupHandler, None, {"cmd": self.backupproperties["cmd"]})
       
    def testSesamBackupHandler3(self):
       import comoonics.backup.SepSesam
@@ -40,28 +40,26 @@ remove task %(taskname)s
    
    def testSesamBackupGroup(self):
       if self.backupproperties.has_key("job"): del self.backupproperties["job"] 
-      self.backupproperties.update({"group": self.groupname})
       self.assertMultiLineEqual(self._testSesamAction("", self.backupproperties, 
                                                       "createArchive", "/tmp", None, False), 
                                 """backup -G %(group)s -l %(level)s
 """ %self.backupproperties)
    
    def testSesamBackupJobCreate(self):
-      if self.backupproperties.has_key("group"): del self.backupproperties["group"]
-      self.backupproperties.update({"job": self.jobname, "taskname": self.taskname})
+      self.backupproperties.update({"taskname": self.taskname, "group": self.groupname})
       self.assertMultiLineEqual(self._testSesamAction(self.taskname, self.backupproperties, 
                                                       "createArchive", "/tmp", None, True), 
-                                """add task %(taskname)s -j %(job)s -c %(client)s -s /tmp
-backup %(taskname)s -j %(job)s -l %(level)s
+                                """add task %(taskname)s -G %(group)s -c %(client)s -s /tmp
+backup %(taskname)s -G %(group)s -l %(level)s
 remove task %(taskname)s
 """ %self.backupproperties)
       
    def testSesamBackupJob(self):
       if self.backupproperties.has_key("group"): del self.backupproperties["group"]
-      self.backupproperties.update({"job": self.jobname})
-      self.assertMultiLineEqual(self._testSesamAction("", self.backupproperties, 
+      self.backupproperties.update({"taskname": self.taskname})
+      self.assertMultiLineEqual(self._testSesamAction(self.taskname, self.backupproperties, 
                                                       "createArchive", "/tmp", None, False), 
-                                """backup -j %(job)s -l %(level)s
+                                """backup %(taskname)s -l %(level)s
 """ %self.backupproperties)
    
    def _testSesamAction(self, jobname, properties, action, *args):

@@ -9,6 +9,9 @@ class SepSesamIsNotInstalledError(ComException):
    def __str__(self):
       return "Seems as SepSesam is not installed. %s is not in place." %(self.value)
 
+class SepSesamParameterError(TypeError):
+   pass
+
 SEPSESAM_CMD="/opt/sesam/bin/sesam/sm_cmd"
 class SepSesam(object):
    FULL="F"
@@ -18,9 +21,9 @@ class SepSesam(object):
    
    log=ComLog.getLogger("comoonics.backup.SepSesam.SepSesam")
 
-   def __init__(self, group=None, job=None, client=None, mediapool=None, level=None, cmd=SEPSESAM_CMD, taskname=None):
+   def __init__(self, group=None, client=None, mediapool=None, level=None, cmd=SEPSESAM_CMD, taskname=None):
       """ Class for Controlling the SepSesam Client """
-      if not job and not group:
+      if not taskname and not group:
          raise TypeError("Either specify job or group for successfull creation of SepSesam.")
       if not cmd:
          cmd=SEPSESAM_CMD
@@ -28,7 +31,6 @@ class SepSesam(object):
          raise SepSesamIsNotInstalledError(cmd)
       self.log.debug(".__init__(group: %s, client: %s, mediapool: %s)"%(group, client, mediapool))
       self.group=group
-      self.job=job
       self.client=client
       self.mediapool=mediapool
       if level:
@@ -68,9 +70,9 @@ class SepSesam(object):
       return self.start_backup_action("-G %s" %self.group)
 
    def start_backupjob(self):
-      return self.start_backup_action("-j %s" %self.job)
+      return self.start_backup_action()
 
-   def start_backup_action(self, action):
+   def start_backup_action(self, action=""):
       cmd="backup %s %s -l %s" %(self.taskname, action, self.level)
       if self.mediapool:
          cmd+=" -m %s" %self.mediapool
@@ -83,10 +85,8 @@ class SepSesam(object):
       if self.group and self.group!="":
          return self.add_backuptask_group(filename)
       else:
-         return self.add_backuptask_job(filename)
+         raise SepSesamParameterError("You have to specify a group to be backuped in order to create a new task (taskname: %s)." %self.taskname)
       
-   def add_backuptask_job(self, filename=None):
-      return self.add_backuptask_action("-j %s" %self.job, filename)
    def add_backuptask_group(self, filename):
       return self.add_backuptask_action("-G %s" %self.group, filename)
    def add_backuptask_action(self, action, filename):

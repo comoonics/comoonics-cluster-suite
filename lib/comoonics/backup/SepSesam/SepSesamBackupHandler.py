@@ -32,7 +32,6 @@ class SepSesamBackupHandler(BackupHandler):
       try:
          self.implementation=SepSesam(client=self.properties.get("client", None).getValue(), taskname=self.name, 
                                       group= self.properties.get("group", None).getValue(),
-                                      job=self.properties.get("job", None).getValue(),
                                       mediapool=self.properties.get("mediapool", None).getValue(),
                                       level=self.properties.get("level", None).getValue(), 
                                       cmd=self.properties.get("cmd", None).getValue())
