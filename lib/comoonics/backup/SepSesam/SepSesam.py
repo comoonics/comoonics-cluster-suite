@@ -39,48 +39,58 @@ class SepSesam(object):
       if taskname:
          self.taskname=taskname
       else:
-         "backup_%(client)s" %(self.__dict__)
+         self.taskname=""
 
-   def doBackup(self, level=None, filename=None):
+   def doBackup(self, level=None, filename=None, create=False):
       output=""
       if level:
          self.level=level
-#      output+=self.add_backuptask(filename=filename)
+      if create:
+         output+=self.add_backuptask(filename=filename)
       output+=self.start_backuptask(filename)
-      #output+=self.wait_for_task()
-#      output+=self.delete_backuptask()
+      output+=self.wait_for_task()
+      if create:
+         output+=self.delete_backuptask()
       return output
 
    def doRecover(self, filename, destdir, recdir=True):
       output=self.start_restoretask()
       #output+=self.wait_for_task()
       return output
+
+   def start_backuptask(self, filename):
+      if self.group and self.group!= "":
+         return self.start_backupgroup()
+      else:
+         return self.start_backupjob()
+
+   def start_backupgroup(self):
+      return self.start_backup_action("-G %s" %self.group)
+
+   def start_backupjob(self):
+      return self.start_backup_action("-j %s" %self.job)
+
+   def start_backup_action(self, action):
+      cmd="backup %s %s -l %s" %(self.taskname, action, self.level)
+      if self.mediapool:
+         cmd+=" -m %s" %self.mediapool
+      return self.execute(cmd)
  
    def wait_for_task(self):
       return ""
 
    def add_backuptask(self, filename=None):
-      cmd="add task %(taskname)s -c %(client)s -j %(group)s" %(self.__dict__)
-      if filename:
-         cmd+=" -s %s" %filename
-      return self.execute(cmd)
-
-   def start_backuptask(self, filename):
-      if self.group and self.group!= "":
-         return self.start_backupgroup(filename)
+      if self.group and self.group!="":
+         return self.add_backuptask_group(filename)
       else:
-         return self.start_backupjob(filename)
-
-   def start_backupgroup(self, filename=None):
-      return self.start_backup_action("-G %s" %self.group, filename)
-
-   def start_backupjob(self, filename=None):
-      return self.start_backup_action("-j %s" %self.job, filename)
-
-   def start_backup_action(self, action, filename):
-      cmd="backup %s -l %s" %(action, self.level)
-      if self.mediapool:
-         cmd+=" -m %s" %self.mediapool
+         return self.add_backuptask_job(filename)
+      
+   def add_backuptask_job(self, filename=None):
+      return self.add_backuptask_action("-j %s" %self.job, filename)
+   def add_backuptask_group(self, filename):
+      return self.add_backuptask_action("-G %s" %self.group, filename)
+   def add_backuptask_action(self, action, filename):
+      cmd="add task %s %s" %(self.taskname, action)
       if self.client:
          cmd+=" -c %s" %self.client
       if filename:

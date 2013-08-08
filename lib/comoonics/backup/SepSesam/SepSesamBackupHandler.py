@@ -72,19 +72,20 @@ class SepSesamBackupHandler(BackupHandler):
 #            os.unlink(os.path.dirname(_file))
       os.chdir(olddir)
       
-   def createArchive(self, source, cdir=None):
+   def createArchive(self, source, cdir=None, create=True):
       ''' 
       creates an archive from the whole source tree
       stays in the same filesystem
       @source: is the sourcedirectory to copy from
       @cdir:   is a chdir directory to change to
+      @create: create the backup job if it not already exists
       '''
       olddir=os.getcwd()
       if cdir and os.path.exists(cdir):
          self.log.debug("createArchive(changing to: %s)" %(cdir))
          os.chdir(cdir)
       self.log.debug("createArchive(%s, %s)" %(source, cdir))
-      output=self.implementation.doBackup(filename=source)
+      output=self.implementation.doBackup(filename=source, create=create)
       os.chdir(olddir)
       return output
       
