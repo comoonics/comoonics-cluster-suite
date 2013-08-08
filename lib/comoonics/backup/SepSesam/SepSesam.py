@@ -23,8 +23,8 @@ class SepSesam(object):
 
    def __init__(self, group=None, client=None, mediapool=None, level=None, cmd=SEPSESAM_CMD, taskname=None):
       """ Class for Controlling the SepSesam Client """
-      if not taskname and not group:
-         raise TypeError("Either specify job or group for successfull creation of SepSesam.")
+      if not client and not group:
+         raise TypeError("Either specify client or group for successfull creation of SepSesam.")
       if not cmd:
          cmd=SEPSESAM_CMD
       if not os.path.exists(cmd):
@@ -85,10 +85,12 @@ class SepSesam(object):
       if self.group and self.group!="":
          return self.add_backuptask_group(filename)
       else:
-         raise SepSesamParameterError("You have to specify a group to be backuped in order to create a new task (taskname: %s)." %self.taskname)
+         return self.add_backuptask_client(filename)
       
    def add_backuptask_group(self, filename):
       return self.add_backuptask_action("-G %s" %self.group, filename)
+   def add_backuptask_client(self, filename):
+      return self.add_backuptask_action("", filename)
    def add_backuptask_action(self, action, filename):
       cmd="add task %s %s" %(self.taskname, action)
       if self.client:
