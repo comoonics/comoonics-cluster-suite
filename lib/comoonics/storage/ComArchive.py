@@ -25,6 +25,7 @@ from comoonics import ComSystem
 from comoonics.ComDataObject import DataObject
 from comoonics import ComLog
 from comoonics.ComExceptions import ComException
+from comoonics.ComProperties import Properties
 
 
 __all__ = ["Archive", "ArchiveHandlerFactory", "ArchiveHandler"]
@@ -185,6 +186,8 @@ class ArchiveHandler(object):
    __logStrLevel__ = "ArchiveHandler"
 
    def __init__(self, name, properties=None):
+      if type(properties)==dict:
+         properties=Properties(**properties)
       self.name=name
       self.properties=properties
 

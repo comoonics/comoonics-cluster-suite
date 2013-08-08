@@ -11,6 +11,7 @@ This program is only a test program to evaluate functionality of the comoonics.b
 import logging
 import sys
 import os.path
+import warnings
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
 try:
@@ -24,9 +25,9 @@ from comoonics import ComLog
 
 __logStrLevel__="com-backup"
 
-logger=logging.getLogger(__logStrLevel__)
-logger.propagate=0
-logger.setLevel(logging.INFO)
+import logging
+logging.basicConfig()
+ComLog.setLevel(logging.INFO)
 
 def parse_cmdline(args=sys.argv):
    parser = OptionParser(description=__doc__, usage="usage: %prog [options] action [arguments]", version=__version__)
@@ -37,14 +38,16 @@ def parse_cmdline(args=sys.argv):
 
    # Options
    backup_options=OptionGroup(parser, "Backup Options")
-   backup_options.add_option("-i", "--implementation", choices=comoonics.storage.ComArchive.ArchiveHandlerFactory.listArchiveHandlerNames(),
-                             help="Select backup implementation. Valid options are: %s." %comoonics.storage.ComArchive.ArchiveHandlerFactory.listArchiveHandlerNames())
-   backup_options.add_option("-t", "--type", default=comoonics.storage.ComArchive.ArchiveHandler.NONE,
+   backup_options.add_option("-t", "--taskname", default="testjob",
+                             help="Specify the name of the job to be executed. Default %default")
+   backup_options.add_option("-T", "--type", default=comoonics.storage.ComArchive.ArchiveHandler.NONE,
                              help="Set the backup format type. Default: %default")
    backup_options.add_option("-c", "--compression", default=comoonics.storage.ComArchive.ArchiveHandler.NONE,
                              help="Set the compression of this backup handler (if any). Default %default.")
    backup_options.add_option("-f", "--format", default=comoonics.storage.ComArchive.ArchiveHandler.NONE,
                              help="Set the backup format of this backup handler (if any). Default %default.")
+   backup_options.add_option("-p", "--property", dest="properties", default=list(), action="append", 
+                             help="List of properties to be added to initialization (dependent on implementation). Each property must be name=value pair. Default %default")
    parser.add_option_group(backup_options)
    try:
       parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
@@ -55,14 +58,22 @@ def parse_cmdline(args=sys.argv):
    (options, args) = parser.parse_args(args)
 
    if options.verbose:
-      ComLog.getLogger().propagate=1
       ComLog.setLevel(logging.DEBUG)
    else:
       ComLog.setLevel(logging.INFO)
-   if not args or len(args) < 2:
+   if not args or len(args) < 3:
       parser.error("To few arguments given to command.")
-   return (options, args[0], args[1:])
+   properties=dict()
+   for property in options.properties:
+      try:
+         name,value=property.split("=",1)
+         properties[name]=value
+      except ValueError:
+         warnings.warn("Skipping property %s because of wrong format. Expecting name=value." %property)
+   return (options, args[1], args[2:], properties)
 
-(options, action, arguments)=parse_cmdline(sys.argv)
-implementation=comoonics.storage.ComArchive.ArchiveHandlerFactory.getArchiveHandler(name=options.implementation, hndlrformat=options.format, hndlrtype=options.type, compression=options.compression)
-logger.debug("Implementation %s: Executing action %s with arguments %s." %(implementation, action, arguments))
+(options, action, arguments, properties)=parse_cmdline(sys.argv)
+implementation=comoonics.storage.ComArchive.ArchiveHandlerFactory.getArchiveHandler(name=options.taskname, hndlrformat=options.format, 
+                                                                                    hndlrtype=options.type, compression=options.compression, properties=properties)
+print ("Implementation %s: Executing action %s with arguments %s." %(implementation, action, arguments))
+print getattr(implementation, action)(*arguments)

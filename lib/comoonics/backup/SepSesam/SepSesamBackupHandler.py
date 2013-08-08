@@ -29,19 +29,18 @@ class SepSesamBackupHandler(BackupHandler):
       if not properties:
          properties=Properties()
       super(SepSesamBackupHandler,self).__init__(name, properties)
-      self.name=name
       try:
-         self.networker=SepSesam(self.properties.get("client", None), name, 
-                                 self.properties.get("mediapool", None))
-         if self.properties.has_key("level"):
-            self.level=self.properties.get("level")
-         else:
-            self.level=SepSesam.FULL
+         self.implementation=SepSesam(client=self.properties.get("client", None).getValue(), taskname=self.name, 
+                                      group= self.properties.get("group", None).getValue(),
+                                      job=self.properties.get("job", None).getValue(),
+                                      mediapool=self.properties.get("mediapool", None).getValue(),
+                                      level=self.properties.get("level", None).getValue(), 
+                                      cmd=self.properties.get("cmd", None).getValue())
       except KeyError, ke:
          raise SepSesamHandlerConfigurationError(ke.__str__(), None)
 
    def __str__(self):
-      return "SepSesamBackupHandler class name %(name)s" %self.name
+      return "SepSesamBackupHandler class name %s" %self.name
          
    def addFile(self, name, arcname=None,recursive=True):
       '''
@@ -85,8 +84,9 @@ class SepSesamBackupHandler(BackupHandler):
          self.log.debug("createArchive(changing to: %s)" %(cdir))
          os.chdir(cdir)
       self.log.debug("createArchive(%s, %s)" %(source, cdir))
-      self.implementation.doBackup(self.level, cdir)
+      output=self.implementation.doBackup(filename=source)
       os.chdir(olddir)
+      return output
       
    def extractArchive(self, dest):
       """ extracts the whole archive to dest.

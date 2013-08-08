@@ -76,7 +76,7 @@ class Property(DataObject):
          self.setAttribute(Property.ATTRIBUTE_VALUE, True)
 
    def __str__(self):
-      return "comoonics.Property %s: %s" %(self.getAttribute(Property.ATTRIBUTE_NAME), self.getAttribute(Property.ATTRIBUTE_VALUE))
+      return "Property:{ %s: %s}" %(self.getAttribute(Property.ATTRIBUTE_NAME), self.getAttribute(Property.ATTRIBUTE_VALUE))
    
    def getType(self):
       if self.hasAttribute(Property.ATTRIBUTE_TYPE):
@@ -139,7 +139,7 @@ class Properties(DataObject):
    def getProperties(self):
       return self.properties
    def getProperty(self, name, d=None):
-      return self.getProperties().get(name, d)
+      return self.getProperties().get(name, Property(name, d, self.getDocument()))
    def setProperty(self, name, value):
       self.getProperties()[name]=Property(name, value, self.getDocument())
 
@@ -151,7 +151,7 @@ class Properties(DataObject):
    def __setitem__(self, name, value):
       self.setProperty(name, value)
    def get(self, name, d=None):
-      self.getProperty(name, d)
+      return self.getProperty(name, d)
    def has_key(self, name):
       return self.properties.has_key(name)
    def iter(self):
@@ -174,3 +174,5 @@ class Properties(DataObject):
       for _property in self.iter():
          buf.append("%s%s%s" %(_property.getAttribute(Property.ATTRIBUTE_NAME), _pairdelim, _property.getValue()))
       return _pairsdelim.join(buf)
+   def __str__(self):
+      return "Properties:{"+self.properties.values().join(", ")+"}"
