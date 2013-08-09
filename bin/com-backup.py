@@ -38,7 +38,7 @@ def parse_cmdline(args=sys.argv):
 
    # Options
    backup_options=OptionGroup(parser, "Backup Options")
-   backup_options.add_option("-t", "--taskname", default="testjob",
+   backup_options.add_option("-t", "--taskname", default="",
                              help="Specify the name of the job to be executed. Default %default")
    backup_options.add_option("-T", "--type", default=comoonics.storage.ComArchive.ArchiveHandler.NONE,
                              help="Set the backup format type. Default: %default")
