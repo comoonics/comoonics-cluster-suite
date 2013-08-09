@@ -62,11 +62,12 @@ class SepSesam(object):
          output+=self.add_backuptask(filename=filename)
       output+=self.start_backuptask(filename)
       jobid=self.get_jobid_from_cmdoutput(output)
-      state,message=self.wait_for_task(jobid=jobid, waittimeout=self.waittimeout, waitcount=self.waitcount)
+      state,msg=self.wait_for_task(jobid=jobid, waittimeout=self.waittimeout, waitcount=self.waitcount)
       if create:
          output+=self.delete_backuptask()
       self.lastoutput=output
-      return state, message
+      # return state and message!
+      return state,msg
 
    def doRecover(self, filename, destdir, recdir=True):
       output=self.start_restoretask()
@@ -131,7 +132,9 @@ class SepSesam(object):
       sqlquery="select state,msg from results where saveset='"+jobid+"'"
       while waitcount==0 or count<waitcount:
          try:
-            return self.sql(sqlquery)
+            state,msg=self.sql(sqlquery)
+            state=int(state)
+            return state,msg
          except ValueError:
             pass
          time.sleep(waittimeout)
@@ -174,7 +177,7 @@ class SepSesam(object):
       return self.execute(cmd)
 
    def sql(self, sqlquery, outputformat="noheader", outputdelim=";"):
-      return self.execute("sql -F %s -d %s %s" %(sqlquery, outputformat, outputdelim)).split(outputdelim)
+      return self.execute("sql \"%s\" -F %s -d '%s'" %(sqlquery, outputformat, outputdelim)).split(outputdelim)
 
    def execute(self, cmd):
       return ComSystem.execLocalOutput("%s %s" %(self.cmd, cmd), asstr=True)
