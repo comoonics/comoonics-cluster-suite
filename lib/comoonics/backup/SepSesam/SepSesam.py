@@ -21,7 +21,7 @@ class SepSesam(object):
    
    log=ComLog.getLogger("comoonics.backup.SepSesam.SepSesam")
 
-   def __init__(self, group=None, client=None, mediapool=None, level=None, cmd=SEPSESAM_CMD, taskname=None):
+   def __init__(self, group=None, client=None, mediapool=None, level=None, cmd=SEPSESAM_CMD, taskname=None, job=None):
       """ Class for Controlling the SepSesam Client """
       if not client and not group:
          raise TypeError("Either specify client or group for successfull creation of SepSesam.")
@@ -37,6 +37,8 @@ class SepSesam(object):
          self.level=level
       else:
          self.level=self.FULL
+      if not job:
+         self.job=job
       self.cmd=cmd
       if taskname:
          self.taskname=taskname
@@ -95,6 +97,8 @@ class SepSesam(object):
       cmd="add task %s %s" %(self.taskname, action)
       if self.client:
          cmd+=" -c %s" %self.client
+      if self.job:
+         cmd+=" -j %s" %self.job
       if filename:
          cmd+=" -s %s" %filename
       return self.execute(cmd)

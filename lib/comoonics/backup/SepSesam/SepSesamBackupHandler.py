@@ -33,7 +33,8 @@ class SepSesamBackupHandler(BackupHandler):
          self.implementation=SepSesam(client=self.properties.get("client", None).getValue(), taskname=self.name, 
                                       group= self.properties.get("group", None).getValue(),
                                       mediapool=self.properties.get("mediapool", None).getValue(),
-                                      level=self.properties.get("level", None).getValue(), 
+                                      level=self.properties.get("level", None).getValue(),
+                                      job=self.properties.get("job", None).getValue(), 
                                       cmd=self.properties.get("cmd", None).getValue())
       except KeyError, ke:
          raise SepSesamHandlerConfigurationError(ke.__str__(), None)
@@ -71,13 +72,13 @@ class SepSesamBackupHandler(BackupHandler):
 #            os.unlink(os.path.dirname(_file))
       os.chdir(olddir)
       
-   def createArchive(self, source, cdir=None, create=True):
+   def createArchive(self, source, cdir=None, create=False):
       ''' 
       creates an archive from the whole source tree
       stays in the same filesystem
       @source: is the sourcedirectory to copy from
       @cdir:   is a chdir directory to change to
-      @create: create the backup job if it not already exists
+      @create: create the backup job if it not already exists. Default don't create.
       '''
       olddir=os.getcwd()
       if cdir and os.path.exists(cdir):
