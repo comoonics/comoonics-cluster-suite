@@ -75,6 +75,8 @@ class SepSesam(object):
 
    def start_backup_action(self, action=""):
       cmd="backup %s %s -l %s" %(self.taskname, action, self.level)
+      if self.job:
+         cmd+=" -j %s" %self.job
       if self.mediapool:
          cmd+=" -m %s" %self.mediapool
       return self.execute(cmd)

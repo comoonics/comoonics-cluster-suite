@@ -52,7 +52,7 @@ remove task %(taskname)s
       self.assertMultiLineEqual(self._testSesamAction(self.taskname, self.backupproperties2, 
                                                       "createArchive", "/tmp", None, True), 
                                 """add task %(taskname)s -c %(client)s -j %(job)s -s /tmp
-backup %(taskname)s -l %(level)s
+backup %(taskname)s -l %(level)s -j %(job)s
 remove task %(taskname)s
 """ %self.backupproperties2)
       
@@ -61,7 +61,15 @@ remove task %(taskname)s
       self.backupproperties2.update({"taskname": self.taskname})
       self.assertMultiLineEqual(self._testSesamAction(self.taskname, self.backupproperties2, 
                                                       "createArchive", "/tmp", None, False), 
-                                """backup %(taskname)s -l %(level)s
+                                """backup %(taskname)s -l %(level)s -j %(job)s
+""" %self.backupproperties2)
+      
+   def testSesamBackupJobAnon(self):
+      if self.backupproperties2.has_key("group"): del self.backupproperties2["group"]
+      if self.backupproperties2.has_key("taskname"): del self.backupproperties2["taskname"]
+      self.assertMultiLineEqual(self._testSesamAction("", self.backupproperties2, 
+                                                      "createArchive", "/tmp", None, False), 
+                                """backup -l %(level)s -j %(job)s
 """ %self.backupproperties2)
    
    def _testSesamAction(self, jobname, properties, action, *args):
