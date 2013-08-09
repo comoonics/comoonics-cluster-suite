@@ -37,8 +37,7 @@ class SepSesam(object):
          self.level=level
       else:
          self.level=self.FULL
-      if not job:
-         self.job=job
+      self.job=job
       self.cmd=cmd
       if taskname:
          self.taskname=taskname
