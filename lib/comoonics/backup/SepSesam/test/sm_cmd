@@ -1,2 +1,12 @@
 #!/bin/bash
-echo $*
+case "$1" in
+  backup) 
+     echo 'STATUS=SUCCESS MSG="SC20130809061320239@9DdOQVSaem6"'
+     ;;
+  sql)
+     echo "0;Backup completed successfully"
+     ;;
+  *)
+     echo "$*"
+     ;;
+esac

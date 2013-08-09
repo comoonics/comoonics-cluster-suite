@@ -10,12 +10,14 @@ class Test(unittest.TestCase):
                      "cmd": "./sm_cmd",
                      "client": "testclient",
                      "group": "testgroup",
-                     "level": "D"}
+                     "level": "D",
+                     "waitcount": "1"}
    backupproperties2={
                      "cmd": "./sm_cmd",
                      "client": "testclient",
                      "job": "testjob",
-                     "level": "D"}
+                     "level": "D",
+                     "waitcount": "1"}
    taskname="task123"
    def testSesamBackupHandler1(self):
       import comoonics.backup.SepSesam
@@ -36,14 +38,14 @@ class Test(unittest.TestCase):
       self.assertMultiLineEqual(self._testSesamAction(self.taskname, self.backupproperties1, 
                                                       "createArchive", "/tmp", None, True), 
                                 """add task %(taskname)s -G %(group)s -c %(client)s -s /tmp
-backup %(taskname)s -G %(group)s -l %(level)s
+STATUS=SUCCESS MSG="SC20130809061320239@9DdOQVSaem6"
 remove task %(taskname)s
 """ %self.backupproperties1)
    
    def testSesamBackupGroup(self):
       self.assertMultiLineEqual(self._testSesamAction("", self.backupproperties1, 
                                                       "createArchive", "/tmp", None, False), 
-                                """backup -G %(group)s -l %(level)s
+                                """STATUS=SUCCESS MSG="SC20130809061320239@9DdOQVSaem6"
 """ %self.backupproperties1)
    
    def testSesamBackupJobCreate(self):
@@ -52,7 +54,7 @@ remove task %(taskname)s
       self.assertMultiLineEqual(self._testSesamAction(self.taskname, self.backupproperties2, 
                                                       "createArchive", "/tmp", None, True), 
                                 """add task %(taskname)s -c %(client)s -j %(job)s -s /tmp
-backup %(taskname)s -l %(level)s -j %(job)s
+STATUS=SUCCESS MSG="SC20130809061320239@9DdOQVSaem6"
 remove task %(taskname)s
 """ %self.backupproperties2)
       
@@ -61,7 +63,7 @@ remove task %(taskname)s
       self.backupproperties2.update({"taskname": self.taskname})
       self.assertMultiLineEqual(self._testSesamAction(self.taskname, self.backupproperties2, 
                                                       "createArchive", "/tmp", None, False), 
-                                """backup %(taskname)s -l %(level)s -j %(job)s
+                                """STATUS=SUCCESS MSG="SC20130809061320239@9DdOQVSaem6"
 """ %self.backupproperties2)
       
    def testSesamBackupJobAnon(self):
@@ -69,13 +71,14 @@ remove task %(taskname)s
       if self.backupproperties2.has_key("taskname"): del self.backupproperties2["taskname"]
       self.assertMultiLineEqual(self._testSesamAction("", self.backupproperties2, 
                                                       "createArchive", "/tmp", None, False), 
-                                """backup -l %(level)s -j %(job)s
+                                """STATUS=SUCCESS MSG="SC20130809061320239@9DdOQVSaem6"
 """ %self.backupproperties2)
    
    def _testSesamAction(self, jobname, properties, action, *args):
       import comoonics.backup.SepSesam
       handler=comoonics.backup.SepSesam.SepSesamBackupHandler.SepSesamBackupHandler(jobname, properties)
-      return getattr(handler, action)(*args)
+      getattr(handler, action)(*args)
+      return handler.getLastOutput()
 
 if __name__ == "__main__":
    #import sys;sys.argv = ['', 'Test.testName']

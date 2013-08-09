@@ -35,7 +35,9 @@ class SepSesamBackupHandler(BackupHandler):
                                       mediapool=self.properties.get("mediapool", None).getValue(),
                                       level=self.properties.get("level", None).getValue(),
                                       job=self.properties.get("job", None).getValue(), 
-                                      cmd=self.properties.get("cmd", None).getValue())
+                                      cmd=self.properties.get("cmd", None).getValue(),
+                                      waittimeout=int(self.properties.get("waittimeout", "30").getValue()),
+                                      waitcount=int(self.properties.get("waitcount", "0").getValue()))
       except KeyError, ke:
          raise SepSesamHandlerConfigurationError(ke.__str__(), None)
 
@@ -120,3 +122,6 @@ class SepSesamBackupHandler(BackupHandler):
             os.unlink(filename)
       if os.path.exists(self.tmppath):
          os.rmdir(self.tmppath)
+
+   def getLastOutput(self):
+      return self.implementation.lastoutput
