@@ -41,7 +41,6 @@ except ImportError:
    from optparse import OptionParser 
 from optparse import OptionGroup
 
-import os.path
 #define some variables
 values=dict()
 
