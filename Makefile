@@ -27,6 +27,12 @@ $(DISTDIR)/comoonics-backup-legato-py-$(VERSION).tar.gz: lib/comoonics/backup/EM
 		lib/comoonics/backup/EMCLegato/__init__.py
 	bash ./build_rpm-backup-legato.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
+# comoonics-backup-sesam-py
+$(DISTDIR)/comoonics-backup-sesam-py-$(VERSION).tar.gz: lib/comoonics/backup/SepSesam/SepSesamBackupHandler.py \
+		lib/comoonics/backup/SepSesam/SepSesam.py \
+		lib/comoonics/backup/SepSesam/__init__.py
+	bash ./build_rpm-backup-sesam.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+
 # comoonics-backup-py
 $(DISTDIR)/comoonics-backup-py-$(VERSION).tar.gz: lib/comoonics/backup/__init__.py \
 		lib/comoonics/backup/ComBackupHandler.py
@@ -221,6 +227,9 @@ comoonics-assistant-py: $(DISTDIR)/comoonics-assistant-py-$(VERSION).tar.gz
 	
 .PHONY: comoonics-backup-legato-py
 comoonics-backup-legato-py: $(DISTDIR)/comoonics-backup-legato-py-$(VERSION).tar.gz
+	
+.PHONY: comoonics-backup-sesam-py
+comoonics-backup-sesam-py: $(DISTDIR)/comoonics-backup-sesam-py-$(VERSION).tar.gz
 	
 .PHONY: comoonics-backup-py
 comoonics-backup-py: $(DISTDIR)/comoonics-backup-py-$(VERSION).tar.gz

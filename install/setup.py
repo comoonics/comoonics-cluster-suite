@@ -1249,6 +1249,19 @@ com.oonics Legato Backup utilities and libraries written in Python
       "package_dir" :  { "comoonics.backup.EMCLegato": "lib/comoonics/backup/EMCLegato"},
       "packages": [ "comoonics.backup.EMCLegato" ],
     },    
+    "comoonics-backup-sesam-py": {
+      "name":"comoonics-backup-sesam-py",
+      "version": "5.0",
+      "description":"com.oonics Sep Sesam Backup utilities and libraries written in Python",
+      "long_description":""" 
+com.oonics Sep Sesam Backup utilities and libraries written in Python
+""",
+#      "author":"ATIX AG - Mark Hlawatschek",
+#      "author_email":"hlawatschek@atix.de",
+      "url":"http://www.comoonics.org/development/comoonics-backup-sesam-py",
+      "package_dir" :  { "comoonics.backup.SepSesam": "lib/comoonics/backup/SepSesam"},
+      "packages": [ "comoonics.backup.SepSesam" ],
+    },    
     "comoonics-backup-py": {
       "name":"comoonics-backup-py",
       "version": "5.0",
