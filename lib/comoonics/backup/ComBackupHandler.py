@@ -11,60 +11,47 @@ from comoonics import ComLog
 from comoonics.storage.ComArchive import ArchiveHandler
 
 class BackupHandler(ArchiveHandler):
-    """
-    Class for the handling of backup applications
-    """
-    log=ComLog.getLogger("BackupHandler")
-    TYPE="backup"
+   """
+   Class for the handling of backup applications
+   """
+   log=ComLog.getLogger("BackupHandler")
+   TYPE="backup"
 
-    def __init__(self, name, properties=None):
-        super(BackupHandler, self).__init__(name, properties)
+   def __init__(self, name, properties=None):
+      super(BackupHandler, self).__init__(name, properties)
 
-    def closeAll(self):
-        pass
+   def closeAll(self):
+      pass
 
-    def hasMember(self, name):
-        ''' checks wether archive hosts member file
-            returns True/False
-        '''
-        raise NotImplementedError
+   def hasMember(self, name):
+      ''' checks wether archive hosts member file
+         returns True/False
+      '''
+      raise NotImplementedError
 
-    def extractFile(self, name, dest):
-        ''' extracts a file or dirctory from archiv'''
-        raise NotImplementedError
+   def extractFile(self, name, dest):
+      ''' extracts a file or dirctory from archiv'''
+      raise NotImplementedError
 
-    def extractArchive(self, dest):
-        ''' extracts the whole archive to dest'''
-        raise NotImplementedError
+   def extractArchive(self, dest):
+      ''' extracts the whole archive to dest'''
+      raise NotImplementedError
 
-    def getFileObj(self, name):
-        ''' returns a fileobject of an archiv member '''
-        raise NotImplementedError
+   def getFileObj(self, name):
+      ''' returns a fileobject of an archiv member '''
+      raise NotImplementedError
 
-    def addFile(self, name, arcname=None,recursive=True):
-        ''' adds a file or directory to archiv'''
-        raise NotImplementedError
+   def addFile(self, name, arcname=None,recursive=True):
+      ''' adds a file or directory to archiv'''
+      raise NotImplementedError
 
-    def createArchive(self, source, cdir=None):
-        ''' creates an archive from the whole source tree
-            stays in the same filesystem
-            @source: is the sourcedirectory to copy from
-            @cdir:   is a chdir directory to change to
-         '''
-#        try:
-#            os.mkdir(self.path+"/"+os.path.dirname(cdir))
-#        except: pass
-        raise NotImplementedError
-
-########################
-# $Log: ComBackupHandler.py,v $
-# Revision 1.3  2010-03-08 12:30:48  marc
-# version for comoonics4.6-rc1
-#
-# Revision 1.2  2007/04/04 12:45:37  marc
-# MMG Backup Legato Integration :
-# - added extractArchive (just for the reference)
-#
-# Revision 1.1  2007/03/26 07:48:58  marc
-# initial revision
-#
+   def createArchive(self, source, cdir=None):
+      ''' creates an archive from the whole source tree
+         stays in the same filesystem
+         @source: is the sourcedirectory to copy from
+         @cdir:   is a chdir directory to change to
+       '''
+#      try:
+#         os.mkdir(self.path+"/"+os.path.dirname(cdir))
+#      except: pass
+      raise NotImplementedError
