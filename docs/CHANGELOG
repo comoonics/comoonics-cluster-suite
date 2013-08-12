@@ -29,6 +29,10 @@ comoonics-assistant-py:
 * Fri Feb 28 2008 MH <hlawatschek@atix.de>, 0.1-1
   - initial revision
 
+comoonics-backup-sesam-py:
+* Fri Aug 09 2013 MG <grimme( at )atix.de>, 5.0-1
+  - Release for 5.0 prod
+
 comoonics-backup-legato-py:
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
@@ -62,6 +66,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Mon Aug 12 2013 MG <grimme( at )atix.de>, 5.0-3
+  - fixed bugs in ComProperties, read from Hash.
 * Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-2
   - Fixed bug #449 in ComSystem not being able to handle non ascii encoded output.
   - Fixed bug in simulator mode.
