@@ -22,6 +22,12 @@ class test_Properties(unittest.TestCase):
       document=XmlTools.parseXMLString(xml_str)
       self.properties=Properties(document.documentElement, document)
 
+   def test_str(self):
+      self.assertEquals(str(self.properties), "Properties:{Property:{ testflag: }, Property:{ testname2: testvalue2}, Property:{ testname1: testvalue1}}")
+   
+   def test_str_property(self):
+      self.assertEquals(str(self.properties["testname1"]), "Property:{ testname1: testvalue1}")
+   
    def test_getProperty1(self):
       property_name="testname1"
       result1="testvalue1"

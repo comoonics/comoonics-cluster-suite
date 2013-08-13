@@ -76,7 +76,7 @@ class Property(DataObject):
          self.setAttribute(Property.ATTRIBUTE_VALUE, True)
 
    def __str__(self):
-      return "Property:{ %s: %s}" %(self.getAttribute(Property.ATTRIBUTE_NAME), self.getAttribute(Property.ATTRIBUTE_VALUE))
+      return "Property:{ %s: %s}" %(self.getAttribute(Property.ATTRIBUTE_NAME), self.getValue())
    
    def getType(self):
       if self.hasAttribute(Property.ATTRIBUTE_TYPE):
@@ -175,4 +175,4 @@ class Properties(DataObject):
          buf.append("%s%s%s" %(_property.getAttribute(Property.ATTRIBUTE_NAME), _pairdelim, _property.getValue()))
       return _pairsdelim.join(buf)
    def __str__(self):
-      return "Properties:{"+self.properties.values().join(", ")+"}"
+      return "Properties:{"+", ".join( map(lambda prop: str(prop), self.properties.values()))+"}"
