@@ -416,9 +416,7 @@ class gfsFileSystem(FileSystem):
       if not __mountpoint:
          raise ComException("device " + device.getDevicePath() + " is not mounted.")
       __cmd = CMD_GFS_TOOL + " getsb " + __mountpoint
-      __rc, __ret = ComSystem.execLocalGetResult(__cmd)
-      if __rc != 0:
-         raise ComException(__cmd + __ret)
+      __ret = ComSystem.execLocalOutput(__cmd)
 
       if __ret[0] == ComSystem.SKIPPED:
          # Just to keep up working when SIMULATING
