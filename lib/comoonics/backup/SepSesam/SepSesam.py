@@ -54,10 +54,12 @@ class SepSesam(object):
       self.waitcount=waitcount
       self.waittimeout=waittimeout
 
-   def doBackup(self, level=None, filename=None, create=False):
+   def doBackup(self, level=None, filename=None, create=False, reallyDo=True):
       output=""
       if level:
          self.level=level
+      if not reallyDo:
+         return 0, "ignored"
       if create:
          output+=self.add_backuptask(filename=filename)
       output+=self.start_backuptask(filename)

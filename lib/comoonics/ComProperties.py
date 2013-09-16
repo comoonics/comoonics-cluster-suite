@@ -109,10 +109,14 @@ class Properties(DataObject):
    static methods
    '''
    @staticmethod
-   def createElement():
+   def createDocument():
       import xml.dom
       impl=xml.dom.getDOMImplementation()
-      doc=impl.createDocument(None, Properties.TAGNAME, None)
+      return impl.createDocument(None, Properties.TAGNAME, None)
+
+   @staticmethod
+   def createElement():
+      doc=Properties.createDocument()
       element=doc.documentElement
       return (element, doc)
 
@@ -120,9 +124,12 @@ class Properties(DataObject):
    Public methods
    '''
    def __init__(self, *args, **kwds):
-      if args and len(args)==2:
+      if args and len(args)<=2:
          element=args[0]
-         doc=args[1]
+         if len(args) < 2:
+            doc=Properties.createDocument()
+         else:
+            doc=args[1]
          super(Properties, self).__init__(element, doc)
          self.properties=dict()
          for eproperty in self.getElement().getElementsByTagName(Property.TAGNAME):
