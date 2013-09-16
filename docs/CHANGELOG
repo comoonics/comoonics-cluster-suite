@@ -30,6 +30,8 @@ comoonics-assistant-py:
   - initial revision
 
 comoonics-backup-sesam-py:
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-2
+  - Fixed latest bugs. First version.
 * Fri Aug 09 2013 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 
@@ -66,6 +68,8 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-4
+  - Fixed properties bug that they could also be constructed with one element as parameter.
 * Mon Aug 12 2013 MG <grimme( at )atix.de>, 5.0-3
   - fixed bugs in ComProperties, read from Hash.
 * Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-2
@@ -658,6 +662,9 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-6
+  - Converted tabs to spaces.
+  - Fixed ComSCSIRequirement to work with more recent systems.
 * Tue May 21 2013 MG <grimme( at )atix.de>, 5.0-5
   - Fixed bugs in FilesystemCopy, LVMCopy, PartitionCopy to be more robust and survive more errors.
 * Thu May 16 2013 MG <grimme( at )atix.de>, 5.0-4
@@ -906,6 +913,9 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-6
+  - ComStorage: work with more recent XML python implementation
+  - ComFileSystem: gfs_tool command will be called from ComSystem.execLocalGetResult
 * Tue May 21 2013 MG <grimme( at )atix.de>, 5.0-5
   - Fixed bugs in Filesystem, Disk, LVM, Partition to be more robust and survive more errors.
 * Tue Oct 09 2012 MG <grimme( at )atix.de>, 5.0-4
