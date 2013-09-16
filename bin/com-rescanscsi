@@ -1,83 +1,74 @@
 #!/usr/bin/python
 
 # here is some internal information
-# $Id: rpm2db.py,v 1.1 2006/08/08 08:32:38 marc Exp $
-#
 
 __version__ = "$revision$"
 __description__="""
 Programm to rescan the scsibus
 """
 
-# $Source: /usr/ATIX/CVSROOT/projects/se/hilti/config/hoi_config/scripts/rpm2db.py,v $
 import sys
 
 import os.path
 sys.path.append(os.path.join(os.path.normpath(sys.prefix), "lib", "python" + sys.version[:3], "site-packages"))
 
 from comoonics import ComLog
-from comoonics import GetOpts
 from comoonics.scsi import ComSCSI
+
+try:
+   from comoonics.tools.poptparse import PersistentOptionParser as OptionParser
+except ImportError:
+   from optparse import OptionParser 
+from optparse import OptionGroup
 
 import logging
 logging.basicConfig()
 
-ComLog.setLevel(logging.INFO)
-
 log=ComLog.getLogger("com-rescanscsi")
 
 def line(str=None):
-    print
-    print "--------------------"+str+"---------------------------------"
+   print
+   print "--------------------"+str+"---------------------------------"
 
-class Config(GetOpts.BaseConfig):
-    hosts=None
-    def __init__(self):
-        GetOpts.BaseConfig.__init__(self, sys.argv[0], __description__, __version__)
-        self.debug=GetOpts.Option("debug", "toggle debugmode and be more helpful", False, False, "D", self.setDebug)
-        self.fibre=GetOpts.Option("fibre", "scan only fibre channel hbas", False, False, "F", self.fibreChannel)
-        self.qlogic=GetOpts.Option("qlogic", "scan qlogichbas with old qlogic way", False, False, "q")
-        self.remove=GetOpts.Option("remove", "only remove scsidisks", False, False, "r")
-        self.add=GetOpts.Option("add", "only add scsidisks", False, False, "a")
-        self.setAdditionalParams("[host]*")
-    def do(self, args_proper):
-        import os.path
-#        if len(args_proper) >= 1:
-#            self.name=args_proper[0]
-        if len(args_proper) >= 0:
-            if not self.hosts:
-                self.hosts=list()
-            self.hosts+=args_proper
-        return 0
+def fibreChannel(option, opt, value, parser):
+   hosts=ComSCSI.getFCHosts()
+   log.debug("hosts %s" %(self.hosts))
 
-    def setDebug(self, value):
-        ComLog.setLevel(logging.DEBUG)
 
-    def fibreChannel(self, value):
-        self.hosts=ComSCSI.getFCHosts()
-        log.debug("hosts %s" %(self.hosts))
+hosts=None
+parser = OptionParser(description=__doc__, usage="usage: %prog [options] [host]*")
+parser.add_option("-d", "--verbose",  default=False,         action="store_true", help="toggle debugmode and be more helpful")
+parser.add_option("-F", "--fibre",    callback=fibreChannel, action="callback",   help="scan only fibre channel hbas")
+parser.add_option("-q", "--qlogic",   default=False,         action="store_true", help="scan qlogichbas with old qlogic way")
+parser.add_option("-r", "--remove",   default=False,         action="store_true", help="only remove scsidisks")
+parser.add_option("-a", "--add",      default=False,         action="store_true", help="only add scsidisks")
 
-config=Config()
+try:
+   parser.setGlobalDefaultsFilename(get_defaultsfiles()[0])
+   parser.setLocalDefaultsFilename(get_defaultsfiles()[1], get_defaultsenvkey())
+except (TypeError, NameError):
+   pass
 
-ret=config.getopt(sys.argv[1:])
-if ret < 0:
-    sys.exit(0)
-elif ret > 0:
-    config.usage()
-    sys.exit(ret)
+(options, args) = parser.parse_args()
 
-if not config.hosts and not config.qlogic:
-    config.hosts=ComSCSI.getSCSIHosts()
-if not config.hosts and config.qlogic:
-    config.hosts=ComSCSI.getQlaHosts()
-for host in config.hosts:
-    log.info("Rescanning "+host)
-    if not config.qlogic:
-        ComSCSI.rescan(host, not config.remove, not config.add)
-    else:
-        ComSCSI.rescan_qla(host, not config.remove, not config.add)
+if options.verbose:
+   ComLog.getLogger().propagate=1
+   ComLog.setLevel(logging.DEBUG)
+else:
+   ComLog.setLevel(logging.INFO)
 
-# $Log: rpm2db.py,v $
-# Revision 1.1  2006/08/08 08:32:38  marc
-# initial revision
-#
+import os.path
+if len(args) >= 0:
+   if not hosts:
+      hosts=args
+
+if not hosts and not options.qlogic:
+   hosts=ComSCSI.getSCSIHosts()
+if not hosts and options.qlogic:
+   options.hosts=ComSCSI.getQlaHosts()
+for host in hosts:
+   log.info("Rescanning "+host)
+   if not options.qlogic:
+      ComSCSI.rescan(host, not options.remove, not options.add)
+   else:
+      ComSCSI.rescan_qla(host, not options.remove, not options.add)
