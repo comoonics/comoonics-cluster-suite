@@ -68,7 +68,7 @@ class SepSesamBackupHandler(BackupHandler):
       _file=os.path.join(_path, _name)
       self.log.debug("addFile: copy %s => %s" %(name, _file))
       shutil.copy(name, _file)
-      self.implementation.doBackup(self.level, _file)
+      self.implementation.doBackup(filename=_file)
 #        os.unlink(_file)
 #        if created:
 #            os.unlink(os.path.dirname(_file))
