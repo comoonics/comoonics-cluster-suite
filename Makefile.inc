@@ -23,7 +23,7 @@ PYTHONPATH=/home/marc/atix/comoonics-git/clustersuite/lib/
 
 PACKAGES=comoonics-assistant-py comoonics-backup-legato-py comoonics-backup-sesam-py comoonics-backup-py comoonics-base-py comoonics-cdsl-py comoonics-cluster-py \
 	comoonics-cluster-tools-py comoonics-cmdb-py comoonics-db-py comoonics-dr-py comoonics-ec-admin-py comoonics-ec-base-py comoonics-ec-py \
-	comoonics-imsd-plugins-py comoonics-imsd-py comoonics-installation-py comoonics-storage-hp-py comoonics-storage-py comoonics-tools-py
+	comoonics-imsd-plugins-py comoonics-imsd-py comoonics-installation-py comoonics-scsi-py comoonics-storage-hp-py comoonics-storage-py comoonics-tools-py
 
 RPM_SIGN_COMMAND=rpm --addsign
 RPM_CHECKSIG_COMMAND=rpm --checksig
