@@ -32,7 +32,7 @@ def line(str=None):
 
 def fibreChannel(option, opt, value, parser):
    hosts=ComSCSI.getFCHosts()
-   log.debug("hosts %s" %(self.hosts))
+   log.debug("hosts %s" %(hosts))
 
 
 hosts=None

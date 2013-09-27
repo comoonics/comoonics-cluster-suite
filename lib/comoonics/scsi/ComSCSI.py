@@ -88,7 +88,10 @@ def rescan(host=None, add=True, remove=True):
                   lunmatch=re.match(SCSILUN_PATTERN, lun_file)
                   if lunmatch and lunmatch.group(1) == scsi_host and lunmatch.group(2) == scsi_bus and lunmatch.group(3) == scsi_id:
                      if remove:
-                        scsi_remove_disk(host, os.path.join(SCSIPATH_2_DEVICE, lun_file))
+                        try:
+                           scsi_remove_disk(host, os.path.join(SCSIPATH_2_DEVICE, lun_file))
+                        except IOError, ioe:
+                           log.debug(ioe)
                      if add:
                         try:
                            scsi_add_disk(host, os.path.join(SCSISCAN_PATH %host, "scan"), lunmatch.group(2), lunmatch.group(3), lunmatch.group(4))
