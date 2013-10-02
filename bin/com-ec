@@ -247,8 +247,9 @@ try:
    if options.xslt:
       doc=parseXSLT(xmlbuf, options.xslt, not options.novalidate, options.xsltimplementation, **options.__dict__)
    else:
+     from xml.dom.ext.reader import Sax2
+     reader = Sax2.Reader(validate=0)
      doc = reader.fromString(xmlbuf.getvalue())
-     buf.close()
 
    if options.onlydisplay:
       print XmlTools.toPrettyXML(doc)
