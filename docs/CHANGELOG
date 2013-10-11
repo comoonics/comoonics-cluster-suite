@@ -29,6 +29,12 @@ comoonics-assistant-py:
 * Fri Feb 28 2008 MH <hlawatschek@atix.de>, 0.1-1
   - initial revision
 
+comoonics-backup-sesam-py:
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-2
+  - Fixed latest bugs. First version.
+* Fri Aug 09 2013 MG <grimme( at )atix.de>, 5.0-1
+  - Release for 5.0 prod
+
 comoonics-backup-legato-py:
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
@@ -62,6 +68,13 @@ comoonics-backup-py:
    initial revision
   
 comoonics-base-py:
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-4
+  - Fixed properties bug that they could also be constructed with one element as parameter.
+* Mon Aug 12 2013 MG <grimme( at )atix.de>, 5.0-3
+  - fixed bugs in ComProperties, read from Hash.
+* Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-2
+  - Fixed bug #449 in ComSystem not being able to handle non ascii encoded output.
+  - Fixed bug in simulator mode.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Mon Apr 18 2011 MG <grimme@atix.de>, 0.1-23
@@ -134,6 +147,9 @@ comoonics-base-py:
   - initial revision
 
 comoonics-cdsl-py:
+* Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-3
+  - Implemented com-cdslinvadm getcdsl --recursive (BZ#463)
+  - fixed typo in com-cdslinvadm
 * Fri Nov 04 2011 MG <grimme( at )atix.de>, 5.0-2
   - Fixed bug that no XML would be written out if queried for.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
@@ -421,6 +437,9 @@ comoonics-cluster-py:
    initial revision
 
 comoonics-cluster-tools-py:
+* Wed Feb 29 2012 MG <grimme( at )atix,de>, 5.0-3
+  - fixed bug in cl_checknodes that would not detect two node cluster with qdisk.
+  - fixed bug in com-fence-validate where options would not be detected as expected.
 * Wed Nov 01 2011 MG <grimme( at )atix.de>, 5.0-2
   - fixed bug in com-dsh with handling of defaultfiles
   - implemented fallback scenario to all groupfile if no clusternodes are to be found
@@ -490,6 +509,11 @@ comoonics-cluster-tools-py:
    - initial revision
 
 comoonics-cmdb-py:
+* Fri May 24 2013 MG <grimme( at )atix.de>, 5.0-3
+  - Fixed bug in com-rpm2db that would not detect the right system information
+* Wed Mar 07 2012 MG <grimme( at )atix.de>, 5.0-2
+- ComSoftwareCMDB.py: systemnames with "." in the names would not yield valid SQL code.
+      They are now quoted (Thanks to Kurt.Keller( at )hilti.com).
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme@atix.de>, 0.1-29
@@ -638,6 +662,17 @@ comoonics-ec-base-py:
    - initial revision
 
 comoonics-ec-py:
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-6
+  - Converted tabs to spaces.
+  - Fixed ComSCSIRequirement to work with more recent systems.
+* Tue May 21 2013 MG <grimme( at )atix.de>, 5.0-5
+  - Fixed bugs in FilesystemCopy, LVMCopy, PartitionCopy to be more robust and survive more errors.
+* Thu May 16 2013 MG <grimme( at )atix.de>, 5.0-4
+  - New version for comoonics-ec-py with xsltproc implementation as addition to libxslt.
+* Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
+  - Fixed bug in ComFilesystemCopyset (updateMetadata)
+* Fri Dec 09 2011 MG <grimme( at )atix.de>, 5.0-2
+  - Implemented excludes feature so that multiple excludes can be specified by a "," delimited property.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-62
@@ -878,6 +913,20 @@ comoonics-storage-hp-py
   SSSU simulator for hp-eva-sssu (Storage scripting)
 
 comoonics-storage-py
+* Mon Sep 16 2013 MG <grimme( at )atix.de>, 5.0-6
+  - ComStorage: work with more recent XML python implementation
+  - ComFileSystem: gfs_tool command will be called from ComSystem.execLocalGetResult
+* Tue May 21 2013 MG <grimme( at )atix.de>, 5.0-5
+  - Fixed bugs in Filesystem, Disk, LVM, Partition to be more robust and survive more errors.
+* Tue Oct 09 2012 MG <grimme( at )atix.de>, 5.0-4
+  - ComParted.ComParted.createPartitions: fixed bug that flags would fail to synchronize.
+* Wed Aug 01 2012 MG <grimme( at )atix.de>, 5.0-3
+  - First offical functional release for GFS2 (ComFileSystem/gfs2FileSystem)
+  - Redesign of use of parted (all parted deps go in ComParted). 
+  - ComParted now handles different parted versions.
+  - ComLVM fixed small bugs in PhysicalVolume. 
+* Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-2
+  - Added support for GFS2 as filesystem (ComFileSystem/gfs2FileSystem)
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-21
@@ -946,6 +995,8 @@ comoonics-storage-py
   initial release
 
 comoonics-tools-py
+* Wed Feb 29 2012 MG <grimme( at )atix.de>, 5.0-2
+  - Fixed ComSystemInformation.RHOpensharedrootSystemInformation as cluster type.
 * Tue Nov 01 2011 MG <grimme( at )atix.de>, 5.0-1
   - Release for 5.0 prod
 * Fri Oct 28 2011 MG <grimme( at )atix.de>, 0.1-13

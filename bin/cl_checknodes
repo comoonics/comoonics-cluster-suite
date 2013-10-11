@@ -38,12 +38,13 @@ usage = "usage: %prog [options]"
 parser = OptionParser(usage=usage, description=__doc__)
 parser=commonoptparseroptions(parser)
 
-parser.add_option("-T", "--times", dest="times", default="5", help="checks the whole cluster for n times. If not  all nodes are reachable it returns with an errorcode")
-parser.add_option("-t", "--pingtimeout", dest="pingtimeout", default="2", help="the ping timeout")
-parser.add_option("-n", "--pingcount", dest="pingcount", default="1", help="the ping counts.")
-parser.add_option("-C", "--pingcmd", dest="pingcmd", default="ping -c %s -t %s %s", help="Which command is used for pings.")
-parser.add_option("-p", "--pathnodes", dest="pathnodes", default="cluster/clusternodes/clusternode/@name", help="How can we know the names of the nodes")
-parser.add_option("-P", "--pathclustername", dest="pathclustername", default="cluster/@name", help="How can we know the name of the cluster")
+parser.add_option("-T", "--times", dest="times", default="5", help="checks the whole cluster for n times. If not  all nodes are reachable it returns with an errorcode. Default: %default.")
+parser.add_option("-t", "--pingtimeout", dest="pingtimeout", default="2", help="the ping timeout. Default: %default.")
+parser.add_option("-n", "--pingcount", dest="pingcount", default="1", help="the ping counts. Default: %default.")
+parser.add_option("-C", "--pingcmd", dest="pingcmd", default="ping -c %s -t %s %s", help="Which command is used for pings. Default: %default.")
+parser.add_option("-p", "--pathnodes", dest="pathnodes", default="cluster/clusternodes/clusternode/@name", help="How can we know the names of the nodes. Default: %default.")
+parser.add_option("-q", "--pathqdisk", dest="pathqdisk", default="cluster/quorumd", help="Where to find the configuration for the qdisk. Default: %default.")
+parser.add_option("-P", "--pathclustername", dest="pathclustername", default="cluster/@name", help="How can we know the name of the cluster. Default: %default.")
 
 ComLog.setLevel(logging.INFO)
 (options, args) = parser.parse_args()
@@ -52,7 +53,8 @@ doc=parseClusterConf(options.clusterconf)
 ComLog.getLogger().debug("Parsing path %s" % options.pathnodes)
 clustername = xpath.Evaluate(options.pathclustername, doc)[0]
 nodeelements = xpath.Evaluate(options.pathnodes, doc)
-if len(nodeelements) == 2:
+qdiskelement = xpath.Evaluate(options.pathqdisk, doc)
+if len(nodeelements) == 2 and len(qdiskelement)==0:
     quorum=len(nodeelements)/2+1
 else:
     print "Skipping because cluster %s has less or more the two nodes." %clustername.value

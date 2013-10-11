@@ -118,6 +118,10 @@ class Test(unittest.TestCase):
         import os.path
         _xml="""
     <copyset type="filesystem" name="save-tmp">
+        <properties>
+          <property name="exclude">test4, 
+          test3</property>
+        </properties>
         <source type="path">
             <path name="%s"/>
         </source>
@@ -130,6 +134,8 @@ class Test(unittest.TestCase):
         destok=True
         for f in self.files:
             if os.path.exists(os.path.join(self.tempdirdest, f)):
+                continue
+            elif f == "test4" or f=="test3":
                 continue
             else:
                 destok=False

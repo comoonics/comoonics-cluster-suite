@@ -3,7 +3,7 @@ CDSL_MANS_GZ=com-cdslinvchk.1.gz com-mkcdsl.1.gz com-cdslinvadm.1.gz com-rmcdsl.
 CLUSTER_MAN_GZ=com-queryclusterconf.1.gz
 
 GZIP=gzip -f
-DOCBOOK2MAN=docbook2x-man
+DOCBOOK2MAN=$(shell which docbook2x-man || which db2x_docbook2man 2>/dev/null)
 RM=rm
 
 .SUFFIXES: .1 .gz .xml

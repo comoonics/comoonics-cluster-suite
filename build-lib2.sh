@@ -20,7 +20,6 @@ BEGIN { changelogfound=0; }
 ' < docs/CHANGELOG)
 
     #distribution_name=$(cat $(dirname $0)/comoonics-release)
-
 	for file in $(find $INSTALLDIR -maxdepth 1 -type f); do
   		cp $file $(basename $file)
 	done
@@ -43,6 +42,7 @@ BEGIN { changelogfound=0; }
 	for file in $(find $INSTALLDIR/$NAME -maxdepth 1 -type f); do
   		rm -f $(basename $file)
 	done
+	rm -f TODO MANIFEST
 	rpm -ivh dist/${NAME}*.src.rpm
 	cp dist/${NAME}*.src.rpm ${RPMBUILDDIR}/SRPMS/
 }

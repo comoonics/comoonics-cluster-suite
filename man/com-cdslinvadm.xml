@@ -130,6 +130,9 @@
                 <title>List or get CDSLs from inventory</title>
                 <para>
                     Lists and returns all or single cdsls from the given repository (--getcdsl/--listcdsls). 
+                    For getcdsl the recursive parameter checks not only for the given cdsl to be a cdsl but also walks
+                    down the path of the given cdsl and checks if predecesors are cdsl. If a predecesor is found it will 
+                    be returned.
                 </para>
             </refsect2>
             <refsect2>

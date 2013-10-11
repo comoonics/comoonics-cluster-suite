@@ -6,7 +6,7 @@ $(DISTDIR)/comoonics-analysis-py-$(VERSION).tar.gz: lib/comoonics/analysis/ComOb
 			lib/comoonics/analysis/__init__.py lib/comoonics/analysis/ComGLockWriters.py \
 			lib/comoonics/analysis/ComWriters.py lib/comoonics/analysis/StraceAnalyser.py \
 			lib/comoonics/analysis/ComParser.py
-	./build_rpm-analysis.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-analysis.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-assistant-py
 $(DISTDIR)/comoonics-assistant-py-$(VERSION).tar.gz: lib/comoonics/assistant/ComClusterAssistantHelper.py \
@@ -19,25 +19,31 @@ $(DISTDIR)/comoonics-assistant-py-$(VERSION).tar.gz: lib/comoonics/assistant/Com
 		lib/comoonics/assistant/ComAssistantController.py \
 		lib/comoonics/assistant/ComAssistantTui.py \
 		lib/comoonics/assistant/ComConfigurationManager.py
-	./build_rpm-assistant.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-assistant.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-backup-legato-py
 $(DISTDIR)/comoonics-backup-legato-py-$(VERSION).tar.gz: lib/comoonics/backup/EMCLegato/ComEMCLegatoBackupHandler.py \
 		lib/comoonics/backup/EMCLegato/ComEMCLegatoNetworker.py \
 		lib/comoonics/backup/EMCLegato/__init__.py
-	./build_rpm-backup-legato.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-backup-legato.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+
+# comoonics-backup-sesam-py
+$(DISTDIR)/comoonics-backup-sesam-py-$(VERSION).tar.gz: lib/comoonics/backup/SepSesam/SepSesamBackupHandler.py \
+		lib/comoonics/backup/SepSesam/SepSesam.py \
+		lib/comoonics/backup/SepSesam/__init__.py
+	bash ./build_rpm-backup-sesam.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-backup-py
 $(DISTDIR)/comoonics-backup-py-$(VERSION).tar.gz: lib/comoonics/backup/__init__.py \
 		lib/comoonics/backup/ComBackupHandler.py
-	./build_rpm-backup.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-backup.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-base-py
 $(DISTDIR)/comoonics-base-py-$(VERSION).tar.gz: lib/comoonics/ComPath.py \
 			lib/comoonics/XmlTools.py lib/comoonics/ComGFS.py lib/comoonics/ComProperties.py lib/comoonics/ComExceptions.py \
 			lib/comoonics/ComSysrq.py lib/comoonics/__init__.py lib/comoonics/DictTools.py lib/comoonics/ComLog.py \
 			lib/comoonics/ComDataObject.py lib/comoonics/ComSystem.py
-	./build_rpm-base.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-base.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-cdsl-py
 $(DISTDIR)/comoonics-cdsl-py-$(VERSION).tar.gz: lib/comoonics/cdsl/ComCdsl.py \
@@ -48,7 +54,7 @@ $(DISTDIR)/comoonics-cdsl-py-$(VERSION).tar.gz: lib/comoonics/cdsl/ComCdsl.py \
 		lib/comoonics/cdsl/ComCdslValidate.py \
 		bin/com-mkcdsl bin/com-cdslinvadm bin/com-cdslinvchk bin/com-rmcdsl
 	@make -C man comoonics-cdsl-py
-	./build_rpm-cdsl.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-cdsl.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-cluster-py
 $(DISTDIR)/comoonics-cluster-py-$(VERSION).tar.gz: lib/comoonics/cluster/ComClusterInfo.py lib/comoonics/cluster/ComClusterNodeNic.py \
@@ -57,14 +63,14 @@ $(DISTDIR)/comoonics-cluster-py-$(VERSION).tar.gz: lib/comoonics/cluster/ComClus
 				lib/comoonics/cluster/ComClusterRepository.py \
 				bin/com-queryclusterconf
 	@make -C man comoonics-cluster-py
-	./build_rpm-cluster.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-cluster.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-cluster-tools-py
 $(DISTDIR)/comoonics-cluster-tools-py-$(VERSION).tar.gz: lib/comoonics/cluster/tools/__init__.py \
 		lib/comoonics/cluster/tools/pxssh.py \
 		lib/comoonics/cluster/tools/pexpect.py \
 		bin/com-dsh bin/com-fence-validate bin/cl_checknodes
-	./build_rpm-cluster-tools.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-cluster-tools.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-cmdb-py
 $(DISTDIR)/comoonics-cmdb-py-$(VERSION).tar.gz: lib/comoonics/cmdb/ComSoftwareCMDB.py \
@@ -77,7 +83,7 @@ $(DISTDIR)/comoonics-cmdb-py-$(VERSION).tar.gz: lib/comoonics/cmdb/ComSoftwareCM
 		lib/comoonics/cmdb/Converter.py \
 		lib/comoonics/cmdb/ComBaseDB.py \
 		bin/com-rpmdiffs bin/com-rpm2db
-	./build_rpm-cmdb.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-cmdb.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-db-py
 $(DISTDIR)/comoonics-db-py-$(VERSION).tar.gz: lib/comoonics/db/ComDBLogger.py \
@@ -86,27 +92,27 @@ $(DISTDIR)/comoonics-db-py-$(VERSION).tar.gz: lib/comoonics/db/ComDBLogger.py \
 		lib/comoonics/db/ComDBJobs.py \
 		lib/comoonics/db/ComDBObject.py \
 
-	./build_rpm-db.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-db.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-dr-py
 $(DISTDIR)/comoonics-dr-py-$(VERSION).tar.gz: bin/comoonics-create-restoreimage  bin/comoonics-restore-system \
 		xml/xml-dr/createlivecd.infodef.xml xml/xml-dr/drbackup.infodef.xml xml/xml-dr/drrestore.infodef.xml \
 		xml/xml-dr/createlivecd.xml xml/xml-dr/drbackup.xml xml/xml-dr/drrestore.template.xml
-	./build_rpm-dr.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-dr.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-ec-admin-py
 $(DISTDIR)/comoonics-ec-admin-py-$(VERSION).tar.gz: xml/xml-ec-admin/localclone.disk2disk.infodef.xml \
 		xml/xml-ec-admin/single-filesystem.backup.infodef.xml xml/xml-ec-admin/single-filesystem.restore.infodef.xml \
 		xml/xml-ec-admin/localclone.disk2disk.template.xml  xml/xml-ec-admin/single-filesystem.backup.template.xml \
 		xml/xml-ec-admin/single-filesystem.restore.template.xml
-	./build_rpm-ec-admin.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-ec-admin.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-ec-base-py
 $(DISTDIR)/comoonics-ec-base-py-$(VERSION).tar.gz: lib/comoonics/ecbase/ComUtils.py \
 		lib/comoonics/ecbase/__init__.py \
 		lib/comoonics/ecbase/ComJournaled.py \
 		lib/comoonics/ecbase/ComMetadataSerializer.py
-	./build_rpm-ec-base.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-ec-base.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-ec-py
 $(DISTDIR)/comoonics-ec-py-$(VERSION).tar.gz: 		lib/comoonics/enterprisecopy/ComStorageModificationset.py \
@@ -144,7 +150,7 @@ $(DISTDIR)/comoonics-ec-py-$(VERSION).tar.gz: 		lib/comoonics/enterprisecopy/Com
 		lib/comoonics/enterprisecopy/ComISOFSModificationset.py \
 		lib/comoonics/enterprisecopy/ComArchiveCopyObject.py \
 		bin/com-ec
-	./build_rpm-ec.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-ec.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-imsd-plugins-py
 $(DISTDIR)/comoonics-imsd-plugins-py-$(VERSION).tar.gz: 		lib/comoonics/imsd/plugins/ComPlugin.py \
@@ -152,29 +158,29 @@ $(DISTDIR)/comoonics-imsd-plugins-py-$(VERSION).tar.gz: 		lib/comoonics/imsd/plu
 		lib/comoonics/imsd/plugins/__init__.py \
 		lib/comoonics/imsd/plugins/ComSysreportPlugin.py \
 		lib/comoonics/imsd/plugins/ComSosReportPlugin.py
-	./build_rpm-imsd-plugins.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-imsd-plugins.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-imsd-py
 $(DISTDIR)/comoonics-imsd-py-$(VERSION).tar.gz: lib/comoonics/imsd/__init__.py
-	./build_rpm-imsd.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-imsd.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-installation-py
 $(DISTDIR)/comoonics-installation-py-$(VERSION).tar.gz: 		lib/comoonics/installation/osrcluster.py \
 		lib/comoonics/installation/nfs.py \
 		lib/comoonics/installation/__init__.py \
 		lib/comoonics/installation/hosts.py
-	./build_rpm-installation.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-installation.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-scsi-py
 $(DISTDIR)/comoonics-scsi-py-$(VERSION).tar.gz: 		lib/comoonics/scsi/ComSCSIResolver.py \
 		lib/comoonics/scsi/ComSCSI.py \
 		lib/comoonics/scsi/__init__.py bin/com-rescanscsi
-	./build_rpm-scsi.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-scsi.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-search-py
 $(DISTDIR)/comoonics-search-py-$(VERSION).tar.gz: 		lib/comoonics/search/__init__.py \
 		lib/comoonics/search/SearchFormat.py
-	./build_rpm-search.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-search.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-storage-hp-py
 $(DISTDIR)/comoonics-storage-hp-py-$(VERSION).tar.gz: lib/comoonics/storage/hp/ComHP_EVA_SSSU_Sim.py \
@@ -182,7 +188,7 @@ $(DISTDIR)/comoonics-storage-hp-py-$(VERSION).tar.gz: lib/comoonics/storage/hp/C
 		lib/comoonics/storage/hp/ComHP_EVA_Storage.py \
 		lib/comoonics/storage/hp/__init__.py \
 		lib/comoonics/storage/hp/ComHP_EVA.py
-	./build_rpm-storage-hp.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-storage-hp.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-storage-py
 $(DISTDIR)/comoonics-storage-py-$(VERSION).tar.gz: lib/comoonics/storage/ComPartition.py \
@@ -198,7 +204,7 @@ $(DISTDIR)/comoonics-storage-py-$(VERSION).tar.gz: lib/comoonics/storage/ComPart
 		lib/comoonics/storage/ComFileSystem.py \
 		lib/comoonics/storage/ComStorage.py \
 		lib/comoonics/storage/ComDisk.py
-	./build_rpm-storage.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-storage.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 
 # comoonics-tools-py
 $(DISTDIR)/comoonics-tools-py-$(VERSION).tar.gz: lib/comoonics/tools/poptparse.py \
@@ -211,7 +217,7 @@ $(DISTDIR)/comoonics-tools-py-$(VERSION).tar.gz: lib/comoonics/tools/poptparse.p
 		lib/comoonics/tools/lockfile.py \
 		lib/comoonics/tools/XMLConfigParser.py \
 		bin/stabilized
-	./build_rpm-tools.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
+	bash ./build_rpm-tools.sh "$(COMOONICS_DISTRIBUTION)" "$(SHORTDISTRO)"
 	
 .PHONY: comoonics-analysis-py
 comoonics-analysis-py: $(DISTDIR)/comoonics-analysis-py-$(VERSION).tar.gz
@@ -221,6 +227,9 @@ comoonics-assistant-py: $(DISTDIR)/comoonics-assistant-py-$(VERSION).tar.gz
 	
 .PHONY: comoonics-backup-legato-py
 comoonics-backup-legato-py: $(DISTDIR)/comoonics-backup-legato-py-$(VERSION).tar.gz
+	
+.PHONY: comoonics-backup-sesam-py
+comoonics-backup-sesam-py: $(DISTDIR)/comoonics-backup-sesam-py-$(VERSION).tar.gz
 	
 .PHONY: comoonics-backup-py
 comoonics-backup-py: $(DISTDIR)/comoonics-backup-py-$(VERSION).tar.gz
@@ -305,7 +314,7 @@ test:
 
 .PHONY: binpackages
 binpackages:
-	PYTHONPATH=$(PYTHONPATH) NOTEST=1 SHORTDISTRO=$(SHORTDISTRO) ./build_all-specs.sh $(PACKAGES)	
+	PYTHONPATH=$(PYTHONPATH) NOTEST=1 SHORTDISTRO=$(SHORTDISTRO) bash ./build_all-specs.sh $(PACKAGES)	
 
 .PHONY: bin
 bin: test binpackages rpmsign
@@ -338,7 +347,12 @@ clean:
 .PHONY:rpmsign
 rpmsign:
 	@echo "Signing packages"
-	rpm --resign $(RPM_PACKAGE_BIN_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO)*.rpm $(RPM_PACKAGE_SRC_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO).src.rpm
+	$(RPM_SIGN_COMMAND) $(RPM_PACKAGE_BIN_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO)*.rpm $(RPM_PACKAGE_SRC_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO).src.rpm
+
+.PHONY:rpmchecksig
+rpmchecksig:
+	@echo "Checking signature of the packages"
+	$(RPM_CHECKSIG_COMMAND) $(RPM_PACKAGE_BIN_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO)*.rpm $(RPM_PACKAGE_SRC_DIR)/$(PACKAGE_NAME)-*$(SHORTDISTRO).src.rpm
 
 .PHONY: channel-rhel5
 channel-rhel5:
@@ -360,7 +374,7 @@ channelcopy:
 	    channelalias=`echo $$channel | cut -f2 -d:`; \
        for architecture in $(ARCHITECTURES); do \
 	      echo -n "Copying rpms to channel $(CHANNELDIR)/$$channelname/$(SHORTDISTRO)/$$architecture.."; \
-	      ./install/copy_rpms.sh "$(SHORTDISTRO)" $(CHANNELDIR)/$$channelname $$channelalias $$architecture "$(PACKAGE_NAME)"; \
+	      bash ./install/copy_rpms.sh "$(SHORTDISTRO)" $(CHANNELDIR)/$$channelname $$channelalias $$architecture "$(PACKAGE_NAME)"; \
 	      echo "(DONE)"; \
 	   done; \
 	done;
@@ -370,5 +384,5 @@ channelbuild:
 	@echo "Rebuilding channels.."
 	@for channel in $(CHANNELNAMES); do \
         channelname=`echo $$channel | cut -f1 -d:`; \
-        $(CHANNELBASEDIR)/updaterepositories -s -r $(PRODUCTNAME)/$(PRODUCTVERSION)/$$channelname/$(SHORTDISTRO); \
+        bash $(CHANNELBASEDIR)/updaterepositories -s -r $(PRODUCTNAME)/$(PRODUCTVERSION)/$$channelname/$(SHORTDISTRO); \
 	 done 

@@ -26,15 +26,15 @@ class CopyModification(FileModification):
     def doModifications(self, file):
         # TODO create bckup of file ?
         # TODO raise Warning Exception
-        __cmd = "cp -a "
-        __cmd += file.getAttribute("sourcefile")
-        __cmd += " "
-        __cmd += file.getAttribute("name")
-        __rc, __ret = ComSystem.execLocalStatusOutput(__cmd)
-        if __rc:
-            ComLog.getLogger("CopyModification").error("doCopy: " + __cmd + " " + __ret)
+        cmd = "cp -a "
+        cmd += file.getAttribute("sourcefile")
+        cmd += " "
+        cmd += file.getAttribute("name")
+        rc, ret = ComSystem.execLocalStatusOutput(cmd)
+        if rc:
+            ComLog.getLogger("CopyModification").error("doCopy: " + cmd + " " + ret)
         else:
-            ComLog.getLogger("CopyModification").debug("doCopy: "  + __cmd +" "+ __ret) 
+            ComLog.getLogger("CopyModification").debug("doCopy: "  + cmd +" "+ ret)
 
 
 # $Log: ComCopyModification.py,v $

@@ -9,15 +9,9 @@ here should be some more information about the module, that finds its way inot t
 # $Id: ComPartition.py,v 1.4 2010-11-16 11:24:20 marc Exp $
 #
 
-#import parted
-import re
-
 from xml.dom import Node
 
-from ComParted import PartedHelper
-
 from comoonics.ComDataObject import DataObject
-from comoonics import ComLog
 from comoonics.ComExceptions import ComException
 
 __version__ = "$Revision: 1.4 $"
@@ -51,12 +45,13 @@ class Partition(DataObject):
         DataObject.__init__(self, element, doc)
 
     def __create_element_from_parted(self, part, doc):
+        import ComParted
         element=doc.createElement(self.TAGNAME)
-        phelper=PartedHelper()
+        phelper=ComParted.getInstance()
         # name
-        element.setAttribute("name", str(part.num))
+        element.setAttribute("name", str(phelper.getPartNumber(part)))
         #type
-        element.setAttribute("type", self.__name_of_part_type(part.type))
+        element.setAttribute("type", self.__name_of_part_type(phelper.getPartType(part)))
         #size
         element.setAttribute("size", str(phelper.getPartSize(part)))
         #start
@@ -65,9 +60,10 @@ class Partition(DataObject):
         #element.setAttribute("end", str(part.geom.end))
         #all flags
         for flag in phelper.get_flags_as_string(part):
-            felem=PartitionFlag(doc.createElement("flag"), doc)
-            felem.setAttribute("name", flag)
-            element.appendChild(felem.getElement())
+            if flag and flag != "":
+                felem=PartitionFlag(doc.createElement("flag"), doc)
+                felem.setAttribute("name", flag)
+                element.appendChild(felem.getElement())
         return element
 
 
@@ -85,64 +81,6 @@ class Partition(DataObject):
 
     def getPartedType(self):
         return self.PARTITION_TYPES.get(self.getType())
-
-    def getPartedSizeOptimum(self, dev):
-        sectors=self.getPartedSize(dev)
-        if sectors == 0: return 0
-        # now round up
-        phelper=PartedHelper()
-        cyls=phelper.end_sector_to_cyl(dev, sectors)
-        sectors=phelper.end_cyl_to_sector(dev, cyls)
-        return sectors
-
-    def getPartedSize(self, dev):
-        """ returns always size in sectors """
-        size=self.getAttribute("size")
-        # calculate new size
-        # FIXME Round up to next cylinder
-        # Test Megabyte e.g. size="200M"
-        res=re.search("([0-9]+)M", size)
-        if res:
-            sectors=int(res.group(1)) * 1024 * 1024 / dev.sector_size
-            ComLog.getLogger(self.__logStrLevel__). \
-                debug("found size in Megabytes : %s -> %s sectors" % (res.group(1), sectors))
-            return sectors
-
-        # Test Gigabyte e.g. size="200G"
-        res=re.search("([0-9]+)G", size)
-        if res:
-            sectors = int(res.group(1)) * 1024 * 1024 * 1024 / dev.sector_size
-            ComLog.getLogger(self.__logStrLevel__). \
-                debug("found size in Gigabytes : %s -> %s sectors" %(res.group(1), sectors))
-            return sectors
-
-        # Test Percentage
-        res=re.search("([0-9]+)%", size)
-        if res:
-            sectors=int(float(float(res.group(1)) / 100 * dev.heads * dev.cylinders * dev.sectors))
-            ComLog.getLogger(self.__logStrLevel__). \
-                debug("found size in %% : %s -> %s sectors" %( res.group(1), sectors))
-            return sectors
-
-        # Test REMAIN
-        res=re.search("REMAIN", size)
-        if res:
-            ComLog.getLogger(self.__logStrLevel__).debug("found size in Tag :REMAIN")
-            return 0
-
-        # Test sectors
-        res=re.search("[0-9]+", size)
-        if res:
-            ComLog.getLogger(self.__logStrLevel__).debug("found size in Tag :%s " % size)
-            return int(size)
-
-        raise ComException("size %s not supported" % size)
-
-    def getPartedFlags(self):
-        flags = []
-        for flag in self.getFlags():
-            flags.append(flag.getFlagPartedNum())
-        return flags
 
     def getFlags(self):
         flags=[]
